@@ -35,6 +35,60 @@
     />
 
     <link rel="stylesheet" href="./style.css" />
+
+    <style>
+      .contact-select {
+        width: 100%;
+        padding: 0.95rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(7, 11, 22, 0.7);
+        color: #f5f7ff;
+        outline: none;
+        transition:
+          border-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+          box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1),
+          background 240ms cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .contact-select:focus {
+        border-color: rgba(247, 217, 139, 0.32);
+        box-shadow: 0 0 0 4px rgba(247, 217, 139, 0.08);
+        background: rgba(10, 15, 29, 0.84);
+      }
+
+      .contact-note {
+        margin: 0.9rem 0 0;
+        text-align: center;
+        color: rgba(245, 247, 255, 0.62);
+        font-size: 0.9rem;
+      }
+
+      .contact-note a {
+        color: var(--gold-1);
+        font-weight: 700;
+      }
+
+      .contact-status {
+        margin-top: 0.9rem;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: rgba(245, 247, 255, 0.78);
+      }
+
+      .contact-status.is-error {
+        color: #ffb3b3;
+      }
+
+      .contact-status.is-success {
+        color: #9ae6c1;
+      }
+
+      .is-submitting {
+        opacity: 0.7;
+        pointer-events: none;
+      }
+    </style>
   </head>
 
   <body>
@@ -43,7 +97,6 @@
       <div class="bg-orb orb-2" aria-hidden="true"></div>
       <div class="bg-grid" aria-hidden="true"></div>
 
-      <!-- Header -->
       <header class="site-header" id="top">
         <div class="container nav-wrap">
           <a href="./index.html" class="brand" aria-label="Card Leo Rewards home">
@@ -86,7 +139,6 @@
       </header>
 
       <main>
-        <!-- Hero -->
         <section class="hero section">
           <div class="container hero-grid">
             <div class="hero-copy reveal">
@@ -165,7 +217,6 @@
           </div>
         </section>
 
-        <!-- Brand strip -->
         <section class="brand-strip section-sm">
           <div class="container reveal">
             <div class="brand-strip-inner">
@@ -178,7 +229,6 @@
           </div>
         </section>
 
-        <!-- Contact form -->
         <section class="section" id="contact-form">
           <div class="container contact-grid">
             <div class="contact-copy reveal">
@@ -189,8 +239,8 @@
                 partnership interest, or anything else related to the Card Leo Rewards experience.
               </p>
               <p>
-                This form is already compatible with your current `script.js`, so it
-                will validate and show a polished success message on submit.
+                This version is wired for a real backend flow, so your message can
+                be submitted to an API instead of only showing a front-end placeholder.
               </p>
 
               <div class="feature-stack" style="margin-top: 1.25rem;">
@@ -223,7 +273,16 @@
               </div>
             </div>
 
-            <form class="glass-card contact-form reveal">
+            <form
+              id="contactFormLive"
+              class="glass-card contact-form reveal"
+              action="/api/contact"
+              method="post"
+              novalidate
+            >
+              <input type="hidden" name="source" value="website-contact" />
+              <input type="hidden" name="contact_page" value="contact.html" />
+
               <div class="form-row">
                 <label for="name">Full Name</label>
                 <input
@@ -231,6 +290,7 @@
                   id="name"
                   name="name"
                   placeholder="Your full name"
+                  autocomplete="name"
                   required
                 />
               </div>
@@ -242,6 +302,7 @@
                   id="email"
                   name="email"
                   placeholder="you@example.com"
+                  autocomplete="email"
                   required
                 />
               </div>
@@ -253,25 +314,14 @@
                   id="phone"
                   name="phone"
                   placeholder="(555) 555-5555"
+                  autocomplete="tel"
                 />
               </div>
 
               <div class="form-row">
                 <label for="topic">Inquiry Type</label>
-                <select
-                  id="topic"
-                  name="topic"
-                  style="
-                    width: 100%;
-                    padding: 0.95rem 1rem;
-                    border-radius: 16px;
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    background: rgba(7, 11, 22, 0.7);
-                    color: #f5f7ff;
-                  "
-                >
+                <select id="topic" name="topic" class="contact-select">
                   <option value="">Select a topic</option>
-                  <option value="signup">Signup question</="">Select a topic</option>
                   <option value="signup">Signup question</option>
                   <option value="portal">Portal access help</option>
                   <option value="member-support">Member support</option>
@@ -291,14 +341,20 @@
                 ></textarea>
               </div>
 
-              <button type="submit" class="btn btn-primary btn-full">
+              <button id="contactSubmitButton" type="submit" class="btn btn-primary btn-full">
                 Send Message
               </button>
+
+              <div id="contactStatus" class="contact-status" aria-live="polite"></div>
+
+              <p class="contact-note">
+                Need to create an account instead?
+                <a href="./signup.html">Go to Sign Up</a>
+              </p>
             </form>
           </div>
         </section>
 
-        <!-- Support options -->
         <section class="section section-dark" id="support-options">
           <div class="container">
             <div class="section-heading reveal">
@@ -355,7 +411,6 @@
           </div>
         </section>
 
-        <!-- Why this page matters -->
         <section class="section">
           <div class="container experience-grid">
             <div class="experience-copy reveal">
@@ -385,7 +440,6 @@
           </div>
         </section>
 
-        <!-- CTA -->
         <section class="section cta-section">
           <div class="container reveal">
             <div class="cta-panel">
@@ -405,7 +459,6 @@
         </section>
       </main>
 
-      <!-- Footer -->
       <footer class="site-footer">
         <div class="container footer-grid">
           <div class="footer-brand">
@@ -452,5 +505,108 @@
     </div>
 
     <script src="./script.js"></script>
+    <script>
+      (() => {
+        const form = document.getElementById("contactFormLive");
+        const submitButton = document.getElementById("contactSubmitButton");
+        const statusNode = document.getElementById("contactStatus");
+
+        if (!form || !submitButton || !statusNode) return;
+
+        const setStatus = (message, tone = "default") => {
+          statusNode.textContent = message;
+          statusNode.classList.remove("is-error", "is-success");
+
+          if (tone === "error") {
+            statusNode.classList.add("is-error");
+          }
+
+          if (tone === "success") {
+            statusNode.classList.add("is-success");
+          }
+        };
+
+        const setSubmitting = (isSubmitting) => {
+          submitButton.disabled = isSubmitting;
+          form.classList.toggle("is-submitting", isSubmitting);
+          submitButton.textContent = isSubmitting
+            ? "Sending..."
+            : "Send Message";
+        };
+
+        const validateForm = (data) => {
+          const name = String(data.get("name") || "").trim();
+          const email = String(data.get("email") || "").trim();
+          const message = String(data.get("message") || "").trim();
+
+          if (!name || !email || !message) {
+            return "Please complete your name, email, and message.";
+          }
+
+          const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+          if (!emailValid) {
+            return "Please enter a valid email address.";
+          }
+
+          return "";
+        };
+
+        form.addEventListener(
+          "submit",
+          async (event) => {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            const formData = new FormData(form);
+            const validationError = validateForm(formData);
+
+            if (validationError) {
+              setStatus(validationError, "error");
+              return;
+            }
+
+            const payload = Object.fromEntries(formData.entries());
+
+            setSubmitting(true);
+            setStatus("Sending your message...");
+
+            try {
+              const response = await fetch(form.action, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+              });
+
+              const result = await response.json().catch(() => ({}));
+
+              if (!response.ok || !result.success) {
+                throw new Error(
+                  result.message ||
+                    "We couldn't send your message right now."
+                );
+              }
+
+              setStatus(
+                "Your message has been sent successfully. We’ll follow up as soon as possible.",
+                "success"
+              );
+
+              form.reset();
+              setSubmitting(false);
+            } catch (error) {
+              setStatus(
+                error.message ||
+                  "Something went wrong while sending your message.",
+                "error"
+              );
+              setSubmitting(false);
+            }
+          },
+          true
+        );
+      })();
+    </script>
   </body>
 </html>

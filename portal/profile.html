@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <title>Profile | Card Leo Rewards</title>
+
+    <meta
+      name="description"
+      content="Manage your Card Leo Rewards member profile, account details, contact information, and membership overview."
+    />
+    <meta
+      name="keywords"
+      content="Card Leo Rewards, member profile, account details, premium membership, rewards profile"
+    />
+    <meta name="theme-color" content="#0b1020" />
+
+    <meta property="og:title" content="Card Leo Rewards | Profile" />
+    <meta
+      property="og:description"
+      content="View and manage your Card Leo Rewards premium member profile."
+    />
+    <meta property="og:type" content="website" />
+
+    <style>
+      :root {
+        --bg: #07101d;
+        --bg-soft: #0d1728;
+        --bg-deep: #040913;
+        --panel: rgba(10, 19, 35, 0.82);
+        --panel-strong: rgba(8, 15, 28, 0.92);
+        --panel-soft: rgba(255, 255, 255, 0.04);
+        --line: rgba(255, 255, 255, 0.08);
+        --line-strong: rgba(255, 255, 255, 0.14);
+
+        --text: #f5f7fb;
+        --muted: #a5b1c5;
+        --muted-2: #7e8aa3;
+
+        --gold: #d7b36a;
+        --gold-strong: #f1d08d;
+        --gold-deep: #8b6a2d;
+
+        --green: #15d18f;
+        --green-soft: rgba(21, 209, 143, 0.14);
+        --amber-soft: rgba(215, 179, 106, 0.14);
+        --danger: #ff6f7d;
+        --danger-soft: rgba(255, 111, 125, 0.14);
+
+        --shadow-xl: 0 30px 80px rgba(0, 0, 0, 0.45);
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.28);
+        --radius-xl: 30px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+        --container: 1280px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(215, 179, 106, 0.12), transparent 28%),
+          radial-gradient(circle at 85% 18%, rgba(21, 209, 143, 0.08), transparent 22%),
+          linear-gradient(180deg, #07101d 0%, #060d18 52%, #040913 100%);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      .page-shell {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
+      .ambient {
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+
+      .ambient::before,
+      .ambient::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        filter: blur(70px);
+        opacity: 0.58;
+      }
+
+      .ambient::before {
+        width: 320px;
+        height: 320px;
+        background: rgba(215, 179, 106, 0.14);
+        top: -70px;
+        left: -60px;
+      }
+
+      .ambient::after {
+        width: 280px;
+        height: 280px;
+        background: rgba(21, 209, 143, 0.12);
+        right: -40px;
+        top: 160px;
+      }
+
+      .grid-overlay {
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 38px 38px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent 86%);
+        opacity: 0.35;
+      }
+
+      .container {
+        width: min(var(--container), calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        backdrop-filter: blur(18px);
+        background: rgba(6, 13, 24, 0.72);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        min-height: 82px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(135deg, rgba(215, 179, 106, 0.22), rgba(21, 209, 143, 0.08)),
+          rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        color: var(--gold-strong);
+        font-size: 1rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+
+      .brand-copy small {
+        display: block;
+        color: var(--gold);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.7rem;
+        margin-bottom: 4px;
+      }
+
+      .brand-copy strong {
+        display: block;
+        font-size: 1rem;
+        font-weight: 700;
+      }
+
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .pill,
+      .btn,
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        transition: 0.25s ease;
+        white-space: nowrap;
+      }
+
+      .pill {
+        min-height: 40px;
+        padding: 0 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .pill:hover,
+      .pill.active {
+        color: var(--text);
+        border-color: rgba(255, 255, 255, 0.14);
+      }
+
+      .btn {
+        min-height: 48px;
+        padding: 0 18px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f1d08d 0%, #c79c52 100%);
+        color: #1a1307;
+        box-shadow: 0 14px 40px rgba(199, 156, 82, 0.24);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 46px rgba(199, 156, 82, 0.28);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.045);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+
+      .btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .status-pill {
+        min-height: 34px;
+        padding: 0 12px;
+        background: var(--green-soft);
+        border-color: rgba(21, 209, 143, 0.22);
+        color: #8ff0c9;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .status-pill.pending {
+        background: var(--amber-soft);
+        border-color: rgba(215, 179, 106, 0.25);
+        color: #f3d8a0;
+      }
+
+      .status-pill.error {
+        background: var(--danger-soft);
+        border-color: rgba(255, 111, 125, 0.24);
+        color: #ffb4bc;
+      }
+
+      .portal-layout {
+        position: relative;
+        z-index: 2;
+        padding: 34px 0 70px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.2fr 0.88fr;
+        gap: 22px;
+        align-items: stretch;
+        margin-bottom: 22px;
+      }
+
+      .glass-card {
+        position: relative;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+          var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+      }
+
+      .glass-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.06),
+          transparent 30%,
+          transparent 65%,
+          rgba(255, 255, 255, 0.04)
+        );
+      }
+
+      .hero-main {
+        padding: 34px;
+        min-height: 295px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        color: var(--gold);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.72rem;
+        font-weight: 800;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 30px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--gold), transparent);
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(1.9rem, 4vw, 3.2rem);
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+
+      .hero-text {
+        max-width: 720px;
+        color: var(--muted);
+        font-size: 1.02rem;
+        line-height: 1.75;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 26px;
+      }
+
+      .hero-side {
+        padding: 26px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .member-block {
+        padding: 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .member-name {
+        margin: 8px 0 8px;
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .member-email {
+        color: var(--muted);
+        font-size: 0.96rem;
+        word-break: break-word;
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .meta-item {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .meta-item span {
+        display: block;
+        color: var(--muted-2);
+        font-size: 0.78rem;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .meta-item strong {
+        display: block;
+        font-size: 0.96rem;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 22px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 22px;
+      }
+
+      .section-card {
+        padding: 28px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .section-head h2,
+      .section-head h3 {
+        margin: 0 0 8px;
+        font-size: 1.2rem;
+        letter-spacing: -0.03em;
+      }
+
+      .section-head p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .profile-form {
+        display: grid;
+        gap: 18px;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        color: var(--muted-2);
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      .field input,
+      .field textarea,
+      .field select {
+        width: 100%;
+        min-height: 54px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        outline: none;
+        transition: 0.2s ease;
+      }
+
+      .field textarea {
+        min-height: 140px;
+        resize: vertical;
+      }
+
+      .field input::placeholder,
+      .field textarea::placeholder {
+        color: #93a0b7;
+      }
+
+      .field input:focus,
+      .field textarea:focus,
+      .field select:focus {
+        border-color: rgba(215, 179, 106, 0.4);
+        box-shadow: 0 0 0 4px rgba(215, 179, 106, 0.08);
+      }
+
+      .readonly-note {
+        margin-top: -2px;
+        color: var(--muted-2);
+        font-size: 0.88rem;
+        line-height: 1.6;
+      }
+
+      .form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 4px;
+      }
+
+      .message {
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .message.success {
+        background: rgba(21, 209, 143, 0.1);
+        border-color: rgba(21, 209, 143, 0.18);
+        color: #9ff2d1;
+      }
+
+      .message.error {
+        background: rgba(255, 111, 125, 0.1);
+        border-color: rgba(255, 111, 125, 0.18);
+        color: #ffc4cb;
+      }
+
+      .info-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .info-card {
+        padding: 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      .info-card strong {
+        display: block;
+        font-size: 1rem;
+        margin-bottom: 8px;
+      }
+
+      .info-card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .support-box {
+        display: grid;
+        gap: 14px;
+      }
+
+      .support-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .support-row:last-child {
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+
+      .support-row span {
+        display: block;
+        color: var(--muted-2);
+        font-size: 0.78rem;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .support-row strong,
+      .support-row a {
+        color: var(--text);
+        font-size: 0.98rem;
+        font-weight: 700;
+      }
+
+      .footer-note {
+        margin-top: 22px;
+        text-align: center;
+        color: var(--muted-2);
+        font-size: 0.86rem;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 1120px) {
+        .hero,
+        .content-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .topbar-inner {
+          min-height: auto;
+          padding: 14px 0;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .hero-main,
+        .hero-side,
+        .section-card {
+          padding: 22px;
+        }
+
+        .field-grid,
+        .meta-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-actions,
+        .topbar-actions,
+        .form-actions {
+          width: 100%;
+        }
+
+        .btn,
+        .pill {
+          width: 100%;
+        }
+
+        .support-row {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="ambient"></div>
+      <div class="grid-overlay"></div>
+
+      <header class="topbar">
+        <div class="container topbar-inner">
+          <a class="brand" href="../index.html" aria-label="Card Leo Rewards Home">
+            <div class="brand-mark">CL</div>
+            <div class="brand-copy">
+              <small>Premium Member Access</small>
+              <strong>Card Leo Rewards</strong>
+            </div>
+          </a>
+
+          <div class="topbar-actions">
+            <a class="pill" href="index.html">Dashboard</a>
+            <a class="pill active" href="profile.html">Profile</a>
+            <a class="pill" href="rewards.html">Rewards</a>
+            <a class="pill" href="support.html">Support</a>
+            <button class="btn btn-secondary" id="logoutButton" type="button">
+              Log Out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="portal-layout">
+        <div class="container">
+          <section class="hero">
+            <div class="glass-card hero-main">
+              <div>
+                <div class="eyebrow">Member Profile</div>
+                <div class="status-pill" id="heroStatusBadge">Loading profile</div>
+
+                <h1 id="heroHeading">Your account details.</h1>
+
+                <p class="hero-text" id="heroDescription">
+                  Review the information tied to your Card Leo Rewards account and
+                  keep your member profile polished and up to date.
+                </p>
+
+                <div class="hero-actions">
+                  <a class="btn btn-primary" href="index.html">Back to Dashboard</a>
+                  <a class="btn btn-secondary" href="support.html">Need Help</a>
+                </div>
+              </div>
+            </div>
+
+            <aside class="glass-card hero-side">
+              <div class="member-block">
+                <div class="status-pill" id="memberStatusBadge">Loading</div>
+                <div class="member-name" id="memberName">Card Leo Member</div>
+                <div class="member-email" id="memberEmail">Loading account data...</div>
+              </div>
+
+              <div class="meta-grid">
+                <div class="meta-item">
+                  <span>Member Status</span>
+                  <strong id="metaStatus">Loading</strong>
+                </div>
+                <div class="meta-item">
+                  <span>Portal Access</span>
+                  <strong id="metaAccess">Checking</strong>
+                </div>
+                <div class="meta-item">
+                  <span>Member Since</span>
+                  <strong id="metaCreated">—</strong>
+                </div>
+                <div class="meta-item">
+                  <span>Location</span>
+                  <strong id="metaLocation">—</strong>
+                </div>
+              </div>
+            </aside>
+          </section>
+
+          <section class="content-grid">
+            <div class="stack">
+              <div class="glass-card section-card">
+                <div class="section-head">
+                  <div>
+                    <h2>Profile Information</h2>
+                    <p>
+                      Update the core details associated with your Card Leo Rewards
+                      account. This keeps your member record accurate and current.
+                    </p>
+                  </div>
+                </div>
+
+                <div id="profileMessage" class="message hidden"></div>
+
+                <form class="profile-form" id="profileForm" novalidate>
+                  <div class="field-grid">
+                    <div class="field">
+                      <label for="firstName">First Name</label>
+                      <input
+                        id="firstName"
+                        name="firstName"
+                        type="text"
+                        placeholder="Enter your first name"
+                        autocomplete="given-name"
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label for="lastName">Last Name</label>
+                      <input
+                        id="lastName"
+                        name="lastName"
+                        type="text"
+                        placeholder="Enter your last name"
+                        autocomplete="family-name"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="field-grid">
+                    <div class="field">
+                      <label for="email">Email Address</label>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        autocomplete="email"
+                        readonly
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label for="phone">Phone Number</label>
+                      <input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        placeholder="Enter your phone number"
+                        autocomplete="tel"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="readonly-note">
+                    Your email is shown as a protected account identifier. Contact
+                    support if you need it changed.
+                  </div>
+
+                  <div class="field-grid">
+                    <div class="field">
+                      <label for="city">City</label>
+                      <input
+                        id="city"
+                        name="city"
+                        type="text"
+                        placeholder="Enter your city"
+                        autocomplete="address-level2"
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label for="state">State</label>
+                      <input
+                        id="state"
+                        name="state"
+                        type="text"
+                        placeholder="Enter your state"
+                        autocomplete="address-level1"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="field-grid">
+                    <div class="field">
+                      <label for="referralName">Referral Name</label>
+                      <input
+                        id="referralName"
+                        name="referralName"
+                        type="text"
+                        placeholder="Who referred you?"
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label for="interest">Primary Interest</label>
+                      <input
+                        id="interest"
+                        name="interest"
+                        type="text"
+                        placeholder="Membership interest"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label for="goals">Goals</label>
+                    <textarea
+                      id="goals"
+                      name="goals"
+                      placeholder="Tell us about your goals or what you want most from Card Leo Rewards"
+                    ></textarea>
+                  </div>
+
+                  <div class="form-actions">
+                    <button class="btn btn-primary" id="saveButton" type="submit">
+                      Save Profile
+                    </button>
+                    <button class="btn btn-secondary" id="resetButton" type="button">
+                      Reset Changes
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <aside class="stack">
+              <div class="glass-card section-card">
+                <div class="section-head">
+                  <div>
+                    <h3>Account Overview</h3>
+                    <p>
+                      High-level visibility into the standing of your Card Leo
+                      Rewards membership.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="info-grid">
+                  <div class="info-card">
+                    <strong>Status</strong>
+                    <p id="overviewStatus">
+                      Your current membership status will appear here.
+                    </p>
+                  </div>
+
+                  <div class="info-card">
+                    <strong>Portal Access</strong>
+                    <p id="overviewAccess">
+                      Your account access details will appear here.
+                    </p>
+                  </div>
+
+                  <div class="info-card">
+                    <strong>Profile Completion</strong>
+                    <p id="overviewCompletion">
+                      We’ll estimate how complete your profile is based on the
+                      information provided.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="glass-card section-card">
+                <div class="section-head">
+                  <div>
+                    <h3>Support Details</h3>
+                    <p>
+                      Reach our team if you need help with account updates or access.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="support-box">
+                  <div class="support-row">
+                    <div>
+                      <span>Email</span>
+                      <a id="supportEmail" href="mailto:support@cardleorewards.com">
+                        support@cardleorewards.com
+                      </a>
+                    </div>
+                  </div>
+
+                  <div class="support-row">
+                    <div>
+                      <span>Phone</span>
+                      <strong id="supportPhone">Not listed</strong>
+                    </div>
+                  </div>
+
+                  <div class="support-row">
+                    <div>
+                      <span>Hours</span>
+                      <strong id="supportHours">Mon–Fri, 9:00 AM – 5:00 PM</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="margin-top: 18px;">
+                  <a class="btn btn-secondary" href="support.html" style="width: 100%;">
+                    Open Member Support
+                  </a>
+                </div>
+              </div>
+
+              <div class="glass-card section-card">
+                <div class="section-head">
+                  <div>
+                    <h3>Next Best Steps</h3>
+                    <p>
+                      Keep your membership profile strong and ready for premium access.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="info-grid">
+                  <div class="info-card">
+                    <strong>Review Rewards</strong>
+                    <p>
+                      See the current member benefit landscape and premium access
+                      opportunities.
+                    </p>
+                  </div>
+
+                  <div class="info-card">
+                    <strong>Keep Contact Info Fresh</strong>
+                    <p>
+                      Make sure your phone, city, state, and goals are always up to date.
+                    </p>
+                  </div>
+
+                  <div class="info-card">
+                    <strong>Reach Support When Needed</strong>
+                    <p>
+                      If your account needs manual review, our support channel is the
+                      fastest path forward.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </section>
+
+          <div class="footer-note">
+            Card Leo Rewards Member Portal · Profile Management
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const els = {
+        heroHeading: document.getElementById("heroHeading"),
+        heroDescription: document.getElementById("heroDescription"),
+        heroStatusBadge: document.getElementById("heroStatusBadge"),
+
+        memberName: document.getElementById("memberName"),
+        memberEmail: document.getElementById("memberEmail"),
+        memberStatusBadge: document.getElementById("memberStatusBadge"),
+
+        metaStatus: document.getElementById("metaStatus"),
+        metaAccess: document.getElementById("metaAccess"),
+        metaCreated: document.getElementById("metaCreated"),
+        metaLocation: document.getElementById("metaLocation"),
+
+        profileForm: document.getElementById("profileForm"),
+        profileMessage: document.getElementById("profileMessage"),
+        saveButton: document.getElementById("saveButton"),
+        resetButton: document.getElementById("resetButton"),
+        logoutButton: document.getElementById("logoutButton"),
+
+        firstName: document.getElementById("firstName"),
+        lastName: document.getElementById("lastName"),
+        email: document.getElementById("email"),
+        phone: document.getElementById("phone"),
+        city: document.getElementById("city"),
+        state: document.getElementById("state"),
+        referralName: document.getElementById("referralName"),
+        interest: document.getElementById("interest"),
+        goals: document.getElementById("goals"),
+
+        overviewStatus: document.getElementById("overviewStatus"),
+        overviewAccess: document.getElementById("overviewAccess"),
+        overviewCompletion: document.getElementById("overviewCompletion"),
+
+        supportEmail: document.getElementById("supportEmail"),
+        supportPhone: document.getElementById("supportPhone"),
+        supportHours: document.getElementById("supportHours"),
+      };
+
+      let initialProfileState = null;
+
+      function normalizeText(value, fallback = "") {
+        const text = String(value ?? "").trim();
+        return text || fallback;
+      }
+
+      function formatDate(value) {
+        if (!value) return "—";
+
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "—";
+
+        return new Intl.DateTimeFormat("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }).format(date);
+      }
+
+      function getStatusClass(statusLabel) {
+        const value = normalizeText(statusLabel).toLowerCase();
+
+        if (
+          value.includes("pending") ||
+          value.includes("review") ||
+          value.includes("submitted")
+        ) {
+          return "pending";
+        }
+
+        if (
+          value.includes("declined") ||
+          value.includes("suspended") ||
+          value.includes("error")
+        ) {
+          return "error";
+        }
+
+        return "";
+      }
+
+      function setStatusBadge(element, label) {
+        const cleanLabel = normalizeText(label, "Unknown");
+        element.textContent = cleanLabel;
+        element.className = "status-pill";
+        const extraClass = getStatusClass(cleanLabel);
+        if (extraClass) {
+          element.classList.add(extraClass);
+        }
+      }
+
+      function getLocationText(member) {
+        const city = normalizeText(member?.city);
+        const state = normalizeText(member?.state);
+
+        if (city && state) return `${city}, ${state}`;
+        if (city) return city;
+        if (state) return state;
+        return "Not provided";
+      }
+
+      function calculateCompletion(member) {
+        const fields = [
+          normalizeText(member?.firstName),
+          normalizeText(member?.lastName),
+          normalizeText(member?.email),
+          normalizeText(member?.phone),
+          normalizeText(member?.city),
+          normalizeText(member?.state),
+          normalizeText(member?.referralName),
+          normalizeText(member?.interest),
+          normalizeText(member?.goals),
+        ];
+
+        const completed = fields.filter(Boolean).length;
+        return Math.round((completed / fields.length) * 100);
+      }
+
+      function showMessage(text, type = "") {
+        const cleanText = normalizeText(text);
+
+        if (!cleanText) {
+          els.profileMessage.className = "message hidden";
+          els.profileMessage.textContent = "";
+          return;
+        }
+
+        els.profileMessage.textContent = cleanText;
+        els.profileMessage.className = `message ${type}`.trim();
+      }
+
+      function setLoadingState(isLoading) {
+        els.saveButton.disabled = isLoading;
+        els.resetButton.disabled = isLoading;
+
+        els.saveButton.textContent = isLoading ? "Saving..." : "Save Profile";
+      }
+
+      function getFormData() {
+        return {
+          firstName: normalizeText(els.firstName.value),
+          lastName: normalizeText(els.lastName.value),
+          email: normalizeText(els.email.value).toLowerCase(),
+          phone: normalizeText(els.phone.value),
+          city: normalizeText(els.city.value),
+          state: normalizeText(els.state.value),
+          referralName: normalizeText(els.referralName.value),
+          interest: normalizeText(els.interest.value),
+          goals: normalizeText(els.goals.value),
+        };
+      }
+
+      function populateForm(member) {
+        const formState = {
+          firstName: normalizeText(member?.firstName),
+          lastName: normalizeText(member?.lastName),
+          email: normalizeText(member?.email).toLowerCase(),
+          phone: normalizeText(member?.phone),
+          city: normalizeText(member?.city),
+          state: normalizeText(member?.state),
+          referralName: normalizeText(member?.referralName),
+          interest: normalizeText(member?.interest),
+          goals: normalizeText(member?.goals),
+        };
+
+        els.firstName.value = formState.firstName;
+        els.lastName.value = formState.lastName;
+        els.email.value = formState.email;
+        els.phone.value = formState.phone;
+        els.city.value = formState.city;
+        els.state.value = formState.state;
+        els.referralName.value = formState.referralName;
+        els.interest.value = formState.interest;
+        els.goals.value = formState.goals;
+
+        initialProfileState = { ...formState };
+      }
+
+      function resetFormToInitialState() {
+        if (!initialProfileState) return;
+
+        els.firstName.value = initialProfileState.firstName;
+        els.lastName.value = initialProfileState.lastName;
+        els.email.value = initialProfileState.email;
+        els.phone.value = initialProfileState.phone;
+        els.city.value = initialProfileState.city;
+        els.state.value = initialProfileState.state;
+        els.referralName.value = initialProfileState.referralName;
+        els.interest.value = initialProfileState.interest;
+        els.goals.value = initialProfileState.goals;
+
+        showMessage("");
+      }
+
+      function renderSupport(support) {
+        const email = normalizeText(support?.email, "support@cardleorewards.com");
+        const phone = normalizeText(support?.phone, "Not listed");
+        const hours = normalizeText(support?.hours, "Mon–Fri, 9:00 AM – 5:00 PM");
+
+        els.supportEmail.textContent = email;
+        els.supportEmail.href = `mailto:${email}`;
+        els.supportPhone.textContent = phone;
+        els.supportHours.textContent = hours;
+      }
+
+      function renderMember(member, support = {}) {
+        const fullName =
+          normalizeText(member?.fullName) ||
+          [member?.firstName, member?.lastName].filter(Boolean).join(" ").trim() ||
+          "Valued Member";
+
+        const email = normalizeText(member?.email, "No email available");
+        const statusLabel = normalizeText(member?.statusLabel, "Submitted");
+        const portalAccess = Boolean(member?.portalAccess);
+        const completion = calculateCompletion(member);
+
+        els.heroHeading.textContent = `Profile for ${fullName}.`;
+        els.heroDescription.textContent = portalAccess
+          ? "Your premium member account is active. Review and refine your information to keep your Card Leo Rewards profile strong."
+          : "Your account is still in progress. Keeping your profile complete helps your Card Leo Rewards experience stay polished and ready.";
+
+        setStatusBadge(els.heroStatusBadge, statusLabel);
+        setStatusBadge(els.memberStatusBadge, statusLabel);
+
+        els.memberName.textContent = fullName;
+        els.memberEmail.textContent = email;
+
+        els.metaStatus.textContent = statusLabel;
+        els.metaAccess.textContent = portalAccess ? "Enabled" : "Pending";
+        els.metaCreated.textContent = formatDate(member?.createdAt);
+        els.metaLocation.textContent = getLocationText(member);
+
+        els.overviewStatus.textContent = `Your current account status is ${statusLabel}.`;
+        els.overviewAccess.textContent = portalAccess
+          ? "Your premium portal access is enabled and ready to use."
+          : "Your premium portal access is still pending review or approval.";
+        els.overviewCompletion.textContent = `Your profile is approximately ${completion}% complete based on the details currently on file.`;
+
+        populateForm(member);
+        renderSupport(support);
+      }
+
+      function renderFallbackState(title, description, isError = false) {
+        els.heroHeading.textContent = title;
+        els.heroDescription.textContent = description;
+
+        const badgeText = isError ? "Access issue" : "Profile pending";
+        setStatusBadge(els.heroStatusBadge, badgeText);
+        setStatusBadge(els.memberStatusBadge, badgeText);
+
+        if (isError) {
+          els.heroStatusBadge.classList.add("error");
+          els.memberStatusBadge.classList.add("error");
+        } else {
+          els.heroStatusBadge.classList.add("pending");
+          els.memberStatusBadge.classList.add("pending");
+        }
+
+        els.memberName.textContent = "Card Leo Rewards";
+        els.memberEmail.textContent = "Please review your access.";
+
+        els.metaStatus.textContent = isError ? "Unavailable" : "Pending";
+        els.metaAccess.textContent = isError ? "Restricted" : "Pending";
+        els.metaCreated.textContent = "—";
+        els.metaLocation.textContent = "—";
+
+        els.overviewStatus.textContent = description;
+        els.overviewAccess.textContent = description;
+        els.overviewCompletion.textContent =
+          "Your completion score will appear after your profile loads.";
+      }
+
+      async function loadProfile() {
+        try {
+          const response = await fetch("../api/portal/profile", {
+            method: "GET",
+            credentials: "same-origin",
+            headers: {
+              Accept: "application/json",
+            },
+          });
+
+          const payload = await response.json().catch(() => ({}));
+
+          if (response.status === 401) {
+            window.location.href = "../login.html";
+            return;
+          }
+
+          if (!response.ok) {
+            throw new Error(payload?.message || "Unable to load profile.");
+          }
+
+          const member = payload?.member || payload?.profile || payload?.data || null;
+          const support = payload?.support || payload?.overview?.support || {};
+
+          if (!member) {
+            renderFallbackState(
+              "We could not locate your member profile.",
+              "Please log in again or contact support if this issue continues.",
+              true
+            );
+            return;
+          }
+
+          renderMember(member, support);
+        } catch (error) {
+          console.error("Profile load error:", error);
+          renderFallbackState(
+            "We couldn’t load your profile right now.",
+            "Please refresh the page or contact support if the issue continues.",
+            true
+          );
+        }
+      }
+
+      async function saveProfile(event) {
+        event.preventDefault();
+        showMessage("");
+
+        const formData = getFormData();
+
+        if (!formData.firstName) {
+          showMessage("Please enter your first name.", "error");
+          els.firstName.focus();
+          return;
+        }
+
+        if (!formData.lastName) {
+          showMessage("Please enter your last name.", "error");
+          els.lastName.focus();
+          return;
+        }
+
+        if (!formData.email) {
+          showMessage("Your account email is missing. Please log in again.", "error");
+          return;
+        }
+
+        setLoadingState(true);
+
+        try {
+          const response = await fetch("../api/portal/update-profile", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(formData),
+          });
+
+          const payload = await response.json().catch(() => ({}));
+
+          if (response.status === 401) {
+            window.location.href = "../login.html";
+            return;
+          }
+
+          if (!response.ok) {
+            throw new Error(payload?.message || "Unable to save your profile.");
+          }
+
+          const member = payload?.member || payload?.profile || null;
+          const support = payload?.support || {};
+
+          if (member) {
+            renderMember(member, support);
+          }
+
+          showMessage(
+            payload?.message || "Your Card Leo Rewards profile was updated successfully.",
+            "success"
+          );
+        } catch (error) {
+          console.error("Profile save error:", error);
+          showMessage(
+            error?.message || "We could not save your profile right now.",
+            "error"
+          );
+        } finally {
+          setLoadingState(false);
+        }
+      }
+
+      async function handleLogout() {
+        const originalLabel = els.logoutButton.textContent;
+        els.logoutButton.disabled = true;
+        els.logoutButton.textContent = "Logging out...";
+
+        try {
+          const response = await fetch("../api/auth/logout", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+              Accept: "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Logout failed.");
+          }
+
+          window.location.href = "../login.html";
+        } catch (error) {
+          console.error("Logout error:", error);
+          els.logoutButton.disabled = false;
+          els.logoutButton.textContent = originalLabel;
+          alert("We couldn't log you out right now. Please try again.");
+        }
+      }
+
+      els.profileForm.addEventListener("submit", saveProfile);
+      els.resetButton.addEventListener("click", resetFormToInitialState);
+      els.logoutButton.addEventListener("click", handleLogout);
+
+      loadProfile();
+    </script>
+  </body>
+</html>

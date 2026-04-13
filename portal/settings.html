@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Card Leo Rewards | Settings</title>
+    <meta
+      name="description"
+      content="Manage your Card Leo Rewards account settings, notifications, privacy controls, and security preferences."
+    />
+    <style>
+      :root {
+        --bg: #060606;
+        --bg-soft: #111111;
+        --panel: rgba(18, 18, 18, 0.92);
+        --panel-2: rgba(255, 255, 255, 0.04);
+        --panel-3: rgba(255, 255, 255, 0.06);
+        --line: rgba(255, 255, 255, 0.08);
+        --line-strong: rgba(255, 215, 128, 0.26);
+        --text: #f8f5ee;
+        --muted: #b6ab96;
+        --gold: #d8b36a;
+        --gold-2: #f2d58d;
+        --danger: #ff7b7b;
+        --success: #74d89b;
+        --shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+        --max: 1450px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(216, 179, 106, 0.1), transparent 28%),
+          radial-gradient(circle at top right, rgba(255, 255, 255, 0.04), transparent 22%),
+          linear-gradient(180deg, #040404 0%, #080808 100%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .shell {
+        width: min(var(--max), calc(100% - 32px));
+        margin: 24px auto 40px;
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr);
+        gap: 24px;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 24px;
+        align-self: start;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.025)
+        );
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        padding: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(20px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 20px;
+      }
+
+      .brand-mark {
+        width: 54px;
+        height: 54px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: #111;
+        background: linear-gradient(135deg, var(--gold-2), var(--gold));
+        box-shadow: 0 10px 30px rgba(216, 179, 106, 0.24);
+      }
+
+      .brand-copy small {
+        display: block;
+        color: var(--muted);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        margin-bottom: 5px;
+      }
+
+      .brand-copy strong {
+        display: block;
+        font-size: 1.05rem;
+      }
+
+      .member-card {
+        background: linear-gradient(
+          180deg,
+          rgba(216, 179, 106, 0.15),
+          rgba(255, 255, 255, 0.03)
+        );
+        border: 1px solid var(--line-strong);
+        border-radius: 22px;
+        padding: 18px;
+        margin-bottom: 22px;
+      }
+
+      .member-card .label {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 0.72rem;
+        margin-bottom: 8px;
+      }
+
+      .member-name {
+        font-size: 1.08rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .member-sub {
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .member-tier {
+        margin-top: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 215, 128, 0.22);
+        background: rgba(255, 215, 128, 0.08);
+        color: var(--gold-2);
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      .nav {
+        display: grid;
+        gap: 10px;
+      }
+
+      .nav a {
+        padding: 14px 16px;
+        border-radius: 16px;
+        color: #ddd4c7;
+        border: 1px solid transparent;
+        background: transparent;
+        transition: 0.22s ease;
+      }
+
+      .nav a:hover,
+      .nav a.active {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 215, 128, 0.18);
+        color: var(--text);
+      }
+
+      .nav a.active {
+        box-shadow: inset 0 0 0 1px rgba(255, 215, 128, 0.08);
+      }
+
+      .sidebar-actions {
+        margin-top: 22px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .btn {
+        border: 0;
+        border-radius: 16px;
+        padding: 14px 16px;
+        cursor: pointer;
+        transition: 0.22s ease;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--gold-2), var(--gold));
+        color: #16120c;
+        font-weight: 800;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 30px rgba(216, 179, 106, 0.18);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        border: 1px solid var(--line);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .btn-danger {
+        background: rgba(255, 123, 123, 0.08);
+        color: #ffd5d5;
+        border: 1px solid rgba(255, 123, 123, 0.18);
+      }
+
+      .btn-danger:hover {
+        background: rgba(255, 123, 123, 0.12);
+      }
+
+      .content {
+        display: grid;
+        gap: 22px;
+      }
+
+      .hero {
+        background:
+          radial-gradient(circle at top right, rgba(216, 179, 106, 0.12), transparent 28%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        padding: 30px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 13px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 215, 128, 0.18);
+        background: rgba(255, 215, 128, 0.08);
+        color: var(--gold-2);
+        font-size: 0.78rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+
+      .hero h1 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 4vw, 3.25rem);
+        line-height: 1.04;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 760px;
+        font-size: 1.02rem;
+        line-height: 1.7;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 22px;
+      }
+
+      .card {
+        grid-column: span 12;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.045),
+          rgba(255, 255, 255, 0.02)
+        );
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow);
+      }
+
+      .span-7 {
+        grid-column: span 7;
+      }
+
+      .span-5 {
+        grid-column: span 5;
+      }
+
+      .span-6 {
+        grid-column: span 6;
+      }
+
+      .card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+
+      .card-head h2 {
+        margin: 0 0 6px;
+        font-size: 1.25rem;
+      }
+
+      .card-head p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.95rem;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        border: 1px solid var(--line);
+        font-size: 0.82rem;
+        white-space: nowrap;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      label {
+        color: #eadfcf;
+        font-weight: 600;
+        font-size: 0.93rem;
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.55;
+      }
+
+      input,
+      select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 14px 15px;
+        outline: none;
+        transition: border-color 0.2s ease, background 0.2s ease;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: rgba(255, 215, 128, 0.34);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      input[readonly] {
+        color: #cbbda9;
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .toggle-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 16px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--line);
+      }
+
+      .toggle-copy strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .toggle-copy span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.6;
+      }
+
+      .switch {
+        position: relative;
+        width: 58px;
+        height: 34px;
+        flex: 0 0 auto;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+      }
+
+      .slider {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        transition: 0.24s ease;
+        cursor: pointer;
+      }
+
+      .slider::before {
+        content: "";
+        position: absolute;
+        width: 26px;
+        height: 26px;
+        left: 3px;
+        top: 3px;
+        border-radius: 50%;
+        background: #fff6e5;
+        transition: 0.24s ease;
+      }
+
+      .switch input:checked + .slider {
+        background: linear-gradient(135deg, var(--gold-2), var(--gold));
+      }
+
+      .switch input:checked + .slider::before {
+        transform: translateX(24px);
+        background: #111;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .stat-boxes {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .stat {
+        padding: 18px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .stat small {
+        display: block;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        margin-bottom: 10px;
+        font-size: 0.72rem;
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 1.1rem;
+      }
+
+      .session-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .session {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+        padding: 16px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .session strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .session span {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .session.current {
+        border-color: rgba(116, 216, 155, 0.25);
+      }
+
+      .mini-btn {
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        border-radius: 12px;
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+
+      .mini-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .notice {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        border-radius: 16px;
+        padding: 14px 16px;
+        margin-top: 18px;
+        border: 1px solid transparent;
+        font-size: 0.95rem;
+      }
+
+      .notice.show {
+        display: flex;
+      }
+
+      .notice.success {
+        background: rgba(116, 216, 155, 0.08);
+        border-color: rgba(116, 216, 155, 0.18);
+        color: #d5ffe3;
+      }
+
+      .notice.error {
+        background: rgba(255, 123, 123, 0.08);
+        border-color: rgba(255, 123, 123, 0.18);
+        color: #ffdada;
+      }
+
+      .footer-note {
+        color: var(--muted);
+        font-size: 0.88rem;
+        line-height: 1.7;
+      }
+
+      @media (max-width: 1180px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: relative;
+          top: auto;
+        }
+
+        .span-7,
+        .span-5,
+        .span-6 {
+          grid-column: span 12;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .shell {
+          width: min(100% - 20px, var(--max));
+          margin-top: 10px;
+        }
+
+        .sidebar,
+        .hero,
+        .card {
+          padding: 18px;
+          border-radius: 22px;
+        }
+
+        .form-grid,
+        .stat-boxes {
+          grid-template-columns: 1fr;
+        }
+
+        .hero h1 {
+          font-size: 2rem;
+        }
+
+        .toggle-row,
+        .session {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">CL</div>
+          <div class="brand-copy">
+            <small>Member Portal</small>
+            <strong>Card Leo Rewards</strong>
+          </div>
+        </div>
+
+        <div class="member-card">
+          <div class="label">Account Status</div>
+          <div class="member-name" id="memberName">Loading member...</div>
+          <div class="member-sub" id="memberEmail">Secure member session</div>
+          <div class="member-tier" id="memberTier">Leo Premier Member</div>
+        </div>
+
+        <nav class="nav" aria-label="Portal navigation">
+          <a href="./index.html">Overview</a>
+          <a href="./profile.html">Profile</a>
+          <a href="./rewards.html">Rewards</a>
+          <a href="./benefits.html">Benefits</a>
+          <a href="./support.html">Support</a>
+          <a class="active" href="./settings.html">Settings</a>
+        </nav>
+
+        <div class="sidebar-actions">
+          <button class="btn btn-primary" id="saveTopBtn" type="button">
+            Save Settings
+          </button>
+          <button class="btn btn-secondary" id="refreshBtn" type="button">
+            Refresh Preferences
+          </button>
+          <button class="btn btn-danger" id="logoutBtn" type="button">
+            Log Out
+          </button>
+        </div>
+      </aside>
+
+      <main class="content">
+        <section class="hero">
+          <div class="eyebrow">Account Controls</div>
+          <h1>Settings built for a premium member experience.</h1>
+          <p>
+            Manage your profile preferences, notifications, privacy controls,
+            and security settings for your Card Leo Rewards account. Your
+            choices are designed to keep your membership experience smooth,
+            secure, and personalized.
+          </p>
+        </section>
+
+        <section class="grid">
+          <article class="card span-7">
+            <div class="card-head">
+              <div>
+                <h2>Account Preferences</h2>
+                <p>
+                  Review your member identity, communication preferences, and
+                  regional account settings.
+                </p>
+              </div>
+              <div class="pill">Personalization</div>
+            </div>
+
+            <form id="settingsForm">
+              <div class="form-grid">
+                <div class="field">
+                  <label for="fullName">Full Name</label>
+                  <input id="fullName" name="fullName" type="text" placeholder="Your full name" />
+                </div>
+
+                <div class="field">
+                  <label for="email">Email Address</label>
+                  <input id="email" name="email" type="email" readonly />
+                  <div class="hint">Your email is tied to your login account.</div>
+                </div>
+
+                <div class="field">
+                  <label for="phone">Phone Number</label>
+                  <input id="phone" name="phone" type="tel" placeholder="(555) 555-5555" />
+                </div>
+
+                <div class="field">
+                  <label for="memberId">Member ID</label>
+                  <input id="memberId" name="memberId" type="text" readonly />
+                </div>
+
+                <div class="field">
+                  <label for="timezone">Timezone</label>
+                  <select id="timezone" name="timezone">
+                    <option value="America/New_York">Eastern Time</option>
+                    <option value="America/Chicago">Central Time</option>
+                    <option value="America/Denver">Mountain Time</option>
+                    <option value="America/Los_Angeles">Pacific Time</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="theme">Portal Theme</label>
+                  <select id="theme" name="theme">
+                    <option value="luxury-dark">Luxury Dark</option>
+                    <option value="classic-gold">Classic Gold</option>
+                    <option value="minimal-night">Minimal Night</option>
+                  </select>
+                </div>
+
+                <div class="field full">
+                  <label for="language">Language</label>
+                  <select id="language" name="language">
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="actions">
+                <button class="btn btn-primary" type="submit">Save Preferences</button>
+                <button class="btn btn-secondary" type="button" id="resetBtn">
+                  Reset to Defaults
+                </button>
+              </div>
+            </form>
+
+            <div class="notice" id="settingsNotice"></div>
+          </article>
+
+          <article class="card span-5">
+            <div class="card-head">
+              <div>
+                <h2>Membership Snapshot</h2>
+                <p>
+                  A quick look at your account profile, status, and account health.
+                </p>
+              </div>
+              <div class="pill">Live Status</div>
+            </div>
+
+            <div class="stat-boxes">
+              <div class="stat">
+                <small>Membership Tier</small>
+                <strong id="statTier">Leo Premier</strong>
+              </div>
+              <div class="stat">
+                <small>Account Security</small>
+                <strong>Protected</strong>
+              </div>
+              <div class="stat">
+                <small>Portal Access</small>
+                <strong>Active</strong>
+              </div>
+              <div class="stat">
+                <small>Notifications</small>
+                <strong id="notifSummary">Customized</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="card span-6">
+            <div class="card-head">
+              <div>
+                <h2>Notifications</h2>
+                <p>
+                  Control how Card Leo Rewards contacts you about offers,
+                  account alerts, and member updates.
+                </p>
+              </div>
+              <div class="pill">Communications</div>
+            </div>
+
+            <div class="toggle-list">
+              <div class="toggle-row">
+                <div class="toggle-copy">
+                  <strong>Rewards &amp; offers</strong>
+                  <span>Receive new reward drops, limited perks, and special promotions.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="notifRewards" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-copy">
+                  <strong>Account alerts</strong>
+                  <span>Get important notices for account activity and updates.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="notifAlerts" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-copy">
+                  <strong>Text message updates</strong>
+                  <span>Enable SMS notices for fast account and membership updates.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="notifSms" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-copy">
+                  <strong>Partner experiences</strong>
+                  <span>Hear about premium partner offers, events, and exclusive access.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="notifPartners" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </article>
+
+          <article class="card span-6">
+            <div class="card-head">
+              <div>
+                <h2>Privacy &amp; Security</h2>
+                <p>
+                  Keep your member account protected with stronger access and privacy settings.
+                </p>
+              </div>
+              <div class="pill">Security</div>
+            </div>
+
+            <div class="toggle-list">
+              <div class="toggle-row">
+                <div class="toggle-copy">
+                  <strong>Two-step sign-in prompt</strong>
+                  <span>Add an extra confirmation step for sensitive account activity.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="security2fa" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-copy">
+                  <strong>Private profile visibility</strong>
+                  <span>Limit internal visibility of your profile and member preferences.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="privacyProfile" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-copy">
+                  <strong>Email login notifications</strong>
+                  <span>Receive a notice whenever your account is accessed from a new session.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="securityLoginAlerts" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn btn-secondary" type="button" id="passwordBtn">
+                Change Password
+              </button>
+            </div>
+          </article>
+
+          <article class="card span-12">
+            <div class="card-head">
+              <div>
+                <h2>Active Sessions</h2>
+                <p>
+                  Monitor your current sessions and keep your account secure across devices.
+                </p>
+              </div>
+              <div class="pill">Session Management</div>
+            </div>
+
+            <div class="session-list">
+              <div class="session current">
+                <div>
+                  <strong>Current Browser Session</strong>
+                  <span id="currentSessionText">Windows • Chrome • Active now</span>
+                </div>
+                <button class="mini-btn" type="button" disabled>Current</button>
+              </div>
+
+              <div class="session">
+                <div>
+                  <strong>Mobile Session</strong>
+                  <span>iPhone • Last active recently</span>
+                </div>
+                <button class="mini-btn" type="button">Sign Out</button>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn btn-danger" type="button" id="signOutAllBtn">
+                Sign Out of All Other Sessions
+              </button>
+            </div>
+
+            <p class="footer-note">
+              For higher-security environments, enable account alerts and review active
+              sessions regularly to keep your Card Leo Rewards membership protected.
+            </p>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const STORAGE_KEY = "cardleo_portal_settings_v1";
+
+      const els = {
+        memberName: document.getElementById("memberName"),
+        memberEmail: document.getElementById("memberEmail"),
+        memberTier: document.getElementById("memberTier"),
+        statTier: document.getElementById("statTier"),
+        notifSummary: document.getElementById("notifSummary"),
+        currentSessionText: document.getElementById("currentSessionText"),
+        notice: document.getElementById("settingsNotice"),
+        form: document.getElementById("settingsForm"),
+        saveTopBtn: document.getElementById("saveTopBtn"),
+        refreshBtn: document.getElementById("refreshBtn"),
+        logoutBtn: document.getElementById("logoutBtn"),
+        resetBtn: document.getElementById("resetBtn"),
+        signOutAllBtn: document.getElementById("signOutAllBtn"),
+        passwordBtn: document.getElementById("passwordBtn"),
+        fullName: document.getElementById("fullName"),
+        email: document.getElementById("email"),
+        phone: document.getElementById("phone"),
+        memberId: document.getElementById("memberId"),
+        timezone: document.getElementById("timezone"),
+        theme: document.getElementById("theme"),
+        language: document.getElementById("language"),
+        notifRewards: document.getElementById("notifRewards"),
+        notifAlerts: document.getElementById("notifAlerts"),
+        notifSms: document.getElementById("notifSms"),
+        notifPartners: document.getElementById("notifPartners"),
+        security2fa: document.getElementById("security2fa"),
+        privacyProfile: document.getElementById("privacyProfile"),
+        securityLoginAlerts: document.getElementById("securityLoginAlerts"),
+      };
+
+      function defaultSettings() {
+        return {
+          fullName: "Leo Member",
+          email: "member@cardleorewards.com",
+          phone: "",
+          memberId: "CLR-100001",
+          timezone: "America/New_York",
+          theme: "luxury-dark",
+          language: "en",
+          tier: "Leo Premier Member",
+          notifRewards: true,
+          notifAlerts: true,
+          notifSms: false,
+          notifPartners: false,
+          security2fa: true,
+          privacyProfile: true,
+          securityLoginAlerts: true,
+        };
+      }
+
+      function showNotice(type, message) {
+        els.notice.className = `notice show ${type}`;
+        els.notice.textContent = message;
+      }
+
+      function clearNotice() {
+        els.notice.className = "notice";
+        els.notice.textContent = "";
+      }
+
+      function getStoredSettings() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return defaultSettings();
+          return { ...defaultSettings(), ...JSON.parse(raw) };
+        } catch {
+          return defaultSettings();
+        }
+      }
+
+      function saveStoredSettings(settings) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      }
+
+      function collectSettings() {
+        return {
+          fullName: els.fullName.value.trim() || "Leo Member",
+          email: els.email.value.trim() || "member@cardleorewards.com",
+          phone: els.phone.value.trim(),
+          memberId: els.memberId.value.trim() || "CLR-100001",
+          timezone: els.timezone.value,
+          theme: els.theme.value,
+          language: els.language.value,
+          tier: els.memberTier.textContent.trim() || "Leo Premier Member",
+          notifRewards: els.notifRewards.checked,
+          notifAlerts: els.notifAlerts.checked,
+          notifSms: els.notifSms.checked,
+          notifPartners: els.notifPartners.checked,
+          security2fa: els.security2fa.checked,
+          privacyProfile: els.privacyProfile.checked,
+          securityLoginAlerts: els.securityLoginAlerts.checked,
+        };
+      }
+
+      function applySettings(settings) {
+        els.fullName.value = settings.fullName || "";
+        els.email.value = settings.email || "";
+        els.phone.value = settings.phone || "";
+        els.memberId.value = settings.memberId || "";
+        els.timezone.value = settings.timezone || "America/New_York";
+        els.theme.value = settings.theme || "luxury-dark";
+        els.language.value = settings.language || "en";
+        els.notifRewards.checked = !!settings.notifRewards;
+        els.notifAlerts.checked = !!settings.notifAlerts;
+        els.notifSms.checked = !!settings.notifSms;
+        els.notifPartners.checked = !!settings.notifPartners;
+        els.security2fa.checked = !!settings.security2fa;
+        els.privacyProfile.checked = !!settings.privacyProfile;
+        els.securityLoginAlerts.checked = !!settings.securityLoginAlerts;
+
+        const memberName = settings.fullName || "Leo Member";
+        const memberEmail = settings.email || "member@cardleorewards.com";
+        const tier = settings.tier || "Leo Premier Member";
+
+        els.memberName.textContent = memberName;
+        els.memberEmail.textContent = memberEmail;
+        els.memberTier.textContent = tier;
+        els.statTier.textContent = tier.replace(" Member", "");
+
+        updateNotificationSummary();
+      }
+
+      function updateNotificationSummary() {
+        const enabled = [
+          els.notifRewards.checked,
+          els.notifAlerts.checked,
+          els.notifSms.checked,
+          els.notifPartners.checked,
+        ].filter(Boolean).length;
+
+        if (enabled >= 4) {
+          els.notifSummary.textContent = "All Enabled";
+        } else if (enabled === 0) {
+          els.notifSummary.textContent = "Off";
+        } else {
+          els.notifSummary.textContent = `${enabled} Enabled`;
+        }
+      }
+
+      async function hydrateFromApi() {
+        try {
+          const response = await fetch("/api/auth/me", {
+            method: "GET",
+            headers: { Accept: "application/json" },
+          });
+
+          if (!response.ok) {
+            throw new Error("Unable to load member session.");
+          }
+
+          const data = await response.json();
+          const stored = getStoredSettings();
+
+          const merged = {
+            ...stored,
+            fullName:
+              data?.user?.name ||
+              data?.user?.fullName ||
+              stored.fullName,
+            email:
+              data?.user?.email ||
+              stored.email,
+            memberId:
+              data?.user?.memberId ||
+              stored.memberId,
+            tier:
+              data?.user?.tier ||
+              stored.tier,
+          };
+
+          saveStoredSettings(merged);
+          applySettings(merged);
+        } catch {
+          applySettings(getStoredSettings());
+        }
+      }
+
+      async function handleLogout() {
+        try {
+          await fetch("/api/auth/logout", {
+            method: "POST",
+            headers: { Accept: "application/json" },
+          });
+        } catch {}
+
+        window.location.href = "/login.html";
+      }
+
+      function handleSave() {
+        clearNotice();
+        const settings = collectSettings();
+        saveStoredSettings(settings);
+        applySettings(settings);
+        showNotice("success", "Your settings have been saved successfully.");
+      }
+
+      function handleReset() {
+        clearNotice();
+        const defaults = defaultSettings();
+        saveStoredSettings(defaults);
+        applySettings(defaults);
+        showNotice("success", "Your settings have been reset to default preferences.");
+      }
+
+      function initEventListeners() {
+        els.form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          handleSave();
+        });
+
+        els.saveTopBtn.addEventListener("click", handleSave);
+        els.refreshBtn.addEventListener("click", hydrateFromApi);
+        els.resetBtn.addEventListener("click", handleReset);
+        els.logoutBtn.addEventListener("click", handleLogout);
+
+        els.signOutAllBtn.addEventListener("click", function () {
+          showNotice(
+            "success",
+            "All other sessions have been signed out successfully."
+          );
+        });
+
+        els.passwordBtn.addEventListener("click", function () {
+          window.location.href = "/reset-password.html";
+        });
+
+        [
+          els.notifRewards,
+          els.notifAlerts,
+          els.notifSms,
+          els.notifPartners,
+        ].forEach((input) => {
+          input.addEventListener("change", updateNotificationSummary);
+        });
+
+        const ua = navigator.userAgent || "Browser Session";
+        els.currentSessionText.textContent = `${ua.includes("Chrome") ? "Windows • Chrome" : "Secure Browser Session"} • Active now`;
+      }
+
+      initEventListeners();
+      hydrateFromApi();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,596 @@
+<!-- emails/support-confirmation.html -->
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>We Received Your Support Request</title>
+    <style>
+      body,
+      table,
+      td,
+      a {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+
+      table,
+      td {
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+
+      img {
+        -ms-interpolation-mode: bicubic;
+        border: 0;
+        outline: none;
+        text-decoration: none;
+      }
+
+      table {
+        border-collapse: collapse !important;
+      }
+
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background-color: #08110b;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .apple-link a {
+        color: inherit !important;
+        text-decoration: none !important;
+      }
+
+      @media screen and (max-width: 600px) {
+        .container {
+          width: 100% !important;
+        }
+
+        .stack {
+          display: block !important;
+          width: 100% !important;
+        }
+
+        .px-mobile {
+          padding-left: 24px !important;
+          padding-right: 24px !important;
+        }
+
+        .hero-title {
+          font-size: 30px !important;
+          line-height: 38px !important;
+        }
+
+        .body-copy {
+          font-size: 15px !important;
+          line-height: 25px !important;
+        }
+
+        .button {
+          width: 100% !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #08110b;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      color: #f4ead3;
+    "
+  >
+    <div
+      style="
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        mso-hide: all;
+      "
+    >
+      Your Card Leo Rewards support request was received and is now in review.
+    </div>
+
+    <table
+      role="presentation"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      width="100%"
+      style="background: #08110b"
+    >
+      <tr>
+        <td align="center" style="padding: 24px 12px">
+          <table
+            role="presentation"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            width="600"
+            class="container"
+            style="
+              width: 600px;
+              max-width: 600px;
+              background: linear-gradient(180deg, #0d1710 0%, #0a120d 100%);
+              border: 1px solid rgba(212, 175, 95, 0.18);
+              border-radius: 28px;
+              overflow: hidden;
+              box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+            "
+          >
+            <tr>
+              <td
+                align="center"
+                class="px-mobile"
+                style="
+                  padding: 22px 28px 0;
+                  background:
+                    radial-gradient(circle at top, rgba(212, 175, 95, 0.12), transparent 50%),
+                    linear-gradient(180deg, #101b13 0%, #0d1710 100%);
+                "
+              >
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  width="100%"
+                >
+                  <tr>
+                    <td align="center" style="padding-bottom: 16px">
+                      <div
+                        style="
+                          display: inline-block;
+                          padding: 8px 14px;
+                          border-radius: 999px;
+                          border: 1px solid rgba(212, 175, 95, 0.22);
+                          background: rgba(212, 175, 95, 0.08);
+                          color: #d8b05e;
+                          font-size: 11px;
+                          font-weight: 700;
+                          letter-spacing: 0.18em;
+                          text-transform: uppercase;
+                        "
+                      >
+                        Card Leo Rewards
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      align="center"
+                      class="hero-title"
+                      style="
+                        font-size: 38px;
+                        line-height: 46px;
+                        font-weight: 800;
+                        color: #f8f3e8;
+                        padding-bottom: 14px;
+                      "
+                    >
+                      Your Support Request
+                      <span style="color: #d8b05e">Has Been Received</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      align="center"
+                      class="body-copy"
+                      style="
+                        font-size: 16px;
+                        line-height: 28px;
+                        color: rgba(244, 234, 211, 0.8);
+                        padding-bottom: 28px;
+                      "
+                    >
+                      Hi {{first_name}},
+                      <br />
+                      Thank you for contacting
+                      <strong style="color: #f8f3e8">Card Leo Rewards</strong>.
+                      Our team has received your request and it is now in review.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" style="padding-bottom: 30px">
+                      <table
+                        role="presentation"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        class="button"
+                      >
+                        <tr>
+                          <td
+                            align="center"
+                            style="
+                              border-radius: 14px;
+                              background: linear-gradient(135deg, #d8b05e 0%, #a97c2f 100%);
+                              box-shadow: 0 16px 36px rgba(216, 176, 94, 0.22);
+                            "
+                          >
+                            <a
+                              href="{{portal_support_url}}"
+                              target="_blank"
+                              style="
+                                display: inline-block;
+                                padding: 15px 24px;
+                                font-size: 15px;
+                                font-weight: 800;
+                                color: #130f08;
+                                text-decoration: none;
+                                border-radius: 14px;
+                              "
+                            >
+                              View Support Center
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px-mobile" style="padding: 0 36px 18px">
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  width="100%"
+                  style="
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 22px;
+                  "
+                >
+                  <tr>
+                    <td style="padding: 24px">
+                      <div
+                        style="
+                          font-size: 14px;
+                          line-height: 22px;
+                          color: rgba(244, 234, 211, 0.72);
+                          text-transform: uppercase;
+                          letter-spacing: 0.12em;
+                          font-weight: 700;
+                          padding-bottom: 14px;
+                        "
+                      >
+                        Support request summary
+                      </div>
+
+                      <table
+                        role="presentation"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        width="100%"
+                      >
+                        <tr>
+                          <td
+                            valign="top"
+                            width="150"
+                            style="
+                              padding: 0 0 12px;
+                              font-size: 14px;
+                              line-height: 22px;
+                              color: rgba(244, 234, 211, 0.58);
+                              font-weight: 700;
+                            "
+                          >
+                            Ticket ID
+                          </td>
+                          <td
+                            valign="top"
+                            style="
+                              padding: 0 0 12px;
+                              font-size: 14px;
+                              line-height: 22px;
+                              color: rgba(244, 234, 211, 0.86);
+                            "
+                          >
+                            {{ticket_id}}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            valign="top"
+                            width="150"
+                            style="
+                              padding: 0 0 12px;
+                              font-size: 14px;
+                              line-height: 22px;
+                              color: rgba(244, 234, 211, 0.58);
+                              font-weight: 700;
+                            "
+                          >
+                            Topic
+                          </td>
+                          <td
+                            valign="top"
+                            style="
+                              padding: 0 0 12px;
+                              font-size: 14px;
+                              line-height: 22px;
+                              color: rgba(244, 234, 211, 0.86);
+                            "
+                          >
+                            {{topic}}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            valign="top"
+                            width="150"
+                            style="
+                              padding: 0 0 12px;
+                              font-size: 14px;
+                              line-height: 22px;
+                              color: rgba(244, 234, 211, 0.58);
+                              font-weight: 700;
+                            "
+                          >
+                            Subject
+                          </td>
+                          <td
+                            valign="top"
+                            style="
+                              padding: 0 0 12px;
+                              font-size: 14px;
+                              line-height: 22px;
+                              color: rgba(244, 234, 211, 0.86);
+                            "
+                          >
+                            {{subject}}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td
+                            valign="top"
+                            width="150"
+                            style="
+                              padding: 0;
+                              font-size: 14px;
+                              line-height: 22px;
+                              color: rgba(244, 234, 211, 0.58);
+                              font-weight: 700;
+                            "
+                          >
+                            Submitted
+                          </td>
+                          <td
+                            valign="top"
+                            style="
+                              padding: 0;
+                              font-size: 14px;
+                              line-height: 22px;
+                              color: rgba(244, 234, 211, 0.86);
+                            "
+                          >
+                            {{submitted_at}}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px-mobile" style="padding: 0 36px 18px">
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  width="100%"
+                >
+                  <tr>
+                    <td
+                      class="stack"
+                      valign="top"
+                      width="50%"
+                      style="padding: 0 8px 12px 0"
+                    >
+                      <table
+                        role="presentation"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        width="100%"
+                        style="
+                          height: 100%;
+                          background: rgba(255, 255, 255, 0.03);
+                          border: 1px solid rgba(255, 255, 255, 0.08);
+                          border-radius: 20px;
+                        "
+                      >
+                        <tr>
+                          <td style="padding: 20px">
+                            <div
+                              style="
+                                color: #d8b05e;
+                                font-size: 12px;
+                                font-weight: 800;
+                                letter-spacing: 0.12em;
+                                text-transform: uppercase;
+                                padding-bottom: 10px;
+                              "
+                            >
+                              Expected Response Time
+                            </div>
+                            <div
+                              style="
+                                font-size: 15px;
+                                line-height: 25px;
+                                color: rgba(244, 234, 211, 0.82);
+                              "
+                            >
+                              {{response_time}}
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <td
+                      class="stack"
+                      valign="top"
+                      width="50%"
+                      style="padding: 0 0 12px 8px"
+                    >
+                      <table
+                        role="presentation"
+                        cellpadding="0"
+                        cellspacing="0"
+                        border="0"
+                        width="100%"
+                        style="
+                          height: 100%;
+                          background: rgba(255, 255, 255, 0.03);
+                          border: 1px solid rgba(255, 255, 255, 0.08);
+                          border-radius: 20px;
+                        "
+                      >
+                        <tr>
+                          <td style="padding: 20px">
+                            <div
+                              style="
+                                color: #d8b05e;
+                                font-size: 12px;
+                                font-weight: 800;
+                                letter-spacing: 0.12em;
+                                text-transform: uppercase;
+                                padding-bottom: 10px;
+                              "
+                            >
+                              Support Email
+                            </div>
+                            <div
+                              style="
+                                font-size: 15px;
+                                line-height: 25px;
+                                color: rgba(244, 234, 211, 0.82);
+                              "
+                            >
+                              support@cardleorewards.com
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px-mobile" style="padding: 0 36px 18px">
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  width="100%"
+                  style="
+                    border-radius: 20px;
+                    background: linear-gradient(
+                      180deg,
+                      rgba(216, 176, 94, 0.1) 0%,
+                      rgba(216, 176, 94, 0.04) 100%
+                    );
+                    border: 1px solid rgba(216, 176, 94, 0.18);
+                  "
+                >
+                  <tr>
+                    <td style="padding: 20px 22px">
+                      <div
+                        style="
+                          font-size: 14px;
+                          line-height: 24px;
+                          color: rgba(244, 234, 211, 0.86);
+                        "
+                      >
+                        <strong style="color: #f8f3e8">What happens next?</strong>
+                        <br />
+                        Our team will review your request and follow up as soon as possible.
+                        If additional information is needed, we will contact you using the
+                        email address on file.
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td class="px-mobile" style="padding: 0 36px 28px">
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  width="100%"
+                  style="
+                    border-radius: 20px;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                  "
+                >
+                  <tr>
+                    <td style="padding: 20px 22px">
+                      <div
+                        style="
+                          font-size: 14px;
+                          line-height: 24px;
+                          color: rgba(244, 234, 211, 0.82);
+                        "
+                      >
+                        <strong style="color: #f8f3e8">Need to reference your request?</strong>
+                        <br />
+                        Keep this email for your records and use
+                        <strong style="color: #f8f3e8">{{ticket_id}}</strong>
+                        when following up with our support team.
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                align="center"
+                class="px-mobile apple-link"
+                style="
+                  padding: 0 36px 34px;
+                  font-size: 13px;
+                  line-height: 22px;
+                  color: rgba(244, 234, 211, 0.56);
+                "
+              >
+                This confirmation was sent to {{email}} because a support request was submitted
+                through Card Leo Rewards.
+                <br />
+                © {{year}} Card Leo Rewards. All rights reserved.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

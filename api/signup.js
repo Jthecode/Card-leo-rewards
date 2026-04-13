@@ -1,33 +1,28 @@
 // api/signup.js
 import { supabaseAdmin } from "../lib/supabase-admin.js";
+import { getServerEnv } from "../lib/env.js";
+import {
+  created,
+  badRequest,
+  conflict,
+  methodNotAllowed,
+  serverError,
+} from "../lib/responses.js";
+import { validateSignupInput } from "../lib/validation.js";
+import { signupRateLimit } from "../lib/rate-limit.js";
+import { logRequestStart, logRequestSuccess, logRequestError } from "../lib/logger.js";
 
-const DEFAULT_REDIRECT = "./thank-you.html";
+const env = getServerEnv();
+
+const DEFAULT_REDIRECT = "/thank-you.html";
 const PORTAL_REDIRECT =
-  process.env.PORTAL_LOGIN_URL || "https://cardleo.my-office.app";
-
-function sendJson(res, statusCode, payload) {
-  res.status(statusCode).json(payload);
-}
-
-function normalizeText(value) {
-  return String(value || "").trim();
-}
-
-function normalizeEmail(value) {
-  return normalizeText(value).toLowerCase();
-}
-
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function isValidPhone(phone) {
-  const digits = String(phone || "").replace(/\D/g, "");
-  return digits.length >= 10;
-}
+  env.portalLoginUrl ||
+  env.PORTAL_LOGIN_URL ||
+  "https://cardleo.my-office.app";
 
 function getRequestBody(req) {
-  if (!req.body) return {};
+  if (!req?.body) return {};
+
   if (typeof req.body === "string") {
     try {
       return JSON.parse(req.body);
@@ -35,6 +30,7 @@ function getRequestBody(req) {
       return {};
     }
   }
+
   return req.body;
 }
 
@@ -52,86 +48,65 @@ async function createPortalAccount(_signupRecord) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader("Cache-Control", "no-store");
+  logRequestStart(req, { scope: "signup" });
 
   if (req.method !== "POST") {
-    return sendJson(res, 405, {
-      success: false,
-      message: "Method not allowed. Use POST.",
-    });
+    return methodNotAllowed(res, ["POST"], "Method not allowed. Use POST.");
   }
 
   try {
+    const rateLimit = signupRateLimit(req, res);
+
+    if (!rateLimit.allowed) {
+      return badRequest(
+        res,
+        "Too many signup attempts. Please try again later.",
+        {
+          retryAfter: rateLimit.retryAfter,
+        },
+        {
+          statusCode: 429,
+          error: "rate_limited",
+        }
+      );
+    }
+
     const body = getRequestBody(req);
+    const validation = validateSignupInput(body);
 
-    const firstName = normalizeText(body.firstName);
-    const lastName = normalizeText(body.lastName);
-    const email = normalizeEmail(body.email);
-    const phone = normalizeText(body.phone);
-    const city = normalizeText(body.city);
-    const state = normalizeText(body.state);
-    const referralName = normalizeText(body.referralName);
-    const interest = normalizeText(body.interest);
-    const goals = normalizeText(body.goals);
-    const agree =
-      body.agree === true ||
-      body.agree === "true" ||
-      body.agree === "on" ||
-      body.agree === "yes" ||
-      body.agree === 1 ||
-      body.agree === "1";
-
-    if (!firstName || !lastName || !email || !phone || !interest) {
-      return sendJson(res, 400, {
-        success: false,
-        message:
-          "Missing required fields. First name, last name, email, phone, and interest are required.",
-      });
+    if (!validation.valid) {
+      return badRequest(res, "Please correct the highlighted fields.", validation.errors);
     }
 
-    if (!isValidEmail(email)) {
-      return sendJson(res, 400, {
-        success: false,
-        message: "Please enter a valid email address.",
-      });
-    }
-
-    if (!isValidPhone(phone)) {
-      return sendJson(res, 400, {
-        success: false,
-        message: "Please enter a valid phone number.",
-      });
-    }
-
-    if (!agree) {
-      return sendJson(res, 400, {
-        success: false,
-        message: "You must agree before continuing.",
-      });
-    }
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      city,
+      state,
+      referralName,
+      interest,
+      goals,
+      agreed,
+    } = validation.values;
 
     const signupPayload = {
       first_name: firstName,
       last_name: lastName,
       email,
-      phone,
+      phone: phone || null,
       city: city || null,
       state: state || null,
       referral_name: referralName || null,
-      interest,
+      interest: interest || null,
       goals: goals || null,
-      agreed: true,
-      status: "pending",
-      source: "website-signup",
+      agreed: Boolean(agreed),
+      status: "new",
+      source: "website",
       signup_page: "signup.html",
     };
 
-    /*
-      IMPORTANT:
-      In Supabase, make "email" unique on the signups table if you want upsert to work cleanly.
-      Example unique index:
-      create unique index signups_email_key on public.signups (email);
-    */
     const { data: signupRecord, error: signupError } = await supabaseAdmin
       .from("signups")
       .upsert(signupPayload, {
@@ -141,28 +116,30 @@ export default async function handler(req, res) {
       .single();
 
     if (signupError) {
-      console.error("Supabase signup insert error:", signupError);
-      return sendJson(res, 500, {
-        success: false,
-        message: "Unable to save signup right now.",
-      });
+      logRequestError(req, signupError, { scope: "signup_upsert", email });
+
+      const message = String(signupError.message || "").toLowerCase();
+      if (message.includes("duplicate") || message.includes("unique")) {
+        return conflict(
+          res,
+          "A signup with this email already exists.",
+          { email }
+        );
+      }
+
+      return serverError(res, "Unable to save signup right now.");
     }
 
-    /*
-      OPTIONAL PORTAL STEP:
-      If you later get an API for cardleo.my-office.app,
-      wire it into createPortalAccount(signupRecord).
-    */
     const portalResult = await createPortalAccount(signupRecord);
 
-    let finalStatus = "saved";
-    let redirect = DEFAULT_REDIRECT;
+    let finalStatus = "reviewing";
+    let redirectTo = DEFAULT_REDIRECT;
 
     if (portalResult.created && portalResult.loginUrl) {
-      finalStatus = "portal_created";
-      redirect = portalResult.loginUrl;
-    } else if (process.env.AUTO_REDIRECT_TO_PORTAL === "true") {
-      redirect = PORTAL_REDIRECT;
+      finalStatus = "invited";
+      redirectTo = portalResult.loginUrl;
+    } else if (String(process.env.AUTO_REDIRECT_TO_PORTAL || "").toLowerCase() === "true") {
+      redirectTo = PORTAL_REDIRECT;
     }
 
     const updatePayload = {
@@ -177,25 +154,34 @@ export default async function handler(req, res) {
       .eq("id", signupRecord.id);
 
     if (updateError) {
-      console.error("Supabase signup status update error:", updateError);
+      logRequestError(req, updateError, {
+        scope: "signup_status_update",
+        signupId: signupRecord.id,
+        email,
+      });
     }
 
-    return sendJson(res, 200, {
-      success: true,
-      message: "Signup received successfully.",
-      redirect,
-      data: {
+    logRequestSuccess(req, {
+      scope: "signup",
+      signupId: signupRecord.id,
+      email,
+      status: finalStatus,
+    });
+
+    return created(
+      res,
+      {
         id: signupRecord.id,
         email: signupRecord.email,
         status: finalStatus,
       },
-    });
+      "Signup received successfully.",
+      {
+        redirectTo,
+      }
+    );
   } catch (error) {
-    console.error("Unexpected signup error:", error);
-
-    return sendJson(res, 500, {
-      success: false,
-      message: "Unexpected server error.",
-    });
+    logRequestError(req, error, { scope: "signup_unexpected" });
+    return serverError(res, "Unexpected server error.");
   }
 }

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>You're Invited to Card Leo Rewards</title>
+    <style>
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      body {
+        background-color: #08101d;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #ecf3ff;
+      }
+
+      table {
+        border-spacing: 0;
+        border-collapse: collapse;
+      }
+
+      img {
+        border: 0;
+        line-height: 100%;
+        text-decoration: none;
+        display: block;
+        max-width: 100%;
+      }
+
+      a {
+        text-decoration: none;
+      }
+
+      .wrapper {
+        width: 100%;
+        background:
+          radial-gradient(circle at top left, rgba(245, 193, 93, 0.14), transparent 28%),
+          radial-gradient(circle at top right, rgba(101, 168, 255, 0.12), transparent 22%),
+          #08101d;
+        padding: 28px 0;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+        background-color: #0b1424;
+        border: 1px solid #1b2940;
+        border-radius: 24px;
+        overflow: hidden;
+      }
+
+      .hero {
+        background:
+          radial-gradient(circle at top left, rgba(245, 193, 93, 0.18), transparent 32%),
+          radial-gradient(circle at right center, rgba(101, 168, 255, 0.14), transparent 28%),
+          linear-gradient(180deg, #121b2e 0%, #0b1424 100%);
+        padding: 40px 40px 28px;
+        text-align: left;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        font-size: 11px;
+        line-height: 11px;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #ffd98a;
+        background-color: rgba(245, 193, 93, 0.12);
+        border: 1px solid rgba(245, 193, 93, 0.25);
+        border-radius: 999px;
+        padding: 10px 14px;
+      }
+
+      .brand {
+        font-size: 24px;
+        line-height: 28px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        color: #ffffff;
+        margin: 18px 0 8px;
+      }
+
+      .headline {
+        font-size: 34px;
+        line-height: 40px;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0 0 14px;
+      }
+
+      .hero-copy {
+        font-size: 16px;
+        line-height: 28px;
+        color: #9eabc4;
+        margin: 0;
+      }
+
+      .content {
+        padding: 34px 40px 22px;
+      }
+
+      .hello {
+        font-size: 16px;
+        line-height: 28px;
+        color: #ecf3ff;
+        margin: 0 0 16px;
+      }
+
+      .body-copy {
+        font-size: 16px;
+        line-height: 28px;
+        color: #c7d3ea;
+        margin: 0 0 18px;
+      }
+
+      .panel {
+        background-color: #101a2c;
+        border: 1px solid #20304b;
+        border-radius: 18px;
+        padding: 22px;
+        margin: 0 0 20px;
+      }
+
+      .panel-title {
+        font-size: 15px;
+        line-height: 22px;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0 0 12px;
+      }
+
+      .detail-row {
+        font-size: 14px;
+        line-height: 24px;
+        color: #c7d3ea;
+        margin: 0 0 8px;
+      }
+
+      .detail-label {
+        color: #8ea0c0;
+        font-weight: 700;
+      }
+
+      .button-wrap {
+        padding: 10px 0 18px;
+        text-align: left;
+      }
+
+      .button {
+        display: inline-block;
+        background: linear-gradient(135deg, #f5c15d 0%, #ffd98a 100%);
+        color: #1a1204 !important;
+        font-size: 15px;
+        line-height: 15px;
+        font-weight: 800;
+        padding: 17px 24px;
+        border-radius: 999px;
+      }
+
+      .sub-copy {
+        font-size: 14px;
+        line-height: 24px;
+        color: #8ea0c0;
+        margin: 0 0 14px;
+      }
+
+      .steps {
+        margin: 0;
+        padding: 0;
+      }
+
+      .step {
+        margin: 0 0 14px;
+        padding: 0;
+        list-style: none;
+      }
+
+      .step-number {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        text-align: center;
+        line-height: 24px;
+        font-size: 12px;
+        font-weight: 800;
+        color: #10151f;
+        background-color: #ffd98a;
+        margin-right: 10px;
+      }
+
+      .divider {
+        height: 1px;
+        background-color: #1b2940;
+        margin: 8px 0 20px;
+      }
+
+      .footer {
+        padding: 0 40px 34px;
+      }
+
+      .footer-copy {
+        font-size: 12px;
+        line-height: 22px;
+        color: #7687a6;
+        margin: 0 0 10px;
+      }
+
+      .footer-link {
+        color: #ffd98a !important;
+      }
+
+      @media only screen and (max-width: 640px) {
+        .container {
+          border-radius: 0 !important;
+        }
+
+        .hero,
+        .content,
+        .footer {
+          padding-left: 24px !important;
+          padding-right: 24px !important;
+        }
+
+        .headline {
+          font-size: 28px !important;
+          line-height: 34px !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <table role="presentation" width="100%">
+        <tr>
+          <td align="center">
+            <table role="presentation" width="640" class="container">
+              <tr>
+                <td class="hero">
+                  <div class="eyebrow">Member Invitation</div>
+                  <div class="brand">Card Leo Rewards</div>
+                  <h1 class="headline">Your membership invite is ready.</h1>
+                  <p class="hero-copy">
+                    You’ve been approved to move forward. Use the secure link below
+                    to activate your access and enter the Card Leo Rewards member portal.
+                  </p>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="content">
+                  <p class="hello">Hi {{first_name}},</p>
+
+                  <p class="body-copy">
+                    We’re excited to let you know that your Card Leo Rewards
+                    membership has been approved. Your account is now ready for the
+                    next step.
+                  </p>
+
+                  <div class="panel">
+                    <p class="panel-title">Your invite details</p>
+                    <p class="detail-row">
+                      <span class="detail-label">Member Name:</span>
+                      {{full_name}}
+                    </p>
+                    <p class="detail-row">
+                      <span class="detail-label">Email:</span>
+                      {{email}}
+                    </p>
+                    <p class="detail-row">
+                      <span class="detail-label">Membership Status:</span>
+                      Approved
+                    </p>
+                    <p class="detail-row">
+                      <span class="detail-label">Portal Access:</span>
+                      Pending activation
+                    </p>
+                  </div>
+
+                  <div class="button-wrap">
+                    <a href="{{invite_url}}" class="button" target="_blank" rel="noreferrer">
+                      Activate My Membership
+                    </a>
+                  </div>
+
+                  <p class="sub-copy">
+                    This secure link will guide you through setting your password
+                    and finishing your account setup.
+                  </p>
+
+                  <div class="panel">
+                    <p class="panel-title">What to do next</p>
+                    <ul class="steps">
+                      <li class="step">
+                        <span class="step-number">1</span>
+                        Open your secure invite link.
+                      </li>
+                      <li class="step">
+                        <span class="step-number">2</span>
+                        Create your password and confirm your access.
+                      </li>
+                      <li class="step">
+                        <span class="step-number">3</span>
+                        Sign in to your Card Leo Rewards portal.
+                      </li>
+                      <li class="step">
+                        <span class="step-number">4</span>
+                        Complete your profile and begin tracking your rewards.
+                      </li>
+                    </ul>
+                  </div>
+
+                  <p class="body-copy">
+                    If the button above does not work, copy and paste this link into
+                    your browser:
+                  </p>
+
+                  <p class="sub-copy">
+                    <a href="{{invite_url}}" class="footer-link" target="_blank" rel="noreferrer">
+                      {{invite_url}}
+                    </a>
+                  </p>
+
+                  <div class="divider"></div>
+
+                  <p class="sub-copy">
+                    For security, this invite may expire after a limited period.
+                    If you need a new access link, reply to this email or contact
+                    the Card Leo Rewards support team.
+                  </p>
+                </td>
+              </tr>
+
+              <tr>
+                <td class="footer">
+                  <p class="footer-copy">
+                    Card Leo Rewards<br />
+                    Premium member access, rewards visibility, and secure portal support.
+                  </p>
+
+                  <p class="footer-copy">
+                    Need help? Contact
+                    <a href="mailto:{{support_email}}" class="footer-link">{{support_email}}</a>
+                  </p>
+
+                  <p class="footer-copy">
+                    If you were not expecting this invitation, you can ignore this email.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>

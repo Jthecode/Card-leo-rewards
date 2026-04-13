@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Admin Signups | Card Leo Rewards</title>
+    <meta
+      name="description"
+      content="Review and manage Card Leo Rewards signup submissions."
+    />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <style>
+      :root {
+        --bg: #070b14;
+        --bg-soft: #0d1424;
+        --panel: rgba(17, 24, 39, 0.78);
+        --panel-strong: rgba(11, 17, 32, 0.92);
+        --panel-border: rgba(255, 255, 255, 0.08);
+        --text: #eef4ff;
+        --muted: #99a7c2;
+        --muted-2: #72819f;
+        --line: rgba(255, 255, 255, 0.08);
+        --gold: #f5c15d;
+        --gold-2: #ffd98a;
+        --green: #3dd598;
+        --red: #ff6b81;
+        --blue: #65a8ff;
+        --amber: #ffbb55;
+        --shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+        --max-width: 1380px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(245, 193, 93, 0.12), transparent 28%),
+          radial-gradient(circle at top right, rgba(101, 168, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, #09101e 0%, #050912 100%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      .shell {
+        width: min(var(--max-width), calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        backdrop-filter: blur(16px);
+        background: rgba(7, 11, 20, 0.72);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .topbar-inner {
+        width: min(var(--max-width), calc(100% - 32px));
+        margin: 0 auto;
+        min-height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(135deg, rgba(245, 193, 93, 0.22), rgba(255, 217, 138, 0.08)),
+          rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(245, 193, 93, 0.28);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        font-weight: 800;
+        color: var(--gold-2);
+      }
+
+      .brand-copy h1 {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .brand-copy p {
+        margin: 3px 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .top-link,
+      .btn {
+        border: 1px solid var(--panel-border);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        padding: 11px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .top-link:hover,
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(245, 193, 93, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f5c15d, #ffd98a);
+        color: #1a1204;
+        font-weight: 700;
+        border-color: transparent;
+      }
+
+      .hero {
+        padding: 28px 0 18px;
+      }
+
+      .hero-card,
+      .panel,
+      .stats-card,
+      .table-wrap,
+      .detail-card,
+      .drawer-card {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-card {
+        padding: 28px;
+        position: relative;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at top left, rgba(245, 193, 93, 0.18), transparent 26%),
+          radial-gradient(circle at right center, rgba(101, 168, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(9, 14, 27, 0.95));
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(245, 193, 93, 0.2);
+        background: rgba(245, 193, 93, 0.08);
+        color: var(--gold-2);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .hero-grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.85fr);
+        gap: 24px;
+      }
+
+      .hero-copy h2 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1.04;
+        letter-spacing: -0.04em;
+      }
+
+      .hero-copy p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.75;
+        max-width: 760px;
+      }
+
+      .hero-meta {
+        display: grid;
+        gap: 14px;
+      }
+
+      .meta-card {
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 18px;
+      }
+
+      .meta-label {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.84rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .meta-value {
+        margin: 0;
+        font-size: 1.12rem;
+        font-weight: 700;
+      }
+
+      .section {
+        padding: 10px 0 0;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .stats-card {
+        padding: 18px;
+        min-height: 140px;
+      }
+
+      .stats-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 7px 10px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .pill.gold {
+        background: rgba(245, 193, 93, 0.12);
+        color: var(--gold-2);
+      }
+
+      .pill.blue {
+        background: rgba(101, 168, 255, 0.12);
+        color: #b8d5ff;
+      }
+
+      .pill.green {
+        background: rgba(61, 213, 152, 0.12);
+        color: #9af1cb;
+      }
+
+      .pill.red {
+        background: rgba(255, 107, 129, 0.12);
+        color: #ffc1cb;
+      }
+
+      .pill.amber {
+        background: rgba(255, 187, 85, 0.12);
+        color: #ffd39b;
+      }
+
+      .stats-label {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .stats-value {
+        font-size: clamp(1.8rem, 3vw, 2.3rem);
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+
+      .stats-sub {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .toolbar {
+        margin-top: 16px;
+        padding: 18px;
+      }
+
+      .toolbar-grid {
+        display: grid;
+        grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr)) auto;
+        gap: 12px;
+        align-items: end;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        color: var(--muted);
+        font-size: 0.83rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .input,
+      .select,
+      .textarea {
+        width: 100%;
+        border: 1px solid var(--panel-border);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        border-radius: 14px;
+        padding: 12px 14px;
+        outline: none;
+      }
+
+      .input:focus,
+      .select:focus,
+      .textarea:focus {
+        border-color: rgba(245, 193, 93, 0.35);
+        box-shadow: 0 0 0 3px rgba(245, 193, 93, 0.08);
+      }
+
+      .table-layout {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(360px, 0.75fr);
+        gap: 16px;
+      }
+
+      .table-wrap {
+        overflow: hidden;
+      }
+
+      .table-head {
+        padding: 18px 20px 10px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .table-head h3,
+      .detail-head h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .table-head p,
+      .detail-head p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .table-scroll {
+        overflow: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 980px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 14px 20px;
+        border-top: 1px solid var(--line);
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      td {
+        font-size: 0.95rem;
+      }
+
+      tbody tr {
+        cursor: pointer;
+        transition: background 0.18s ease;
+      }
+
+      tbody tr:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      tbody tr.active {
+        background: rgba(245, 193, 93, 0.08);
+      }
+
+      .name-cell {
+        display: grid;
+        gap: 6px;
+      }
+
+      .name-title {
+        font-weight: 700;
+      }
+
+      .meta-line {
+        color: var(--muted);
+        font-size: 0.86rem;
+        line-height: 1.55;
+      }
+
+      .status-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        white-space: nowrap;
+      }
+
+      .status-new,
+      .status-reviewing {
+        background: rgba(255, 187, 85, 0.12);
+        color: #ffd39b;
+      }
+
+      .status-approved,
+      .status-invited,
+      .status-active {
+        background: rgba(61, 213, 152, 0.12);
+        color: #9af1cb;
+      }
+
+      .status-rejected {
+        background: rgba(255, 107, 129, 0.12);
+        color: #ffc1cb;
+      }
+
+      .detail-card {
+        overflow: hidden;
+      }
+
+      .detail-head {
+        padding: 18px 20px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .detail-body {
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .detail-empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 28px 12px;
+        border: 1px dashed var(--line);
+        border-radius: var(--radius-md);
+      }
+
+      .detail-block {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.025);
+        padding: 16px;
+      }
+
+      .detail-block h4 {
+        margin: 0 0 12px;
+        font-size: 0.98rem;
+      }
+
+      .kv {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 10px 12px;
+      }
+
+      .kv .k {
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .kv .v {
+        font-size: 0.92rem;
+        word-break: break-word;
+      }
+
+      .actions {
+        display: grid;
+        gap: 10px;
+      }
+
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .btn-danger {
+        border-color: rgba(255, 107, 129, 0.25);
+        color: #ffc1cb;
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .drawer {
+        position: fixed;
+        inset: 0;
+        z-index: 70;
+        display: none;
+        background: rgba(2, 5, 12, 0.62);
+        backdrop-filter: blur(10px);
+        padding: 18px;
+      }
+
+      .drawer.open {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .drawer-card {
+        width: min(680px, 100%);
+        max-height: calc(100vh - 36px);
+        overflow: auto;
+        padding: 22px;
+      }
+
+      .drawer-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+
+      .drawer-top h3 {
+        margin: 0;
+        font-size: 1.15rem;
+      }
+
+      .drawer-top p {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+
+      .drawer-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .textarea {
+        min-height: 124px;
+        resize: vertical;
+      }
+
+      .drawer-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .footer-row {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 4px 36px;
+      }
+
+      .pagination {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .loading {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .loading::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.05),
+          transparent
+        );
+        animation: shimmer 1.2s infinite;
+      }
+
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      @media (max-width: 1200px) {
+        .stats-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .toolbar-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .table-layout,
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .topbar-inner {
+          padding: 12px 0;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .toolbar-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-card,
+        .panel,
+        .stats-card,
+        .detail-card,
+        .drawer-card {
+          padding: 18px;
+        }
+
+        .kv {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark">CL</div>
+          <div class="brand-copy">
+            <h1>Admin Signups</h1>
+            <p>Review, approve, and route Card Leo Rewards member intake</p>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <a class="top-link" href="/admin/index.html">Dashboard</a>
+          <a class="top-link" href="/admin/members.html">Members</a>
+          <a class="top-link" href="/admin/support.html">Support</a>
+          <button class="btn" id="refreshBtn" type="button">Refresh</button>
+          <button class="btn btn-primary" id="logoutBtn" type="button">Log Out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-card">
+          <div class="eyebrow">Signup Operations</div>
+
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <h2>Move qualified signups into live members fast.</h2>
+              <p>
+                Review new submissions, inspect goals and referral context,
+                approve the right people, and send portal invitations without
+                leaving the admin flow.
+              </p>
+            </div>
+
+            <div class="hero-meta">
+              <div class="meta-card">
+                <p class="meta-label">Signed in as</p>
+                <p class="meta-value" id="adminName">Loading...</p>
+              </div>
+
+              <div class="meta-card">
+                <p class="meta-label">Access level</p>
+                <p class="meta-value" id="adminAccess">Checking...</p>
+              </div>
+
+              <div class="meta-card">
+                <p class="meta-label">Last refresh</p>
+                <p class="meta-value" id="lastRefresh">—</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="stats-grid">
+          <article class="stats-card loading" id="cardPending">
+            <div class="stats-top">
+              <span class="pill amber">Pending</span>
+            </div>
+            <div class="stats-label">New + reviewing</div>
+            <div class="stats-value" id="valuePending">—</div>
+            <div class="stats-sub">Waiting for action</div>
+          </article>
+
+          <article class="stats-card loading" id="cardApproved">
+            <div class="stats-top">
+              <span class="pill green">Approved</span>
+            </div>
+            <div class="stats-label">Approval ready</div>
+            <div class="stats-value" id="valueApproved">—</div>
+            <div class="stats-sub">Approved but not yet active</div>
+          </article>
+
+          <article class="stats-card loading" id="cardInvited">
+            <div class="stats-top">
+              <span class="pill blue">Invited</span>
+            </div>
+            <div class="stats-label">Invite sent</div>
+            <div class="stats-value" id="valueInvited">—</div>
+            <div class="stats-sub">Portal invite already sent</div>
+          </article>
+
+          <article class="stats-card loading" id="cardActive">
+            <div class="stats-top">
+              <span class="pill green">Active</span>
+            </div>
+            <div class="stats-label">Converted</div>
+            <div class="stats-value" id="valueActive">—</div>
+            <div class="stats-sub">Active member signups</div>
+          </article>
+
+          <article class="stats-card loading" id="cardRejected">
+            <div class="stats-top">
+              <span class="pill red">Rejected</span>
+            </div>
+            <div class="stats-label">Declined</div>
+            <div class="stats-value" id="valueRejected">—</div>
+            <div class="stats-sub">Rejected submissions</div>
+          </article>
+
+          <article class="stats-card loading" id="cardTotal">
+            <div class="stats-top">
+              <span class="pill gold">Total</span>
+            </div>
+            <div class="stats-label">All signups</div>
+            <div class="stats-value" id="valueTotal">—</div>
+            <div class="stats-sub">Tracked in this workspace</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="panel toolbar">
+          <div class="toolbar-grid">
+            <div class="field">
+              <label for="searchInput">Search</label>
+              <input
+                class="input"
+                id="searchInput"
+                type="search"
+                placeholder="Search by name, email, phone, interest..."
+              />
+            </div>
+
+            <div class="field">
+              <label for="statusFilter">Status</label>
+              <select class="select" id="statusFilter"></select>
+            </div>
+
+            <div class="field">
+              <label for="sortFilter">Sort</label>
+              <select class="select" id="sortFilter"></select>
+            </div>
+
+            <div class="field">
+              <label for="limitFilter">Rows per page</label>
+              <select class="select" id="limitFilter">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="pageIndicator">Page</label>
+              <input class="input" id="pageIndicator" type="text" value="1" readonly />
+            </div>
+
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary" id="applyFiltersBtn" type="button">
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="table-layout">
+          <div class="table-wrap">
+            <div class="table-head">
+              <div>
+                <h3>Signup Queue</h3>
+                <p id="tableMeta">Loading submissions...</p>
+              </div>
+            </div>
+
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Person</th>
+                    <th>Status</th>
+                    <th>Source</th>
+                    <th>Interest</th>
+                    <th>Portal</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="signupsTableBody">
+                  <tr>
+                    <td colspan="6" class="muted">Loading signups...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="detail-card">
+            <div class="detail-head">
+              <div>
+                <h3>Signup Detail</h3>
+                <p>Inspect one record, then approve or invite from here.</p>
+              </div>
+            </div>
+
+            <div class="detail-body" id="detailBody">
+              <div class="detail-empty">
+                Select a signup from the table to view full details.
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="footer-row">
+          <div class="muted" id="paginationMeta">—</div>
+
+          <div class="pagination">
+            <button class="btn" id="prevPageBtn" type="button">Previous</button>
+            <button class="btn" id="nextPageBtn" type="button">Next</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="drawer" id="approveDrawer" aria-hidden="true">
+      <div class="drawer-card">
+        <div class="drawer-top">
+          <div>
+            <h3>Approve Signup</h3>
+            <p id="approveDrawerMeta">Send invite, create portal profile, and move signup forward.</p>
+          </div>
+          <button class="btn" id="closeDrawerBtn" type="button">Close</button>
+        </div>
+
+        <div class="drawer-grid">
+          <div class="field">
+            <label for="approvalStatus">Approval Result</label>
+            <select class="select" id="approvalStatus">
+              <option value="invited" selected>Approved + Invited</option>
+              <option value="approved">Approved Only</option>
+              <option value="active">Activate Immediately</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="approvalNote">Approval Note</label>
+            <textarea
+              class="textarea"
+              id="approvalNote"
+              placeholder="Add a timestamped approval note to the signup record..."
+            ></textarea>
+          </div>
+
+          <div class="field">
+            <label for="adminNote">Internal Admin Note</label>
+            <textarea
+              class="textarea"
+              id="adminNote"
+              placeholder="Add a private note for the admin team..."
+            ></textarea>
+          </div>
+
+          <div class="field">
+            <label for="redirectTo">Invite Redirect</label>
+            <input
+              class="input"
+              id="redirectTo"
+              type="text"
+              placeholder="Optional custom redirect URL"
+            />
+          </div>
+
+          <div class="field">
+            <label>
+              <input id="sendInviteCheckbox" type="checkbox" checked />
+              Send portal invite email
+            </label>
+          </div>
+
+          <div class="field">
+            <label>
+              <input id="awardWelcomeBonusCheckbox" type="checkbox" checked />
+              Award welcome bonus automatically
+            </label>
+          </div>
+        </div>
+
+        <div class="drawer-actions">
+          <button class="btn" id="cancelApproveBtn" type="button">Cancel</button>
+          <button class="btn btn-primary" id="confirmApproveBtn" type="button">
+            Confirm Approval
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const state = {
+          admin: null,
+          filters: {
+            status: "all",
+            sort: "newest",
+            search: "",
+            limit: 20,
+            page: 1,
+          },
+          options: {
+            statuses: [],
+            sorts: [],
+          },
+          pagination: null,
+          summary: null,
+          signups: [],
+          selectedSignupId: null,
+          approveTargetId: null,
+          loading: false,
+        };
+
+        const SORT_LABELS = {
+          newest: "Newest",
+          oldest: "Oldest",
+          name: "Name",
+          status: "Status",
+        };
+
+        function $(id) {
+          return document.getElementById(id);
+        }
+
+        function escapeHtml(value) {
+          return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+        }
+
+        function titleCase(value) {
+          return String(value || "")
+            .split(/[\s_-]+/)
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(" ");
+        }
+
+        function formatDate(value) {
+          if (!value) return "—";
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return "—";
+
+          return new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          }).format(date);
+        }
+
+        function formatCount(value) {
+          const num = Number(value || 0);
+          return Number.isFinite(num) ? num.toLocaleString() : "0";
+        }
+
+        function setText(id, value) {
+          const el = $(id);
+          if (el) el.textContent = value;
+        }
+
+        async function api(url, options = {}) {
+          const response = await fetch(url, {
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              ...(options.headers || {}),
+            },
+            ...options,
+          });
+
+          const contentType = response.headers.get("content-type") || "";
+          const body = contentType.includes("application/json")
+            ? await response.json()
+            : { success: false, message: "Unexpected server response." };
+
+          if (!response.ok || body?.success === false) {
+            const error = new Error(body?.message || "Request failed.");
+            error.status = response.status;
+            error.payload = body;
+            throw error;
+          }
+
+          return body;
+        }
+
+        function buildQuery() {
+          const params = new URLSearchParams();
+          params.set("status", state.filters.status);
+          params.set("sort", state.filters.sort);
+          params.set("search", state.filters.search);
+          params.set("limit", String(state.filters.limit));
+          params.set("page", String(state.filters.page));
+          return params.toString();
+        }
+
+        function getStatusClass(status) {
+          const normalized = String(status || "").toLowerCase();
+          if (normalized === "rejected") return "status-rejected";
+          if (["approved", "invited", "active"].includes(normalized)) return "status-approved";
+          if (["new", "reviewing"].includes(normalized)) return "status-new";
+          return "status-new";
+        }
+
+        function renderHeader() {
+          if (!state.admin) return;
+
+          setText("adminName", state.admin.fullName || state.admin.email || "Admin");
+          setText(
+            "adminAccess",
+            state.admin.isSuperAdmin ? "Super Admin" : "Members Admin"
+          );
+          setText("lastRefresh", formatDate(new Date().toISOString()));
+        }
+
+        function renderFilters() {
+          const statusFilter = $("statusFilter");
+          const sortFilter = $("sortFilter");
+
+          if (statusFilter && !statusFilter.dataset.ready) {
+            statusFilter.innerHTML = (state.options.statuses || [])
+              .map(
+                (status) =>
+                  `<option value="${escapeHtml(status)}">${escapeHtml(
+                    status === "all" ? "All Statuses" : titleCase(status)
+                  )}</option>`
+              )
+              .join("");
+            statusFilter.dataset.ready = "true";
+          }
+
+          if (sortFilter && !sortFilter.dataset.ready) {
+            sortFilter.innerHTML = (state.options.sorts || [])
+              .map(
+                (sort) =>
+                  `<option value="${escapeHtml(sort)}">${escapeHtml(
+                    SORT_LABELS[sort] || titleCase(sort)
+                  )}</option>`
+              )
+              .join("");
+            sortFilter.dataset.ready = "true";
+          }
+
+          if (statusFilter) statusFilter.value = state.filters.status;
+          if (sortFilter) sortFilter.value = state.filters.sort;
+          if ($("limitFilter")) $("limitFilter").value = String(state.filters.limit);
+          if ($("searchInput")) $("searchInput").value = state.filters.search;
+          if ($("pageIndicator")) $("pageIndicator").value = String(state.filters.page);
+        }
+
+        function renderSummary() {
+          const summary = state.summary || {};
+          const statusCounts = summary.statusCounts || {};
+
+          const pending =
+            Number(statusCounts.new || 0) + Number(statusCounts.reviewing || 0);
+
+          setText("valuePending", formatCount(pending));
+          setText("valueApproved", formatCount(summary.approved || 0));
+          setText("valueInvited", formatCount(summary.invited || 0));
+          setText("valueActive", formatCount(summary.active || 0));
+          setText("valueRejected", formatCount(summary.rejected || 0));
+          setText("valueTotal", formatCount(summary.total || 0));
+
+          [
+            "cardPending",
+            "cardApproved",
+            "cardInvited",
+            "cardActive",
+            "cardRejected",
+            "cardTotal",
+          ].forEach((id) => {
+            const el = $(id);
+            if (el) el.classList.remove("loading");
+          });
+        }
+
+        function renderTable() {
+          const body = $("signupsTableBody");
+          if (!body) return;
+
+          if (!state.signups.length) {
+            body.innerHTML = `
+              <tr>
+                <td colspan="6" class="muted">No signups matched your filters.</td>
+              </tr>
+            `;
+            return;
+          }
+
+          body.innerHTML = state.signups
+            .map((item) => {
+              const isActive = item.id === state.selectedSignupId;
+              return `
+                <tr data-signup-id="${escapeHtml(item.id)}" class="${isActive ? "active" : ""}">
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(item.fullName || item.email || "Signup")}</div>
+                      <div class="meta-line">${escapeHtml(item.email || "No email")}</div>
+                      <div class="meta-line">${escapeHtml(item.phone || "No phone")}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="status-tag ${getStatusClass(item.status)}">
+                      ${escapeHtml(item.statusLabel || titleCase(item.status))}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(item.sourceLabel || "Website")}</div>
+                      <div class="meta-line">${escapeHtml(item.signupPage || "No page")}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(item.interest || "General Interest")}</div>
+                      <div class="meta-line">${escapeHtml(item.referralName || "No referral name")}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${item.hasPortalUser ? "Linked" : "Not linked"}</div>
+                      <div class="meta-line">${escapeHtml(item.portalUserId || "No portal user")}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(formatDate(item.createdAt))}</div>
+                      <div class="meta-line">${escapeHtml(formatDate(item.updatedAt))}</div>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("");
+        }
+
+        function getSelectedSignup() {
+          return state.signups.find((item) => item.id === state.selectedSignupId) || null;
+        }
+
+        function renderDetail() {
+          const container = $("detailBody");
+          if (!container) return;
+
+          const item = getSelectedSignup();
+
+          if (!item) {
+            container.innerHTML = `
+              <div class="detail-empty">
+                Select a signup from the table to view full details.
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = `
+            <div class="detail-block">
+              <h4>Lead Overview</h4>
+              <div class="kv">
+                <div class="k">Name</div>
+                <div class="v">${escapeHtml(item.fullName || "—")}</div>
+
+                <div class="k">Email</div>
+                <div class="v">${escapeHtml(item.email || "—")}</div>
+
+                <div class="k">Phone</div>
+                <div class="v">${escapeHtml(item.phone || "—")}</div>
+
+                <div class="k">Status</div>
+                <div class="v">
+                  <span class="status-tag ${getStatusClass(item.status)}">
+                    ${escapeHtml(item.statusLabel || titleCase(item.status))}
+                  </span>
+                </div>
+
+                <div class="k">Source</div>
+                <div class="v">${escapeHtml(item.sourceLabel || "—")}</div>
+
+                <div class="k">Signup Page</div>
+                <div class="v">${escapeHtml(item.signupPage || "—")}</div>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h4>Location + Context</h4>
+              <div class="kv">
+                <div class="k">City</div>
+                <div class="v">${escapeHtml(item.city || "—")}</div>
+
+                <div class="k">State</div>
+                <div class="v">${escapeHtml(item.state || "—")}</div>
+
+                <div class="k">Referral Name</div>
+                <div class="v">${escapeHtml(item.referralName || "—")}</div>
+
+                <div class="k">Interest</div>
+                <div class="v">${escapeHtml(item.interest || "—")}</div>
+
+                <div class="k">Agreed</div>
+                <div class="v">${item.agreed ? "Yes" : "No"}</div>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h4>Goals</h4>
+              <div class="kv">
+                <div class="k">Submitted Goals</div>
+                <div class="v">${escapeHtml(item.goals || "No goals were provided.")}</div>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h4>Portal Linkage</h4>
+              <div class="kv">
+                <div class="k">Portal User</div>
+                <div class="v">${escapeHtml(item.portalUserId || "Not linked yet")}</div>
+
+                <div class="k">Login URL</div>
+                <div class="v">${item.portalLoginUrl ? `<a href="${escapeHtml(item.portalLoginUrl)}" target="_blank" rel="noreferrer">${escapeHtml(item.portalLoginUrl)}</a>` : "—"}</div>
+
+                <div class="k">Notes</div>
+                <div class="v">${escapeHtml(item.notes || "No signup notes yet.")}</div>
+
+                <div class="k">Admin Notes</div>
+                <div class="v">${formatCount(item.noteCount || 0)}</div>
+              </div>
+            </div>
+
+            <div class="detail-block actions">
+              <h4>Actions</h4>
+              <div class="btn-row">
+                <button class="btn btn-primary" type="button" id="approveSignupBtn">
+                  Approve Signup
+                </button>
+                <button class="btn btn-secondary" type="button" id="copyEmailBtn">
+                  Copy Email
+                </button>
+                ${item.portalLoginUrl ? `<a class="btn" href="${escapeHtml(item.portalLoginUrl)}" target="_blank" rel="noreferrer">Open Login</a>` : ""}
+              </div>
+            </div>
+          `;
+
+          const approveBtn = $("approveSignupBtn");
+          if (approveBtn) {
+            approveBtn.addEventListener("click", openApproveDrawer);
+          }
+
+          const copyBtn = $("copyEmailBtn");
+          if (copyBtn) {
+            copyBtn.addEventListener("click", async () => {
+              try {
+                await navigator.clipboard.writeText(item.email || "");
+                copyBtn.textContent = "Copied";
+                setTimeout(() => {
+                  copyBtn.textContent = "Copy Email";
+                }, 1200);
+              } catch (_) {}
+            });
+          }
+        }
+
+        function renderMeta() {
+          const pagination = state.pagination || {};
+          setText(
+            "tableMeta",
+            `${formatCount(pagination.total || 0)} signups • page ${formatCount(
+              pagination.page || 1
+            )} of ${formatCount(pagination.totalPages || 1)}`
+          );
+
+          setText(
+            "paginationMeta",
+            pagination.total
+              ? `Showing ${formatCount(pagination.from)}–${formatCount(
+                  pagination.to
+                )} of ${formatCount(pagination.total)} signups`
+              : "No signups to show"
+          );
+
+          if ($("pageIndicator")) {
+            $("pageIndicator").value = String(pagination.page || state.filters.page || 1);
+          }
+
+          if ($("prevPageBtn")) {
+            $("prevPageBtn").disabled = !pagination.hasPreviousPage;
+          }
+
+          if ($("nextPageBtn")) {
+            $("nextPageBtn").disabled = !pagination.hasNextPage;
+          }
+        }
+
+        function renderAll() {
+          renderHeader();
+          renderFilters();
+          renderSummary();
+          renderTable();
+          renderDetail();
+          renderMeta();
+        }
+
+        async function loadSignups() {
+          state.loading = true;
+
+          try {
+            const me = await api("/api/auth/me");
+            state.admin = me?.data?.user || null;
+          } catch (error) {
+            if (error?.status === 401) {
+              const next = encodeURIComponent("/admin/signups.html");
+              window.location.href = `/login.html?next=${next}`;
+              return;
+            }
+            throw error;
+          }
+
+          const result = await api(`/api/admin/signups?${buildQuery()}`);
+
+          state.options.statuses = result?.data?.filters?.statuses || [];
+          state.options.sorts = result?.data?.filters?.sorts || [];
+          state.summary = result?.data?.summary || null;
+          state.pagination = result?.data?.pagination || null;
+          state.signups = result?.data?.signups || [];
+
+          state.admin = result?.data?.admin || state.admin;
+
+          if (!state.selectedSignupId && state.signups.length) {
+            state.selectedSignupId = state.signups[0].id;
+          }
+
+          if (
+            state.selectedSignupId &&
+            !state.signups.some((item) => item.id === state.selectedSignupId)
+          ) {
+            state.selectedSignupId = state.signups.length ? state.signups[0].id : null;
+          }
+
+          renderAll();
+        }
+
+        function openApproveDrawer() {
+          const selected = getSelectedSignup();
+          if (!selected) return;
+
+          state.approveTargetId = selected.id;
+          const drawer = $("approveDrawer");
+          const meta = $("approveDrawerMeta");
+          const approvalNote = $("approvalNote");
+          const adminNote = $("adminNote");
+          const redirectTo = $("redirectTo");
+          const approvalStatus = $("approvalStatus");
+          const sendInviteCheckbox = $("sendInviteCheckbox");
+          const awardWelcomeBonusCheckbox = $("awardWelcomeBonusCheckbox");
+
+          if (meta) {
+            meta.textContent = `Approving ${selected.fullName || selected.email || "this signup"}.`;
+          }
+
+          if (approvalNote) approvalNote.value = "";
+          if (adminNote) adminNote.value = "";
+          if (redirectTo) redirectTo.value = "";
+          if (approvalStatus) approvalStatus.value = "invited";
+          if (sendInviteCheckbox) sendInviteCheckbox.checked = true;
+          if (awardWelcomeBonusCheckbox) awardWelcomeBonusCheckbox.checked = true;
+
+          if (drawer) {
+            drawer.classList.add("open");
+            drawer.setAttribute("aria-hidden", "false");
+          }
+        }
+
+        function closeApproveDrawer() {
+          state.approveTargetId = null;
+          const drawer = $("approveDrawer");
+          if (drawer) {
+            drawer.classList.remove("open");
+            drawer.setAttribute("aria-hidden", "true");
+          }
+        }
+
+        async function submitApproval() {
+          if (!state.approveTargetId) return;
+
+          const confirmBtn = $("confirmApproveBtn");
+          const originalText = confirmBtn ? confirmBtn.textContent : "Confirm Approval";
+
+          if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = "Approving...";
+          }
+
+          try {
+            const payload = {
+              signupId: state.approveTargetId,
+              status: $("approvalStatus")?.value || "invited",
+              approvalNote: $("approvalNote")?.value || "",
+              adminNote: $("adminNote")?.value || "",
+              redirectTo: $("redirectTo")?.value || "",
+              sendInvite: Boolean($("sendInviteCheckbox")?.checked),
+              awardWelcomeBonus: Boolean($("awardWelcomeBonusCheckbox")?.checked),
+            };
+
+            const result = await api("/api/admin/approve-signup.js", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(payload),
+            });
+
+            closeApproveDrawer();
+            await loadSignups();
+
+            alert(result?.message || "Signup approved successfully.");
+          } catch (error) {
+            alert(error?.message || "Unable to approve signup.");
+          } finally {
+            if (confirmBtn) {
+              confirmBtn.disabled = false;
+              confirmBtn.textContent = originalText;
+            }
+          }
+        }
+
+        async function handleLogout() {
+          try {
+            await api("/api/auth/logout", { method: "POST" });
+          } catch (_) {
+          } finally {
+            window.location.href = "/login.html";
+          }
+        }
+
+        function bindEvents() {
+          $("refreshBtn")?.addEventListener("click", loadSignups);
+
+          $("logoutBtn")?.addEventListener("click", handleLogout);
+
+          $("applyFiltersBtn")?.addEventListener("click", () => {
+            state.filters.search = $("searchInput")?.value.trim() || "";
+            state.filters.status = $("statusFilter")?.value || "all";
+            state.filters.sort = $("sortFilter")?.value || "newest";
+            state.filters.limit = Number($("limitFilter")?.value || 20);
+            state.filters.page = 1;
+            loadSignups();
+          });
+
+          $("prevPageBtn")?.addEventListener("click", () => {
+            if (!state.pagination?.hasPreviousPage) return;
+            state.filters.page = Math.max(1, Number(state.filters.page || 1) - 1);
+            loadSignups();
+          });
+
+          $("nextPageBtn")?.addEventListener("click", () => {
+            if (!state.pagination?.hasNextPage) return;
+            state.filters.page = Number(state.filters.page || 1) + 1;
+            loadSignups();
+          });
+
+          $("signupsTableBody")?.addEventListener("click", (event) => {
+            const row = event.target.closest("tr[data-signup-id]");
+            if (!row) return;
+
+            state.selectedSignupId = row.getAttribute("data-signup-id");
+            renderTable();
+            renderDetail();
+          });
+
+          $("closeDrawerBtn")?.addEventListener("click", closeApproveDrawer);
+          $("cancelApproveBtn")?.addEventListener("click", closeApproveDrawer);
+          $("confirmApproveBtn")?.addEventListener("click", submitApproval);
+
+          $("approveDrawer")?.addEventListener("click", (event) => {
+            if (event.target === $("approveDrawer")) {
+              closeApproveDrawer();
+            }
+          });
+
+          $("approvalStatus")?.addEventListener("change", (event) => {
+            const value = event.target.value;
+            const sendInviteCheckbox = $("sendInviteCheckbox");
+            if (!sendInviteCheckbox) return;
+
+            if (value === "approved") {
+              sendInviteCheckbox.checked = false;
+            } else if (value === "invited") {
+              sendInviteCheckbox.checked = true;
+            }
+          });
+        }
+
+        async function init() {
+          bindEvents();
+
+          try {
+            await loadSignups();
+          } catch (error) {
+            if (error?.status === 403) {
+              window.location.href = "/unauthorized.html";
+              return;
+            }
+
+            $("signupsTableBody").innerHTML = `
+              <tr>
+                <td colspan="6" class="muted">${escapeHtml(
+                  error?.message || "Unable to load signups."
+                )}</td>
+              </tr>
+            `;
+          }
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init, { once: true });
+        } else {
+          init();
+        }
+      })();
+    </script>
+  </body>
+</html>

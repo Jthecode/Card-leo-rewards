@@ -1,0 +1,832 @@
+<!-- terms.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Terms of Use | Card Leo Rewards</title>
+    <meta
+      name="description"
+      content="Read the Terms of Use for Card Leo Rewards, including website use, portal access, account responsibilities, support, and legal terms."
+    />
+    <meta
+      name="keywords"
+      content="Card Leo Rewards terms, terms of use, member portal terms, rewards platform, legal"
+    />
+    <meta name="theme-color" content="#08110b" />
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+      :root {
+        --bg: #08110b;
+        --bg-soft: #0d1710;
+        --panel: rgba(255, 255, 255, 0.04);
+        --panel-strong: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.08);
+        --border-gold: rgba(216, 176, 94, 0.2);
+        --text: #f8f3e8;
+        --muted: rgba(244, 234, 211, 0.76);
+        --muted-soft: rgba(244, 234, 211, 0.58);
+        --gold: #d8b05e;
+        --gold-deep: #a97c2f;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --container: 1180px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(216, 176, 94, 0.08), transparent 28%),
+          linear-gradient(180deg, #0b130d 0%, #08110b 100%);
+        color: var(--text);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      .container {
+        width: min(100% - 32px, var(--container));
+        margin: 0 auto;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        backdrop-filter: blur(14px);
+        background: rgba(8, 17, 11, 0.78);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .site-header__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 16px 0;
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .brand__eyebrow {
+        margin: 0;
+        color: var(--gold);
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        font-weight: 800;
+      }
+
+      .brand__name {
+        margin: 0;
+        font-size: 1.12rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+      }
+
+      .site-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .site-nav a {
+        color: var(--muted);
+        padding: 10px 12px;
+        border-radius: 999px;
+        font-size: 0.94rem;
+        transition: 0.2s ease;
+      }
+
+      .site-nav a:hover,
+      .site-nav a:focus-visible,
+      .site-nav a.is-active {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .site-nav .nav-cta {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+        color: #140f07;
+        font-weight: 800;
+        box-shadow: 0 14px 30px rgba(216, 176, 94, 0.18);
+      }
+
+      .hero {
+        padding: 72px 0 28px;
+      }
+
+      .hero__card {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border-gold);
+        background:
+          radial-gradient(circle at top right, rgba(216, 176, 94, 0.14), transparent 26%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+        box-shadow: var(--shadow);
+        padding: 38px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(216, 176, 94, 0.22);
+        background: rgba(216, 176, 94, 0.08);
+        color: var(--gold);
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 800;
+      }
+
+      .hero h1 {
+        margin: 18px 0 12px;
+        font-size: clamp(2.25rem, 5vw, 4rem);
+        line-height: 1.02;
+        letter-spacing: -0.03em;
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 840px;
+        font-size: 1.02rem;
+        line-height: 1.8;
+        color: var(--muted);
+      }
+
+      .meta-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 26px;
+      }
+
+      .meta-card {
+        padding: 18px;
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+      }
+
+      .meta-card__label {
+        margin: 0 0 8px;
+        color: var(--gold);
+        font-size: 0.72rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-weight: 800;
+      }
+
+      .meta-card__value {
+        margin: 0;
+        color: var(--text);
+        font-weight: 700;
+        line-height: 1.6;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 290px minmax(0, 1fr);
+        gap: 26px;
+        padding: 18px 0 84px;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 92px;
+        align-self: start;
+      }
+
+      .toc,
+      .contact-card {
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .toc {
+        padding: 22px;
+        margin-bottom: 18px;
+      }
+
+      .toc h2,
+      .contact-card h2 {
+        margin: 0 0 14px;
+        font-size: 1rem;
+        letter-spacing: -0.01em;
+      }
+
+      .toc nav {
+        display: grid;
+        gap: 8px;
+      }
+
+      .toc a {
+        padding: 11px 12px;
+        border-radius: 12px;
+        color: var(--muted);
+        font-size: 0.95rem;
+        transition: 0.2s ease;
+      }
+
+      .toc a:hover,
+      .toc a:focus-visible {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text);
+      }
+
+      .contact-card {
+        padding: 22px;
+      }
+
+      .contact-card p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 0.95rem;
+      }
+
+      .contact-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .contact-item {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        color: var(--muted);
+        font-size: 0.94rem;
+        line-height: 1.6;
+      }
+
+      .contact-item strong {
+        display: block;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+
+      .policy {
+        display: grid;
+        gap: 18px;
+      }
+
+      .section {
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        padding: 28px;
+      }
+
+      .section h2 {
+        margin: 0 0 12px;
+        font-size: 1.35rem;
+        letter-spacing: -0.02em;
+      }
+
+      .section p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        line-height: 1.85;
+      }
+
+      .section p:last-child {
+        margin-bottom: 0;
+      }
+
+      .section ul {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--muted);
+        line-height: 1.85;
+      }
+
+      .section li + li {
+        margin-top: 8px;
+      }
+
+      .section strong {
+        color: var(--text);
+      }
+
+      .callout {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(216, 176, 94, 0.2);
+        background: rgba(216, 176, 94, 0.07);
+        color: var(--muted);
+      }
+
+      .grid-two {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .mini-card {
+        border-radius: 16px;
+        padding: 18px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      .mini-card h3 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      .mini-card p {
+        margin: 0;
+        font-size: 0.95rem;
+      }
+
+      .site-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .site-footer__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 24px 0 34px;
+      }
+
+      .site-footer p {
+        margin: 0;
+        color: var(--muted-soft);
+        font-size: 0.92rem;
+      }
+
+      .footer-links {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .footer-links a {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      @media (max-width: 1040px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .site-header__inner,
+        .site-footer__inner {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .site-nav {
+          width: 100%;
+          justify-content: flex-start;
+        }
+
+        .hero {
+          padding-top: 42px;
+        }
+
+        .hero__card,
+        .section,
+        .toc,
+        .contact-card {
+          padding: 22px;
+        }
+
+        .meta-row,
+        .grid-two {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <a class="brand" href="index.html" aria-label="Card Leo Rewards home">
+          <p class="brand__eyebrow">Card Leo Rewards</p>
+          <p class="brand__name">Premium Member Platform</p>
+        </a>
+
+        <nav class="site-nav" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a href="about.html">About</a>
+          <a href="get-started.html">Get Started</a>
+          <a href="signup.html">Sign Up</a>
+          <a href="contact.html">Contact</a>
+          <a href="terms.html" class="is-active">Terms</a>
+          <a href="login.html" class="nav-cta">Member Login</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <div class="hero__card">
+            <span class="eyebrow">Terms of Use</span>
+            <h1>The rules for using Card Leo Rewards</h1>
+            <p>
+              These Terms of Use govern access to and use of the Card Leo Rewards
+              website, signup flows, member portal, account features, support
+              systems, and related services. Please read them carefully before
+              using the platform.
+            </p>
+
+            <div class="meta-row">
+              <div class="meta-card">
+                <p class="meta-card__label">Effective Date</p>
+                <p class="meta-card__value">April 6, 2026</p>
+              </div>
+              <div class="meta-card">
+                <p class="meta-card__label">Applies To</p>
+                <p class="meta-card__value">
+                  Public website, authentication pages, portal access, member tools,
+                  and support interactions
+                </p>
+              </div>
+              <div class="meta-card">
+                <p class="meta-card__label">Contact</p>
+                <p class="meta-card__value">support@cardleorewards.com</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="container layout">
+        <aside class="sidebar">
+          <div class="toc">
+            <h2>On this page</h2>
+            <nav>
+              <a href="#acceptance">1. Acceptance of Terms</a>
+              <a href="#eligibility">2. Eligibility & Access</a>
+              <a href="#accounts">3. Accounts & Credentials</a>
+              <a href="#portal">4. Member Portal Use</a>
+              <a href="#conduct">5. Acceptable Use</a>
+              <a href="#rewards">6. Rewards & Benefits</a>
+              <a href="#support">7. Support & Communications</a>
+              <a href="#ownership">8. Intellectual Property</a>
+              <a href="#termination">9. Suspension & Termination</a>
+              <a href="#disclaimers">10. Disclaimers</a>
+              <a href="#liability">11. Limitation of Liability</a>
+              <a href="#changes">12. Changes to Terms</a>
+              <a href="#contact">13. Contact Us</a>
+            </nav>
+          </div>
+
+          <div class="contact-card">
+            <h2>Questions about these terms?</h2>
+            <p>
+              If you need clarification about account access, permitted use, or
+              platform rules, contact our team before relying on any assumption
+              about your rights or access level.
+            </p>
+
+            <div class="contact-list">
+              <div class="contact-item">
+                <strong>Email</strong>
+                support@cardleorewards.com
+              </div>
+              <div class="contact-item">
+                <strong>Portal Support</strong>
+                Available inside the member portal after login
+              </div>
+              <div class="contact-item">
+                <strong>Recommended Subject</strong>
+                Terms Question — Card Leo Rewards
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <div class="policy">
+          <section class="section" id="acceptance">
+            <h2>1. Acceptance of Terms</h2>
+            <p>
+              By accessing or using Card Leo Rewards, including the public website,
+              signup forms, login flows, member portal, and support features, you
+              agree to be bound by these Terms of Use and any policies referenced
+              within them, including our Privacy Policy and other posted platform
+              notices.
+            </p>
+            <p>
+              If you do not agree to these terms, you should not access or use the
+              Card Leo Rewards platform.
+            </p>
+            <div class="callout">
+              Continued use of the website or portal after changes are posted may
+              constitute acceptance of the updated terms.
+            </div>
+          </section>
+
+          <section class="section" id="eligibility">
+            <h2>2. Eligibility &amp; Access</h2>
+            <p>
+              Card Leo Rewards may make certain features publicly available while
+              reserving other features for approved or authenticated members only.
+              Access to the member portal, settings, rewards views, support tools,
+              or related account features may require successful signup,
+              verification, and ongoing account eligibility.
+            </p>
+            <p>You agree that you will:</p>
+            <ul>
+              <li>provide accurate and current information when requested;</li>
+              <li>use the platform only for lawful and authorized purposes;</li>
+              <li>access only those sections of the platform intended for you; and</li>
+              <li>comply with any account restrictions, eligibility rules, or operational requirements we communicate to you.</li>
+            </ul>
+          </section>
+
+          <section class="section" id="accounts">
+            <h2>3. Accounts &amp; Credentials</h2>
+            <p>
+              You are responsible for maintaining the confidentiality of your login
+              credentials and for all activity that occurs through your account.
+              You must not share your password, verification links, or reset links
+              with anyone else.
+            </p>
+            <p>You agree to notify Card Leo Rewards promptly if you believe:</p>
+            <ul>
+              <li>your account has been accessed without authorization;</li>
+              <li>your password or session has been compromised;</li>
+              <li>your contact details are no longer accurate; or</li>
+              <li>you notice suspicious activity associated with your account.</li>
+            </ul>
+            <p>
+              We may require identity or account verification before restoring
+              access, updating credentials, or honoring certain support requests.
+            </p>
+          </section>
+
+          <section class="section" id="portal">
+            <h2>4. Member Portal Use</h2>
+            <p>
+              The member portal is provided for authorized Card Leo Rewards
+              account-related use only. Depending on your access level, the portal
+              may allow you to:
+            </p>
+            <ul>
+              <li>view and update profile information;</li>
+              <li>manage account settings and security-related preferences;</li>
+              <li>view rewards or benefits information;</li>
+              <li>review or manage support activity; and</li>
+              <li>access other features made available to your account.</li>
+            </ul>
+            <p>
+              Portal access may be modified, limited, suspended, or removed at any
+              time if your account is inactive, pending review, restricted, or no
+              longer eligible for access.
+            </p>
+          </section>
+
+          <section class="section" id="conduct">
+            <h2>5. Acceptable Use</h2>
+            <p>You must not use Card Leo Rewards to:</p>
+            <ul>
+              <li>violate any law, regulation, or third-party right;</li>
+              <li>attempt unauthorized access to accounts, systems, or data;</li>
+              <li>interfere with, disrupt, or overload the website or portal;</li>
+              <li>submit false, misleading, abusive, or fraudulent information;</li>
+              <li>reverse engineer, scrape, copy, exploit, or probe protected functionality without authorization;</li>
+              <li>introduce malware, automation abuse, or harmful code;</li>
+              <li>impersonate another person, business, or member account; or</li>
+              <li>use the platform in a way that harms Card Leo Rewards, its users, or its infrastructure.</li>
+            </ul>
+            <p>
+              We reserve the right to investigate any activity that appears to
+              violate these terms or threaten the integrity of the platform.
+            </p>
+          </section>
+
+          <section class="section" id="rewards">
+            <h2>6. Rewards &amp; Benefits</h2>
+            <p>
+              Any rewards, perks, member benefits, account statuses, or portal
+              features displayed through Card Leo Rewards are subject to change,
+              availability limits, account standing, operational review, and any
+              additional program rules we may establish.
+            </p>
+            <p>
+              Unless expressly stated otherwise, rewards information displayed in
+              the portal is provided for account reference and convenience. Access
+              to a portal page or rewards screen does not itself guarantee
+              entitlement to a particular reward, redemption, cash value, transfer
+              right, or ongoing availability.
+            </p>
+
+            <div class="grid-two" style="margin-top: 14px">
+              <div class="mini-card">
+                <h3>Availability</h3>
+                <p>
+                  Certain rewards or benefits may be limited, updated, paused,
+                  replaced, or retired at our discretion.
+                </p>
+              </div>
+              <div class="mini-card">
+                <h3>Account Standing</h3>
+                <p>
+                  Access to benefits may depend on your current status, verification
+                  level, account history, or compliance with platform rules.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" id="support">
+            <h2>7. Support &amp; Communications</h2>
+            <p>
+              Card Leo Rewards may provide support through email, web forms, and
+              portal-based support tools. While we aim to respond in a timely and
+              professional manner, response times may vary depending on request
+              volume, complexity, account verification needs, or system status.
+            </p>
+            <p>
+              You agree that communications sent by Card Leo Rewards regarding your
+              account, security, support tickets, verification status, or platform
+              updates may be delivered electronically.
+            </p>
+            <p>
+              You are responsible for monitoring the email address and portal
+              account associated with your membership.
+            </p>
+          </section>
+
+          <section class="section" id="ownership">
+            <h2>8. Intellectual Property</h2>
+            <p>
+              The Card Leo Rewards name, branding, website design, portal layout,
+              content, visuals, text, software logic, and related materials are
+              owned by or licensed to Card Leo Rewards and are protected by
+              applicable intellectual property laws.
+            </p>
+            <p>You may not, without prior written permission:</p>
+            <ul>
+              <li>copy, reproduce, republish, or distribute protected materials;</li>
+              <li>use our branding in a misleading, competitive, or unauthorized way;</li>
+              <li>create derivative works from protected platform content; or</li>
+              <li>commercially exploit any aspect of the platform or its materials.</li>
+            </ul>
+          </section>
+
+          <section class="section" id="termination">
+            <h2>9. Suspension &amp; Termination</h2>
+            <p>
+              We may suspend, limit, or terminate access to any part of Card Leo
+              Rewards at any time, with or without notice, if we believe:
+            </p>
+            <ul>
+              <li>you violated these Terms of Use;</li>
+              <li>your account information is inaccurate or misleading;</li>
+              <li>there is suspected fraud, abuse, or unauthorized activity;</li>
+              <li>continued access presents a security or operational risk; or</li>
+              <li>your membership or eligibility status has changed.</li>
+            </ul>
+            <p>
+              Suspension or termination may affect your access to the member
+              portal, support history, settings, or rewards-related information.
+            </p>
+          </section>
+
+          <section class="section" id="disclaimers">
+            <h2>10. Disclaimers</h2>
+            <p>
+              Card Leo Rewards is provided on an “as is” and “as available” basis,
+              to the fullest extent permitted by law. We do not guarantee that the
+              website, portal, or related services will always be uninterrupted,
+              error-free, secure, or available at all times.
+            </p>
+            <p>
+              We may update, pause, remove, or change features, content, workflows,
+              and functionality at any time. We also do not guarantee that support
+              responses, rewards visibility, or specific portal features will be
+              continuously available without limitation.
+            </p>
+          </section>
+
+          <section class="section" id="liability">
+            <h2>11. Limitation of Liability</h2>
+            <p>
+              To the fullest extent permitted by applicable law, Card Leo Rewards
+              and its operators, affiliates, service providers, and representatives
+              will not be liable for any indirect, incidental, consequential,
+              special, exemplary, or punitive damages arising out of or related to
+              your use of, or inability to use, the platform.
+            </p>
+            <p>
+              This includes, without limitation, damages related to lost access,
+              data disruption, account interruption, lost opportunities, lost
+              profits, or service downtime, even if we have been advised of the
+              possibility of such damages.
+            </p>
+          </section>
+
+          <section class="section" id="changes">
+            <h2>12. Changes to These Terms</h2>
+            <p>
+              We may revise these Terms of Use from time to time to reflect
+              platform updates, policy changes, legal developments, or operational
+              decisions. When we update these terms, we may revise the effective
+              date at the top of this page.
+            </p>
+            <p>
+              Your continued use of Card Leo Rewards after revised terms become
+              effective means the updated terms will apply to your use of the
+              platform going forward.
+            </p>
+          </section>
+
+          <section class="section" id="contact">
+            <h2>13. Contact Us</h2>
+            <p>
+              If you have questions about these Terms of Use, need clarification
+              about permitted use, or want to report an account or access issue,
+              contact our team.
+            </p>
+
+            <div class="grid-two" style="margin-top: 14px">
+              <div class="mini-card">
+                <h3>Email</h3>
+                <p>support@cardleorewards.com</p>
+              </div>
+              <div class="mini-card">
+                <h3>Member Support</h3>
+                <p>Available inside the Card Leo Rewards portal after login</p>
+              </div>
+            </div>
+
+            <div class="callout">
+              For faster assistance, include your full name, account email, and a
+              clear description of the issue or question.
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <p>© 2026 Card Leo Rewards. All rights reserved.</p>
+
+        <div class="footer-links">
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Terms</a>
+          <a href="cookies.html">Cookies</a>
+          <a href="contact.html">Contact</a>
+          <a href="login.html">Member Login</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

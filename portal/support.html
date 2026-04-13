@@ -1,0 +1,1780 @@
+<!-- portal/support.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Card Leo Rewards | Member Support</title>
+    <meta
+      name="description"
+      content="Access Card Leo Rewards member support, submit account requests, review support guidance, and manage premium assistance."
+    />
+    <meta name="theme-color" content="#0b1020" />
+    <link rel="stylesheet" href="../style.css" />
+
+    <style>
+      :root {
+        --portal-bg: #07111f;
+        --portal-bg-2: #0b1426;
+        --panel: rgba(10, 18, 34, 0.78);
+        --panel-strong: rgba(9, 16, 29, 0.92);
+        --panel-soft: rgba(255, 255, 255, 0.04);
+        --line: rgba(255, 255, 255, 0.08);
+        --line-strong: rgba(255, 255, 255, 0.14);
+        --text: #f8fbff;
+        --muted: #a8b4c7;
+        --muted-2: #7d8aa3;
+        --gold: #d4a94f;
+        --gold-2: #f5d486;
+        --green: #2fd08f;
+        --green-2: #96f0c7;
+        --danger: #ff6d7a;
+        --warning: #ffcf5a;
+        --shadow-xl: 0 30px 80px rgba(0, 0, 0, 0.45);
+        --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.28);
+        --radius-xl: 28px;
+        --radius-lg: 20px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+        --max-width: 1280px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(47, 208, 143, 0.13), transparent 28%),
+          radial-gradient(circle at top right, rgba(212, 169, 79, 0.15), transparent 24%),
+          linear-gradient(180deg, #040913 0%, #07111f 48%, #081221 100%);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      .portal-shell {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .portal-shell::before,
+      .portal-shell::after {
+        content: "";
+        position: fixed;
+        pointer-events: none;
+        z-index: 0;
+        filter: blur(40px);
+        opacity: 0.55;
+      }
+
+      .portal-shell::before {
+        top: -100px;
+        right: -80px;
+        width: 320px;
+        height: 320px;
+        background: radial-gradient(circle, rgba(212, 169, 79, 0.26), transparent 70%);
+      }
+
+      .portal-shell::after {
+        bottom: -120px;
+        left: -60px;
+        width: 360px;
+        height: 360px;
+        background: radial-gradient(circle, rgba(47, 208, 143, 0.18), transparent 70%);
+      }
+
+      .portal-container {
+        position: relative;
+        z-index: 1;
+        width: min(var(--max-width), calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 64px;
+      }
+
+      .portal-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 18px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(8, 14, 26, 0.72);
+        backdrop-filter: blur(18px);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .portal-brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+      }
+
+      .portal-brand-mark {
+        width: 46px;
+        height: 46px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        color: #041014;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        background:
+          linear-gradient(135deg, var(--gold-2), var(--gold)),
+          linear-gradient(135deg, #fff, #ddd);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.45),
+          0 10px 30px rgba(212, 169, 79, 0.2);
+      }
+
+      .portal-brand-copy {
+        min-width: 0;
+      }
+
+      .portal-eyebrow {
+        margin: 0 0 2px;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: var(--gold-2);
+      }
+
+      .portal-brand-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+
+      .portal-brand-subtitle {
+        margin: 2px 0 0;
+        font-size: 0.82rem;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .portal-topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .button {
+        appearance: none;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        padding: 12px 18px;
+        cursor: pointer;
+        transition:
+          transform 0.18s ease,
+          border-color 0.18s ease,
+          background 0.18s ease,
+          box-shadow 0.18s ease,
+          opacity 0.18s ease;
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+      }
+
+      .button:disabled {
+        cursor: not-allowed;
+        opacity: 0.65;
+        transform: none;
+      }
+
+      .button-primary {
+        color: #081018;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--gold-2), var(--gold));
+        box-shadow: 0 12px 28px rgba(212, 169, 79, 0.22);
+      }
+
+      .button-ghost {
+        color: var(--text);
+        border-color: var(--line);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .button-soft {
+        color: var(--text);
+        border-color: rgba(47, 208, 143, 0.18);
+        background: rgba(47, 208, 143, 0.08);
+      }
+
+      .portal-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 18px 0 0;
+      }
+
+      .portal-nav a {
+        padding: 11px 16px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--muted);
+        transition:
+          border-color 0.18s ease,
+          color 0.18s ease,
+          background 0.18s ease,
+          transform 0.18s ease;
+      }
+
+      .portal-nav a:hover {
+        color: var(--text);
+        border-color: var(--line-strong);
+        transform: translateY(-1px);
+      }
+
+      .portal-nav a.active {
+        color: #081018;
+        font-weight: 700;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--green-2), var(--green));
+        box-shadow: 0 12px 30px rgba(47, 208, 143, 0.18);
+      }
+
+      .status-banner,
+      .form-status {
+        display: none;
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--muted);
+      }
+
+      .status-banner.show,
+      .form-status.show {
+        display: block;
+      }
+
+      .status-banner.error,
+      .form-status.error {
+        color: #ffd9de;
+        border-color: rgba(255, 109, 122, 0.3);
+        background: rgba(255, 109, 122, 0.08);
+      }
+
+      .status-banner.success,
+      .form-status.success {
+        color: #dffced;
+        border-color: rgba(47, 208, 143, 0.24);
+        background: rgba(47, 208, 143, 0.09);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.18fr 0.82fr;
+        gap: 22px;
+        margin-top: 24px;
+      }
+
+      .panel {
+        position: relative;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+          var(--panel);
+        backdrop-filter: blur(20px);
+        box-shadow: var(--shadow-xl);
+      }
+
+      .hero-card,
+      .member-card,
+      .summary-card,
+      .form-card,
+      .info-card,
+      .timeline-card,
+      .faq-card {
+        padding: 24px;
+      }
+
+      .hero-card {
+        overflow: hidden;
+      }
+
+      .hero-card::before {
+        content: "";
+        position: absolute;
+        inset: auto auto -120px -90px;
+        width: 260px;
+        height: 260px;
+        background: radial-gradient(circle, rgba(212, 169, 79, 0.18), transparent 70%);
+        pointer-events: none;
+      }
+
+      .hero-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      .badge.is-gold {
+        color: #221400;
+        font-weight: 700;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--gold-2), var(--gold));
+      }
+
+      .badge.is-green {
+        color: #07150e;
+        font-weight: 700;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--green-2), var(--green));
+      }
+
+      .hero-title {
+        margin: 0;
+        max-width: 12ch;
+        font-size: clamp(2rem, 5vw, 3.8rem);
+        line-height: 0.98;
+        letter-spacing: -0.04em;
+      }
+
+      .hero-copy {
+        max-width: 62ch;
+        margin: 16px 0 0;
+        color: var(--muted);
+        font-size: 1.02rem;
+        line-height: 1.7;
+      }
+
+      .hero-meta {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 22px;
+      }
+
+      .hero-stat {
+        padding: 16px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .hero-stat-label {
+        color: var(--muted-2);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+
+      .hero-stat-value {
+        margin-top: 8px;
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .member-top {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .member-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 22px;
+        display: grid;
+        place-items: center;
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #081018;
+        background: linear-gradient(135deg, var(--gold-2), var(--gold));
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.45),
+          0 10px 26px rgba(212, 169, 79, 0.2);
+      }
+
+      .member-name {
+        margin: 0;
+        font-size: 1.28rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .member-email {
+        margin: 6px 0 0;
+        color: var(--muted);
+        word-break: break-word;
+      }
+
+      .member-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .member-item {
+        padding: 14px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .member-item-label {
+        color: var(--muted-2);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+
+      .member-item-value {
+        margin-top: 8px;
+        font-weight: 700;
+      }
+
+      .section {
+        margin-top: 24px;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .section-title {
+        margin: 0;
+        font-size: clamp(1.2rem, 3vw, 1.6rem);
+        letter-spacing: -0.03em;
+      }
+
+      .section-copy {
+        margin: 6px 0 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .section-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .summary-card {
+        border-radius: var(--radius-lg);
+      }
+
+      .summary-label {
+        color: var(--muted-2);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+
+      .summary-value {
+        margin-top: 10px;
+        font-size: clamp(1.2rem, 3vw, 1.8rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        word-break: break-word;
+      }
+
+      .summary-note {
+        margin-top: 8px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .support-layout {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 18px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field.full {
+        grid-column: 1 / -1;
+      }
+
+      .label {
+        color: var(--muted);
+        font-size: 0.84rem;
+        font-weight: 600;
+      }
+
+      .input,
+      .textarea,
+      .select {
+        width: 100%;
+        border: 1px solid var(--line);
+        outline: none;
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.035);
+        border-radius: 16px;
+        padding: 14px 16px;
+        transition:
+          border-color 0.18s ease,
+          background 0.18s ease,
+          box-shadow 0.18s ease;
+      }
+
+      .input:focus,
+      .textarea:focus,
+      .select:focus {
+        border-color: rgba(212, 169, 79, 0.45);
+        box-shadow: 0 0 0 4px rgba(212, 169, 79, 0.08);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .textarea {
+        min-height: 160px;
+        resize: vertical;
+      }
+
+      .helper {
+        color: var(--muted-2);
+        font-size: 0.8rem;
+        line-height: 1.5;
+      }
+
+      .form-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .card-title {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .card-copy {
+        margin: 10px 0 0;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .info-list,
+      .timeline-list,
+      .faq-list {
+        margin: 16px 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 12px;
+      }
+
+      .info-list li,
+      .timeline-item,
+      .faq-item {
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .timeline-head,
+      .faq-question {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+
+      .timeline-title,
+      .faq-title {
+        margin: 0;
+        font-size: 0.98rem;
+        font-weight: 800;
+      }
+
+      .timeline-meta,
+      .faq-answer,
+      .timeline-copy {
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.045);
+        color: var(--muted);
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+
+      .pill.is-live {
+        color: #07150e;
+        font-weight: 800;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--green-2), var(--green));
+      }
+
+      .pill.is-premium {
+        color: #201402;
+        font-weight: 800;
+        border-color: transparent;
+        background: linear-gradient(135deg, var(--gold-2), var(--gold));
+      }
+
+      .pill.is-pending {
+        color: #241702;
+        font-weight: 800;
+        border-color: transparent;
+        background: linear-gradient(135deg, #ffe6a3, #ffcf5a);
+      }
+
+      .pill.is-danger {
+        color: #fff2f4;
+        font-weight: 800;
+        border-color: transparent;
+        background: linear-gradient(135deg, #ef667d, #d84c61);
+      }
+
+      .empty-state,
+      .status-state {
+        padding: 26px;
+        border-radius: var(--radius-lg);
+        border: 1px dashed var(--line-strong);
+        background: rgba(255, 255, 255, 0.02);
+        text-align: center;
+        color: var(--muted);
+      }
+
+      .loading {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+      }
+
+      .loading-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--gold-2), var(--gold));
+        animation: pulse 1s infinite ease-in-out;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.35;
+          transform: scale(0.85);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      .footer-note {
+        margin-top: 24px;
+        color: var(--muted-2);
+        font-size: 0.85rem;
+        text-align: center;
+      }
+
+      @media (max-width: 1080px) {
+        .hero,
+        .support-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .summary-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        .portal-container {
+          width: min(calc(100% - 20px), var(--max-width));
+          padding-top: 18px;
+        }
+
+        .portal-topbar {
+          border-radius: 24px;
+          padding: 14px;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .portal-topbar-actions {
+          width: 100%;
+        }
+
+        .portal-topbar-actions .button {
+          flex: 1;
+        }
+
+        .hero-card,
+        .member-card,
+        .summary-card,
+        .form-card,
+        .info-card,
+        .timeline-card,
+        .faq-card {
+          padding: 20px;
+        }
+
+        .hero-meta,
+        .member-grid,
+        .summary-grid,
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="portal-shell">
+      <main class="portal-container">
+        <header class="portal-topbar">
+          <div class="portal-brand">
+            <div class="portal-brand-mark">CL</div>
+            <div class="portal-brand-copy">
+              <p class="portal-eyebrow">Member Portal</p>
+              <h1 class="portal-brand-title">Card Leo Rewards</h1>
+              <p class="portal-brand-subtitle">
+                Premium support, guided service, and member-first assistance.
+              </p>
+            </div>
+          </div>
+
+          <div class="portal-topbar-actions">
+            <a class="button button-ghost" href="./rewards.html">Rewards</a>
+            <button class="button button-primary" id="logoutButton" type="button">
+              Logout
+            </button>
+          </div>
+        </header>
+
+        <nav class="portal-nav" aria-label="Portal navigation">
+          <a href="./index.html">Dashboard</a>
+          <a href="./profile.html">Profile</a>
+          <a href="./rewards.html">Rewards</a>
+          <a href="./benefits.html">Benefits</a>
+          <a class="active" href="./support.html" aria-current="page">Support</a>
+          <a href="./settings.html">Settings</a>
+        </nav>
+
+        <div class="status-banner" id="statusBanner"></div>
+
+        <section class="hero">
+          <article class="panel hero-card">
+            <div class="hero-badges">
+              <span class="badge is-gold" id="heroAccessBadge">Premium Access</span>
+              <span class="badge is-green" id="heroSupportBadge">Member Support</span>
+              <span class="badge" id="heroPriorityBadge">Loading support...</span>
+            </div>
+
+            <h2 class="hero-title">Support built for members.</h2>
+            <p class="hero-copy" id="heroCopy">
+              Submit a request, review your support route, and access premium assistance
+              tailored to your Card Leo Rewards membership.
+            </p>
+
+            <div class="hero-meta">
+              <div class="hero-stat">
+                <div class="hero-stat-label">Support Channel</div>
+                <div class="hero-stat-value" id="heroChannel">—</div>
+              </div>
+
+              <div class="hero-stat">
+                <div class="hero-stat-label">Priority Level</div>
+                <div class="hero-stat-value" id="heroPriority">—</div>
+              </div>
+
+              <div class="hero-stat">
+                <div class="hero-stat-label">Recent Requests</div>
+                <div class="hero-stat-value" id="heroRequestCount">—</div>
+              </div>
+            </div>
+          </article>
+
+          <aside class="panel member-card">
+            <div class="member-top">
+              <div class="member-avatar" id="memberAvatar">CL</div>
+              <div>
+                <h2 class="member-name" id="memberName">Member</h2>
+                <p class="member-email" id="memberEmail">Loading your account...</p>
+              </div>
+            </div>
+
+            <div class="member-grid">
+              <div class="member-item">
+                <div class="member-item-label">Access Level</div>
+                <div class="member-item-value" id="memberAccessLevel">—</div>
+              </div>
+
+              <div class="member-item">
+                <div class="member-item-label">Status</div>
+                <div class="member-item-value" id="memberStatus">—</div>
+              </div>
+
+              <div class="member-item">
+                <div class="member-item-label">Member ID</div>
+                <div class="member-item-value" id="memberId">—</div>
+              </div>
+
+              <div class="member-item">
+                <div class="member-item-label">Primary Route</div>
+                <div class="member-item-value" id="memberSupportRoute">—</div>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <div>
+              <h2 class="section-title">Support Snapshot</h2>
+              <p class="section-copy">
+                A premium view of your support route, service expectations, and account
+                assistance posture.
+              </p>
+            </div>
+
+            <div class="section-actions">
+              <a class="button button-ghost" href="./benefits.html">View Benefits</a>
+              <a class="button button-ghost" href="./profile.html">Update Profile</a>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <article class="panel summary-card">
+              <div class="summary-label">Support Email</div>
+              <div class="summary-value" id="summarySupportEmail">—</div>
+              <div class="summary-note">
+                The main support route currently attached to your member account.
+              </div>
+            </article>
+
+            <article class="panel summary-card">
+              <div class="summary-label">Support Hours</div>
+              <div class="summary-value" id="summarySupportHours">—</div>
+              <div class="summary-note">
+                General availability window for account assistance and follow-up.
+              </div>
+            </article>
+
+            <article class="panel summary-card">
+              <div class="summary-label">Priority Tier</div>
+              <div class="summary-value" id="summaryPriorityTier">—</div>
+              <div class="summary-note">
+                Your account’s current service posture and request routing level.
+              </div>
+            </article>
+
+            <article class="panel summary-card">
+              <div class="summary-label">Last Update</div>
+              <div class="summary-value" id="summaryLastUpdated">—</div>
+              <div class="summary-note">
+                The most recent support data or account assistance refresh time.
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section support-layout">
+          <div class="stack">
+            <article class="panel form-card">
+              <h3 class="card-title">Submit a Support Request</h3>
+              <p class="card-copy">
+                Tell us what you need help with and we’ll route your message through your
+                member support channel.
+              </p>
+
+              <div class="form-status" id="formStatus"></div>
+
+              <form id="supportForm" novalidate>
+                <div class="form-grid">
+                  <label class="field">
+                    <span class="label">Subject</span>
+                    <input
+                      class="input"
+                      type="text"
+                      id="subject"
+                      name="subject"
+                      placeholder="Example: Need help accessing a member reward"
+                      maxlength="120"
+                      required
+                    />
+                  </label>
+
+                  <label class="field">
+                    <span class="label">Category</span>
+                    <select class="select" id="category" name="category" required>
+                      <option value="">Select a category</option>
+                      <option value="account-access">Account Access</option>
+                      <option value="rewards">Rewards</option>
+                      <option value="benefits">Benefits</option>
+                      <option value="profile-update">Profile Update</option>
+                      <option value="technical">Technical Support</option>
+                      <option value="general">General Question</option>
+                    </select>
+                  </label>
+
+                  <label class="field">
+                    <span class="label">Priority</span>
+                    <select class="select" id="priority" name="priority" required>
+                      <option value="">Select a priority</option>
+                      <option value="standard">Standard</option>
+                      <option value="priority">Priority</option>
+                      <option value="urgent">Urgent</option>
+                    </select>
+                  </label>
+
+                  <label class="field">
+                    <span class="label">Preferred Response</span>
+                    <select class="select" id="preferredResponse" name="preferredResponse">
+                      <option value="">No preference</option>
+                      <option value="email">Email</option>
+                      <option value="phone">Phone</option>
+                      <option value="portal">Portal update</option>
+                    </select>
+                  </label>
+
+                  <label class="field full">
+                    <span class="label">Message</span>
+                    <textarea
+                      class="textarea"
+                      id="message"
+                      name="message"
+                      placeholder="Describe your issue, request, or question in detail."
+                      maxlength="2500"
+                      required
+                    ></textarea>
+                    <span class="helper">
+                      Include as much relevant detail as possible so your request can be
+                      handled efficiently.
+                    </span>
+                  </label>
+                </div>
+
+                <div class="form-actions">
+                  <button class="button button-primary" type="submit" id="submitButton">
+                    Send Request
+                  </button>
+                  <button class="button button-ghost" type="button" id="resetButton">
+                    Reset Form
+                  </button>
+                </div>
+              </form>
+            </article>
+
+            <article class="panel timeline-card">
+              <h3 class="card-title">Recent Support Activity</h3>
+              <p class="card-copy">
+                Track the latest visible requests, notes, or support movement associated
+                with your account.
+              </p>
+
+              <div id="timelineList" class="timeline-list">
+                <div class="status-state">
+                  <span class="loading">
+                    <span class="loading-dot"></span>
+                    Loading recent support activity...
+                  </span>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="stack">
+            <article class="panel info-card">
+              <h3 class="card-title">Support Guidance</h3>
+              <p class="card-copy" id="guidanceCopy">
+                We’re preparing your support guidance, service expectations, and contact
+                details.
+              </p>
+              <ul class="info-list" id="guidanceList">
+                <li>Loading support guidance...</li>
+              </ul>
+            </article>
+
+            <article class="panel info-card">
+              <h3 class="card-title">Service Channels</h3>
+              <p class="card-copy">
+                These channels reflect the current support posture linked to your member
+                account.
+              </p>
+              <ul class="info-list" id="channelList">
+                <li>Loading service channels...</li>
+              </ul>
+            </article>
+
+            <article class="panel faq-card">
+              <h3 class="card-title">Support FAQ</h3>
+              <p class="card-copy">
+                Quick answers to the most common account and member support questions.
+              </p>
+              <div id="faqList" class="faq-list">
+                <div class="status-state">
+                  <span class="loading">
+                    <span class="loading-dot"></span>
+                    Loading support FAQ...
+                  </span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <p class="footer-note">
+          Card Leo Rewards support portal — premium member guidance, service continuity,
+          and elevated account assistance.
+        </p>
+      </main>
+    </div>
+
+    <script>
+      const state = {
+        payload: null,
+      };
+
+      const els = {
+        statusBanner: document.getElementById("statusBanner"),
+        formStatus: document.getElementById("formStatus"),
+        logoutButton: document.getElementById("logoutButton"),
+        supportForm: document.getElementById("supportForm"),
+        submitButton: document.getElementById("submitButton"),
+        resetButton: document.getElementById("resetButton"),
+
+        heroAccessBadge: document.getElementById("heroAccessBadge"),
+        heroSupportBadge: document.getElementById("heroSupportBadge"),
+        heroPriorityBadge: document.getElementById("heroPriorityBadge"),
+        heroCopy: document.getElementById("heroCopy"),
+        heroChannel: document.getElementById("heroChannel"),
+        heroPriority: document.getElementById("heroPriority"),
+        heroRequestCount: document.getElementById("heroRequestCount"),
+
+        memberAvatar: document.getElementById("memberAvatar"),
+        memberName: document.getElementById("memberName"),
+        memberEmail: document.getElementById("memberEmail"),
+        memberAccessLevel: document.getElementById("memberAccessLevel"),
+        memberStatus: document.getElementById("memberStatus"),
+        memberId: document.getElementById("memberId"),
+        memberSupportRoute: document.getElementById("memberSupportRoute"),
+
+        summarySupportEmail: document.getElementById("summarySupportEmail"),
+        summarySupportHours: document.getElementById("summarySupportHours"),
+        summaryPriorityTier: document.getElementById("summaryPriorityTier"),
+        summaryLastUpdated: document.getElementById("summaryLastUpdated"),
+
+        guidanceCopy: document.getElementById("guidanceCopy"),
+        guidanceList: document.getElementById("guidanceList"),
+        channelList: document.getElementById("channelList"),
+        timelineList: document.getElementById("timelineList"),
+        faqList: document.getElementById("faqList"),
+      };
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function isObject(value) {
+        return value !== null && typeof value === "object" && !Array.isArray(value);
+      }
+
+      function toArray(value) {
+        return Array.isArray(value) ? value : [];
+      }
+
+      function firstDefined(...values) {
+        for (const value of values) {
+          if (value !== undefined && value !== null && value !== "") return value;
+        }
+        return "";
+      }
+
+      function safeNumber(value, fallback = 0) {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : fallback;
+      }
+
+      function toTitleCase(value) {
+        return String(value || "")
+          .replace(/[_-]+/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .replace(/\b\w/g, (char) => char.toUpperCase());
+      }
+
+      function getInitials(name) {
+        const parts = String(name || "")
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean);
+
+        if (!parts.length) return "CL";
+
+        return parts
+          .slice(0, 2)
+          .map((part) => part.charAt(0).toUpperCase())
+          .join("");
+      }
+
+      function formatDateTime(value) {
+        if (!value) return "—";
+
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return String(value);
+
+        return date.toLocaleString([], {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        });
+      }
+
+      function showBanner(message, type = "") {
+        if (!message) {
+          els.statusBanner.className = "status-banner";
+          els.statusBanner.textContent = "";
+          return;
+        }
+
+        els.statusBanner.className = `status-banner show ${type}`.trim();
+        els.statusBanner.textContent = message;
+      }
+
+      function showFormStatus(message, type = "") {
+        if (!message) {
+          els.formStatus.className = "form-status";
+          els.formStatus.textContent = "";
+          return;
+        }
+
+        els.formStatus.className = `form-status show ${type}`.trim();
+        els.formStatus.textContent = message;
+      }
+
+      function normalizePayload(payload) {
+        const root = isObject(payload) ? payload : {};
+        const data = isObject(root.data) ? root.data : {};
+
+        const memberRaw = isObject(root.member)
+          ? root.member
+          : isObject(data.member)
+            ? data.member
+            : {};
+
+        const profileRaw = isObject(root.profile)
+          ? root.profile
+          : isObject(data.profile)
+            ? data.profile
+            : {};
+
+        const supportRaw = isObject(root.support)
+          ? root.support
+          : isObject(data.support)
+            ? data.support
+            : {};
+
+        const summaryRaw = isObject(root.summary)
+          ? root.summary
+          : isObject(data.summary)
+            ? data.summary
+            : {};
+
+        const memberName = firstDefined(
+          memberRaw.fullName,
+          memberRaw.name,
+          `${firstDefined(profileRaw.firstName, memberRaw.firstName, "").trim()} ${firstDefined(
+            profileRaw.lastName,
+            memberRaw.lastName,
+            ""
+          ).trim()}`.trim(),
+          "Card Leo Member"
+        );
+
+        const recentRequests = toArray(
+          firstDefined(
+            supportRaw.recentRequests,
+            supportRaw.requests,
+            root.recentRequests,
+            data.recentRequests,
+            []
+          )
+        );
+
+        const supportEmail = firstDefined(
+          supportRaw.email,
+          supportRaw.supportEmail,
+          supportRaw.contactEmail,
+          "support@cardleorewards.com"
+        );
+
+        const supportHours = firstDefined(
+          supportRaw.hours,
+          supportRaw.availability,
+          supportRaw.supportHours,
+          "Member support hours unavailable"
+        );
+
+        const priorityTier = toTitleCase(
+          firstDefined(
+            supportRaw.priorityTier,
+            supportRaw.priority,
+            summaryRaw.priorityTier,
+            "Premium"
+          )
+        );
+
+        const primaryRoute = toTitleCase(
+          firstDefined(
+            supportRaw.primaryRoute,
+            supportRaw.channel,
+            supportRaw.supportRoute,
+            "Member Support"
+          )
+        );
+
+        const guidance = toArray(
+          firstDefined(supportRaw.guidance, supportRaw.notes, root.guidance, [])
+        );
+
+        const channels = toArray(
+          firstDefined(supportRaw.channels, supportRaw.contactOptions, [])
+        );
+
+        const faq = toArray(firstDefined(supportRaw.faq, root.faq, data.faq, []));
+
+        return {
+          member: {
+            fullName: memberName,
+            email: firstDefined(profileRaw.email, memberRaw.email, "Member account"),
+            accessLevel: toTitleCase(
+              firstDefined(
+                memberRaw.accessLevel,
+                memberRaw.membershipLevel,
+                summaryRaw.accessLevel,
+                "Premium Access"
+              )
+            ),
+            statusLabel: toTitleCase(
+              firstDefined(memberRaw.statusLabel, memberRaw.status, "Active")
+            ),
+            memberId: firstDefined(
+              memberRaw.memberId,
+              memberRaw.portalUserId,
+              memberRaw.signupId,
+              profileRaw.signupId,
+              "—"
+            ),
+          },
+          support: {
+            email: supportEmail,
+            hours: supportHours,
+            priorityTier,
+            primaryRoute,
+            lastUpdated: firstDefined(
+              supportRaw.lastUpdated,
+              supportRaw.updatedAt,
+              root.fetchedAt,
+              new Date().toISOString()
+            ),
+            recentRequests,
+            guidance,
+            channels,
+            faq,
+          },
+        };
+      }
+
+      function buildGuidance(model) {
+        const items = [];
+
+        items.push(`Your current access level is ${model.member.accessLevel}.`);
+        items.push(`Your support requests are routed through ${model.support.primaryRoute}.`);
+        items.push(`Your current priority posture is ${model.support.priorityTier}.`);
+        items.push(`Primary support email: ${model.support.email}.`);
+        items.push(`Availability: ${model.support.hours}.`);
+
+        return items;
+      }
+
+      function buildChannels(model) {
+        if (model.support.channels.length) {
+          return model.support.channels.map((item) => {
+            if (isObject(item)) {
+              return `${firstDefined(item.label, item.name, "Support Channel")}: ${firstDefined(
+                item.value,
+                item.detail,
+                item.description,
+                "Available"
+              )}`;
+            }
+            return String(item);
+          });
+        }
+
+        return [
+          `Email: ${model.support.email}`,
+          `Primary route: ${model.support.primaryRoute}`,
+          `Priority tier: ${model.support.priorityTier}`,
+        ];
+      }
+
+      function buildFaq(model) {
+        if (model.support.faq.length) {
+          return model.support.faq.map((item, index) => {
+            if (isObject(item)) {
+              return {
+                id: firstDefined(item.id, `faq-${index + 1}`),
+                question: firstDefined(item.question, item.title, `Question ${index + 1}`),
+                answer: firstDefined(
+                  item.answer,
+                  item.body,
+                  item.description,
+                  "Please contact member support for additional details."
+                ),
+              };
+            }
+
+            return {
+              id: `faq-${index + 1}`,
+              question: `Question ${index + 1}`,
+              answer: String(item),
+            };
+          });
+        }
+
+        return [
+          {
+            id: "faq-1",
+            question: "How do I request help with a reward or benefit?",
+            answer:
+              "Use the support request form on this page and select the most relevant category so your request is routed correctly.",
+          },
+          {
+            id: "faq-2",
+            question: "How is my support priority determined?",
+            answer:
+              "Your support posture is tied to your current account standing, access level, and member support configuration.",
+          },
+          {
+            id: "faq-3",
+            question: "Where will I receive updates?",
+            answer:
+              "Updates may be delivered through your support email route, portal notes, or the communication preference you choose when submitting a request.",
+          },
+        ];
+      }
+
+      function renderHeader(model) {
+        els.heroAccessBadge.textContent = model.member.accessLevel;
+        els.heroSupportBadge.textContent = model.member.statusLabel;
+        els.heroPriorityBadge.textContent = `${model.support.priorityTier} Priority`;
+
+        els.heroCopy.textContent = `Your Card Leo Rewards account currently routes support through ${model.support.primaryRoute} with a ${model.support.priorityTier.toLowerCase()} service posture designed for your ${model.member.accessLevel.toLowerCase()} membership experience.`;
+
+        els.heroChannel.textContent = model.support.primaryRoute;
+        els.heroPriority.textContent = model.support.priorityTier;
+        els.heroRequestCount.textContent = String(model.support.recentRequests.length);
+
+        els.memberAvatar.textContent = getInitials(model.member.fullName);
+        els.memberName.textContent = model.member.fullName;
+        els.memberEmail.textContent = model.member.email;
+        els.memberAccessLevel.textContent = model.member.accessLevel;
+        els.memberStatus.textContent = model.member.statusLabel;
+        els.memberId.textContent = model.member.memberId || "—";
+        els.memberSupportRoute.textContent = model.support.primaryRoute;
+
+        els.summarySupportEmail.textContent = model.support.email;
+        els.summarySupportHours.textContent = model.support.hours;
+        els.summaryPriorityTier.textContent = model.support.priorityTier;
+        els.summaryLastUpdated.textContent = formatDateTime(model.support.lastUpdated);
+      }
+
+      function renderGuidance(model) {
+        const guidanceItems = model.support.guidance.length
+          ? model.support.guidance.map((item) => String(item))
+          : buildGuidance(model);
+
+        els.guidanceCopy.textContent = `Your current support route is aligned to your ${model.member.accessLevel} level and ${model.member.statusLabel} member standing.`;
+
+        els.guidanceList.innerHTML = guidanceItems
+          .map((item) => `<li>${escapeHtml(item)}</li>`)
+          .join("");
+      }
+
+      function renderChannels(model) {
+        const channels = buildChannels(model);
+
+        els.channelList.innerHTML = channels
+          .map((item) => `<li>${escapeHtml(item)}</li>`)
+          .join("");
+      }
+
+      function supportPillClass(value) {
+        const normalized = String(value || "").toLowerCase();
+
+        if (normalized.includes("open") || normalized.includes("resolved")) return "is-live";
+        if (normalized.includes("urgent")) return "is-danger";
+        if (normalized.includes("pending") || normalized.includes("in review")) return "is-pending";
+        return "is-premium";
+      }
+
+      function renderTimeline(model) {
+        const items = model.support.recentRequests;
+
+        if (!items.length) {
+          els.timelineList.innerHTML = `
+            <div class="empty-state">
+              No visible support requests are attached to this account yet. Use the form
+              above to submit your first request.
+            </div>
+          `;
+          return;
+        }
+
+        els.timelineList.innerHTML = items
+          .map((item, index) => {
+            const raw = isObject(item) ? item : {};
+            const title = firstDefined(
+              raw.subject,
+              raw.title,
+              raw.name,
+              `Support Request ${index + 1}`
+            );
+            const status = toTitleCase(firstDefined(raw.status, raw.state, "Open"));
+            const createdAt = formatDateTime(firstDefined(raw.createdAt, raw.date, raw.submittedAt));
+            const category = toTitleCase(firstDefined(raw.category, "General"));
+            const message = firstDefined(
+              raw.message,
+              raw.description,
+              raw.summary,
+              "Support request submitted through the member portal."
+            );
+
+            return `
+              <article class="timeline-item">
+                <div class="timeline-head">
+                  <h4 class="timeline-title">${escapeHtml(title)}</h4>
+                  <span class="pill ${supportPillClass(status)}">${escapeHtml(status)}</span>
+                </div>
+                <p class="timeline-meta">${escapeHtml(category)} • ${escapeHtml(createdAt)}</p>
+                <p class="timeline-copy">${escapeHtml(message)}</p>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      function renderFaq(model) {
+        const faqItems = buildFaq(model);
+
+        els.faqList.innerHTML = faqItems
+          .map(
+            (item) => `
+              <article class="faq-item">
+                <div class="faq-question">
+                  <h4 class="faq-title">${escapeHtml(item.question)}</h4>
+                  <span class="pill is-premium">Support</span>
+                </div>
+                <p class="faq-answer">${escapeHtml(item.answer)}</p>
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      function validateForm(payload) {
+        if (!payload.subject.trim()) return "Please enter a support subject.";
+        if (!payload.category.trim()) return "Please select a support category.";
+        if (!payload.priority.trim()) return "Please select a priority level.";
+        if (!payload.message.trim()) return "Please enter a support message.";
+        if (payload.message.trim().length < 10) {
+          return "Please provide a little more detail so support can help effectively.";
+        }
+        return "";
+      }
+
+      async function fetchSupportData() {
+        showBanner("");
+        showFormStatus("");
+
+        try {
+          const response = await fetch("../api/portal/support", {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+            credentials: "include",
+          });
+
+          let payload = {};
+          try {
+            payload = await response.json();
+          } catch {
+            payload = {};
+          }
+
+          if (response.status === 401) {
+            window.location.href = "../login.html?next=/portal/support.html";
+            return;
+          }
+
+          if (response.status === 403) {
+            showBanner(
+              payload?.message ||
+                "Your member account exists, but portal support access is not enabled yet.",
+              "error"
+            );
+
+            els.timelineList.innerHTML = `
+              <div class="empty-state">
+                Your account exists, but premium support access is not enabled yet.
+                Please contact support through your main onboarding route for assistance.
+              </div>
+            `;
+            return;
+          }
+
+          if (response.status === 404) {
+            showBanner(
+              payload?.message ||
+                "We could not locate a member record for this account.",
+              "error"
+            );
+
+            els.timelineList.innerHTML = `
+              <div class="empty-state">
+                A matching member record could not be found. Please contact support if
+                you believe this is an error.
+              </div>
+            `;
+            return;
+          }
+
+          if (!response.ok) {
+            throw new Error(
+              payload?.message || "Unable to load your support details right now."
+            );
+          }
+
+          state.payload = payload;
+
+          const model = normalizePayload(payload);
+          renderHeader(model);
+          renderGuidance(model);
+          renderChannels(model);
+          renderTimeline(model);
+          renderFaq(model);
+
+          showBanner("Your support portal has been loaded successfully.", "success");
+        } catch (error) {
+          console.error("[portal/support] load error:", error);
+
+          showBanner(
+            error?.message ||
+              "Something went wrong while loading support details. Please try again.",
+            "error"
+          );
+
+          els.timelineList.innerHTML = `
+            <div class="empty-state">
+              We couldn’t load your support activity right now. Refresh this page or try again shortly.
+            </div>
+          `;
+
+          els.guidanceCopy.textContent =
+            "We couldn’t load your guidance details right now.";
+          els.guidanceList.innerHTML = `<li>Please refresh the page or try again later.</li>`;
+          els.channelList.innerHTML = `<li>Support channel data is temporarily unavailable.</li>`;
+          els.faqList.innerHTML = `
+            <div class="empty-state">
+              Support FAQ is temporarily unavailable. Please try again later.
+            </div>
+          `;
+        }
+      }
+
+      async function handleSupportSubmit(event) {
+        event.preventDefault();
+        showFormStatus("");
+
+        const payload = {
+          subject: document.getElementById("subject").value,
+          category: document.getElementById("category").value,
+          priority: document.getElementById("priority").value,
+          preferredResponse: document.getElementById("preferredResponse").value,
+          message: document.getElementById("message").value,
+        };
+
+        const validationMessage = validateForm(payload);
+        if (validationMessage) {
+          showFormStatus(validationMessage, "error");
+          return;
+        }
+
+        const originalText = els.submitButton.textContent;
+        els.submitButton.disabled = true;
+        els.submitButton.textContent = "Sending...";
+
+        try {
+          const response = await fetch("../api/portal/support", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(payload),
+          });
+
+          let result = {};
+          try {
+            result = await response.json();
+          } catch {
+            result = {};
+          }
+
+          if (response.status === 401) {
+            window.location.href = "../login.html?next=/portal/support.html";
+            return;
+          }
+
+          if (!response.ok) {
+            throw new Error(
+              result?.message || "Your support request could not be submitted."
+            );
+          }
+
+          showFormStatus(
+            result?.message ||
+              "Your support request has been submitted successfully.",
+            "success"
+          );
+
+          els.supportForm.reset();
+          await fetchSupportData();
+        } catch (error) {
+          console.error("[portal/support] submit error:", error);
+          showFormStatus(
+            error?.message ||
+              "Something went wrong while sending your support request.",
+            "error"
+          );
+        } finally {
+          els.submitButton.disabled = false;
+          els.submitButton.textContent = originalText;
+        }
+      }
+
+      function handleFormReset() {
+        els.supportForm.reset();
+        showFormStatus("");
+      }
+
+      async function handleLogout() {
+        const originalText = els.logoutButton.textContent;
+        els.logoutButton.disabled = true;
+        els.logoutButton.textContent = "Logging out...";
+
+        try {
+          await fetch("../api/auth/logout", {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+            },
+            credentials: "include",
+          });
+        } catch (error) {
+          console.error("[portal/support] logout error:", error);
+        } finally {
+          window.location.href = "../login.html";
+          els.logoutButton.disabled = false;
+          els.logoutButton.textContent = originalText;
+        }
+      }
+
+      els.supportForm.addEventListener("submit", handleSupportSubmit);
+      els.resetButton.addEventListener("click", handleFormReset);
+      els.logoutButton.addEventListener("click", handleLogout);
+
+      fetchSupportData();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,483 @@
+<!-- unauthorized.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Unauthorized Access | Card Leo Rewards</title>
+    <meta
+      name="description"
+      content="You do not currently have permission to access this Card Leo Rewards page."
+    />
+    <meta
+      name="keywords"
+      content="Card Leo Rewards unauthorized, access denied, member portal"
+    />
+    <meta name="theme-color" content="#08110b" />
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+      :root {
+        --bg: #08110b;
+        --bg-soft: #0d1710;
+        --panel: rgba(255, 255, 255, 0.04);
+        --panel-strong: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.08);
+        --border-gold: rgba(216, 176, 94, 0.2);
+        --text: #f8f3e8;
+        --muted: rgba(244, 234, 211, 0.76);
+        --muted-soft: rgba(244, 234, 211, 0.58);
+        --gold: #d8b05e;
+        --gold-deep: #a97c2f;
+        --danger: #ffb7b7;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --container: 1180px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(216, 176, 94, 0.08), transparent 28%),
+          linear-gradient(180deg, #0b130d 0%, #08110b 100%);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .container {
+        width: min(100% - 32px, var(--container));
+        margin: 0 auto;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        backdrop-filter: blur(14px);
+        background: rgba(8, 17, 11, 0.78);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .site-header__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 16px 0;
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .brand__eyebrow {
+        margin: 0;
+        color: var(--gold);
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        font-weight: 800;
+      }
+
+      .brand__name {
+        margin: 0;
+        font-size: 1.12rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+      }
+
+      .site-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .site-nav a {
+        color: var(--muted);
+        padding: 10px 12px;
+        border-radius: 999px;
+        font-size: 0.94rem;
+        transition: 0.2s ease;
+      }
+
+      .site-nav a:hover,
+      .site-nav a:focus-visible {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .site-nav .nav-cta {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+        color: #140f07;
+        font-weight: 800;
+        box-shadow: 0 14px 30px rgba(216, 176, 94, 0.18);
+      }
+
+      main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        padding: 46px 0 70px;
+      }
+
+      .hero-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border-gold);
+        background:
+          radial-gradient(circle at top right, rgba(216, 176, 94, 0.14), transparent 26%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+        box-shadow: var(--shadow);
+        padding: 34px;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(216, 176, 94, 0.22);
+        background: rgba(216, 176, 94, 0.08);
+        color: var(--gold);
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 800;
+      }
+
+      .error-code {
+        margin: 18px 0 10px;
+        font-size: clamp(3.25rem, 9vw, 6.5rem);
+        line-height: 0.95;
+        letter-spacing: -0.06em;
+        font-weight: 900;
+        color: #f8f3e8;
+      }
+
+      .hero-title {
+        margin: 0 0 14px;
+        font-size: clamp(1.9rem, 4vw, 3rem);
+        line-height: 1.06;
+        letter-spacing: -0.03em;
+      }
+
+      .hero-copy {
+        margin: 0;
+        max-width: 720px;
+        font-size: 1.02rem;
+        line-height: 1.85;
+        color: var(--muted);
+      }
+
+      .notice {
+        margin-top: 22px;
+        padding: 16px 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 183, 183, 0.16);
+        background: rgba(255, 183, 183, 0.06);
+        color: var(--muted);
+      }
+
+      .notice strong {
+        color: #ffe7e7;
+      }
+
+      .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 26px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 50px;
+        padding: 0 18px;
+        border-radius: 14px;
+        font-weight: 800;
+        font-size: 0.96rem;
+        transition: transform 0.18s ease, opacity 0.18s ease;
+      }
+
+      .btn:hover,
+      .btn:focus-visible {
+        transform: translateY(-1px);
+      }
+
+      .btn--primary {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+        color: #140f07;
+        box-shadow: 0 14px 30px rgba(216, 176, 94, 0.18);
+      }
+
+      .btn--secondary {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--text);
+      }
+
+      .side-panel {
+        height: 100%;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        padding: 24px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .side-panel h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        letter-spacing: -0.02em;
+      }
+
+      .side-panel p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.75;
+      }
+
+      .info-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .info-item {
+        padding: 14px 15px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      .info-item strong {
+        display: block;
+        color: var(--text);
+        margin-bottom: 5px;
+        font-size: 0.94rem;
+      }
+
+      .info-item span {
+        color: var(--muted);
+        font-size: 0.93rem;
+        line-height: 1.65;
+      }
+
+      .site-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .site-footer__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 24px 0 34px;
+      }
+
+      .site-footer p {
+        margin: 0;
+        color: var(--muted-soft);
+        font-size: 0.92rem;
+      }
+
+      .footer-links {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .footer-links a {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      @media (max-width: 920px) {
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .site-header__inner,
+        .site-footer__inner {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .site-nav {
+          width: 100%;
+          justify-content: flex-start;
+        }
+
+        main {
+          padding-top: 28px;
+        }
+
+        .hero-card,
+        .side-panel {
+          padding: 22px;
+        }
+
+        .action-row {
+          flex-direction: column;
+        }
+
+        .btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <a class="brand" href="index.html" aria-label="Card Leo Rewards home">
+          <p class="brand__eyebrow">Card Leo Rewards</p>
+          <p class="brand__name">Premium Member Platform</p>
+        </a>
+
+        <nav class="site-nav" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a href="about.html">About</a>
+          <a href="get-started.html">Get Started</a>
+          <a href="contact.html">Contact</a>
+          <a href="login.html" class="nav-cta">Member Login</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <section class="hero-card" aria-labelledby="unauthorized-title">
+          <div class="hero-grid">
+            <div>
+              <span class="eyebrow">Access Restricted</span>
+              <div class="error-code">403</div>
+              <h1 class="hero-title" id="unauthorized-title">
+                You do not currently have access to this page.
+              </h1>
+              <p class="hero-copy">
+                This area of Card Leo Rewards is reserved for authorized members or
+                for accounts that have already been granted the required portal
+                permissions. Your session may have expired, your account may still
+                be pending review, or this page may not be available to your current
+                access level.
+              </p>
+
+              <div class="notice">
+                <strong>What this usually means:</strong>
+                You may need to sign in again, complete verification, or wait until
+                your portal access is approved.
+              </div>
+
+              <div class="action-row">
+                <a class="btn btn--primary" href="login.html">Go to Member Login</a>
+                <a class="btn btn--secondary" href="index.html">Return Home</a>
+                <a class="btn btn--secondary" href="contact.html">Contact Support</a>
+              </div>
+            </div>
+
+            <aside class="side-panel" aria-label="Helpful next steps">
+              <h2>Helpful next steps</h2>
+              <p>
+                Before contacting support, try these quick checks to make sure the
+                issue is not related to session timing or account status.
+              </p>
+
+              <div class="info-list">
+                <div class="info-item">
+                  <strong>1. Sign in again</strong>
+                  <span>
+                    Your portal session may have expired or timed out.
+                  </span>
+                </div>
+
+                <div class="info-item">
+                  <strong>2. Check your email</strong>
+                  <span>
+                    Look for verification, welcome, or account approval emails from
+                    Card Leo Rewards.
+                  </span>
+                </div>
+
+                <div class="info-item">
+                  <strong>3. Confirm access status</strong>
+                  <span>
+                    Some portal pages are only available after account review or
+                    member activation.
+                  </span>
+                </div>
+
+                <div class="info-item">
+                  <strong>4. Reach out to support</strong>
+                  <span>
+                    Email <a href="mailto:support@cardleorewards.com">support@cardleorewards.com</a>
+                    if you believe you should already have access.
+                  </span>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <p>© 2026 Card Leo Rewards. All rights reserved.</p>
+
+        <div class="footer-links">
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Terms</a>
+          <a href="cookies.html">Cookies</a>
+          <a href="contact.html">Contact</a>
+          <a href="login.html">Member Login</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

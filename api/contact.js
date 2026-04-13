@@ -1,76 +1,147 @@
 // api/contact.js
 import { supabaseAdmin } from "../lib/supabase-admin.js";
+import {
+  ok,
+  badRequest,
+  methodNotAllowed,
+  serverError,
+  unprocessableEntity,
+} from "../lib/responses.js";
+import { validateContactInput } from "../lib/validation.js";
+import { contactRateLimit } from "../lib/rate-limit.js";
+import {
+  logRequestStart,
+  logRequestSuccess,
+  logRequestError,
+} from "../lib/logger.js";
 
-function sendJson(res, statusCode, payload) {
-  res.status(statusCode).json(payload);
-}
+const TABLE_NAME = "contact_messages";
+const DEFAULT_SOURCE = "website";
+const DEFAULT_CONTACT_PAGE = "contact.html";
 
-function normalizeText(value) {
-  return String(value || "").trim();
-}
+function normalizeText(value, { preserveLineBreaks = false } = {}) {
+  let text = String(value ?? "");
 
-function normalizeEmail(value) {
-  return normalizeText(value).toLowerCase();
-}
+  text = text.replace(/\u0000/g, "");
 
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (preserveLineBreaks) {
+    text = text
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .replace(/[ \t]+/g, " ");
+    return text.trim();
+  }
+
+  return text.replace(/\s+/g, " ").trim();
 }
 
 function getRequestBody(req) {
-  if (!req.body) return {};
+  if (!req?.body) {
+    return {};
+  }
 
   if (typeof req.body === "string") {
     try {
       return JSON.parse(req.body);
     } catch {
-      return {};
+      throw new Error("Invalid request body.");
     }
   }
 
   return req.body;
 }
 
+function getClientIp(req) {
+  const forwarded = req?.headers?.["x-forwarded-for"];
+
+  if (typeof forwarded === "string" && forwarded.length > 0) {
+    return forwarded.split(",")[0].trim();
+  }
+
+  const realIp = req?.headers?.["x-real-ip"];
+  if (typeof realIp === "string" && realIp.length > 0) {
+    return realIp.trim();
+  }
+
+  return null;
+}
+
 export default async function handler(req, res) {
-  res.setHeader("Cache-Control", "no-store");
+  logRequestStart(req, { scope: "contact" });
+
+  if (req.method === "OPTIONS") {
+    res.setHeader("Allow", "POST, OPTIONS");
+    return res.status(204).end();
+  }
 
   if (req.method !== "POST") {
-    return sendJson(res, 405, {
-      success: false,
-      message: "Method not allowed. Use POST.",
-    });
+    return methodNotAllowed(res, ["POST", "OPTIONS"], "Method not allowed. Use POST.");
   }
 
   try {
-    const body = getRequestBody(req);
+    const rateLimit = contactRateLimit(req, res);
 
-    const name = normalizeText(body.name);
-    const email = normalizeEmail(body.email);
-    const phone = normalizeText(body.phone);
-    const topic = normalizeText(body.topic);
-    const message = normalizeText(body.message);
-    const source = normalizeText(body.source) || "website-contact";
-    const contactPage = normalizeText(body.contact_page) || "contact.html";
-
-    if (!name || !email || !message) {
-      return sendJson(res, 400, {
-        success: false,
-        message: "Name, email, and message are required.",
-      });
+    if (!rateLimit.allowed) {
+      return badRequest(
+        res,
+        "Too many contact attempts. Please try again later.",
+        { retryAfter: rateLimit.retryAfter },
+        {
+          statusCode: 429,
+          error: "rate_limited",
+        }
+      );
     }
 
-    if (!isValidEmail(email)) {
-      return sendJson(res, 400, {
-        success: false,
-        message: "Please enter a valid email address.",
-      });
+    let body = {};
+
+    try {
+      body = getRequestBody(req);
+    } catch (parseError) {
+      logRequestError(req, parseError, { scope: "contact_parse" });
+      return badRequest(res, "Invalid request body.");
     }
+
+    const honeypot = normalizeText(body.company || body.website || "");
+    if (honeypot) {
+      logRequestSuccess(req, { scope: "contact_honeypot_blocked" });
+      return ok(res, null, "Your message has been received successfully.");
+    }
+
+    const validation = validateContactInput({
+      name: body.name,
+      fullName: body.fullName,
+      email: body.email,
+      phone: body.phone,
+      topic: body.topic,
+      message: normalizeText(body.message, { preserveLineBreaks: true }),
+    });
+
+    if (!validation.valid) {
+      return unprocessableEntity(
+        res,
+        "Please correct the highlighted fields.",
+        validation.errors
+      );
+    }
+
+    const {
+      name,
+      email,
+      phone,
+      topic,
+      message,
+    } = validation.values;
+
+    const source = normalizeText(body.source) || DEFAULT_SOURCE;
+    const contactPage =
+      normalizeText(body.contact_page || body.contactPage) || DEFAULT_CONTACT_PAGE;
 
     const insertPayload = {
       name,
       email,
       phone: phone || null,
-      topic: topic || null,
+      topic: topic || "general",
       message,
       source,
       contact_page: contactPage,
@@ -78,35 +149,35 @@ export default async function handler(req, res) {
     };
 
     const { data, error } = await supabaseAdmin
-      .from("contact_messages")
+      .from(TABLE_NAME)
       .insert(insertPayload)
-      .select()
+      .select("id, email, status, created_at")
       .single();
 
     if (error) {
-      console.error("Supabase contact insert error:", error);
-
-      return sendJson(res, 500, {
-        success: false,
-        message: "Unable to save your message right now.",
-      });
+      logRequestError(req, error, { scope: "contact_insert", email });
+      return serverError(res, "Unable to save your message right now.");
     }
 
-    return sendJson(res, 200, {
-      success: true,
-      message: "Your message has been received successfully.",
-      data: {
+    logRequestSuccess(req, {
+      scope: "contact",
+      contactId: data.id,
+      email: data.email,
+    });
+
+    return ok(
+      res,
+      {
         id: data.id,
         email: data.email,
         status: data.status,
+        createdAt: data.created_at,
+        clientIp: getClientIp(req),
       },
-    });
+      "Your message has been received successfully."
+    );
   } catch (error) {
-    console.error("Unexpected contact error:", error);
-
-    return sendJson(res, 500, {
-      success: false,
-      message: "Unexpected server error.",
-    });
+    logRequestError(req, error, { scope: "contact_unexpected" });
+    return serverError(res, "Unexpected server error.");
   }
 }

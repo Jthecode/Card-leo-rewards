@@ -1,0 +1,834 @@
+<!-- privacy.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Privacy Policy | Card Leo Rewards</title>
+    <meta
+      name="description"
+      content="Read the Privacy Policy for Card Leo Rewards, including how we collect, use, store, and protect your personal information."
+    />
+    <meta
+      name="keywords"
+      content="Card Leo Rewards privacy policy, privacy, member portal, rewards, data protection"
+    />
+    <meta name="theme-color" content="#08110b" />
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+      :root {
+        --bg: #08110b;
+        --bg-soft: #0d1710;
+        --panel: rgba(255, 255, 255, 0.04);
+        --panel-strong: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.08);
+        --border-gold: rgba(216, 176, 94, 0.2);
+        --text: #f8f3e8;
+        --muted: rgba(244, 234, 211, 0.76);
+        --muted-soft: rgba(244, 234, 211, 0.58);
+        --gold: #d8b05e;
+        --gold-deep: #a97c2f;
+        --success: #77d7a2;
+        --danger: #ffb7b7;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --container: 1180px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(216, 176, 94, 0.08), transparent 28%),
+          linear-gradient(180deg, #0b130d 0%, #08110b 100%);
+        color: var(--text);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      img {
+        max-width: 100%;
+        display: block;
+      }
+
+      .container {
+        width: min(100% - 32px, var(--container));
+        margin: 0 auto;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        backdrop-filter: blur(14px);
+        background: rgba(8, 17, 11, 0.78);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .site-header__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 16px 0;
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .brand__eyebrow {
+        margin: 0;
+        color: var(--gold);
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        font-weight: 800;
+      }
+
+      .brand__name {
+        margin: 0;
+        font-size: 1.12rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+      }
+
+      .site-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+      }
+
+      .site-nav a {
+        color: var(--muted);
+        padding: 10px 12px;
+        border-radius: 999px;
+        font-size: 0.94rem;
+        transition: 0.2s ease;
+      }
+
+      .site-nav a:hover,
+      .site-nav a:focus-visible,
+      .site-nav a.is-active {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .site-nav .nav-cta {
+        background: linear-gradient(135deg, var(--gold) 0%, var(--gold-deep) 100%);
+        color: #140f07;
+        font-weight: 800;
+        box-shadow: 0 14px 30px rgba(216, 176, 94, 0.18);
+      }
+
+      .hero {
+        padding: 72px 0 28px;
+      }
+
+      .hero__card {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border-gold);
+        background:
+          radial-gradient(circle at top right, rgba(216, 176, 94, 0.14), transparent 26%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+        box-shadow: var(--shadow);
+        padding: 38px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(216, 176, 94, 0.22);
+        background: rgba(216, 176, 94, 0.08);
+        color: var(--gold);
+        font-size: 0.72rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 800;
+      }
+
+      .hero h1 {
+        margin: 18px 0 12px;
+        font-size: clamp(2.25rem, 5vw, 4rem);
+        line-height: 1.02;
+        letter-spacing: -0.03em;
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 840px;
+        font-size: 1.02rem;
+        line-height: 1.8;
+        color: var(--muted);
+      }
+
+      .meta-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 26px;
+      }
+
+      .meta-card {
+        padding: 18px;
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+      }
+
+      .meta-card__label {
+        margin: 0 0 8px;
+        color: var(--gold);
+        font-size: 0.72rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-weight: 800;
+      }
+
+      .meta-card__value {
+        margin: 0;
+        color: var(--text);
+        font-weight: 700;
+        line-height: 1.6;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 290px minmax(0, 1fr);
+        gap: 26px;
+        padding: 18px 0 84px;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 92px;
+        align-self: start;
+      }
+
+      .toc,
+      .contact-card {
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .toc {
+        padding: 22px;
+        margin-bottom: 18px;
+      }
+
+      .toc h2,
+      .contact-card h2 {
+        margin: 0 0 14px;
+        font-size: 1rem;
+        letter-spacing: -0.01em;
+      }
+
+      .toc nav {
+        display: grid;
+        gap: 8px;
+      }
+
+      .toc a {
+        padding: 11px 12px;
+        border-radius: 12px;
+        color: var(--muted);
+        font-size: 0.95rem;
+        transition: 0.2s ease;
+      }
+
+      .toc a:hover,
+      .toc a:focus-visible {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text);
+      }
+
+      .contact-card {
+        padding: 22px;
+      }
+
+      .contact-card p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 0.95rem;
+      }
+
+      .contact-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .contact-item {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        color: var(--muted);
+        font-size: 0.94rem;
+        line-height: 1.6;
+      }
+
+      .contact-item strong {
+        display: block;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+
+      .policy {
+        display: grid;
+        gap: 18px;
+      }
+
+      .section {
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        padding: 28px;
+      }
+
+      .section h2 {
+        margin: 0 0 12px;
+        font-size: 1.35rem;
+        letter-spacing: -0.02em;
+      }
+
+      .section p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        line-height: 1.85;
+      }
+
+      .section p:last-child {
+        margin-bottom: 0;
+      }
+
+      .section ul {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--muted);
+        line-height: 1.85;
+      }
+
+      .section li + li {
+        margin-top: 8px;
+      }
+
+      .section strong {
+        color: var(--text);
+      }
+
+      .callout {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(216, 176, 94, 0.2);
+        background: rgba(216, 176, 94, 0.07);
+        color: var(--muted);
+      }
+
+      .grid-two {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .mini-card {
+        border-radius: 16px;
+        padding: 18px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      .mini-card h3 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      .mini-card p {
+        margin: 0;
+        font-size: 0.95rem;
+      }
+
+      .site-footer {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .site-footer__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        padding: 24px 0 34px;
+      }
+
+      .site-footer p {
+        margin: 0;
+        color: var(--muted-soft);
+        font-size: 0.92rem;
+      }
+
+      .footer-links {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .footer-links a {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      @media (max-width: 1040px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .site-header__inner,
+        .site-footer__inner {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .site-nav {
+          width: 100%;
+          justify-content: flex-start;
+        }
+
+        .hero {
+          padding-top: 42px;
+        }
+
+        .hero__card,
+        .section,
+        .toc,
+        .contact-card {
+          padding: 22px;
+        }
+
+        .meta-row,
+        .grid-two {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <a class="brand" href="index.html" aria-label="Card Leo Rewards home">
+          <p class="brand__eyebrow">Card Leo Rewards</p>
+          <p class="brand__name">Premium Member Platform</p>
+        </a>
+
+        <nav class="site-nav" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a href="about.html">About</a>
+          <a href="get-started.html">Get Started</a>
+          <a href="signup.html">Sign Up</a>
+          <a href="contact.html">Contact</a>
+          <a href="privacy.html" class="is-active">Privacy</a>
+          <a href="login.html" class="nav-cta">Member Login</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <div class="hero__card">
+            <span class="eyebrow">Privacy Policy</span>
+            <h1>How Card Leo Rewards handles your information</h1>
+            <p>
+              This Privacy Policy explains how Card Leo Rewards collects, uses,
+              stores, and protects personal information across our public website,
+              signup flows, member authentication, and protected portal
+              experience.
+            </p>
+
+            <div class="meta-row">
+              <div class="meta-card">
+                <p class="meta-card__label">Effective Date</p>
+                <p class="meta-card__value">April 6, 2026</p>
+              </div>
+              <div class="meta-card">
+                <p class="meta-card__label">Applies To</p>
+                <p class="meta-card__value">
+                  Public site, signup forms, member portal, and related support
+                  services
+                </p>
+              </div>
+              <div class="meta-card">
+                <p class="meta-card__label">Contact</p>
+                <p class="meta-card__value">support@cardleorewards.com</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="container layout">
+        <aside class="sidebar">
+          <div class="toc">
+            <h2>On this page</h2>
+            <nav>
+              <a href="#overview">1. Overview</a>
+              <a href="#collect">2. Information We Collect</a>
+              <a href="#use">3. How We Use Information</a>
+              <a href="#share">4. When We Share Information</a>
+              <a href="#cookies">5. Cookies & Sessions</a>
+              <a href="#storage">6. Storage & Security</a>
+              <a href="#rights">7. Your Choices & Rights</a>
+              <a href="#retention">8. Data Retention</a>
+              <a href="#children">9. Children’s Privacy</a>
+              <a href="#updates">10. Policy Updates</a>
+              <a href="#contact">11. Contact Us</a>
+            </nav>
+          </div>
+
+          <div class="contact-card">
+            <h2>Need help?</h2>
+            <p>
+              If you have a privacy question, data request, or account concern,
+              contact our team and include enough detail for us to review your
+              request efficiently.
+            </p>
+
+            <div class="contact-list">
+              <div class="contact-item">
+                <strong>Email</strong>
+                support@cardleorewards.com
+              </div>
+              <div class="contact-item">
+                <strong>Portal Support</strong>
+                Use the member support area after signing in
+              </div>
+              <div class="contact-item">
+                <strong>Subject Line Suggestion</strong>
+                Privacy Request — Card Leo Rewards
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <div class="policy">
+          <section class="section" id="overview">
+            <h2>1. Overview</h2>
+            <p>
+              Card Leo Rewards operates a public-facing website, member signup
+              experience, authentication system, and protected member portal. In
+              order to provide these services, we collect and process certain
+              information you voluntarily provide to us, along with limited
+              technical information associated with site visits, account access,
+              and support requests.
+            </p>
+            <p>
+              By using our website, submitting forms, creating or accessing a
+              member account, or communicating with our team, you acknowledge that
+              your information may be processed in accordance with this Privacy
+              Policy.
+            </p>
+            <div class="callout">
+              We aim to collect only the information reasonably needed to operate
+              the Card Leo Rewards platform, support members, maintain account
+              security, and improve the overall experience.
+            </div>
+          </section>
+
+          <section class="section" id="collect">
+            <h2>2. Information We Collect</h2>
+            <p>Depending on how you interact with Card Leo Rewards, we may collect:</p>
+            <ul>
+              <li>
+                <strong>Identity and contact details</strong>, such as first name,
+                last name, email address, phone number, city, and state.
+              </li>
+              <li>
+                <strong>Signup and onboarding details</strong>, such as referral
+                information, interest selections, goals, submission source, and
+                page of origin.
+              </li>
+              <li>
+                <strong>Member account information</strong>, such as portal user
+                identifiers, login activity, profile updates, settings, rewards
+                visibility, and support history.
+              </li>
+              <li>
+                <strong>Support request information</strong>, including topic,
+                subject, message content, and related timestamps.
+              </li>
+              <li>
+                <strong>Technical and device data</strong>, such as browser type,
+                operating system, approximate IP-based session metadata, request
+                logs, and similar usage information.
+              </li>
+              <li>
+                <strong>Authentication and session data</strong>, including secure
+                cookies, login status, password reset events, email verification
+                activity, and account session management details.
+              </li>
+            </ul>
+
+            <div class="grid-two" style="margin-top: 18px">
+              <div class="mini-card">
+                <h3>Information you give us directly</h3>
+                <p>
+                  This includes any details you submit through signup forms,
+                  contact forms, profile fields, support requests, login flows, or
+                  portal settings.
+                </p>
+              </div>
+              <div class="mini-card">
+                <h3>Information collected automatically</h3>
+                <p>
+                  This includes limited technical and operational data used to
+                  maintain the site, support sessions, secure accounts, and
+                  diagnose performance or abuse-related issues.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section class="section" id="use">
+            <h2>3. How We Use Information</h2>
+            <p>We may use collected information to:</p>
+            <ul>
+              <li>process signups and onboard prospective or active members;</li>
+              <li>create, manage, and secure member portal access;</li>
+              <li>authenticate users and maintain active sessions;</li>
+              <li>send account-related emails, including verification, welcome, and password reset messages;</li>
+              <li>display and manage member profile details, support history, and rewards-related information;</li>
+              <li>respond to questions, support requests, and operational inquiries;</li>
+              <li>monitor service reliability, detect misuse, and improve performance;</li>
+              <li>maintain internal business records, reporting, and administrative operations; and</li>
+              <li>comply with applicable legal requirements or platform security obligations.</li>
+            </ul>
+          </section>
+
+          <section class="section" id="share">
+            <h2>4. When We Share Information</h2>
+            <p>
+              We do not sell your personal information. We may share information
+              only in limited circumstances such as:
+            </p>
+            <ul>
+              <li>
+                with trusted service providers that help us operate the website,
+                database, authentication, hosting, or communications systems;
+              </li>
+              <li>
+                when necessary to investigate fraud, abuse, unauthorized access,
+                or security incidents;
+              </li>
+              <li>
+                when required by law, regulation, legal process, or valid
+                governmental request; or
+              </li>
+              <li>
+                in connection with a business transition, provided appropriate
+                protections continue to apply to your information.
+              </li>
+            </ul>
+            <p>
+              Any third-party service providers used in connection with Card Leo
+              Rewards are expected to process information only for operational and
+              support purposes related to the platform.
+            </p>
+          </section>
+
+          <section class="section" id="cookies">
+            <h2>5. Cookies &amp; Session Technologies</h2>
+            <p>
+              Card Leo Rewards uses cookies and similar session technologies to
+              support login state, portal security, account continuity, and core
+              site functionality.
+            </p>
+            <ul>
+              <li>
+                <strong>Essential cookies</strong> help maintain secure sessions,
+                authentication state, and portal access.
+              </li>
+              <li>
+                <strong>Operational cookies</strong> may help remember certain
+                user choices or maintain consistency during sign-in and support
+                flows.
+              </li>
+              <li>
+                <strong>Security-related session data</strong> may be used to
+                help detect suspicious access patterns, manage device sessions, or
+                support account recovery workflows.
+              </li>
+            </ul>
+            <p>
+              Because certain cookies are necessary for core site and portal
+              functionality, disabling them may limit or prevent access to member
+              features.
+            </p>
+          </section>
+
+          <section class="section" id="storage">
+            <h2>6. Storage, Infrastructure &amp; Security</h2>
+            <p>
+              We use modern web infrastructure and database tools to operate Card
+              Leo Rewards, including hosted services used for application logic,
+              authentication, storage, and member data management.
+            </p>
+            <p>
+              We take reasonable administrative, technical, and organizational
+              steps to protect personal information against unauthorized access,
+              misuse, or disclosure. These measures may include secure transport,
+              authenticated access controls, server-side processing for sensitive
+              actions, and restricted handling of privileged credentials.
+            </p>
+            <p>
+              Even so, no internet-based platform or storage system can be
+              guaranteed to be completely secure. You should use strong passwords,
+              keep your login credentials confidential, and contact us immediately
+              if you believe your account has been compromised.
+            </p>
+          </section>
+
+          <section class="section" id="rights">
+            <h2>7. Your Choices &amp; Rights</h2>
+            <p>
+              Subject to applicable law and verification of your identity, you may
+              request to:
+            </p>
+            <ul>
+              <li>access certain personal information we maintain about you;</li>
+              <li>correct inaccurate or incomplete information;</li>
+              <li>request deletion of certain information, where appropriate;</li>
+              <li>update profile details through your member portal, when available;</li>
+              <li>manage settings related to account notifications and portal preferences; and</li>
+              <li>ask questions about how your information is used in connection with your membership.</li>
+            </ul>
+            <p>
+              Some information may need to be retained for security, legal,
+              operational, fraud-prevention, or recordkeeping reasons even after a
+              deletion or closure request.
+            </p>
+          </section>
+
+          <section class="section" id="retention">
+            <h2>8. Data Retention</h2>
+            <p>
+              We retain information for as long as reasonably necessary to operate
+              Card Leo Rewards, fulfill the purpose for which information was
+              collected, maintain member services, comply with legal obligations,
+              resolve disputes, and enforce our policies.
+            </p>
+            <p>
+              Retention periods may vary based on the type of information involved,
+              whether you maintain an active portal account, whether support or
+              security issues remain open, and whether laws or internal recordkeeping
+              requirements apply.
+            </p>
+          </section>
+
+          <section class="section" id="children">
+            <h2>9. Children’s Privacy</h2>
+            <p>
+              Card Leo Rewards is not directed to children under the age of 13, and
+              we do not knowingly collect personal information from children under
+              13 through the platform. If you believe a child has provided personal
+              information to us, contact us so we can review and address the issue.
+            </p>
+          </section>
+
+          <section class="section" id="updates">
+            <h2>10. Changes to This Privacy Policy</h2>
+            <p>
+              We may update this Privacy Policy from time to time to reflect
+              changes in our platform, services, technical infrastructure, legal
+              obligations, or operational practices.
+            </p>
+            <p>
+              When we make updates, we may revise the effective date at the top of
+              this page. Continued use of Card Leo Rewards after an update becomes
+              effective means the updated policy will apply going forward.
+            </p>
+          </section>
+
+          <section class="section" id="contact">
+            <h2>11. Contact Us</h2>
+            <p>
+              If you have questions about this Privacy Policy, want to submit a
+              privacy-related request, or need help with your Card Leo Rewards
+              account, contact us using the details below.
+            </p>
+
+            <div class="grid-two" style="margin-top: 14px">
+              <div class="mini-card">
+                <h3>Email</h3>
+                <p>support@cardleorewards.com</p>
+              </div>
+              <div class="mini-card">
+                <h3>Member Support</h3>
+                <p>Available through the Card Leo Rewards portal after login</p>
+              </div>
+            </div>
+
+            <div class="callout">
+              For faster handling, include your full name, account email address,
+              and the specific nature of your request.
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container site-footer__inner">
+        <p>© 2026 Card Leo Rewards. All rights reserved.</p>
+
+        <div class="footer-links">
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Terms</a>
+          <a href="cookies.html">Cookies</a>
+          <a href="contact.html">Contact</a>
+          <a href="login.html">Member Login</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

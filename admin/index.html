@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Card Leo Rewards Admin</title>
+    <meta
+      name="description"
+      content="Card Leo Rewards admin dashboard for signups, members, support, and rewards operations."
+    />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <style>
+      :root {
+        --bg: #070b14;
+        --bg-soft: #0d1424;
+        --panel: rgba(17, 24, 39, 0.78);
+        --panel-strong: rgba(11, 17, 32, 0.92);
+        --panel-border: rgba(255, 255, 255, 0.08);
+        --text: #eef4ff;
+        --muted: #99a7c2;
+        --muted-2: #72819f;
+        --line: rgba(255, 255, 255, 0.08);
+        --gold: #f5c15d;
+        --gold-2: #ffd98a;
+        --green: #3dd598;
+        --red: #ff6b81;
+        --blue: #65a8ff;
+        --amber: #ffbb55;
+        --shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+        --max-width: 1320px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(245, 193, 93, 0.12), transparent 28%),
+          radial-gradient(circle at top right, rgba(101, 168, 255, 0.12), transparent 22%),
+          linear-gradient(180deg, #09101e 0%, #050912 100%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .shell {
+        width: min(var(--max-width), calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        backdrop-filter: blur(16px);
+        background: rgba(7, 11, 20, 0.72);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .topbar-inner {
+        width: min(var(--max-width), calc(100% - 32px));
+        margin: 0 auto;
+        min-height: 78px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(135deg, rgba(245, 193, 93, 0.22), rgba(255, 217, 138, 0.08)),
+          rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(245, 193, 93, 0.28);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        font-weight: 800;
+        color: var(--gold-2);
+      }
+
+      .brand-copy h1 {
+        margin: 0;
+        font-size: 1.02rem;
+        letter-spacing: 0.02em;
+      }
+
+      .brand-copy p {
+        margin: 3px 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .top-link,
+      .btn {
+        border: 1px solid var(--panel-border);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        padding: 11px 14px;
+        border-radius: 999px;
+        transition: 0.2s ease;
+        cursor: pointer;
+      }
+
+      .top-link:hover,
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(245, 193, 93, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f5c15d, #ffd98a);
+        color: #1a1204;
+        font-weight: 700;
+        border-color: transparent;
+      }
+
+      .hero {
+        padding: 34px 0 24px;
+      }
+
+      .hero-card {
+        position: relative;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at top left, rgba(245, 193, 93, 0.18), transparent 26%),
+          radial-gradient(circle at right center, rgba(101, 168, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(9, 14, 27, 0.95));
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow);
+        padding: 30px;
+      }
+
+      .hero-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.03) 48%, transparent 100%);
+        pointer-events: none;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(245, 193, 93, 0.2);
+        background: rgba(245, 193, 93, 0.08);
+        color: var(--gold-2);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .hero-grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.9fr);
+        gap: 24px;
+      }
+
+      .hero-copy h2 {
+        margin: 0 0 14px;
+        font-size: clamp(2rem, 4vw, 3.25rem);
+        line-height: 1.02;
+        letter-spacing: -0.04em;
+      }
+
+      .hero-copy p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1.02rem;
+        line-height: 1.75;
+        max-width: 760px;
+      }
+
+      .hero-meta {
+        display: grid;
+        gap: 14px;
+      }
+
+      .meta-panel {
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 18px;
+      }
+
+      .meta-label {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.84rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .meta-value {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 700;
+      }
+
+      .section {
+        padding: 12px 0 0;
+      }
+
+      .section-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .section-title-row h3 {
+        margin: 0;
+        font-size: 1.18rem;
+        letter-spacing: -0.02em;
+      }
+
+      .section-title-row p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .stat-card,
+      .card,
+      .quick-card {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+      }
+
+      .stat-card {
+        padding: 20px;
+        min-height: 154px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .stat-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        padding: 7px 10px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .pill.gold {
+        background: rgba(245, 193, 93, 0.12);
+        color: var(--gold-2);
+      }
+
+      .pill.blue {
+        background: rgba(101, 168, 255, 0.12);
+        color: #b8d5ff;
+      }
+
+      .pill.green {
+        background: rgba(61, 213, 152, 0.12);
+        color: #9af1cb;
+      }
+
+      .pill.red {
+        background: rgba(255, 107, 129, 0.12);
+        color: #ffc1cb;
+      }
+
+      .stat-label {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .stat-value {
+        font-size: clamp(2rem, 3vw, 2.55rem);
+        line-height: 1;
+        letter-spacing: -0.04em;
+        font-weight: 800;
+      }
+
+      .stat-subtext {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .content-grid {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+        gap: 16px;
+      }
+
+      .card {
+        padding: 22px;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+
+      .card-header h4 {
+        margin: 0;
+        font-size: 1.02rem;
+      }
+
+      .card-header p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .list-item {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.025);
+        padding: 14px;
+      }
+
+      .list-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .list-title {
+        margin: 0;
+        font-size: 0.98rem;
+        font-weight: 700;
+      }
+
+      .list-meta {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+        line-height: 1.6;
+      }
+
+      .empty {
+        border: 1px dashed var(--line);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .quick-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .quick-card {
+        padding: 20px;
+        min-height: 196px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .quick-card h5 {
+        margin: 0 0 10px;
+        font-size: 1.05rem;
+      }
+
+      .quick-card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 0.95rem;
+      }
+
+      .quick-card .btn {
+        margin-top: 16px;
+        width: fit-content;
+      }
+
+      .footer-space {
+        height: 40px;
+      }
+
+      .status-banner {
+        display: none;
+        margin: 16px 0 0;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 107, 129, 0.22);
+        background: rgba(255, 107, 129, 0.08);
+        color: #ffd5dc;
+      }
+
+      .loading {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .loading::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.05),
+          transparent
+        );
+        animation: shimmer 1.2s infinite;
+      }
+
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      @media (max-width: 1120px) {
+        .stats-grid,
+        .quick-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .content-grid,
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .topbar-inner {
+          padding: 12px 0;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .stats-grid,
+        .quick-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-card,
+        .card,
+        .stat-card,
+        .quick-card {
+          padding: 18px;
+        }
+
+        .hero {
+          padding-top: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark">CL</div>
+          <div class="brand-copy">
+            <h1>Card Leo Rewards Admin</h1>
+            <p>Operations dashboard for members, support, and rewards</p>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <a class="top-link" href="/">Website</a>
+          <a class="top-link" href="/portal/index.html">Member Portal</a>
+          <button class="btn" id="refreshBtn" type="button">Refresh</button>
+          <button class="btn btn-primary" id="logoutBtn" type="button">Log Out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-card">
+          <div class="eyebrow">Admin Command Center</div>
+
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <h2>Run Card Leo Rewards from one elite dashboard.</h2>
+              <p>
+                Review incoming signups, monitor active members, manage support,
+                and keep the rewards engine moving with full operational visibility.
+              </p>
+
+              <div id="statusBanner" class="status-banner"></div>
+            </div>
+
+            <div class="hero-meta">
+              <div class="meta-panel">
+                <p class="meta-label">Signed in as</p>
+                <p class="meta-value" id="adminName">Loading...</p>
+              </div>
+
+              <div class="meta-panel">
+                <p class="meta-label">Role access</p>
+                <p class="meta-value" id="adminAccess">Checking permissions...</p>
+              </div>
+
+              <div class="meta-panel">
+                <p class="meta-label">Last refresh</p>
+                <p class="meta-value" id="lastRefresh">—</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-title-row">
+          <div>
+            <h3>Operational Snapshot</h3>
+            <p>Live summary pulled from signups, members, and support.</p>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card loading" id="signupsCard">
+            <div class="stat-top">
+              <span class="pill gold">Signups</span>
+              <a href="/admin/signups.html" class="top-link">Open</a>
+            </div>
+            <div class="stat-label">Pending review</div>
+            <div class="stat-value" id="signupsValue">—</div>
+            <div class="stat-subtext" id="signupsSubtext">Loading signup data...</div>
+          </article>
+
+          <article class="stat-card loading" id="membersCard">
+            <div class="stat-top">
+              <span class="pill blue">Members</span>
+              <a href="/admin/members.html" class="top-link">Open</a>
+            </div>
+            <div class="stat-label">Active members</div>
+            <div class="stat-value" id="membersValue">—</div>
+            <div class="stat-subtext" id="membersSubtext">Loading member data...</div>
+          </article>
+
+          <article class="stat-card loading" id="supportCard">
+            <div class="stat-top">
+              <span class="pill red">Support</span>
+              <a href="/admin/support.html" class="top-link">Open</a>
+            </div>
+            <div class="stat-label">Open or in progress</div>
+            <div class="stat-value" id="supportValue">—</div>
+            <div class="stat-subtext" id="supportSubtext">Loading support data...</div>
+          </article>
+
+          <article class="stat-card loading" id="rewardsCard">
+            <div class="stat-top">
+              <span class="pill green">Rewards</span>
+              <span class="top-link" style="pointer-events: none;">Live</span>
+            </div>
+            <div class="stat-label">VIP + admin operators</div>
+            <div class="stat-value" id="rewardsValue">—</div>
+            <div class="stat-subtext" id="rewardsSubtext">Loading operator insight...</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="content-grid">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h4>Latest Signups</h4>
+                <p>Newest leads and member approvals waiting for action.</p>
+              </div>
+              <a href="/admin/signups.html" class="top-link">View all</a>
+            </div>
+
+            <div id="latestSignups" class="list">
+              <div class="empty">Loading recent signups...</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h4>Support Queue</h4>
+                <p>Recent tickets that need review, routing, or follow-up.</p>
+              </div>
+              <a href="/admin/support.html" class="top-link">View all</a>
+            </div>
+
+            <div id="supportQueue" class="list">
+              <div class="empty">Loading recent tickets...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h4>Quick Actions</h4>
+              <p>Jump straight into the most important admin workflows.</p>
+            </div>
+          </div>
+
+          <div class="quick-grid">
+            <article class="quick-card">
+              <div>
+                <h5>Review Signups</h5>
+                <p>
+                  Inspect new lead submissions, approve qualified members, and
+                  move people from signup to live portal access.
+                </p>
+              </div>
+              <a class="btn btn-primary" href="/admin/signups.html">Open Signups</a>
+            </article>
+
+            <article class="quick-card">
+              <div>
+                <h5>Manage Members</h5>
+                <p>
+                  View active member records, tier status, onboarding progress,
+                  portal access, and rewards standing across the platform.
+                </p>
+              </div>
+              <a class="btn btn-primary" href="/admin/members.html">Open Members</a>
+            </article>
+
+            <article class="quick-card">
+              <div>
+                <h5>Run Support Ops</h5>
+                <p>
+                  Monitor open tickets, check assignees, and keep the member
+                  experience tight with fast operational response.
+                </p>
+              </div>
+              <a class="btn btn-primary" href="/admin/support.html">Open Support</a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer-space"></div>
+    </main>
+
+    <script>
+      (function () {
+        const state = {
+          me: null,
+          signups: null,
+          members: null,
+          support: null,
+        };
+
+        function $(id) {
+          return document.getElementById(id);
+        }
+
+        function setText(id, value) {
+          const el = $(id);
+          if (el) el.textContent = value;
+        }
+
+        function setHtml(id, value) {
+          const el = $(id);
+          if (el) el.innerHTML = value;
+        }
+
+        function showBanner(message) {
+          const el = $("statusBanner");
+          if (!el) return;
+          el.textContent = message || "";
+          el.style.display = message ? "block" : "none";
+        }
+
+        function escapeHtml(value) {
+          return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+        }
+
+        function titleCase(value) {
+          return String(value || "")
+            .split(/[\s_-]+/)
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(" ");
+        }
+
+        function formatDate(value) {
+          if (!value) return "—";
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return "—";
+
+          return new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          }).format(date);
+        }
+
+        function formatCount(value) {
+          const num = Number(value || 0);
+          return Number.isFinite(num) ? num.toLocaleString() : "0";
+        }
+
+        async function api(url, options = {}) {
+          const response = await fetch(url, {
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              ...(options.headers || {}),
+            },
+            ...options,
+          });
+
+          const contentType = response.headers.get("content-type") || "";
+          const body = contentType.includes("application/json")
+            ? await response.json()
+            : { success: false, message: "Unexpected server response." };
+
+          if (!response.ok || body?.success === false) {
+            const error = new Error(body?.message || "Request failed.");
+            error.status = response.status;
+            error.payload = body;
+            throw error;
+          }
+
+          return body;
+        }
+
+        function stripLoading() {
+          ["signupsCard", "membersCard", "supportCard", "rewardsCard"].forEach((id) => {
+            const el = $(id);
+            if (el) el.classList.remove("loading");
+          });
+        }
+
+        function renderAdminHeader() {
+          const adminName =
+            state.signups?.data?.admin?.fullName ||
+            state.members?.data?.admin?.fullName ||
+            state.support?.data?.admin?.fullName ||
+            state.me?.data?.user?.email ||
+            "Admin";
+
+          setText("adminName", adminName);
+
+          const access = [];
+          if (state.signups?.data?.admin?.canManageMembers) access.push("Members");
+          if (state.support?.data?.admin?.canManageSupport) access.push("Support");
+          if (state.members?.data?.admin?.isSuperAdmin) access.push("Super Admin");
+
+          setText("adminAccess", access.length ? access.join(" • ") : "Verified Admin");
+          setText("lastRefresh", formatDate(new Date().toISOString()));
+        }
+
+        function renderSnapshot() {
+          const signupSummary = state.signups?.data?.summary || {};
+          const memberSummary = state.members?.data?.summary || {};
+          const supportSummary = state.support?.data?.summary || {};
+
+          const pendingSignups =
+            Number(signupSummary.statusCounts?.new || 0) +
+            Number(signupSummary.statusCounts?.reviewing || 0);
+
+          setText("signupsValue", formatCount(pendingSignups));
+          setText(
+            "signupsSubtext",
+            `${formatCount(signupSummary.total || 0)} total • ${formatCount(
+              signupSummary.active || 0
+            )} active`
+          );
+
+          setText("membersValue", formatCount(memberSummary.activeMembers || 0));
+          setText(
+            "membersSubtext",
+            `${formatCount(memberSummary.total || 0)} total • ${formatCount(
+              memberSummary.adminOperators || 0
+            )} admins`
+          );
+
+          const liveSupport =
+            Number(supportSummary.open || 0) +
+            Number(supportSummary.inProgress || 0) +
+            Number(supportSummary.waitingOnMember || 0);
+
+          setText("supportValue", formatCount(liveSupport));
+          setText(
+            "supportSubtext",
+            `${formatCount(supportSummary.urgent || 0)} urgent • ${formatCount(
+              supportSummary.total || 0
+            )} total`
+          );
+
+          const vipCount = (state.members?.data?.members || []).filter(
+            (member) => String(member.tier || "").toLowerCase() === "vip"
+          ).length;
+
+          const operatorCount =
+            Number(memberSummary.adminOperators || 0) +
+            Number(memberSummary.supportOperators || 0);
+
+          setText("rewardsValue", formatCount(vipCount + operatorCount));
+          setText(
+            "rewardsSubtext",
+            `${formatCount(vipCount)} VIP visible • ${formatCount(operatorCount)} operators`
+          );
+        }
+
+        function renderSignups() {
+          const list = state.signups?.data?.signups || [];
+          if (!list.length) {
+            setHtml("latestSignups", `<div class="empty">No signup records found.</div>`);
+            return;
+          }
+
+          setHtml(
+            "latestSignups",
+            list
+              .slice(0, 5)
+              .map(
+                (item) => `
+                  <article class="list-item">
+                    <div class="list-row">
+                      <p class="list-title">${escapeHtml(item.fullName || item.email || "Signup")}</p>
+                      <span class="pill gold">${escapeHtml(item.statusLabel || "New")}</span>
+                    </div>
+                    <p class="list-meta">
+                      ${escapeHtml(item.email || "No email")} •
+                      ${escapeHtml(item.sourceLabel || "Website")} •
+                      ${escapeHtml(formatDate(item.createdAt))}
+                    </p>
+                  </article>
+                `
+              )
+              .join("")
+          );
+        }
+
+        function renderSupport() {
+          const tickets = state.support?.data?.tickets || [];
+          if (!tickets.length) {
+            setHtml("supportQueue", `<div class="empty">No support tickets found.</div>`);
+            return;
+          }
+
+          setHtml(
+            "supportQueue",
+            tickets
+              .slice(0, 5)
+              .map(
+                (item) => `
+                  <article class="list-item">
+                    <div class="list-row">
+                      <p class="list-title">${escapeHtml(item.subject || item.ticketNumber || "Support Ticket")}</p>
+                      <span class="pill red">${escapeHtml(item.priorityLabel || "Normal")}</span>
+                    </div>
+                    <p class="list-meta">
+                      ${escapeHtml(item.ticketNumber || "No ticket number")} •
+                      ${escapeHtml(item.statusLabel || "Open")} •
+                      ${escapeHtml(formatDate(item.lastMessageAt || item.createdAt))}
+                    </p>
+                  </article>
+                `
+              )
+              .join("")
+          );
+        }
+
+        async function loadDashboard() {
+          showBanner("");
+
+          try {
+            state.me = await api("/api/auth/me");
+          } catch (error) {
+            if (error?.status === 401) {
+              const next = encodeURIComponent("/admin/index.html");
+              window.location.href = `/login.html?next=${next}`;
+              return;
+            }
+
+            showBanner(error?.message || "Unable to verify your session.");
+            stripLoading();
+            return;
+          }
+
+          try {
+            const [signups, members, support] = await Promise.all([
+              api("/api/admin/signups?limit=5&status=all&sort=newest"),
+              api("/api/admin/members?limit=8&status=all&sort=newest"),
+              api("/api/admin/support?limit=5&status=all&sort=updated"),
+            ]);
+
+            state.signups = signups;
+            state.members = members;
+            state.support = support;
+
+            renderAdminHeader();
+            renderSnapshot();
+            renderSignups();
+            renderSupport();
+            stripLoading();
+          } catch (error) {
+            stripLoading();
+
+            if (error?.status === 403) {
+              window.location.href = "/unauthorized.html";
+              return;
+            }
+
+            showBanner(error?.message || "Unable to load admin dashboard data.");
+          }
+        }
+
+        async function handleLogout() {
+          try {
+            await api("/api/auth/logout", {
+              method: "POST",
+            });
+          } catch (_) {
+          } finally {
+            window.location.href = "/login.html";
+          }
+        }
+
+        function bindEvents() {
+          const refreshBtn = $("refreshBtn");
+          const logoutBtn = $("logoutBtn");
+
+          if (refreshBtn) {
+            refreshBtn.addEventListener("click", () => {
+              ["signupsCard", "membersCard", "supportCard", "rewardsCard"].forEach((id) => {
+                const el = $(id);
+                if (el) el.classList.add("loading");
+              });
+
+              setHtml("latestSignups", `<div class="empty">Refreshing signups...</div>`);
+              setHtml("supportQueue", `<div class="empty">Refreshing tickets...</div>`);
+              loadDashboard();
+            });
+          }
+
+          if (logoutBtn) {
+            logoutBtn.addEventListener("click", handleLogout);
+          }
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+              bindEvents();
+              loadDashboard();
+            },
+            { once: true }
+          );
+        } else {
+          bindEvents();
+          loadDashboard();
+        }
+      })();
+    </script>
+  </body>
+</html>

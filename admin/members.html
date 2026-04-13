@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Admin Members | Card Leo Rewards</title>
+    <meta
+      name="description"
+      content="Manage Card Leo Rewards members, onboarding, tiers, and rewards visibility."
+    />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <style>
+      :root {
+        --bg: #070b14;
+        --bg-soft: #0d1424;
+        --panel: rgba(17, 24, 39, 0.78);
+        --panel-strong: rgba(11, 17, 32, 0.92);
+        --panel-border: rgba(255, 255, 255, 0.08);
+        --text: #eef4ff;
+        --muted: #99a7c2;
+        --muted-2: #72819f;
+        --line: rgba(255, 255, 255, 0.08);
+        --gold: #f5c15d;
+        --gold-2: #ffd98a;
+        --green: #3dd598;
+        --red: #ff6b81;
+        --blue: #65a8ff;
+        --amber: #ffbb55;
+        --shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+        --max-width: 1420px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(245, 193, 93, 0.12), transparent 28%),
+          radial-gradient(circle at top right, rgba(101, 168, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, #09101e 0%, #050912 100%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .shell {
+        width: min(var(--max-width), calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        backdrop-filter: blur(16px);
+        background: rgba(7, 11, 20, 0.72);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .topbar-inner {
+        width: min(var(--max-width), calc(100% - 32px));
+        margin: 0 auto;
+        min-height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(135deg, rgba(245, 193, 93, 0.22), rgba(255, 217, 138, 0.08)),
+          rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(245, 193, 93, 0.28);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        font-weight: 800;
+        color: var(--gold-2);
+      }
+
+      .brand-copy h1 {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .brand-copy p {
+        margin: 3px 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .top-link,
+      .btn {
+        border: 1px solid var(--panel-border);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        padding: 11px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .top-link:hover,
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(245, 193, 93, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f5c15d, #ffd98a);
+        color: #1a1204;
+        font-weight: 700;
+        border-color: transparent;
+      }
+
+      .hero {
+        padding: 28px 0 18px;
+      }
+
+      .hero-card,
+      .panel,
+      .stats-card,
+      .table-wrap,
+      .detail-card {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-card {
+        padding: 28px;
+        position: relative;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at top left, rgba(245, 193, 93, 0.18), transparent 26%),
+          radial-gradient(circle at right center, rgba(101, 168, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(9, 14, 27, 0.95));
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(245, 193, 93, 0.2);
+        background: rgba(245, 193, 93, 0.08);
+        color: var(--gold-2);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .hero-grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.85fr);
+        gap: 24px;
+      }
+
+      .hero-copy h2 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1.04;
+        letter-spacing: -0.04em;
+      }
+
+      .hero-copy p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.75;
+        max-width: 780px;
+      }
+
+      .hero-meta {
+        display: grid;
+        gap: 14px;
+      }
+
+      .meta-card {
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 18px;
+      }
+
+      .meta-label {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.84rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .meta-value {
+        margin: 0;
+        font-size: 1.12rem;
+        font-weight: 700;
+      }
+
+      .section {
+        padding: 10px 0 0;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .stats-card {
+        padding: 18px;
+        min-height: 140px;
+      }
+
+      .stats-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 7px 10px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .pill.gold {
+        background: rgba(245, 193, 93, 0.12);
+        color: var(--gold-2);
+      }
+
+      .pill.blue {
+        background: rgba(101, 168, 255, 0.12);
+        color: #b8d5ff;
+      }
+
+      .pill.green {
+        background: rgba(61, 213, 152, 0.12);
+        color: #9af1cb;
+      }
+
+      .pill.red {
+        background: rgba(255, 107, 129, 0.12);
+        color: #ffc1cb;
+      }
+
+      .pill.amber {
+        background: rgba(255, 187, 85, 0.12);
+        color: #ffd39b;
+      }
+
+      .stats-label {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .stats-value {
+        font-size: clamp(1.8rem, 3vw, 2.3rem);
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+
+      .stats-sub {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .toolbar {
+        margin-top: 16px;
+        padding: 18px;
+      }
+
+      .toolbar-grid {
+        display: grid;
+        grid-template-columns: 1.35fr repeat(4, minmax(0, 1fr)) auto;
+        gap: 12px;
+        align-items: end;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        color: var(--muted);
+        font-size: 0.83rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .input,
+      .select {
+        width: 100%;
+        border: 1px solid var(--panel-border);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        border-radius: 14px;
+        padding: 12px 14px;
+        outline: none;
+      }
+
+      .input:focus,
+      .select:focus {
+        border-color: rgba(245, 193, 93, 0.35);
+        box-shadow: 0 0 0 3px rgba(245, 193, 93, 0.08);
+      }
+
+      .table-layout {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.32fr) minmax(380px, 0.78fr);
+        gap: 16px;
+      }
+
+      .table-wrap {
+        overflow: hidden;
+      }
+
+      .table-head {
+        padding: 18px 20px 10px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .table-head h3,
+      .detail-head h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .table-head p,
+      .detail-head p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .table-scroll {
+        overflow: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1120px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 14px 20px;
+        border-top: 1px solid var(--line);
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      td {
+        font-size: 0.95rem;
+      }
+
+      tbody tr {
+        cursor: pointer;
+        transition: background 0.18s ease;
+      }
+
+      tbody tr:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      tbody tr.active {
+        background: rgba(245, 193, 93, 0.08);
+      }
+
+      .name-cell {
+        display: grid;
+        gap: 6px;
+      }
+
+      .name-title {
+        font-weight: 700;
+      }
+
+      .meta-line {
+        color: var(--muted);
+        font-size: 0.86rem;
+        line-height: 1.55;
+      }
+
+      .status-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        white-space: nowrap;
+      }
+
+      .status-pending {
+        background: rgba(255, 187, 85, 0.12);
+        color: #ffd39b;
+      }
+
+      .status-active {
+        background: rgba(61, 213, 152, 0.12);
+        color: #9af1cb;
+      }
+
+      .status-paused,
+      .status-suspended {
+        background: rgba(255, 107, 129, 0.12);
+        color: #ffc1cb;
+      }
+
+      .status-closed {
+        background: rgba(255, 255, 255, 0.08);
+        color: #d9e1f2;
+      }
+
+      .tier-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        background: rgba(101, 168, 255, 0.12);
+        color: #b8d5ff;
+        text-transform: uppercase;
+      }
+
+      .tier-vip {
+        background: rgba(245, 193, 93, 0.14);
+        color: var(--gold-2);
+      }
+
+      .tier-gold {
+        background: rgba(245, 193, 93, 0.12);
+        color: #ffd39b;
+      }
+
+      .tier-platinum {
+        background: rgba(185, 193, 214, 0.18);
+        color: #eef4ff;
+      }
+
+      .detail-card {
+        overflow: hidden;
+      }
+
+      .detail-head {
+        padding: 18px 20px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .detail-body {
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .detail-empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 28px 12px;
+        border: 1px dashed var(--line);
+        border-radius: var(--radius-md);
+      }
+
+      .detail-block {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.025);
+        padding: 16px;
+      }
+
+      .detail-block h4 {
+        margin: 0 0 12px;
+        font-size: 0.98rem;
+      }
+
+      .kv {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 10px 12px;
+      }
+
+      .kv .k {
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .kv .v {
+        font-size: 0.92rem;
+        word-break: break-word;
+      }
+
+      .flag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .flag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .footer-row {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 4px 36px;
+      }
+
+      .pagination {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .loading {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .loading::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.05),
+          transparent
+        );
+        animation: shimmer 1.2s infinite;
+      }
+
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      @media (max-width: 1260px) {
+        .stats-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .toolbar-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .table-layout,
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .topbar-inner {
+          padding: 12px 0;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .toolbar-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-card,
+        .panel,
+        .stats-card,
+        .detail-card {
+          padding: 18px;
+        }
+
+        .kv {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark">CL</div>
+          <div class="brand-copy">
+            <h1>Admin Members</h1>
+            <p>Monitor member lifecycle, onboarding, tiers, and rewards posture</p>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <a class="top-link" href="/admin/index.html">Dashboard</a>
+          <a class="top-link" href="/admin/signups.html">Signups</a>
+          <a class="top-link" href="/admin/support.html">Support</a>
+          <button class="btn" id="refreshBtn" type="button">Refresh</button>
+          <button class="btn btn-primary" id="logoutBtn" type="button">Log Out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-card">
+          <div class="eyebrow">Member Operations</div>
+
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <h2>See every member, every tier, and every onboarding stage.</h2>
+              <p>
+                Track active members, VIP visibility, portal readiness, reward posture,
+                and admin-operator overlap from one clean control layer.
+              </p>
+            </div>
+
+            <div class="hero-meta">
+              <div class="meta-card">
+                <p class="meta-label">Signed in as</p>
+                <p class="meta-value" id="adminName">Loading...</p>
+              </div>
+
+              <div class="meta-card">
+                <p class="meta-label">Access level</p>
+                <p class="meta-value" id="adminAccess">Checking...</p>
+              </div>
+
+              <div class="meta-card">
+                <p class="meta-label">Last refresh</p>
+                <p class="meta-value" id="lastRefresh">—</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="stats-grid">
+          <article class="stats-card loading" id="cardTotal">
+            <div class="stats-top">
+              <span class="pill gold">Members</span>
+            </div>
+            <div class="stats-label">Total records</div>
+            <div class="stats-value" id="valueTotal">—</div>
+            <div class="stats-sub">All member profiles</div>
+          </article>
+
+          <article class="stats-card loading" id="cardActive">
+            <div class="stats-top">
+              <span class="pill green">Active</span>
+            </div>
+            <div class="stats-label">Live members</div>
+            <div class="stats-value" id="valueActive">—</div>
+            <div class="stats-sub">Currently active accounts</div>
+          </article>
+
+          <article class="stats-card loading" id="cardPending">
+            <div class="stats-top">
+              <span class="pill amber">Pending</span>
+            </div>
+            <div class="stats-label">Still onboarding</div>
+            <div class="stats-value" id="valuePending">—</div>
+            <div class="stats-sub">Not fully activated yet</div>
+          </article>
+
+          <article class="stats-card loading" id="cardVip">
+            <div class="stats-top">
+              <span class="pill gold">VIP</span>
+            </div>
+            <div class="stats-label">Top-tier members</div>
+            <div class="stats-value" id="valueVip">—</div>
+            <div class="stats-sub">VIP tier accounts</div>
+          </article>
+
+          <article class="stats-card loading" id="cardAdmins">
+            <div class="stats-top">
+              <span class="pill blue">Admins</span>
+            </div>
+            <div class="stats-label">Admin operators</div>
+            <div class="stats-value" id="valueAdmins">—</div>
+            <div class="stats-sub">Profiles with admin role</div>
+          </article>
+
+          <article class="stats-card loading" id="cardSupport">
+            <div class="stats-top">
+              <span class="pill red">Support</span>
+            </div>
+            <div class="stats-label">Support operators</div>
+            <div class="stats-value" id="valueSupport">—</div>
+            <div class="stats-sub">Profiles with support role</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="panel toolbar">
+          <div class="toolbar-grid">
+            <div class="field">
+              <label for="searchInput">Search</label>
+              <input
+                class="input"
+                id="searchInput"
+                type="search"
+                placeholder="Search by name, email, phone, referral code..."
+              />
+            </div>
+
+            <div class="field">
+              <label for="statusFilter">Status</label>
+              <select class="select" id="statusFilter"></select>
+            </div>
+
+            <div class="field">
+              <label for="tierFilter">Tier</label>
+              <select class="select" id="tierFilter"></select>
+            </div>
+
+            <div class="field">
+              <label for="roleFilter">Role</label>
+              <select class="select" id="roleFilter"></select>
+            </div>
+
+            <div class="field">
+              <label for="sortFilter">Sort</label>
+              <select class="select" id="sortFilter"></select>
+            </div>
+
+            <div class="field">
+              <label for="limitFilter">Rows</label>
+              <select class="select" id="limitFilter">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="toolbar-grid" style="margin-top: 12px; grid-template-columns: 1fr auto auto;">
+            <div class="field">
+              <label for="pageIndicator">Page</label>
+              <input class="input" id="pageIndicator" type="text" value="1" readonly />
+            </div>
+
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn" id="clearFiltersBtn" type="button">Clear Filters</button>
+            </div>
+
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary" id="applyFiltersBtn" type="button">
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="table-layout">
+          <div class="table-wrap">
+            <div class="table-head">
+              <div>
+                <h3>Member Directory</h3>
+                <p id="tableMeta">Loading members...</p>
+              </div>
+            </div>
+
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Member</th>
+                    <th>Status</th>
+                    <th>Tier</th>
+                    <th>Role</th>
+                    <th>Onboarding</th>
+                    <th>Rewards</th>
+                    <th>Support</th>
+                    <th>Updated</th>
+                  </tr>
+                </thead>
+                <tbody id="membersTableBody">
+                  <tr>
+                    <td colspan="8" class="muted">Loading member records...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="detail-card">
+            <div class="detail-head">
+              <div>
+                <h3>Member Detail</h3>
+                <p>Inspect profile state, onboarding, rewards, and operational flags.</p>
+              </div>
+            </div>
+
+            <div class="detail-body" id="detailBody">
+              <div class="detail-empty">
+                Select a member from the table to view full detail.
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="footer-row">
+          <div class="muted" id="paginationMeta">—</div>
+
+          <div class="pagination">
+            <button class="btn" id="prevPageBtn" type="button">Previous</button>
+            <button class="btn" id="nextPageBtn" type="button">Next</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        const state = {
+          admin: null,
+          filters: {
+            status: "all",
+            tier: "all",
+            role: "all",
+            sort: "newest",
+            search: "",
+            limit: 20,
+            page: 1,
+          },
+          options: {
+            statuses: [],
+            tiers: [],
+            roles: [],
+            sorts: [],
+          },
+          pagination: null,
+          summary: null,
+          members: [],
+          selectedMemberId: null,
+        };
+
+        const SORT_LABELS = {
+          newest: "Newest",
+          oldest: "Oldest",
+          name: "Name",
+          status: "Status",
+          tier: "Tier",
+        };
+
+        function $(id) {
+          return document.getElementById(id);
+        }
+
+        function escapeHtml(value) {
+          return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+        }
+
+        function titleCase(value) {
+          return String(value || "")
+            .split(/[\s_-]+/)
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(" ");
+        }
+
+        function formatDate(value) {
+          if (!value) return "—";
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return "—";
+
+          return new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          }).format(date);
+        }
+
+        function formatCount(value) {
+          const num = Number(value || 0);
+          return Number.isFinite(num) ? num.toLocaleString() : "0";
+        }
+
+        function formatPoints(value) {
+          return `${formatCount(value)} pts`;
+        }
+
+        function setText(id, value) {
+          const el = $(id);
+          if (el) el.textContent = value;
+        }
+
+        async function api(url, options = {}) {
+          const response = await fetch(url, {
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              ...(options.headers || {}),
+            },
+            ...options,
+          });
+
+          const contentType = response.headers.get("content-type") || "";
+          const body = contentType.includes("application/json")
+            ? await response.json()
+            : { success: false, message: "Unexpected server response." };
+
+          if (!response.ok || body?.success === false) {
+            const error = new Error(body?.message || "Request failed.");
+            error.status = response.status;
+            error.payload = body;
+            throw error;
+          }
+
+          return body;
+        }
+
+        function buildQuery() {
+          const params = new URLSearchParams();
+          params.set("status", state.filters.status);
+          params.set("tier", state.filters.tier);
+          params.set("role", state.filters.role);
+          params.set("sort", state.filters.sort);
+          params.set("search", state.filters.search);
+          params.set("limit", String(state.filters.limit));
+          params.set("page", String(state.filters.page));
+          return params.toString();
+        }
+
+        function getStatusClass(status) {
+          const normalized = String(status || "").toLowerCase();
+          if (normalized === "active") return "status-active";
+          if (normalized === "pending") return "status-pending";
+          if (normalized === "closed") return "status-closed";
+          if (normalized === "paused" || normalized === "suspended") return "status-paused";
+          return "status-pending";
+        }
+
+        function getTierClass(tier) {
+          const normalized = String(tier || "").toLowerCase();
+          if (normalized === "vip") return "tier-vip";
+          if (normalized === "gold") return "tier-gold";
+          if (normalized === "platinum") return "tier-platinum";
+          return "";
+        }
+
+        function renderHeader() {
+          if (!state.admin) return;
+
+          setText("adminName", state.admin.fullName || state.admin.email || "Admin");
+          setText(
+            "adminAccess",
+            state.admin.isSuperAdmin ? "Super Admin" : "Members Admin"
+          );
+          setText("lastRefresh", formatDate(new Date().toISOString()));
+        }
+
+        function renderFilters() {
+          const statusFilter = $("statusFilter");
+          const tierFilter = $("tierFilter");
+          const roleFilter = $("roleFilter");
+          const sortFilter = $("sortFilter");
+
+          if (statusFilter && !statusFilter.dataset.ready) {
+            statusFilter.innerHTML = (state.options.statuses || [])
+              .map(
+                (value) =>
+                  `<option value="${escapeHtml(value)}">${escapeHtml(
+                    value === "all" ? "All Statuses" : titleCase(value)
+                  )}</option>`
+              )
+              .join("");
+            statusFilter.dataset.ready = "true";
+          }
+
+          if (tierFilter && !tierFilter.dataset.ready) {
+            tierFilter.innerHTML = (state.options.tiers || [])
+              .map(
+                (value) =>
+                  `<option value="${escapeHtml(value)}">${escapeHtml(
+                    value === "all" ? "All Tiers" : titleCase(value)
+                  )}</option>`
+              )
+              .join("");
+            tierFilter.dataset.ready = "true";
+          }
+
+          if (roleFilter && !roleFilter.dataset.ready) {
+            roleFilter.innerHTML = (state.options.roles || [])
+              .map(
+                (value) =>
+                  `<option value="${escapeHtml(value)}">${escapeHtml(
+                    value === "all" ? "All Roles" : titleCase(value)
+                  )}</option>`
+              )
+              .join("");
+            roleFilter.dataset.ready = "true";
+          }
+
+          if (sortFilter && !sortFilter.dataset.ready) {
+            sortFilter.innerHTML = (state.options.sorts || [])
+              .map(
+                (value) =>
+                  `<option value="${escapeHtml(value)}">${escapeHtml(
+                    SORT_LABELS[value] || titleCase(value)
+                  )}</option>`
+              )
+              .join("");
+            sortFilter.dataset.ready = "true";
+          }
+
+          if (statusFilter) statusFilter.value = state.filters.status;
+          if (tierFilter) tierFilter.value = state.filters.tier;
+          if (roleFilter) roleFilter.value = state.filters.role;
+          if (sortFilter) sortFilter.value = state.filters.sort;
+          if ($("limitFilter")) $("limitFilter").value = String(state.filters.limit);
+          if ($("searchInput")) $("searchInput").value = state.filters.search;
+          if ($("pageIndicator")) $("pageIndicator").value = String(state.filters.page);
+        }
+
+        function renderSummary() {
+          const summary = state.summary || {};
+          const vipCount = (state.members || []).filter(
+            (member) => String(member.tier || "").toLowerCase() === "vip"
+          ).length;
+
+          setText("valueTotal", formatCount(summary.total || 0));
+          setText("valueActive", formatCount(summary.activeMembers || 0));
+          setText("valuePending", formatCount(summary.statusCounts?.pending || 0));
+          setText("valueVip", formatCount(vipCount));
+          setText("valueAdmins", formatCount(summary.adminOperators || 0));
+          setText("valueSupport", formatCount(summary.supportOperators || 0));
+
+          [
+            "cardTotal",
+            "cardActive",
+            "cardPending",
+            "cardVip",
+            "cardAdmins",
+            "cardSupport",
+          ].forEach((id) => {
+            const el = $(id);
+            if (el) el.classList.remove("loading");
+          });
+        }
+
+        function renderTable() {
+          const body = $("membersTableBody");
+          if (!body) return;
+
+          if (!state.members.length) {
+            body.innerHTML = `
+              <tr>
+                <td colspan="8" class="muted">No members matched your filters.</td>
+              </tr>
+            `;
+            return;
+          }
+
+          body.innerHTML = state.members
+            .map((item) => {
+              const isActive = item.id === state.selectedMemberId;
+              const onboardingPercent = Number(item.metrics?.onboardingPercent || 0);
+              const pointsAvailable = Number(item.metrics?.pointsAvailable || 0);
+              const openSupport = Number(item.metrics?.openSupportTickets || 0);
+
+              return `
+                <tr data-member-id="${escapeHtml(item.id)}" class="${isActive ? "active" : ""}">
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(item.fullName || item.email || "Member")}</div>
+                      <div class="meta-line">${escapeHtml(item.email || "No email")}</div>
+                      <div class="meta-line">${escapeHtml(item.phone || "No phone")}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="status-tag ${getStatusClass(item.memberStatus)}">
+                      ${escapeHtml(item.memberStatusLabel || titleCase(item.memberStatus))}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="tier-tag ${getTierClass(item.tier)}">
+                      ${escapeHtml(item.tierLabel || titleCase(item.tier))}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(item.roleLabel || titleCase(item.role))}</div>
+                      <div class="meta-line">${item.flags?.isAdminOperator ? "Operator access" : "Standard access"}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${formatCount(onboardingPercent)}%</div>
+                      <div class="meta-line">${item.onboarding?.onboardingStatus ? escapeHtml(titleCase(item.onboarding.onboardingStatus)) : "No onboarding data"}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(formatPoints(pointsAvailable))}</div>
+                      <div class="meta-line">${escapeHtml(formatPoints(item.metrics?.pointsPending || 0))} pending</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${formatCount(openSupport)}</div>
+                      <div class="meta-line">${openSupport ? "Open tickets" : "No open tickets"}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(formatDate(item.updatedAt))}</div>
+                      <div class="meta-line">${escapeHtml(formatDate(item.lastLoginAt))}</div>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("");
+        }
+
+        function getSelectedMember() {
+          return state.members.find((item) => item.id === state.selectedMemberId) || null;
+        }
+
+        function renderDetail() {
+          const container = $("detailBody");
+          if (!container) return;
+
+          const item = getSelectedMember();
+
+          if (!item) {
+            container.innerHTML = `
+              <div class="detail-empty">
+                Select a member from the table to view full detail.
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = `
+            <div class="detail-block">
+              <h4>Profile Overview</h4>
+              <div class="kv">
+                <div class="k">Name</div>
+                <div class="v">${escapeHtml(item.fullName || "—")}</div>
+
+                <div class="k">Email</div>
+                <div class="v">${escapeHtml(item.email || "—")}</div>
+
+                <div class="k">Phone</div>
+                <div class="v">${escapeHtml(item.phone || "—")}</div>
+
+                <div class="k">Status</div>
+                <div class="v">
+                  <span class="status-tag ${getStatusClass(item.memberStatus)}">
+                    ${escapeHtml(item.memberStatusLabel || titleCase(item.memberStatus))}
+                  </span>
+                </div>
+
+                <div class="k">Tier</div>
+                <div class="v">
+                  <span class="tier-tag ${getTierClass(item.tier)}">
+                    ${escapeHtml(item.tierLabel || titleCase(item.tier))}
+                  </span>
+                </div>
+
+                <div class="k">Role</div>
+                <div class="v">${escapeHtml(item.roleLabel || titleCase(item.role))}</div>
+
+                <div class="k">Referral Code</div>
+                <div class="v">${escapeHtml(item.referralCode || "—")}</div>
+
+                <div class="k">Portal Login</div>
+                <div class="v">${item.portalLoginUrl ? `<a href="${escapeHtml(item.portalLoginUrl)}" target="_blank" rel="noreferrer">${escapeHtml(item.portalLoginUrl)}</a>` : "—"}</div>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h4>Onboarding</h4>
+              <div class="kv">
+                <div class="k">Progress</div>
+                <div class="v">${formatCount(item.metrics?.onboardingPercent || 0)}%</div>
+
+                <div class="k">Status</div>
+                <div class="v">${escapeHtml(titleCase(item.onboarding?.onboardingStatus || "not_started"))}</div>
+
+                <div class="k">Terms Accepted</div>
+                <div class="v">${item.onboarding?.acceptedTerms ? "Yes" : "No"}</div>
+
+                <div class="k">Privacy Accepted</div>
+                <div class="v">${item.onboarding?.acceptedPrivacy ? "Yes" : "No"}</div>
+
+                <div class="k">Profile Completed</div>
+                <div class="v">${item.onboarding?.profileCompleted ? "Yes" : "No"}</div>
+
+                <div class="k">Email Verified</div>
+                <div class="v">${item.flags?.hasVerifiedEmail ? "Yes" : "No"}</div>
+
+                <div class="k">Rewards Activated</div>
+                <div class="v">${item.onboarding?.rewardsActivated ? "Yes" : "No"}</div>
+
+                <div class="k">First Login Completed</div>
+                <div class="v">${item.onboarding?.firstLoginCompleted ? "Yes" : "No"}</div>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h4>Rewards Snapshot</h4>
+              <div class="kv">
+                <div class="k">Account Status</div>
+                <div class="v">${escapeHtml(titleCase(item.rewardAccount?.accountStatus || "active"))}</div>
+
+                <div class="k">Available</div>
+                <div class="v">${escapeHtml(formatPoints(item.rewardAccount?.pointsAvailable || 0))}</div>
+
+                <div class="k">Pending</div>
+                <div class="v">${escapeHtml(formatPoints(item.rewardAccount?.pointsPending || 0))}</div>
+
+                <div class="k">Lifetime Earned</div>
+                <div class="v">${escapeHtml(formatPoints(item.rewardAccount?.pointsLifetimeEarned || 0))}</div>
+
+                <div class="k">Lifetime Redeemed</div>
+                <div class="v">${escapeHtml(formatPoints(item.rewardAccount?.pointsLifetimeRedeemed || 0))}</div>
+
+                <div class="k">Lifetime Expired</div>
+                <div class="v">${escapeHtml(formatPoints(item.rewardAccount?.pointsLifetimeExpired || 0))}</div>
+
+                <div class="k">Last Earned</div>
+                <div class="v">${escapeHtml(formatDate(item.rewardAccount?.lastEarnedAt))}</div>
+
+                <div class="k">Last Redeemed</div>
+                <div class="v">${escapeHtml(formatDate(item.rewardAccount?.lastRedeemedAt))}</div>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h4>Operational Flags</h4>
+              <div class="flag-row">
+                <span class="flag">${item.flags?.hasVerifiedEmail ? "Verified Email" : "Email Not Verified"}</span>
+                <span class="flag">${item.flags?.hasVerifiedPhone ? "Verified Phone" : "Phone Not Verified"}</span>
+                <span class="flag">${item.flags?.hasCompletedOnboarding ? "Onboarding Complete" : "Onboarding Incomplete"}</span>
+                <span class="flag">${item.flags?.hasCompletedProfile ? "Profile Complete" : "Profile Incomplete"}</span>
+                <span class="flag">${item.flags?.hasRewardsActivated ? "Rewards Active" : "Rewards Pending"}</span>
+                <span class="flag">${item.flags?.hasPortalLoginUrl ? "Portal Ready" : "Portal Link Missing"}</span>
+                <span class="flag">${item.flags?.isAdminOperator ? "Operator Profile" : "Member Profile"}</span>
+                <span class="flag">${item.flags?.hasOpenSupportTickets ? "Open Support Ticket" : "No Open Support Tickets"}</span>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h4>Linked Records</h4>
+              <div class="kv">
+                <div class="k">Signup Source</div>
+                <div class="v">${escapeHtml(item.signup?.sourceLabel || "—")}</div>
+
+                <div class="k">Signup Status</div>
+                <div class="v">${escapeHtml(item.signup?.statusLabel || "—")}</div>
+
+                <div class="k">Signup Page</div>
+                <div class="v">${escapeHtml(item.signup?.signupPage || "—")}</div>
+
+                <div class="k">Open Support Tickets</div>
+                <div class="v">${formatCount(item.metrics?.openSupportTickets || 0)}</div>
+
+                <div class="k">Internal Note Count</div>
+                <div class="v">${formatCount(item.metrics?.noteCount || 0)}</div>
+
+                <div class="k">Last Login</div>
+                <div class="v">${escapeHtml(formatDate(item.lastLoginAt))}</div>
+
+                <div class="k">Created</div>
+                <div class="v">${escapeHtml(formatDate(item.createdAt))}</div>
+
+                <div class="k">Updated</div>
+                <div class="v">${escapeHtml(formatDate(item.updatedAt))}</div>
+              </div>
+            </div>
+          `;
+        }
+
+        function renderMeta() {
+          const pagination = state.pagination || {};
+          setText(
+            "tableMeta",
+            `${formatCount(pagination.total || 0)} members • page ${formatCount(
+              pagination.page || 1
+            )} of ${formatCount(pagination.totalPages || 1)}`
+          );
+
+          setText(
+            "paginationMeta",
+            pagination.total
+              ? `Showing ${formatCount(pagination.from)}–${formatCount(
+                  pagination.to
+                )} of ${formatCount(pagination.total)} members`
+              : "No members to show"
+          );
+
+          if ($("pageIndicator")) {
+            $("pageIndicator").value = String(pagination.page || state.filters.page || 1);
+          }
+
+          if ($("prevPageBtn")) $("prevPageBtn").disabled = !pagination.hasPreviousPage;
+          if ($("nextPageBtn")) $("nextPageBtn").disabled = !pagination.hasNextPage;
+        }
+
+        function renderAll() {
+          renderHeader();
+          renderFilters();
+          renderSummary();
+          renderTable();
+          renderDetail();
+          renderMeta();
+        }
+
+        async function loadMembers() {
+          try {
+            const me = await api("/api/auth/me");
+            state.admin = me?.data?.user || null;
+          } catch (error) {
+            if (error?.status === 401) {
+              const next = encodeURIComponent("/admin/members.html");
+              window.location.href = `/login.html?next=${next}`;
+              return;
+            }
+            throw error;
+          }
+
+          const result = await api(`/api/admin/members?${buildQuery()}`);
+
+          state.options.statuses = result?.data?.filters?.statuses || [];
+          state.options.tiers = result?.data?.filters?.tiers || [];
+          state.options.roles = result?.data?.filters?.roles || [];
+          state.options.sorts = result?.data?.filters?.sorts || [];
+          state.summary = result?.data?.summary || null;
+          state.pagination = result?.data?.pagination || null;
+          state.members = result?.data?.members || [];
+          state.admin = result?.data?.admin || state.admin;
+
+          if (!state.selectedMemberId && state.members.length) {
+            state.selectedMemberId = state.members[0].id;
+          }
+
+          if (
+            state.selectedMemberId &&
+            !state.members.some((item) => item.id === state.selectedMemberId)
+          ) {
+            state.selectedMemberId = state.members.length ? state.members[0].id : null;
+          }
+
+          renderAll();
+        }
+
+        async function handleLogout() {
+          try {
+            await api("/api/auth/logout", { method: "POST" });
+          } catch (_) {
+          } finally {
+            window.location.href = "/login.html";
+          }
+        }
+
+        function clearFilters() {
+          state.filters = {
+            status: "all",
+            tier: "all",
+            role: "all",
+            sort: "newest",
+            search: "",
+            limit: 20,
+            page: 1,
+          };
+          renderFilters();
+          loadMembers();
+        }
+
+        function bindEvents() {
+          $("refreshBtn")?.addEventListener("click", loadMembers);
+          $("logoutBtn")?.addEventListener("click", handleLogout);
+
+          $("applyFiltersBtn")?.addEventListener("click", () => {
+            state.filters.search = $("searchInput")?.value.trim() || "";
+            state.filters.status = $("statusFilter")?.value || "all";
+            state.filters.tier = $("tierFilter")?.value || "all";
+            state.filters.role = $("roleFilter")?.value || "all";
+            state.filters.sort = $("sortFilter")?.value || "newest";
+            state.filters.limit = Number($("limitFilter")?.value || 20);
+            state.filters.page = 1;
+            loadMembers();
+          });
+
+          $("clearFiltersBtn")?.addEventListener("click", clearFilters);
+
+          $("prevPageBtn")?.addEventListener("click", () => {
+            if (!state.pagination?.hasPreviousPage) return;
+            state.filters.page = Math.max(1, Number(state.filters.page || 1) - 1);
+            loadMembers();
+          });
+
+          $("nextPageBtn")?.addEventListener("click", () => {
+            if (!state.pagination?.hasNextPage) return;
+            state.filters.page = Number(state.filters.page || 1) + 1;
+            loadMembers();
+          });
+
+          $("membersTableBody")?.addEventListener("click", (event) => {
+            const row = event.target.closest("tr[data-member-id]");
+            if (!row) return;
+
+            state.selectedMemberId = row.getAttribute("data-member-id");
+            renderTable();
+            renderDetail();
+          });
+        }
+
+        async function init() {
+          bindEvents();
+
+          try {
+            await loadMembers();
+          } catch (error) {
+            if (error?.status === 403) {
+              window.location.href = "/unauthorized.html";
+              return;
+            }
+
+            $("membersTableBody").innerHTML = `
+              <tr>
+                <td colspan="8" class="muted">${escapeHtml(
+                  error?.message || "Unable to load members."
+                )}</td>
+              </tr>
+            `;
+          }
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init, { once: true });
+        } else {
+          init();
+        }
+      })();
+    </script>
+  </body>
+</html>

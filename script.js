@@ -1,497 +1,556 @@
-/* =====================================
-   CARD LEO REWARDS — ELITE INTERACTIONS
-   mobile nav + smooth scroll + reveal
-   + active section link + multi-form UX
-===================================== */
+// assets/js/portal-benefits.js
 
 (() => {
-  const onReady = (callback) => {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", callback, { once: true });
-    } else {
-      callback();
-    }
+  const state = {
+    loading: false,
+    summary: null,
+    featureFlags: null,
+    onboarding: null,
+    rewardAccount: null,
+    benefits: [],
+    groups: [],
+    activeCategory: "all",
   };
 
-  onReady(() => {
-    const doc = document;
-    const body = doc.body;
-    const header = doc.querySelector(".site-header");
-    const menuToggle = doc.querySelector(".menu-toggle");
-    const siteNav = doc.querySelector(".site-nav");
-    const navLinks = siteNav
-      ? [...siteNav.querySelectorAll('a[href]:not([target="_blank"])')]
-      : [];
-    const revealItems = [...doc.querySelectorAll(".reveal")];
-    const allYearTargets = [...doc.querySelectorAll("[data-year]")];
-    const allForms = [...doc.querySelectorAll("form")];
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
+  function $(id) {
+    return document.getElementById(id);
+  }
 
-    /* ---------------------------------
-       Helpers
-    ---------------------------------- */
-    const getHeaderOffset = () => {
-      if (!header) return 0;
-      return Math.round(header.getBoundingClientRect().height) + 12;
-    };
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
 
-    const isMobileNav = () =>
-      window.matchMedia("(max-width: 940px)").matches;
+  function titleCase(value) {
+    return String(value || "")
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ");
+  }
 
-    const setBodyLock = (locked) => {
-      body.style.overflow = locked ? "hidden" : "";
-    };
+  function formatDate(value) {
+    if (!value) return "—";
 
-    const openMenu = () => {
-      if (!menuToggle || !siteNav) return;
-      menuToggle.setAttribute("aria-expanded", "true");
-      siteNav.classList.add("is-open");
-      setBodyLock(true);
-    };
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "—";
 
-    const closeMenu = () => {
-      if (!menuToggle || !siteNav) return;
-      menuToggle.setAttribute("aria-expanded", "false");
-      siteNav.classList.remove("is-open");
-      setBodyLock(false);
-    };
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date);
+  }
 
-    const toggleMenu = () => {
-      if (!menuToggle || !siteNav) return;
-      const isOpen = menuToggle.getAttribute("aria-expanded") === "true";
-      if (isOpen) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    };
+  function formatMoney(value) {
+    const num = Number(value || 0);
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number.isFinite(num) ? num : 0);
+  }
 
-    const getHashTarget = (hash) => {
-      if (!hash || hash === "#") return null;
-      try {
-        return doc.querySelector(hash);
-      } catch {
-        return null;
-      }
-    };
+  function formatCount(value) {
+    const num = Number(value || 0);
+    return Number.isFinite(num) ? num.toLocaleString() : "0";
+  }
 
-    const smoothScrollTo = (target) => {
-      if (!target) return;
+  function setText(id, value) {
+    const el = $(id);
+    if (el) el.textContent = value;
+  }
 
-      const top =
-        window.scrollY +
-        target.getBoundingClientRect().top -
-        getHeaderOffset();
-
-      window.scrollTo({
-        top: Math.max(0, top),
-        behavior: prefersReducedMotion ? "auto" : "smooth",
-      });
-    };
-
-    const createStatusNode = (form) => {
-      let status = form.querySelector(".form-status");
-
-      if (!status) {
-        status = doc.createElement("div");
-        status.className = "form-status";
-        status.setAttribute("aria-live", "polite");
-        status.style.marginTop = "0.85rem";
-        status.style.fontSize = "0.95rem";
-        status.style.lineHeight = "1.5";
-        status.style.color = "rgba(245, 247, 255, 0.78)";
-        form.appendChild(status);
-      }
-
-      return status;
-    };
-
-    const setStatus = (statusNode, message, tone = "default") => {
-      if (!statusNode) return;
-
-      statusNode.textContent = message;
-
-      if (tone === "error") {
-        statusNode.style.color = "#ffb3b3";
-        return;
-      }
-
-      if (tone === "success") {
-        statusNode.style.color = "#9ae6c1";
-        return;
-      }
-
-      statusNode.style.color = "rgba(245, 247, 255, 0.78)";
-    };
-
-    const setButtonLoading = (button, loadingText) => {
-      if (!button) return () => {};
-
-      const previousText = button.textContent;
-      const previousOpacity = button.style.opacity;
-
-      button.disabled = true;
-      button.style.opacity = "0.7";
-      button.textContent = loadingText;
-
-      return () => {
-        button.disabled = false;
-        button.style.opacity = previousOpacity || "1";
-        button.textContent = previousText;
-      };
-    };
-
-    const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-
-    const isValidPhone = (value) => {
-      const digits = value.replace(/\D/g, "");
-      return digits.length >= 10;
-    };
-
-    const pageHas = (selector) => Boolean(doc.querySelector(selector));
-
-    /* ---------------------------------
-       Dynamic year
-    ---------------------------------- */
-    if (allYearTargets.length) {
-      const currentYear = new Date().getFullYear();
-      allYearTargets.forEach((node) => {
-        node.textContent = String(currentYear);
-      });
-    }
-
-    /* ---------------------------------
-       Mobile navigation
-    ---------------------------------- */
-    if (menuToggle && siteNav) {
-      menuToggle.addEventListener("click", toggleMenu);
-
-      doc.addEventListener("click", (event) => {
-        if (!isMobileNav()) return;
-        const target = event.target;
-        if (!(target instanceof Node)) return;
-
-        const clickedInsideNav = siteNav.contains(target);
-        const clickedToggle = menuToggle.contains(target);
-
-        if (!clickedInsideNav && !clickedToggle) {
-          closeMenu();
-        }
-      });
-
-      doc.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-          closeMenu();
-        }
-      });
-
-      window.addEventListener("resize", () => {
-        if (!isMobileNav()) {
-          closeMenu();
-          setBodyLock(false);
-        }
-      });
-    }
-
-    /* ---------------------------------
-       Smooth scrolling for same-page hashes
-    ---------------------------------- */
-    doc.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-      anchor.addEventListener("click", (event) => {
-        const href = anchor.getAttribute("href");
-        const target = getHashTarget(href);
-
-        if (!target) return;
-
-        event.preventDefault();
-        smoothScrollTo(target);
-
-        if (history.pushState) {
-          history.pushState(null, "", href);
-        } else {
-          window.location.hash = href;
-        }
-
-        if (isMobileNav()) {
-          closeMenu();
-        }
-      });
+  async function api(url, options = {}) {
+    const response = await fetch(url, {
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        ...(options.headers || {}),
+      },
+      ...options,
     });
 
-    /* ---------------------------------
-       Reveal on scroll
-    ---------------------------------- */
-    if (revealItems.length) {
-      if (!prefersReducedMotion) {
-        revealItems.forEach((item, index) => {
-          item.classList.add("is-hidden");
-          item.style.transitionDelay = `${Math.min(index * 40, 220)}ms`;
-        });
-      }
+    const contentType = response.headers.get("content-type") || "";
+    const body = contentType.includes("application/json")
+      ? await response.json()
+      : { success: false, message: "Unexpected server response." };
 
-      if ("IntersectionObserver" in window && !prefersReducedMotion) {
-        const revealObserver = new IntersectionObserver(
-          (entries, observer) => {
-            entries.forEach((entry) => {
-              if (!entry.isIntersecting) return;
-
-              entry.target.classList.remove("is-hidden");
-              entry.target.classList.add("is-visible");
-              observer.unobserve(entry.target);
-            });
-          },
-          {
-            threshold: 0.12,
-            rootMargin: "0px 0px -40px 0px",
-          }
-        );
-
-        revealItems.forEach((item) => revealObserver.observe(item));
-      } else {
-        revealItems.forEach((item) => {
-          item.classList.remove("is-hidden");
-          item.classList.add("is-visible");
-        });
-      }
+    if (!response.ok || body?.success === false) {
+      const error = new Error(body?.message || "Request failed.");
+      error.status = response.status;
+      error.payload = body;
+      throw error;
     }
 
-    /* ---------------------------------
-       Active nav link on scroll
-       Uses current page's section links
-    ---------------------------------- */
-    const internalNavLinks = navLinks.filter((link) => {
-      const href = link.getAttribute("href");
-      return href && href.startsWith("#") && getHashTarget(href);
+    return body;
+  }
+
+  function getToneClass(benefit) {
+    if (benefit?.featured && benefit?.unlocked) return "benefit-featured";
+    if (benefit?.locked) return "benefit-locked";
+    return "benefit-unlocked";
+  }
+
+  function getBadgeClass(benefit) {
+    if (benefit?.locked) return "badge-muted";
+    if (benefit?.featured) return "badge-gold";
+    return "badge-soft";
+  }
+
+  function normalizeGroups() {
+    if (Array.isArray(state.groups) && state.groups.length) {
+      return state.groups;
+    }
+
+    const grouped = {};
+    (state.benefits || []).forEach((benefit) => {
+      const key = benefit.category || "other";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(benefit);
     });
 
-    const setActiveNavLink = () => {
-      if (!internalNavLinks.length) return;
+    return Object.entries(grouped).map(([category, items]) => ({
+      category,
+      title: titleCase(category),
+      count: items.length,
+      unlockedCount: items.filter((item) => item.unlocked).length,
+      items,
+    }));
+  }
 
-      const sections = internalNavLinks
-        .map((link) => {
-          const id = link.getAttribute("href");
-          return {
-            id,
-            el: id ? doc.querySelector(id) : null,
-          };
-        })
-        .filter((item) => item.el);
+  function getVisibleGroups() {
+    const groups = normalizeGroups();
 
-      if (!sections.length) return;
-
-      const scrollMarker = window.scrollY + getHeaderOffset() + 120;
-      let currentId = sections[0].id || "";
-
-      sections.forEach((section) => {
-        if (section.el && section.el.offsetTop <= scrollMarker) {
-          currentId = section.id || currentId;
-        }
-      });
-
-      internalNavLinks.forEach((link) => {
-        const href = link.getAttribute("href");
-        link.classList.toggle("is-active", href === currentId);
-      });
-    };
-
-    /* ---------------------------------
-       Header scrolled state
-    ---------------------------------- */
-    const updateHeaderState = () => {
-      if (!header) return;
-      header.classList.toggle("is-scrolled", window.scrollY > 12);
-    };
-
-    updateHeaderState();
-    setActiveNavLink();
-
-    window.addEventListener("scroll", updateHeaderState, { passive: true });
-    window.addEventListener("scroll", setActiveNavLink, { passive: true });
-
-    /* ---------------------------------
-       Contact form UX
-       Works for pages with:
-       name + email + message
-    ---------------------------------- */
-    const contactForm = allForms.find(
-      (form) =>
-        form.querySelector('[name="name"]') &&
-        form.querySelector('[name="email"]') &&
-        form.querySelector('[name="message"]')
-    );
-
-    if (contactForm) {
-      const submitButton = contactForm.querySelector('button[type="submit"]');
-      const status = createStatusNode(contactForm);
-
-      contactForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-
-        const formData = new FormData(contactForm);
-        const name = String(formData.get("name") || "").trim();
-        const email = String(formData.get("email") || "").trim();
-        const message = String(formData.get("message") || "").trim();
-
-        if (!name || !email || !message) {
-          setStatus(
-            status,
-            "Please fill out your name, email, and message.",
-            "error"
-          );
-          return;
-        }
-
-        if (!isValidEmail(email)) {
-          setStatus(status, "Please enter a valid email address.", "error");
-          return;
-        }
-
-        const resetButton = setButtonLoading(submitButton, "Sending...");
-        setStatus(status, "");
-
-        window.setTimeout(() => {
-          setStatus(
-            status,
-            "Thank you — your message has been captured on the page. Connect this form to Formspree, Netlify Forms, EmailJS, or your own backend next.",
-            "success"
-          );
-          contactForm.reset();
-          resetButton();
-        }, 700);
-      });
+    if (!state.activeCategory || state.activeCategory === "all") {
+      return groups;
     }
 
-    /* ---------------------------------
-       Signup form UX
-       Works for pages with:
-       firstName + lastName + email
-    ---------------------------------- */
-    const signupForm = allForms.find(
-      (form) =>
-        form.querySelector('[name="firstName"]') &&
-        form.querySelector('[name="lastName"]') &&
-        form.querySelector('[name="email"]')
+    return groups.filter((group) => group.category === state.activeCategory);
+  }
+
+  function renderHeader() {
+    const summary = state.summary || {};
+    const totals = summary.totals || {};
+
+    setText(
+      "memberName",
+      summary.memberName || document.body.dataset.memberName || "Card Leo Member"
+    );
+    setText("memberTier", summary.tierLabel || titleCase(summary.tier || "core"));
+    setText(
+      "memberStatus",
+      titleCase(summary.memberStatus || "active")
+    );
+    setText(
+      "nextTier",
+      summary.nextTierLabel || "Current Highest Tier"
     );
 
-    if (signupForm) {
-      const submitButton = signupForm.querySelector('button[type="submit"]');
-      const status = createStatusNode(signupForm);
+    setText("benefitsTotal", formatCount(totals.benefits || state.benefits.length || 0));
+    setText("benefitsUnlocked", formatCount(totals.unlocked || 0));
+    setText("benefitsLocked", formatCount(totals.locked || 0));
+  }
 
-      signupForm.addEventListener("submit", (event) => {
-        event.preventDefault();
+  function renderMetrics() {
+    const rewardAccount = state.rewardAccount || {};
+    const onboarding = state.onboarding || {};
 
-        const formData = new FormData(signupForm);
-        const firstName = String(formData.get("firstName") || "").trim();
-        const lastName = String(formData.get("lastName") || "").trim();
-        const email = String(formData.get("email") || "").trim();
-        const phone = String(formData.get("phone") || "").trim();
-        const interest = String(formData.get("interest") || "").trim();
-        const agreed = signupForm.querySelector('[name="agree"]')?.checked;
+    setText(
+      "metricOnboarding",
+      `${formatCount(onboarding.onboarding_percent || onboarding.onboardingPercent || 0)}%`
+    );
+    setText(
+      "metricEarned",
+      formatMoney(
+        rewardAccount.total_rewards_earned ||
+          rewardAccount.totalRewardsEarned ||
+          0
+      )
+    );
+    setText(
+      "metricReleased",
+      formatMoney(
+        rewardAccount.company_building_released ||
+          rewardAccount.companyBuildingReleased ||
+          0
+      )
+    );
+    setText(
+      "metricPending",
+      formatMoney(
+        rewardAccount.company_building_pending ||
+          rewardAccount.companyBuildingPending ||
+          0
+      )
+    );
+  }
 
-        if (!firstName || !lastName || !email || !phone || !interest) {
-          setStatus(
-            status,
-            "Please complete all required signup fields before continuing.",
-            "error"
-          );
-          return;
-        }
+  function renderFeatureFlags() {
+    const container = $("featureFlags");
+    if (!container) return;
 
-        if (!isValidEmail(email)) {
-          setStatus(status, "Please enter a valid email address.", "error");
-          return;
-        }
+    const flags = state.featureFlags || {};
+    const items = [
+      {
+        label: "Rewards",
+        enabled: flags.rewards_enabled !== false,
+      },
+      {
+        label: "Referrals",
+        enabled: flags.referrals_enabled !== false,
+      },
+      {
+        label: "Support",
+        enabled: flags.support_enabled !== false,
+      },
+      {
+        label: "Benefits",
+        enabled: flags.benefits_enabled !== false,
+      },
+    ];
 
-        if (!isValidPhone(phone)) {
-          setStatus(
-            status,
-            "Please enter a valid phone number with at least 10 digits.",
-            "error"
-          );
-          return;
-        }
+    container.innerHTML = items
+      .map(
+        (item) => `
+          <span class="flag ${item.enabled ? "enabled" : "disabled"}">
+            ${escapeHtml(item.label)} · ${item.enabled ? "On" : "Off"}
+          </span>
+        `
+      )
+      .join("");
+  }
 
-        if (!agreed) {
-          setStatus(
-            status,
-            "Please agree to the registration terms before continuing.",
-            "error"
-          );
-          return;
-        }
+  function renderCategoryTabs() {
+    const container = $("benefitCategoryTabs");
+    if (!container) return;
 
-        const resetButton = setButtonLoading(submitButton, "Creating...");
-        setStatus(status, "Creating your account experience...");
+    const groups = normalizeGroups();
+    const tabs = [
+      {
+        key: "all",
+        label: "All Benefits",
+        count: state.benefits.length,
+      },
+      ...groups.map((group) => ({
+        key: group.category,
+        label: group.title,
+        count: group.count,
+      })),
+    ];
 
-        window.setTimeout(() => {
-          const action =
-            signupForm.getAttribute("action")?.trim() || "./thank-you.html";
+    container.innerHTML = tabs
+      .map(
+        (tab) => `
+          <button
+            type="button"
+            class="filter-chip ${state.activeCategory === tab.key ? "active" : ""}"
+            data-benefit-category="${escapeHtml(tab.key)}"
+          >
+            ${escapeHtml(tab.label)} <span>${formatCount(tab.count)}</span>
+          </button>
+        `
+      )
+      .join("");
+  }
 
-          setStatus(
-            status,
-            "Signup details look good. Redirecting you to the next step...",
-            "success"
-          );
+  function renderBenefits() {
+    const container = $("benefitsGrid");
+    if (!container) return;
 
-          resetButton();
+    const groups = getVisibleGroups();
 
-          window.setTimeout(() => {
-            if (
-              action.startsWith("http://") ||
-              action.startsWith("https://") ||
-              action.startsWith("./") ||
-              action.endsWith(".html")
-            ) {
-              window.location.href = action;
-            } else {
-              signupForm.submit();
-            }
-          }, 500);
-        }, 900);
-      });
+    if (!groups.length) {
+      container.innerHTML = `
+        <div class="detail-empty">
+          No benefits matched this category.
+        </div>
+      `;
+      return;
     }
 
-    /* ---------------------------------
-       Smart CTA helpers
-       Optional support for future buttons:
-       [data-scroll-to="#id"]
-    ---------------------------------- */
-    doc.querySelectorAll("[data-scroll-to]").forEach((button) => {
+    container.innerHTML = groups
+      .map(
+        (group) => `
+          <section class="benefit-group">
+            <div class="benefit-group-header">
+              <div>
+                <h3>${escapeHtml(group.title)}</h3>
+                <p>
+                  ${formatCount(group.unlockedCount)} unlocked of
+                  ${formatCount(group.count)} total
+                </p>
+              </div>
+            </div>
+
+            <div class="benefit-card-grid">
+              ${group.items
+                .map(
+                  (benefit) => `
+                    <article class="benefit-card ${getToneClass(benefit)}">
+                      <div class="benefit-card-top">
+                        <span class="benefit-badge ${getBadgeClass(benefit)}">
+                          ${escapeHtml(benefit.badge || (benefit.unlocked ? "Unlocked" : "Locked"))}
+                        </span>
+                        <span class="benefit-state ${benefit.unlocked ? "unlocked" : "locked"}">
+                          ${benefit.unlocked ? "Unlocked" : "Locked"}
+                        </span>
+                      </div>
+
+                      <h4>${escapeHtml(benefit.title || "Benefit")}</h4>
+                      <p>${escapeHtml(benefit.description || "No description available.")}</p>
+
+                      <div class="benefit-meta">
+                        <span>Category: ${escapeHtml(titleCase(benefit.category || "general"))}</span>
+                        <span>Required Tier: ${escapeHtml(titleCase(benefit.requiredTier || "core"))}</span>
+                      </div>
+
+                      ${
+                        benefit.lockedReason
+                          ? `<div class="benefit-note">${escapeHtml(benefit.lockedReason)}</div>`
+                          : ""
+                      }
+
+                      ${
+                        benefit.meta
+                          ? `
+                            <details class="benefit-details">
+                              <summary>More detail</summary>
+                              <pre>${escapeHtml(JSON.stringify(benefit.meta, null, 2))}</pre>
+                            </details>
+                          `
+                          : ""
+                      }
+                    </article>
+                  `
+                )
+                .join("")}
+            </div>
+          </section>
+        `
+      )
+      .join("");
+  }
+
+  function renderTimeline() {
+    const container = $("benefitsTimeline");
+    if (!container) return;
+
+    const onboarding = state.onboarding || {};
+    const rewardAccount = state.rewardAccount || {};
+
+    const steps = [
+      {
+        title: "Profile Setup",
+        status: onboarding.profile_completed || onboarding.profileCompleted ? "complete" : "pending",
+        description: "Complete your core profile details to improve eligibility and personalization.",
+      },
+      {
+        title: "Email Verification",
+        status: onboarding.email_verified || onboarding.emailVerified ? "complete" : "pending",
+        description: "Verify your email to secure your account and complete onboarding.",
+      },
+      {
+        title: "Rewards Activation",
+        status: onboarding.rewards_activated || onboarding.rewardsActivated ? "complete" : "pending",
+        description: "Activate the rewards profile so earnings and member incentives can track properly.",
+      },
+      {
+        title: "Company Building Release",
+        status:
+          Number(
+            rewardAccount.company_building_released ||
+              rewardAccount.companyBuildingReleased ||
+              0
+          ) > 0
+            ? "complete"
+            : "pending",
+        description: "Complete paid membership cycles to release company-building earnings.",
+      },
+    ];
+
+    container.innerHTML = steps
+      .map(
+        (step) => `
+          <div class="timeline-step ${step.status}">
+            <div class="timeline-dot"></div>
+            <div class="timeline-copy">
+              <h4>${escapeHtml(step.title)}</h4>
+              <p>${escapeHtml(step.description)}</p>
+            </div>
+          </div>
+        `
+      )
+      .join("");
+  }
+
+  function renderAccountPanel() {
+    const summary = state.summary || {};
+    const onboarding = state.onboarding || {};
+    const rewardAccount = state.rewardAccount || {};
+
+    setText("accountTier", summary.tierLabel || titleCase(summary.tier || "core"));
+    setText(
+      "accountOnboarding",
+      `${formatCount(onboarding.onboarding_percent || onboarding.onboardingPercent || 0)}%`
+    );
+    setText(
+      "accountCompanyPending",
+      formatMoney(
+        rewardAccount.company_building_pending ||
+          rewardAccount.companyBuildingPending ||
+          0
+      )
+    );
+    setText(
+      "accountCompanyReleased",
+      formatMoney(
+        rewardAccount.company_building_released ||
+          rewardAccount.companyBuildingReleased ||
+          0
+      )
+    );
+    setText(
+      "accountTotalEarned",
+      formatMoney(
+        rewardAccount.total_rewards_earned ||
+          rewardAccount.totalRewardsEarned ||
+          0
+      )
+    );
+    setText(
+      "accountTotalPaid",
+      formatMoney(
+        rewardAccount.total_rewards_paid ||
+          rewardAccount.totalRewardsPaid ||
+          0
+      )
+    );
+  }
+
+  function bindCategoryEvents() {
+    const container = $("benefitCategoryTabs");
+    if (!container) return;
+
+    container.querySelectorAll("[data-benefit-category]").forEach((button) => {
       button.addEventListener("click", () => {
-        const selector = button.getAttribute("data-scroll-to");
-        if (!selector) return;
-        const target = getHashTarget(selector);
-        if (!target) return;
-
-        smoothScrollTo(target);
-
-        if (isMobileNav()) {
-          closeMenu();
-        }
+        state.activeCategory = button.getAttribute("data-benefit-category") || "all";
+        renderCategoryTabs();
+        renderBenefits();
       });
     });
+  }
 
-    /* ---------------------------------
-       Initial load hash correction
-    ---------------------------------- */
-    if (window.location.hash) {
-      const initialTarget = getHashTarget(window.location.hash);
-      if (initialTarget) {
-        window.setTimeout(() => {
-          smoothScrollTo(initialTarget);
-          setActiveNavLink();
-        }, 80);
+  function renderAll() {
+    renderHeader();
+    renderMetrics();
+    renderFeatureFlags();
+    renderCategoryTabs();
+    renderBenefits();
+    renderTimeline();
+    renderAccountPanel();
+    bindCategoryEvents();
+    setText("lastRefresh", formatDate(new Date().toISOString()));
+  }
+
+  async function loadBenefits() {
+    state.loading = true;
+
+    const result = await api("/api/portal/benefits");
+    const data = result?.data || {};
+
+    state.summary = data.summary || null;
+    state.featureFlags = data.featureFlags || {};
+    state.onboarding = data.onboarding || {};
+    state.rewardAccount = data.rewardAccount || {};
+    state.benefits = Array.isArray(data.benefits) ? data.benefits : [];
+    state.groups = Array.isArray(data.groups) ? data.groups : [];
+
+    if (!state.activeCategory) {
+      state.activeCategory = "all";
+    }
+
+    renderAll();
+  }
+
+  async function handleRefresh() {
+    const button = $("refreshBenefitsBtn");
+    const originalText = button ? button.textContent : "";
+
+    try {
+      if (button) {
+        button.disabled = true;
+        button.textContent = "Refreshing...";
+      }
+
+      await loadBenefits();
+    } catch (error) {
+      alert(error?.message || "Unable to refresh benefits.");
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = originalText || "Refresh";
       }
     }
+  }
 
-    /* ---------------------------------
-       Safety cleanup for pages without
-       internal section nav
-    ---------------------------------- */
-    if (!internalNavLinks.length && pageHas(".site-nav")) {
-      navLinks.forEach((link) => link.classList.remove("is-active"));
+  async function handleLogout() {
+    try {
+      await api("/api/auth/logout", {
+        method: "POST",
+      });
+    } catch {
+      // no-op
+    } finally {
+      window.location.href = "/login.html";
     }
-  });
+  }
+
+  function bindEvents() {
+    $("refreshBenefitsBtn")?.addEventListener("click", handleRefresh);
+    $("logoutBtn")?.addEventListener("click", handleLogout);
+  }
+
+  async function init() {
+    bindEvents();
+
+    try {
+      await loadBenefits();
+    } catch (error) {
+      if (error?.status === 401) {
+        const next = encodeURIComponent("/portal/benefits.html");
+        window.location.href = `/login.html?next=${next}`;
+        return;
+      }
+
+      if (error?.status === 403) {
+        window.location.href = "/unauthorized.html";
+        return;
+      }
+
+      const container = $("benefitsGrid");
+      if (container) {
+        container.innerHTML = `
+          <div class="detail-empty">
+            ${escapeHtml(error?.message || "Unable to load benefits.")}
+          </div>
+        `;
+      }
+    } finally {
+      state.loading = false;
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, { once: true });
+  } else {
+    init();
+  }
 })();

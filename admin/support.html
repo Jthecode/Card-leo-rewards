@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Admin Support | Card Leo Rewards</title>
+    <meta
+      name="description"
+      content="Manage Card Leo Rewards support tickets, queue priority, and support operations."
+    />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <style>
+      :root {
+        --bg: #070b14;
+        --bg-soft: #0d1424;
+        --panel: rgba(17, 24, 39, 0.78);
+        --panel-strong: rgba(11, 17, 32, 0.92);
+        --panel-border: rgba(255, 255, 255, 0.08);
+        --text: #eef4ff;
+        --muted: #99a7c2;
+        --muted-2: #72819f;
+        --line: rgba(255, 255, 255, 0.08);
+        --gold: #f5c15d;
+        --gold-2: #ffd98a;
+        --green: #3dd598;
+        --red: #ff6b81;
+        --blue: #65a8ff;
+        --amber: #ffbb55;
+        --shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --radius-sm: 12px;
+        --max-width: 1420px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(245, 193, 93, 0.12), transparent 28%),
+          radial-gradient(circle at top right, rgba(101, 168, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, #09101e 0%, #050912 100%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      .shell {
+        width: min(var(--max-width), calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        backdrop-filter: blur(16px);
+        background: rgba(7, 11, 20, 0.72);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .topbar-inner {
+        width: min(var(--max-width), calc(100% - 32px));
+        margin: 0 auto;
+        min-height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background:
+          linear-gradient(135deg, rgba(245, 193, 93, 0.22), rgba(255, 217, 138, 0.08)),
+          rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(245, 193, 93, 0.28);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        font-weight: 800;
+        color: var(--gold-2);
+      }
+
+      .brand-copy h1 {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .brand-copy p {
+        margin: 3px 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .top-link,
+      .btn {
+        border: 1px solid var(--panel-border);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        padding: 11px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .top-link:hover,
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(245, 193, 93, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f5c15d, #ffd98a);
+        color: #1a1204;
+        font-weight: 700;
+        border-color: transparent;
+      }
+
+      .hero {
+        padding: 28px 0 18px;
+      }
+
+      .hero-card,
+      .panel,
+      .stats-card,
+      .table-wrap,
+      .detail-card {
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-card {
+        padding: 28px;
+        position: relative;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at top left, rgba(245, 193, 93, 0.18), transparent 26%),
+          radial-gradient(circle at right center, rgba(101, 168, 255, 0.12), transparent 24%),
+          linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(9, 14, 27, 0.95));
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(245, 193, 93, 0.2);
+        background: rgba(245, 193, 93, 0.08);
+        color: var(--gold-2);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .hero-grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.85fr);
+        gap: 24px;
+      }
+
+      .hero-copy h2 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1.04;
+        letter-spacing: -0.04em;
+      }
+
+      .hero-copy p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.75;
+        max-width: 780px;
+      }
+
+      .hero-meta {
+        display: grid;
+        gap: 14px;
+      }
+
+      .meta-card {
+        border: 1px solid var(--panel-border);
+        border-radius: var(--radius-lg);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 18px;
+      }
+
+      .meta-label {
+        margin: 0 0 8px;
+        color: var(--muted);
+        font-size: 0.84rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .meta-value {
+        margin: 0;
+        font-size: 1.12rem;
+        font-weight: 700;
+      }
+
+      .section {
+        padding: 10px 0 0;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .stats-card {
+        padding: 18px;
+        min-height: 140px;
+      }
+
+      .stats-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 7px 10px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .pill.gold {
+        background: rgba(245, 193, 93, 0.12);
+        color: var(--gold-2);
+      }
+
+      .pill.blue {
+        background: rgba(101, 168, 255, 0.12);
+        color: #b8d5ff;
+      }
+
+      .pill.green {
+        background: rgba(61, 213, 152, 0.12);
+        color: #9af1cb;
+      }
+
+      .pill.red {
+        background: rgba(255, 107, 129, 0.12);
+        color: #ffc1cb;
+      }
+
+      .pill.amber {
+        background: rgba(255, 187, 85, 0.12);
+        color: #ffd39b;
+      }
+
+      .stats-label {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .stats-value {
+        font-size: clamp(1.8rem, 3vw, 2.3rem);
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+
+      .stats-sub {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .toolbar {
+        margin-top: 16px;
+        padding: 18px;
+      }
+
+      .toolbar-grid {
+        display: grid;
+        grid-template-columns: 1.35fr repeat(5, minmax(0, 1fr)) auto;
+        gap: 12px;
+        align-items: end;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        color: var(--muted);
+        font-size: 0.83rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .input,
+      .select,
+      .textarea {
+        width: 100%;
+        border: 1px solid var(--panel-border);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        border-radius: 14px;
+        padding: 12px 14px;
+        outline: none;
+      }
+
+      .input:focus,
+      .select:focus,
+      .textarea:focus {
+        border-color: rgba(245, 193, 93, 0.35);
+        box-shadow: 0 0 0 3px rgba(245, 193, 93, 0.08);
+      }
+
+      .table-layout {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.28fr) minmax(390px, 0.82fr);
+        gap: 16px;
+      }
+
+      .table-wrap {
+        overflow: hidden;
+      }
+
+      .table-head {
+        padding: 18px 20px 10px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .table-head h3,
+      .detail-head h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .table-head p,
+      .detail-head p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .table-scroll {
+        overflow: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1220px;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 14px 20px;
+        border-top: 1px solid var(--line);
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      td {
+        font-size: 0.95rem;
+      }
+
+      tbody tr {
+        cursor: pointer;
+        transition: background 0.18s ease;
+      }
+
+      tbody tr:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      tbody tr.active {
+        background: rgba(245, 193, 93, 0.08);
+      }
+
+      .name-cell {
+        display: grid;
+        gap: 6px;
+      }
+
+      .name-title {
+        font-weight: 700;
+      }
+
+      .meta-line {
+        color: var(--muted);
+        font-size: 0.86rem;
+        line-height: 1.55;
+      }
+
+      .status-tag,
+      .priority-tag,
+      .assign-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        white-space: nowrap;
+      }
+
+      .status-open {
+        background: rgba(255, 187, 85, 0.12);
+        color: #ffd39b;
+      }
+
+      .status-in_progress {
+        background: rgba(101, 168, 255, 0.12);
+        color: #b8d5ff;
+      }
+
+      .status-waiting_on_member {
+        background: rgba(245, 193, 93, 0.12);
+        color: var(--gold-2);
+      }
+
+      .status-resolved {
+        background: rgba(61, 213, 152, 0.12);
+        color: #9af1cb;
+      }
+
+      .status-closed {
+        background: rgba(255, 255, 255, 0.08);
+        color: #d9e1f2;
+      }
+
+      .priority-low {
+        background: rgba(255, 255, 255, 0.08);
+        color: #d9e1f2;
+      }
+
+      .priority-normal {
+        background: rgba(101, 168, 255, 0.12);
+        color: #b8d5ff;
+      }
+
+      .priority-high {
+        background: rgba(255, 187, 85, 0.12);
+        color: #ffd39b;
+      }
+
+      .priority-urgent {
+        background: rgba(255, 107, 129, 0.12);
+        color: #ffc1cb;
+      }
+
+      .assign-tag.assigned {
+        background: rgba(61, 213, 152, 0.12);
+        color: #9af1cb;
+      }
+
+      .assign-tag.unassigned {
+        background: rgba(255, 255, 255, 0.08);
+        color: #d9e1f2;
+      }
+
+      .detail-card {
+        overflow: hidden;
+      }
+
+      .detail-head {
+        padding: 18px 20px 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .detail-body {
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .detail-empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 28px 12px;
+        border: 1px dashed var(--line);
+        border-radius: var(--radius-md);
+      }
+
+      .detail-block {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.025);
+        padding: 16px;
+      }
+
+      .detail-block h4 {
+        margin: 0 0 12px;
+        font-size: 0.98rem;
+      }
+
+      .kv {
+        display: grid;
+        grid-template-columns: 145px 1fr;
+        gap: 10px 12px;
+      }
+
+      .kv .k {
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .kv .v {
+        font-size: 0.92rem;
+        word-break: break-word;
+      }
+
+      .message-preview {
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .message-preview strong {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .flag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .flag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .footer-row {
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 4px 36px;
+      }
+
+      .pagination {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .loading {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .loading::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.05),
+          transparent
+        );
+        animation: shimmer 1.2s infinite;
+      }
+
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      @media (max-width: 1320px) {
+        .stats-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .toolbar-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .table-layout,
+        .hero-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .topbar-inner {
+          padding: 12px 0;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .stats-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .toolbar-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-card,
+        .panel,
+        .stats-card,
+        .detail-card {
+          padding: 18px;
+        }
+
+        .kv {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark">CL</div>
+          <div class="brand-copy">
+            <h1>Admin Support</h1>
+            <p>Monitor ticket flow, member issues, and support workload</p>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <a class="top-link" href="/admin/index.html">Dashboard</a>
+          <a class="top-link" href="/admin/signups.html">Signups</a>
+          <a class="top-link" href="/admin/members.html">Members</a>
+          <button class="btn" id="refreshBtn" type="button">Refresh</button>
+          <button class="btn btn-primary" id="logoutBtn" type="button">Log Out</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-card">
+          <div class="eyebrow">Support Operations</div>
+
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <h2>Keep every ticket visible, prioritized, and moving.</h2>
+              <p>
+                Review open cases, spot urgent queues, monitor assignees, and inspect
+                the latest message context for Card Leo Rewards support operations.
+              </p>
+            </div>
+
+            <div class="hero-meta">
+              <div class="meta-card">
+                <p class="meta-label">Signed in as</p>
+                <p class="meta-value" id="adminName">Loading...</p>
+              </div>
+
+              <div class="meta-card">
+                <p class="meta-label">Access level</p>
+                <p class="meta-value" id="adminAccess">Checking...</p>
+              </div>
+
+              <div class="meta-card">
+                <p class="meta-label">Last refresh</p>
+                <p class="meta-value" id="lastRefresh">—</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="stats-grid">
+          <article class="stats-card loading" id="cardTotal">
+            <div class="stats-top">
+              <span class="pill gold">Tickets</span>
+            </div>
+            <div class="stats-label">Total tickets</div>
+            <div class="stats-value" id="valueTotal">—</div>
+            <div class="stats-sub">Across the current filter set</div>
+          </article>
+
+          <article class="stats-card loading" id="cardOpen">
+            <div class="stats-top">
+              <span class="pill amber">Open</span>
+            </div>
+            <div class="stats-label">Fresh queue</div>
+            <div class="stats-value" id="valueOpen">—</div>
+            <div class="stats-sub">New unresolved tickets</div>
+          </article>
+
+          <article class="stats-card loading" id="cardProgress">
+            <div class="stats-top">
+              <span class="pill blue">In Progress</span>
+            </div>
+            <div class="stats-label">Being worked</div>
+            <div class="stats-value" id="valueProgress">—</div>
+            <div class="stats-sub">Actively routed or handled</div>
+          </article>
+
+          <article class="stats-card loading" id="cardWaiting">
+            <div class="stats-top">
+              <span class="pill gold">Waiting</span>
+            </div>
+            <div class="stats-label">Waiting on member</div>
+            <div class="stats-value" id="valueWaiting">—</div>
+            <div class="stats-sub">Needs member reply</div>
+          </article>
+
+          <article class="stats-card loading" id="cardUrgent">
+            <div class="stats-top">
+              <span class="pill red">Urgent</span>
+            </div>
+            <div class="stats-label">High priority queue</div>
+            <div class="stats-value" id="valueUrgent">—</div>
+            <div class="stats-sub">Urgent tickets visible now</div>
+          </article>
+
+          <article class="stats-card loading" id="cardResolved">
+            <div class="stats-top">
+              <span class="pill green">Resolved</span>
+            </div>
+            <div class="stats-label">Resolved + closed</div>
+            <div class="stats-value" id="valueResolved">—</div>
+            <div class="stats-sub">Completed ticket outcomes</div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="panel toolbar">
+          <div class="toolbar-grid">
+            <div class="field">
+              <label for="searchInput">Search</label>
+              <input
+                class="input"
+                id="searchInput"
+                type="search"
+                placeholder="Search ticket number, subject, category..."
+              />
+            </div>
+
+            <div class="field">
+              <label for="statusFilter">Status</label>
+              <select class="select" id="statusFilter"></select>
+            </div>
+
+            <div class="field">
+              <label for="priorityFilter">Priority</label>
+              <select class="select" id="priorityFilter"></select>
+            </div>
+
+            <div class="field">
+              <label for="categoryFilter">Category</label>
+              <select class="select" id="categoryFilter"></select>
+            </div>
+
+            <div class="field">
+              <label for="assignedFilter">Assignment</label>
+              <select class="select" id="assignedFilter"></select>
+            </div>
+
+            <div class="field">
+              <label for="sortFilter">Sort</label>
+              <select class="select" id="sortFilter"></select>
+            </div>
+
+            <div class="field">
+              <label for="limitFilter">Rows</label>
+              <select class="select" id="limitFilter">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="toolbar-grid" style="margin-top: 12px; grid-template-columns: 1fr auto auto;">
+            <div class="field">
+              <label for="pageIndicator">Page</label>
+              <input class="input" id="pageIndicator" type="text" value="1" readonly />
+            </div>
+
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn" id="clearFiltersBtn" type="button">Clear Filters</button>
+            </div>
+
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn btn-primary" id="applyFiltersBtn" type="button">
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="table-layout">
+          <div class="table-wrap">
+            <div class="table-head">
+              <div>
+                <h3>Support Queue</h3>
+                <p id="tableMeta">Loading tickets...</p>
+              </div>
+            </div>
+
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Ticket</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Category</th>
+                    <th>Member</th>
+                    <th>Assignee</th>
+                    <th>Messages</th>
+                    <th>Last Activity</th>
+                  </tr>
+                </thead>
+                <tbody id="ticketsTableBody">
+                  <tr>
+                    <td colspan="8" class="muted">Loading support tickets...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="detail-card">
+            <div class="detail-head">
+              <div>
+                <h3>Ticket Detail</h3>
+                <p>Inspect ticket status, member context, and latest conversation preview.</p>
+              </div>
+            </div>
+
+            <div class="detail-body" id="detailBody">
+              <div class="detail-empty">
+                Select a ticket from the table to view full detail.
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="footer-row">
+          <div class="muted" id="paginationMeta">—</div>
+
+          <div class="pagination">
+            <button class="btn" id="prevPageBtn" type="button">Previous</button>
+            <button class="btn" id="nextPageBtn" type="button">Next</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        const state = {
+          admin: null,
+          filters: {
+            status: "all",
+            priority: "all",
+            category: "all",
+            assigned: "all",
+            sort: "updated",
+            search: "",
+            limit: 20,
+            page: 1,
+          },
+          options: {
+            statuses: [],
+            priorities: [],
+            categories: [],
+            assignedOptions: [],
+            sorts: [],
+          },
+          pagination: null,
+          summary: null,
+          tickets: [],
+          selectedTicketId: null,
+        };
+
+        const SORT_LABELS = {
+          newest: "Newest",
+          oldest: "Oldest",
+          updated: "Recently Updated",
+          priority: "Priority",
+          status: "Status",
+        };
+
+        const ASSIGNED_LABELS = {
+          all: "All Tickets",
+          assigned: "Assigned",
+          unassigned: "Unassigned",
+          mine: "Assigned To Me",
+        };
+
+        function $(id) {
+          return document.getElementById(id);
+        }
+
+        function escapeHtml(value) {
+          return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+        }
+
+        function titleCase(value) {
+          return String(value || "")
+            .split(/[\s_-]+/)
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(" ");
+        }
+
+        function formatDate(value) {
+          if (!value) return "—";
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return "—";
+
+          return new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          }).format(date);
+        }
+
+        function formatCount(value) {
+          const num = Number(value || 0);
+          return Number.isFinite(num) ? num.toLocaleString() : "0";
+        }
+
+        function setText(id, value) {
+          const el = $(id);
+          if (el) el.textContent = value;
+        }
+
+        async function api(url, options = {}) {
+          const response = await fetch(url, {
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              ...(options.headers || {}),
+            },
+            ...options,
+          });
+
+          const contentType = response.headers.get("content-type") || "";
+          const body = contentType.includes("application/json")
+            ? await response.json()
+            : { success: false, message: "Unexpected server response." };
+
+          if (!response.ok || body?.success === false) {
+            const error = new Error(body?.message || "Request failed.");
+            error.status = response.status;
+            error.payload = body;
+            throw error;
+          }
+
+          return body;
+        }
+
+        function buildQuery() {
+          const params = new URLSearchParams();
+          params.set("status", state.filters.status);
+          params.set("priority", state.filters.priority);
+          params.set("category", state.filters.category);
+          params.set("assigned", state.filters.assigned);
+          params.set("sort", state.filters.sort);
+          params.set("search", state.filters.search);
+          params.set("limit", String(state.filters.limit));
+          params.set("page", String(state.filters.page));
+          return params.toString();
+        }
+
+        function getStatusClass(status) {
+          const normalized = String(status || "").toLowerCase();
+          return `status-${normalized}`;
+        }
+
+        function getPriorityClass(priority) {
+          const normalized = String(priority || "").toLowerCase();
+          return `priority-${normalized}`;
+        }
+
+        function renderHeader() {
+          if (!state.admin) return;
+
+          setText("adminName", state.admin.fullName || state.admin.email || "Admin");
+          setText(
+            "adminAccess",
+            state.admin.isSuperAdmin ? "Super Admin" : "Support Admin"
+          );
+          setText("lastRefresh", formatDate(new Date().toISOString()));
+        }
+
+        function renderFilters() {
+          const statusFilter = $("statusFilter");
+          const priorityFilter = $("priorityFilter");
+          const categoryFilter = $("categoryFilter");
+          const assignedFilter = $("assignedFilter");
+          const sortFilter = $("sortFilter");
+
+          if (statusFilter && !statusFilter.dataset.ready) {
+            statusFilter.innerHTML = (state.options.statuses || [])
+              .map(
+                (value) =>
+                  `<option value="${escapeHtml(value)}">${escapeHtml(
+                    value === "all" ? "All Statuses" : titleCase(value)
+                  )}</option>`
+              )
+              .join("");
+            statusFilter.dataset.ready = "true";
+          }
+
+          if (priorityFilter && !priorityFilter.dataset.ready) {
+            priorityFilter.innerHTML = (state.options.priorities || [])
+              .map(
+                (value) =>
+                  `<option value="${escapeHtml(value)}">${escapeHtml(
+                    value === "all" ? "All Priorities" : titleCase(value)
+                  )}</option>`
+              )
+              .join("");
+            priorityFilter.dataset.ready = "true";
+          }
+
+          if (categoryFilter && !categoryFilter.dataset.ready) {
+            categoryFilter.innerHTML = (state.options.categories || [])
+              .map(
+                (value) =>
+                  `<option value="${escapeHtml(value)}">${escapeHtml(
+                    value === "all" ? "All Categories" : titleCase(value)
+                  )}</option>`
+              )
+              .join("");
+            categoryFilter.dataset.ready = "true";
+          }
+
+          if (assignedFilter && !assignedFilter.dataset.ready) {
+            assignedFilter.innerHTML = (state.options.assignedOptions || [])
+              .map(
+                (value) =>
+                  `<option value="${escapeHtml(value)}">${escapeHtml(
+                    ASSIGNED_LABELS[value] || titleCase(value)
+                  )}</option>`
+              )
+              .join("");
+            assignedFilter.dataset.ready = "true";
+          }
+
+          if (sortFilter && !sortFilter.dataset.ready) {
+            sortFilter.innerHTML = (state.options.sorts || [])
+              .map(
+                (value) =>
+                  `<option value="${escapeHtml(value)}">${escapeHtml(
+                    SORT_LABELS[value] || titleCase(value)
+                  )}</option>`
+              )
+              .join("");
+            sortFilter.dataset.ready = "true";
+          }
+
+          if (statusFilter) statusFilter.value = state.filters.status;
+          if (priorityFilter) priorityFilter.value = state.filters.priority;
+          if (categoryFilter) categoryFilter.value = state.filters.category;
+          if (assignedFilter) assignedFilter.value = state.filters.assigned;
+          if (sortFilter) sortFilter.value = state.filters.sort;
+          if ($("limitFilter")) $("limitFilter").value = String(state.filters.limit);
+          if ($("searchInput")) $("searchInput").value = state.filters.search;
+          if ($("pageIndicator")) $("pageIndicator").value = String(state.filters.page);
+        }
+
+        function renderSummary() {
+          const summary = state.summary || {};
+
+          setText("valueTotal", formatCount(summary.total || 0));
+          setText("valueOpen", formatCount(summary.open || 0));
+          setText("valueProgress", formatCount(summary.inProgress || 0));
+          setText("valueWaiting", formatCount(summary.waitingOnMember || 0));
+          setText("valueUrgent", formatCount(summary.urgent || 0));
+          setText(
+            "valueResolved",
+            formatCount((summary.resolved || 0) + (summary.closed || 0))
+          );
+
+          [
+            "cardTotal",
+            "cardOpen",
+            "cardProgress",
+            "cardWaiting",
+            "cardUrgent",
+            "cardResolved",
+          ].forEach((id) => {
+            const el = $(id);
+            if (el) el.classList.remove("loading");
+          });
+        }
+
+        function renderTable() {
+          const body = $("ticketsTableBody");
+          if (!body) return;
+
+          if (!state.tickets.length) {
+            body.innerHTML = `
+              <tr>
+                <td colspan="8" class="muted">No tickets matched your filters.</td>
+              </tr>
+            `;
+            return;
+          }
+
+          body.innerHTML = state.tickets
+            .map((item) => {
+              const isActive = item.id === state.selectedTicketId;
+              return `
+                <tr data-ticket-id="${escapeHtml(item.id)}" class="${isActive ? "active" : ""}">
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(item.subject || item.ticketNumber || "Ticket")}</div>
+                      <div class="meta-line">${escapeHtml(item.ticketNumber || "No ticket number")}</div>
+                      <div class="meta-line">${escapeHtml(item.sourceLabel || "Portal")}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="status-tag ${getStatusClass(item.status)}">
+                      ${escapeHtml(item.statusLabel || titleCase(item.status))}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="priority-tag ${getPriorityClass(item.priority)}">
+                      ${escapeHtml(item.priorityLabel || titleCase(item.priority))}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(item.categoryLabel || titleCase(item.category))}</div>
+                      <div class="meta-line">${escapeHtml(item.sourceLabel || "Portal")}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(item.member?.fullName || item.contactMessage?.name || "Unknown")}</div>
+                      <div class="meta-line">${escapeHtml(item.member?.email || item.contactMessage?.email || "No email")}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(item.assignee?.fullName || "Unassigned")}</div>
+                      <div class="meta-line">
+                        <span class="assign-tag ${item.flags?.isAssigned ? "assigned" : "unassigned"}">
+                          ${item.flags?.isAssigned ? "Assigned" : "Unassigned"}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${formatCount(item.counts?.messageCount || 0)}</div>
+                      <div class="meta-line">${formatCount(item.counts?.internalNoteCount || 0)} internal notes</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="name-cell">
+                      <div class="name-title">${escapeHtml(formatDate(item.lastMessageAt || item.updatedAt || item.createdAt))}</div>
+                      <div class="meta-line">${escapeHtml(formatDate(item.firstResponseAt))}</div>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("");
+        }
+
+        function getSelectedTicket() {
+          return state.tickets.find((item) => item.id === state.selectedTicketId) || null;
+        }
+
+        function renderDetail() {
+          const container = $("detailBody");
+          if (!container) return;
+
+          const item = getSelectedTicket();
+
+          if (!item) {
+            container.innerHTML = `
+              <div class="detail-empty">
+                Select a ticket from the table to view full detail.
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = `
+            <div class="detail-block">
+              <h4>Ticket Overview</h4>
+              <div class="kv">
+                <div class="k">Ticket</div>
+                <div class="v">${escapeHtml(item.ticketNumber || "—")}</div>
+
+                <div class="k">Subject</div>
+                <div class="v">${escapeHtml(item.subject || "—")}</div>
+
+                <div class="k">Status</div>
+                <div class="v">
+                  <span class="status-tag ${getStatusClass(item.status)}">
+                    ${escapeHtml(item.statusLabel || titleCase(item.status))}
+                  </span>
+                </div>
+
+                <div class="k">Priority</div>
+                <div class="v">
+                  <span class="priority-tag ${getPriorityClass(item.priority)}">
+                    ${escapeHtml(item.priorityLabel || titleCase(item.priority))}
+                  </span>
+                </div>
+
+                <div class="k">Category</div>
+                <div class="v">${escapeHtml(item.categoryLabel || titleCase(item.category))}</div>
+
+                <div class="k">Source</div>
+                <div class="v">${escapeHtml(item.sourceLabel || "Portal")}</div>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h4>Member + Contact Context</h4>
+              <div class="kv">
+                <div class="k">Member</div>
+                <div class="v">${escapeHtml(item.member?.fullName || "—")}</div>
+
+                <div class="k">Member Email</div>
+                <div class="v">${escapeHtml(item.member?.email || item.contactMessage?.email || "—")}</div>
+
+                <div class="k">Member Tier</div>
+                <div class="v">${escapeHtml(item.member?.tier ? titleCase(item.member.tier) : "—")}</div>
+
+                <div class="k">Member Status</div>
+                <div class="v">${escapeHtml(item.member?.memberStatus ? titleCase(item.member.memberStatus) : "—")}</div>
+
+                <div class="k">Contact Name</div>
+                <div class="v">${escapeHtml(item.contactMessage?.name || "—")}</div>
+
+                <div class="k">Contact Topic</div>
+                <div class="v">${escapeHtml(item.contactMessage?.topic ? titleCase(item.contactMessage.topic) : "—")}</div>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h4>Assignment + Timing</h4>
+              <div class="kv">
+                <div class="k">Assignee</div>
+                <div class="v">${escapeHtml(item.assignee?.fullName || "Unassigned")}</div>
+
+                <div class="k">First Response</div>
+                <div class="v">${escapeHtml(formatDate(item.firstResponseAt))}</div>
+
+                <div class="k">Last Message</div>
+                <div class="v">${escapeHtml(formatDate(item.lastMessageAt))}</div>
+
+                <div class="k">Resolved At</div>
+                <div class="v">${escapeHtml(formatDate(item.resolvedAt))}</div>
+
+                <div class="k">Closed At</div>
+                <div class="v">${escapeHtml(formatDate(item.closedAt))}</div>
+
+                <div class="k">Created</div>
+                <div class="v">${escapeHtml(formatDate(item.createdAt))}</div>
+
+                <div class="k">Updated</div>
+                <div class="v">${escapeHtml(formatDate(item.updatedAt))}</div>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h4>Queue Metrics</h4>
+              <div class="kv">
+                <div class="k">Messages</div>
+                <div class="v">${formatCount(item.counts?.messageCount || 0)}</div>
+
+                <div class="k">Internal Notes</div>
+                <div class="v">${formatCount(item.counts?.internalNoteCount || 0)}</div>
+
+                <div class="k">Assigned</div>
+                <div class="v">${item.flags?.isAssigned ? "Yes" : "No"}</div>
+
+                <div class="k">Has Member</div>
+                <div class="v">${item.flags?.hasMember ? "Yes" : "No"}</div>
+
+                <div class="k">Has Contact Record</div>
+                <div class="v">${item.flags?.hasContactMessage ? "Yes" : "No"}</div>
+
+                <div class="k">Has Internal Notes</div>
+                <div class="v">${item.flags?.hasInternalNotes ? "Yes" : "No"}</div>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h4>Latest Message Preview</h4>
+              ${
+                item.latestMessage
+                  ? `
+                    <div class="message-preview">
+                      <strong>${escapeHtml(titleCase(item.latestMessage.senderType || "message"))}</strong>
+                      <div class="meta-line" style="margin-bottom: 10px;">
+                        ${escapeHtml(item.latestMessage.senderName || item.latestMessage.senderEmail || "Unknown sender")} •
+                        ${escapeHtml(formatDate(item.latestMessage.createdAt))}
+                      </div>
+                      <div>${escapeHtml(item.latestMessage.body || "No message body.")}</div>
+                    </div>
+                  `
+                  : `<div class="detail-empty">No message preview is available for this ticket.</div>`
+              }
+            </div>
+
+            <div class="detail-block">
+              <h4>Operational Flags</h4>
+              <div class="flag-row">
+                <span class="flag">${item.flags?.isAssigned ? "Assigned" : "Unassigned"}</span>
+                <span class="flag">${item.flags?.isResolved ? "Resolved" : "Not Resolved"}</span>
+                <span class="flag">${item.flags?.isClosed ? "Closed" : "Open Workflow"}</span>
+                <span class="flag">${item.flags?.hasMember ? "Member Linked" : "No Member Linked"}</span>
+                <span class="flag">${item.flags?.hasContactMessage ? "Contact Message Linked" : "No Contact Record"}</span>
+                <span class="flag">${item.flags?.hasInternalNotes ? "Internal Notes Present" : "No Internal Notes"}</span>
+              </div>
+            </div>
+          `;
+        }
+
+        function renderMeta() {
+          const pagination = state.pagination || {};
+          setText(
+            "tableMeta",
+            `${formatCount(pagination.total || 0)} tickets • page ${formatCount(
+              pagination.page || 1
+            )} of ${formatCount(pagination.totalPages || 1)}`
+          );
+
+          setText(
+            "paginationMeta",
+            pagination.total
+              ? `Showing ${formatCount(pagination.from)}–${formatCount(
+                  pagination.to
+                )} of ${formatCount(pagination.total)} tickets`
+              : "No tickets to show"
+          );
+
+          if ($("pageIndicator")) {
+            $("pageIndicator").value = String(pagination.page || state.filters.page || 1);
+          }
+
+          if ($("prevPageBtn")) $("prevPageBtn").disabled = !pagination.hasPreviousPage;
+          if ($("nextPageBtn")) $("nextPageBtn").disabled = !pagination.hasNextPage;
+        }
+
+        function renderAll() {
+          renderHeader();
+          renderFilters();
+          renderSummary();
+          renderTable();
+          renderDetail();
+          renderMeta();
+        }
+
+        async function loadTickets() {
+          try {
+            const me = await api("/api/auth/me");
+            state.admin = me?.data?.user || null;
+          } catch (error) {
+            if (error?.status === 401) {
+              const next = encodeURIComponent("/admin/support.html");
+              window.location.href = `/login.html?next=${next}`;
+              return;
+            }
+            throw error;
+          }
+
+          const result = await api(`/api/admin/support?${buildQuery()}`);
+
+          state.options.statuses = result?.data?.filters?.statuses || [];
+          state.options.priorities = result?.data?.filters?.priorities || [];
+          state.options.categories = result?.data?.filters?.categories || [];
+          state.options.assignedOptions = result?.data?.filters?.assignedOptions || [];
+          state.options.sorts = result?.data?.filters?.sorts || [];
+          state.summary = result?.data?.summary || null;
+          state.pagination = result?.data?.pagination || null;
+          state.tickets = result?.data?.tickets || [];
+          state.admin = result?.data?.admin || state.admin;
+
+          if (!state.selectedTicketId && state.tickets.length) {
+            state.selectedTicketId = state.tickets[0].id;
+          }
+
+          if (
+            state.selectedTicketId &&
+            !state.tickets.some((item) => item.id === state.selectedTicketId)
+          ) {
+            state.selectedTicketId = state.tickets.length ? state.tickets[0].id : null;
+          }
+
+          renderAll();
+        }
+
+        async function handleLogout() {
+          try {
+            await api("/api/auth/logout", { method: "POST" });
+          } catch (_) {
+          } finally {
+            window.location.href = "/login.html";
+          }
+        }
+
+        function clearFilters() {
+          state.filters = {
+            status: "all",
+            priority: "all",
+            category: "all",
+            assigned: "all",
+            sort: "updated",
+            search: "",
+            limit: 20,
+            page: 1,
+          };
+          renderFilters();
+          loadTickets();
+        }
+
+        function bindEvents() {
+          $("refreshBtn")?.addEventListener("click", loadTickets);
+          $("logoutBtn")?.addEventListener("click", handleLogout);
+
+          $("applyFiltersBtn")?.addEventListener("click", () => {
+            state.filters.search = $("searchInput")?.value.trim() || "";
+            state.filters.status = $("statusFilter")?.value || "all";
+            state.filters.priority = $("priorityFilter")?.value || "all";
+            state.filters.category = $("categoryFilter")?.value || "all";
+            state.filters.assigned = $("assignedFilter")?.value || "all";
+            state.filters.sort = $("sortFilter")?.value || "updated";
+            state.filters.limit = Number($("limitFilter")?.value || 20);
+            state.filters.page = 1;
+            loadTickets();
+          });
+
+          $("clearFiltersBtn")?.addEventListener("click", clearFilters);
+
+          $("prevPageBtn")?.addEventListener("click", () => {
+            if (!state.pagination?.hasPreviousPage) return;
+            state.filters.page = Math.max(1, Number(state.filters.page || 1) - 1);
+            loadTickets();
+          });
+
+          $("nextPageBtn")?.addEventListener("click", () => {
+            if (!state.pagination?.hasNextPage) return;
+            state.filters.page = Number(state.filters.page || 1) + 1;
+            loadTickets();
+          });
+
+          $("ticketsTableBody")?.addEventListener("click", (event) => {
+            const row = event.target.closest("tr[data-ticket-id]");
+            if (!row) return;
+
+            state.selectedTicketId = row.getAttribute("data-ticket-id");
+            renderTable();
+            renderDetail();
+          });
+        }
+
+        async function init() {
+          bindEvents();
+
+          try {
+            await loadTickets();
+          } catch (error) {
+            if (error?.status === 403) {
+              window.location.href = "/unauthorized.html";
+              return;
+            }
+
+            $("ticketsTableBody").innerHTML = `
+              <tr>
+                <td colspan="8" class="muted">${escapeHtml(
+                  error?.message || "Unable to load support tickets."
+                )}</td>
+              </tr>
+            `;
+          }
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init, { once: true });
+        } else {
+          init();
+        }
+      })();
+    </script>
+  </body>
+</html>

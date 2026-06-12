@@ -1,8 +1,9 @@
 // assets/js/portal-rewards.js
-
 (function () {
   const CONFIG = {
+    meEndpoint: "/api/auth/me",
     rewardsEndpoint: "/api/portal/rewards",
+    logoutEndpoint: "/api/auth/logout",
     loginPage: "/login.html",
     unauthorizedPage: "/unauthorized.html",
     authGuardOptions: {
@@ -10,45 +11,188 @@
       logoutEndpoint: "/api/auth/logout",
       loginPage: "/login.html",
       unauthorizedPage: "/unauthorized.html",
-      fallbackPortalOverviewEndpoint: "/api/portal/overview",
       redirectOnFail: true,
       requirePortalAccess: true,
       showLoader: true,
+      autoBindLogout: true,
       debug: false,
     },
   };
 
+  const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
+
   const state = {
     member: null,
+    profile: null,
     rewards: [],
+    payouts: [],
+    payments: [],
+    cycles: [],
     summary: null,
+    rewardAccount: null,
     support: null,
+    notices: [],
+    raw: null,
     isLoading: false,
+    authReady: false,
   };
 
-  function normalizeText(value) {
-    return String(value ?? "").trim();
+  function normalizeText(value, fallback = "") {
+    const text = String(value ?? "").trim();
+    return text || fallback;
+  }
+
+  function normalizeEmail(value) {
+    return normalizeText(value).toLowerCase();
   }
 
   function isObject(value) {
-    return !!value && typeof value === "object" && !Array.isArray(value);
+    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function unwrapApiPayload(payload) {
+    if (!isObject(payload)) return {};
+    return isObject(payload.data) ? payload.data : payload;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function titleCase(value) {
+    return String(value || "")
+      .split(/[\s_-]+/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ");
+  }
+
+  function money(value) {
+    const num = Number(value || 0);
+
+    if (!Number.isFinite(num)) {
+      return "$0.00";
+    }
+
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(num);
+  }
+
+  function formatNumber(value) {
+    const num = Number(value ?? 0);
+    if (!Number.isFinite(num)) return "0";
+    return new Intl.NumberFormat("en-US").format(num);
+  }
+
+  function formatPoints(value) {
+    const num = Number(value ?? 0);
+    if (!Number.isFinite(num)) return "0 pts";
+    return `${new Intl.NumberFormat("en-US").format(num)} pts`;
+  }
+
+  function formatDate(value) {
+    if (!value) return "—";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "—";
+
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }).format(date);
+  }
+
+  function formatDateTime(value) {
+    if (!value) return "—";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "—";
+
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date);
+  }
+
+  async function fetchJson(url, options = {}) {
+    const response = await fetch(url, {
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+      ...options,
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    return {
+      response,
+      payload,
+      data: unwrapApiPayload(payload),
+      message: normalizeText(payload?.message || unwrapApiPayload(payload)?.message),
+    };
+  }
+
+  function redirectToLogin() {
+    const next = `${window.location.pathname}${window.location.search || ""}`;
+    window.location.href = `${CONFIG.loginPage}?next=${encodeURIComponent(next)}`;
+  }
+
+  function redirectToUnauthorized() {
+    const next = `${window.location.pathname}${window.location.search || ""}`;
+    window.location.href = `${CONFIG.unauthorizedPage}?next=${encodeURIComponent(next)}`;
   }
 
   function setText(selector, value) {
+    if (!selector) return;
+
     document.querySelectorAll(selector).forEach((node) => {
       node.textContent = normalizeText(value);
     });
   }
 
   function setHtml(selector, value) {
+    if (!selector) return;
+
     document.querySelectorAll(selector).forEach((node) => {
       node.innerHTML = String(value ?? "");
     });
   }
 
+  function setHidden(selector, hidden) {
+    if (!selector) return;
+
+    document.querySelectorAll(selector).forEach((node) => {
+      node.hidden = Boolean(hidden);
+    });
+  }
+
+  function getStatusNode() {
+    return (
+      document.querySelector("[data-rewards-page-status]") ||
+      document.querySelector("#rewards-page-status") ||
+      document.querySelector("[data-rewards-status]") ||
+      document.querySelector("#rewards-status")
+    );
+  }
+
   function setStatus(target, type, message) {
-    const el =
-      typeof target === "string" ? document.querySelector(target) : target;
+    const el = typeof target === "string" ? document.querySelector(target) : target;
 
     if (!el) return;
 
@@ -80,8 +224,7 @@
   }
 
   function clearStatus(target) {
-    const el =
-      typeof target === "string" ? document.querySelector(target) : target;
+    const el = typeof target === "string" ? document.querySelector(target) : target;
 
     if (!el) return;
 
@@ -90,63 +233,145 @@
     el.dataset.state = "";
   }
 
-  function escapeHtml(value) {
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+  function getFullName(member = {}, profile = {}) {
+    const fullName =
+      normalizeText(member.fullName) ||
+      normalizeText(member.full_name) ||
+      normalizeText(member.name) ||
+      normalizeText(profile.fullName) ||
+      normalizeText(profile.full_name) ||
+      normalizeText(profile.name);
+
+    if (fullName) return fullName;
+
+    const firstName =
+      normalizeText(member.firstName || member.first_name) ||
+      normalizeText(profile.firstName || profile.first_name);
+
+    const lastName =
+      normalizeText(member.lastName || member.last_name) ||
+      normalizeText(profile.lastName || profile.last_name);
+
+    return [firstName, lastName].filter(Boolean).join(" ") || "Card Leo Member";
   }
 
-  function formatDate(value) {
-    if (!value) return "—";
+  function getFirstName(member = {}, profile = {}) {
+    const firstName =
+      normalizeText(member.firstName || member.first_name) ||
+      normalizeText(profile.firstName || profile.first_name);
 
-    try {
-      return new Date(value).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-    } catch {
-      return "—";
-    }
+    if (firstName) return firstName;
+
+    return getFullName(member, profile).split(/\s+/)[0] || "Member";
   }
 
-  function formatDateTime(value) {
-    if (!value) return "—";
-
-    try {
-      return new Date(value).toLocaleString();
-    } catch {
-      return "—";
-    }
+  function getMemberStatus(member = {}, profile = {}) {
+    return normalizeText(
+      member.memberStatus ||
+        member.member_status ||
+        member.status ||
+        profile.memberStatus ||
+        profile.member_status ||
+        profile.status ||
+        "active"
+    ).toLowerCase();
   }
 
-  function formatNumber(value) {
-    const num = Number(value ?? 0);
-    if (!Number.isFinite(num)) return "0";
-    return new Intl.NumberFormat().format(num);
+  function getPortalAccess(member = {}, profile = {}) {
+    if (typeof member.portalAccess === "boolean") return member.portalAccess;
+    if (typeof member.portal_access === "boolean") return member.portal_access;
+
+    return ACTIVE_STATUSES.has(getMemberStatus(member, profile));
   }
 
-  function formatPoints(value) {
-    const num = Number(value ?? 0);
-    if (!Number.isFinite(num)) return "0";
-    return `${new Intl.NumberFormat().format(num)} pts`;
+  function normalizeMember(member = {}, profile = {}) {
+    const safeMember = isObject(member) ? member : {};
+    const safeProfile = isObject(profile) ? profile : {};
+    const fullName = getFullName(safeMember, safeProfile);
+    const firstName = getFirstName(safeMember, safeProfile);
+    const status = getMemberStatus(safeMember, safeProfile);
+    const tier = normalizeText(
+      safeMember.tier ||
+        safeMember.accessLevel ||
+        safeMember.access_level ||
+        safeProfile.tier ||
+        "core"
+    ).toLowerCase();
+
+    return {
+      ...safeMember,
+      id:
+        safeMember.id ||
+        safeMember.signupId ||
+        safeMember.signup_id ||
+        safeProfile.id ||
+        "",
+      signupId:
+        safeMember.signupId ||
+        safeMember.signup_id ||
+        safeMember.id ||
+        safeProfile.signupId ||
+        safeProfile.signup_id ||
+        safeProfile.id ||
+        "",
+      portalUserId: safeMember.portalUserId || safeMember.portal_user_id || "",
+      firstName,
+      first_name: firstName,
+      lastName:
+        safeMember.lastName ||
+        safeMember.last_name ||
+        safeProfile.lastName ||
+        safeProfile.last_name ||
+        "",
+      fullName,
+      full_name: fullName,
+      name: fullName,
+      email: normalizeEmail(safeMember.email || safeProfile.email),
+      phone: safeMember.phone || safeProfile.phone || "",
+      city: safeMember.city || safeProfile.city || "",
+      state: safeMember.state || safeProfile.state || "",
+      status,
+      memberStatus: status,
+      member_status: status,
+      tier,
+      tierLabel: titleCase(tier),
+      portalAccess: getPortalAccess(
+        {
+          ...safeMember,
+          status,
+        },
+        safeProfile
+      ),
+      accessLevel: safeMember.accessLevel || safeMember.access_level || tier || "member",
+      joinedAt:
+        safeMember.joinedAt ||
+        safeMember.joined_at ||
+        safeMember.createdAt ||
+        safeMember.created_at ||
+        null,
+      createdAt: safeMember.createdAt || safeMember.created_at || null,
+      updatedAt: safeMember.updatedAt || safeMember.updated_at || null,
+    };
   }
 
   function normalizeStatusTone(status) {
     const value = normalizeText(status).toLowerCase();
 
-    if (["active", "available", "earned", "approved", "unlocked"].includes(value)) {
+    if (
+      ["active", "available", "earned", "approved", "unlocked", "posted", "paid", "released", "success"].includes(value)
+    ) {
       return "success";
     }
 
-    if (["pending", "processing", "in review", "scheduled"].includes(value)) {
+    if (
+      ["pending", "processing", "in review", "scheduled", "reward_pending", "open"].includes(value)
+    ) {
       return "warning";
     }
 
-    if (["expired", "inactive", "redeemed", "used", "ended"].includes(value)) {
+    if (
+      ["expired", "inactive", "redeemed", "used", "ended", "voided", "cancelled"].includes(value)
+    ) {
       return "muted";
     }
 
@@ -185,150 +410,209 @@
     };
   }
 
-  async function fetchJson(url, options = {}) {
-    const response = await fetch(url, {
-      credentials: "include",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
+  function inferRewardsPayload(payload, fallback = {}) {
+    const data = unwrapApiPayload(payload);
+
+    const fallbackMember = isObject(fallback.member) ? fallback.member : {};
+    const fallbackProfile = isObject(fallback.profile) ? fallback.profile : {};
+    const fallbackSupport = isObject(fallback.support) ? fallback.support : {};
+
+    const member = normalizeMember(
+      {
+        ...fallbackMember,
+        ...(isObject(data.member) ? data.member : {}),
       },
-      ...options,
-    });
+      {
+        ...fallbackProfile,
+        ...(isObject(data.profile) ? data.profile : {}),
+      }
+    );
 
-    let data = null;
+    const profile =
+      (isObject(data.profile) && data.profile) ||
+      fallbackProfile ||
+      {};
 
-    try {
-      data = await response.json();
-    } catch {
-      data = null;
-    }
+    const support =
+      (isObject(data.support) && data.support) ||
+      fallbackSupport ||
+      {};
 
-    return { response, data };
-  }
+    const summary =
+      (isObject(data.summary) && data.summary) ||
+      {};
 
-  function inferRewardsPayload(payload) {
-    const data = isObject(payload?.data) ? payload.data : payload;
-    const member = isObject(data?.member) ? data.member : {};
-    const support = isObject(data?.support) ? data.support : {};
-    const summary = isObject(data?.summary) ? data.summary : {};
-    const rewards = Array.isArray(data?.rewards) ? data.rewards : [];
+    const rewardAccount =
+      (isObject(data.rewardAccount) && data.rewardAccount) ||
+      (isObject(data.reward_account) && data.reward_account) ||
+      null;
 
-    return { member, support, summary, rewards };
+    const rewards = Array.isArray(data.rewards)
+      ? data.rewards
+      : Array.isArray(data.transactions)
+        ? data.transactions
+        : [];
+
+    const payouts = Array.isArray(data.payouts) ? data.payouts : [];
+    const payments = Array.isArray(data.membershipPayments)
+      ? data.membershipPayments
+      : Array.isArray(data.payments)
+        ? data.payments
+        : [];
+
+    const cycles = Array.isArray(data.cycles) ? data.cycles : [];
+    const notices = Array.isArray(data.notices)
+      ? data.notices
+      : Array.isArray(data.announcements)
+        ? data.announcements
+        : [];
+
+    return {
+      member,
+      profile,
+      support,
+      summary,
+      rewardAccount,
+      rewards,
+      payouts,
+      payments,
+      cycles,
+      notices,
+      raw: data,
+    };
   }
 
   function applyMember(member = {}) {
-    state.member = member;
+    state.member = normalizeMember(member, state.profile || {});
 
-    const fullName =
-      normalizeText(member.name) ||
-      [
-        normalizeText(member.firstName || member.first_name),
-        normalizeText(member.lastName || member.last_name),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim() ||
-      "Card Leo Member";
-
-    const firstName =
-      normalizeText(member.firstName || member.first_name) ||
-      fullName.split(" ")[0] ||
-      "Member";
+    const fullName = state.member.fullName;
+    const firstName = state.member.firstName || "Member";
+    const statusLabel = titleCase(state.member.memberStatus || state.member.status || "active");
+    const accessLevel = state.member.accessLevel || state.member.tier || "member";
 
     setText("[data-member-name]", fullName);
+    setText("[data-member-full-name]", fullName);
     setText("[data-member-first-name]", firstName);
-    setText("[data-member-email]", member.email || "");
-    setText("[data-member-status]", member.status || "member");
-    setText(
-      "[data-member-access-level]",
-      member.accessLevel || member.access_level || "member"
-    );
-    setText(
-      "[data-member-joined-at]",
-      member.joinedAt ? formatDate(member.joinedAt) : "—"
-    );
+    setText("[data-member-email]", state.member.email || "");
+    setText("[data-member-status]", statusLabel);
+    setText("[data-member-tier]", titleCase(state.member.tier || "core"));
+    setText("[data-member-access-level]", titleCase(accessLevel));
+    setText("[data-member-accesslevel]", titleCase(accessLevel));
+    setText("[data-member-joined-at]", formatDate(state.member.joinedAt));
 
     document.body.dataset.memberName = fullName;
-    document.body.dataset.memberEmail = normalizeText(member.email || "");
-    document.body.dataset.memberStatus = normalizeText(member.status || "");
+    document.body.dataset.memberEmail = state.member.email || "";
+    document.body.dataset.memberStatus = state.member.memberStatus || "";
+    document.body.dataset.memberAccessLevel = accessLevel;
+    document.body.dataset.memberId = state.member.id || state.member.signupId || "";
   }
 
   function applySupport(support = {}) {
-    state.support = support;
+    state.support = isObject(support) ? support : {};
 
-    setText("[data-support-email]", support.email || "support@cardleorewards.com");
-    setText("[data-support-phone]", support.phone || "");
-    setText("[data-support-hours]", support.hours || "Mon–Fri, 9:00 AM–6:00 PM");
+    const email = normalizeText(state.support.email, "support@cardleorewards.com");
+    const phone = normalizeText(state.support.phone, "Not listed");
+    const hours = normalizeText(state.support.hours, "Mon–Fri, 9:00 AM–6:00 PM");
+
+    setText("[data-support-email]", email);
+    setText("[data-support-phone]", phone);
+    setText("[data-support-hours]", hours);
+
+    document.querySelectorAll("[data-support-email-link]").forEach((node) => {
+      node.textContent = email;
+      node.href = `mailto:${email}`;
+    });
   }
 
-  function applySummary(summary = {}, rewards = []) {
-    state.summary = summary;
+  function buildComputedSummary(summary = {}, rewards = [], rewardAccount = null) {
+    const account = isObject(rewardAccount) ? rewardAccount : {};
 
-    const totalRewards =
-      Number.isFinite(Number(summary.totalRewards))
-        ? Number(summary.totalRewards)
-        : rewards.length;
+    const totalRewardsEarned =
+      Number(summary.totalRewardsEarned ?? account.totalRewardsEarned ?? account.total_rewards_earned ?? 0);
 
-    const activeRewards =
-      Number.isFinite(Number(summary.activeRewards))
-        ? Number(summary.activeRewards)
-        : rewards.filter((reward) =>
-            ["active", "available", "earned", "unlocked"].includes(
-              normalizeText(reward.status).toLowerCase()
-            )
-          ).length;
+    const totalRewardsPaid =
+      Number(summary.totalRewardsPaid ?? account.totalRewardsPaid ?? account.total_rewards_paid ?? 0);
 
-    const pendingRewards =
-      Number.isFinite(Number(summary.pendingRewards))
-        ? Number(summary.pendingRewards)
-        : rewards.filter((reward) =>
-            ["pending", "processing", "scheduled"].includes(
-              normalizeText(reward.status).toLowerCase()
-            )
-          ).length;
+    const companyBuildingPending =
+      Number(summary.companyBuildingPending ?? account.companyBuildingPending ?? account.company_building_pending ?? 0);
 
-    const accessLevel = normalizeText(summary.accessLevel || "member");
-    const statusLabel = normalizeText(summary.statusLabel || "Active Member");
+    const companyBuildingReleased =
+      Number(summary.companyBuildingReleased ?? account.companyBuildingReleased ?? account.company_building_released ?? 0);
 
-    setText("[data-total-rewards]", formatNumber(totalRewards));
-    setText("[data-active-rewards]", formatNumber(activeRewards));
-    setText("[data-pending-rewards]", formatNumber(pendingRewards));
-    setText("[data-rewards-access-level]", accessLevel);
-    setText("[data-rewards-status-label]", statusLabel);
+    const directReferralEarned =
+      Number(summary.totalDirectReferralEarned ?? account.totalDirectReferralEarned ?? account.total_direct_referral_earned ?? 0);
 
-    const totalPoints =
-      Number.isFinite(Number(summary.totalPoints))
-        ? Number(summary.totalPoints)
-        : rewards.reduce((acc, reward) => {
-            const value =
-              reward.points ??
-              reward.value ??
-              reward.amount ??
-              reward.balance ??
-              0;
-            return acc + (Number.isFinite(Number(value)) ? Number(value) : 0);
-          }, 0);
+    const overrideEarned =
+      Number(summary.totalOverrideEarned ?? account.totalOverrideEarned ?? account.total_override_earned ?? 0);
 
-    setText("[data-total-points]", formatPoints(totalPoints));
+    const activeRewards = rewards.filter((reward) =>
+      ["active", "available", "earned", "unlocked", "posted", "released", "paid"].includes(
+        normalizeText(reward.status || reward.transactionStatus || reward.transaction_status).toLowerCase()
+      )
+    ).length;
+
+    const pendingRewards = rewards.filter((reward) =>
+      ["pending", "processing", "scheduled", "reward_pending"].includes(
+        normalizeText(reward.status || reward.transactionStatus || reward.transaction_status).toLowerCase()
+      )
+    ).length;
+
+    return {
+      totalRewards: Number(summary.totalRewards ?? rewards.length),
+      activeRewards: Number(summary.activeRewards ?? activeRewards),
+      pendingRewards: Number(summary.pendingRewards ?? pendingRewards),
+
+      totalRewardsEarned: Number.isFinite(totalRewardsEarned) ? totalRewardsEarned : 0,
+      totalRewardsPaid: Number.isFinite(totalRewardsPaid) ? totalRewardsPaid : 0,
+      companyBuildingPending: Number.isFinite(companyBuildingPending) ? companyBuildingPending : 0,
+      companyBuildingReleased: Number.isFinite(companyBuildingReleased) ? companyBuildingReleased : 0,
+      directReferralEarned: Number.isFinite(directReferralEarned) ? directReferralEarned : 0,
+      overrideEarned: Number.isFinite(overrideEarned) ? overrideEarned : 0,
+
+      accessLevel: normalizeText(summary.accessLevel || state.member?.accessLevel || "member"),
+      statusLabel: normalizeText(summary.statusLabel || state.member?.memberStatus || "Active Member"),
+    };
+  }
+
+  function applySummary(summary = {}, rewards = [], rewardAccount = null) {
+    state.summary = buildComputedSummary(summary, rewards, rewardAccount);
+
+    setText("[data-total-rewards]", formatNumber(state.summary.totalRewards));
+    setText("[data-active-rewards]", formatNumber(state.summary.activeRewards));
+    setText("[data-pending-rewards]", formatNumber(state.summary.pendingRewards));
+
+    setText("[data-rewards-access-level]", titleCase(state.summary.accessLevel));
+    setText("[data-rewards-status-label]", titleCase(state.summary.statusLabel));
+
+    setText("[data-total-points]", formatPoints(state.summary.totalRewardsEarned));
+    setText("[data-total-rewards-earned]", money(state.summary.totalRewardsEarned));
+    setText("[data-total-rewards-paid]", money(state.summary.totalRewardsPaid));
+    setText("[data-company-building-pending]", money(state.summary.companyBuildingPending));
+    setText("[data-company-building-released]", money(state.summary.companyBuildingReleased));
+    setText("[data-direct-referral-earned]", money(state.summary.directReferralEarned));
+    setText("[data-override-earned]", money(state.summary.overrideEarned));
   }
 
   function normalizeReward(reward = {}, index = 0) {
+    const amount =
+      reward.amount ??
+      reward.points ??
+      reward.value ??
+      reward.balance ??
+      reward.total ??
+      null;
+
     return {
-      id: normalizeText(reward.id || reward.rewardId || reward.slug || `reward-${index + 1}`),
+      id: normalizeText(reward.id || reward.rewardId || reward.reward_id || reward.slug || `reward-${index + 1}`),
       title:
-        normalizeText(reward.title || reward.name || reward.label) ||
+        normalizeText(reward.title || reward.name || reward.label || reward.transactionType || reward.transaction_type) ||
         `Reward ${index + 1}`,
       description:
         normalizeText(reward.description || reward.summary || reward.details) ||
-        "Premium member reward available through Card Leo Rewards.",
-      category: normalizeText(reward.category || reward.type || "Member Benefit"),
-      status: normalizeText(reward.status || reward.state || "Active"),
-      points:
-        reward.points ??
-        reward.value ??
-        reward.amount ??
-        reward.balance ??
-        null,
+        "Premium member reward activity available through Card Leo Rewards.",
+      category: normalizeText(reward.category || reward.type || reward.transactionType || reward.transaction_type || "Member Reward"),
+      status: normalizeText(reward.status || reward.transactionStatus || reward.transaction_status || reward.state || "posted"),
+      amount,
       expiresAt:
         reward.expiresAt ||
         reward.expires_at ||
@@ -340,75 +624,70 @@
         reward.redeemed_at ||
         reward.usedAt ||
         reward.used_at ||
+        reward.paidAt ||
+        reward.paid_at ||
         null,
       createdAt:
+        reward.postedAt ||
+        reward.posted_at ||
         reward.createdAt ||
         reward.created_at ||
         reward.earnedAt ||
         reward.earned_at ||
         null,
-      code: normalizeText(reward.code || reward.redemptionCode || ""),
-      ctaLabel: normalizeText(reward.ctaLabel || reward.buttonLabel || "View Reward"),
+      code: normalizeText(reward.code || reward.redemptionCode || reward.referenceId || reward.reference_id || ""),
+      ctaLabel: normalizeText(reward.ctaLabel || reward.buttonLabel || "View Details"),
       ctaHref: normalizeText(reward.ctaHref || reward.link || "#"),
-      meta: Array.isArray(reward.meta) ? reward.meta : [],
+      metadata: isObject(reward.metadata) ? reward.metadata : {},
     };
   }
 
-  function renderRewards(rewards = []) {
-    const containers = document.querySelectorAll(
-      "[data-rewards-grid], #rewards-grid, #portal-rewards-grid"
-    );
+  function buildEmptyRewardHtml() {
+    return `
+      <div style="
+        padding:20px;
+        border-radius:20px;
+        background:rgba(255,255,255,0.03);
+        border:1px solid rgba(255,255,255,0.08);
+        color:rgba(244,234,211,0.76);
+      ">
+        <strong style="display:block;color:#f8f3e8;font-size:1rem;margin-bottom:8px;">
+          Rewards are ready
+        </strong>
+        <span>
+          Your next Card Leo Rewards activity will appear here once rewards, referrals, or company-building earnings are issued.
+        </span>
+      </div>
+    `;
+  }
 
-    if (!containers.length) return;
+  function rewardCardHtml(reward) {
+    const tone = normalizeStatusTone(reward.status);
+    const badge = badgeStyles(tone);
 
-    const normalized = rewards.map(normalizeReward);
+    const valueLabel =
+      reward.amount !== null && reward.amount !== undefined && reward.amount !== ""
+        ? money(reward.amount)
+        : "Included";
 
-    containers.forEach((container) => {
-      container.innerHTML = "";
-
-      if (!normalized.length) {
-        const empty = document.createElement("div");
-        empty.style.padding = "20px";
-        empty.style.borderRadius = "20px";
-        empty.style.background = "rgba(255,255,255,0.03)";
-        empty.style.border = "1px solid rgba(255,255,255,0.08)";
-        empty.style.color = "rgba(244, 234, 211, 0.76)";
-        empty.innerHTML = `
-          <strong style="display:block;color:#f8f3e8;font-size:1rem;margin-bottom:8px;">
-            No rewards available yet
-          </strong>
-          <span>
-            Your next member rewards will appear here once they are issued to your account.
-          </span>
-        `;
-        container.appendChild(empty);
-        return;
-      }
-
-      normalized.forEach((reward) => {
-        const tone = normalizeStatusTone(reward.status);
-        const badge = badgeStyles(tone);
-
-        const card = document.createElement("article");
-        card.style.display = "grid";
-        card.style.gap = "14px";
-        card.style.padding = "20px";
-        card.style.borderRadius = "22px";
-        card.style.background =
-          "linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02))";
-        card.style.border = "1px solid rgba(255,255,255,0.08)";
-        card.style.boxShadow = "0 18px 40px rgba(0,0,0,0.22)";
-
-        const top = document.createElement("div");
-        top.style.display = "flex";
-        top.style.alignItems = "flex-start";
-        top.style.justifyContent = "space-between";
-        top.style.gap = "12px";
-        top.style.flexWrap = "wrap";
-
-        const titleWrap = document.createElement("div");
-        titleWrap.innerHTML = `
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+    return `
+      <article style="
+        display:grid;
+        gap:14px;
+        padding:20px;
+        border-radius:22px;
+        background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+        border:1px solid rgba(255,255,255,0.08);
+        box-shadow:0 18px 40px rgba(0,0,0,0.22);
+      ">
+        <div style="
+          display:flex;
+          align-items:flex-start;
+          justify-content:space-between;
+          gap:12px;
+          flex-wrap:wrap;
+        ">
+          <div>
             <span style="
               display:inline-flex;
               align-items:center;
@@ -421,171 +700,360 @@
               color:rgba(244,234,211,0.78);
               background:rgba(255,255,255,0.05);
               border:1px solid rgba(255,255,255,0.08);
-            ">${escapeHtml(reward.category)}</span>
+            ">
+              ${escapeHtml(titleCase(reward.category))}
+            </span>
+
+            <h3 style="margin:10px 0 6px;color:#f8f3e8;font-size:1.12rem;line-height:1.2;">
+              ${escapeHtml(titleCase(reward.title))}
+            </h3>
+
+            <p style="margin:0;color:rgba(244,234,211,0.76);line-height:1.65;font-size:0.95rem;">
+              ${escapeHtml(reward.description)}
+            </p>
           </div>
-          <h3 style="margin:10px 0 6px;color:#f8f3e8;font-size:1.12rem;line-height:1.2;">
-            ${escapeHtml(reward.title)}
-          </h3>
-          <p style="margin:0;color:rgba(244,234,211,0.76);line-height:1.65;font-size:0.95rem;">
-            ${escapeHtml(reward.description)}
-          </p>
-        `;
 
-        const status = document.createElement("span");
-        status.textContent = reward.status;
-        status.style.display = "inline-flex";
-        status.style.alignItems = "center";
-        status.style.justifyContent = "center";
-        status.style.padding = "8px 12px";
-        status.style.borderRadius = "999px";
-        status.style.fontSize = "0.78rem";
-        status.style.fontWeight = "700";
-        status.style.letterSpacing = "0.04em";
-        status.style.background = badge.background;
-        status.style.color = badge.color;
-        status.style.border = badge.border;
+          <span style="
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            padding:8px 12px;
+            border-radius:999px;
+            font-size:0.78rem;
+            font-weight:700;
+            letter-spacing:0.04em;
+            background:${badge.background};
+            color:${badge.color};
+            border:${badge.border};
+          ">
+            ${escapeHtml(titleCase(reward.status))}
+          </span>
+        </div>
 
-        top.appendChild(titleWrap);
-        top.appendChild(status);
+        <div style="
+          display:grid;
+          grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+          gap:12px;
+        ">
+          ${[
+            ["Reward Value", valueLabel],
+            ["Posted / Added", reward.createdAt ? formatDate(reward.createdAt) : "—"],
+            ["Expires", reward.expiresAt ? formatDate(reward.expiresAt) : "No expiry"],
+            ["Redeemed / Paid", reward.redeemedAt ? formatDate(reward.redeemedAt) : "Not yet"],
+          ]
+            .map(
+              ([label, value]) => `
+                <div style="
+                  padding:14px;
+                  border-radius:16px;
+                  background:rgba(255,255,255,0.03);
+                  border:1px solid rgba(255,255,255,0.07);
+                ">
+                  <div style="
+                    font-size:0.78rem;
+                    color:rgba(244,234,211,0.64);
+                    margin-bottom:6px;
+                    letter-spacing:0.04em;
+                    text-transform:uppercase;
+                  ">
+                    ${escapeHtml(label)}
+                  </div>
+                  <div style="font-size:0.98rem;color:#f8f3e8;font-weight:700;">
+                    ${escapeHtml(value)}
+                  </div>
+                </div>
+              `
+            )
+            .join("")}
+        </div>
 
-        const stats = document.createElement("div");
-        stats.style.display = "grid";
-        stats.style.gridTemplateColumns = "repeat(auto-fit, minmax(140px, 1fr))";
-        stats.style.gap = "12px";
+        <div style="
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          flex-wrap:wrap;
+          gap:12px;
+        ">
+          <div style="color:rgba(244,234,211,0.72);font-size:0.92rem;">
+            ${
+              reward.code
+                ? `<strong style="color:#f4ead3;">Reference:</strong> ${escapeHtml(reward.code)}`
+                : `<strong style="color:#f4ead3;">Last updated:</strong> ${escapeHtml(
+                    formatDateTime(reward.createdAt || reward.expiresAt || reward.redeemedAt)
+                  )}`
+            }
+          </div>
 
-        const statItems = [
-          {
-            label: "Reward Value",
-            value:
-              reward.points !== null && reward.points !== undefined
-                ? formatPoints(reward.points)
-                : "Included",
-          },
-          {
-            label: "Earned / Added",
-            value: reward.createdAt ? formatDate(reward.createdAt) : "—",
-          },
-          {
-            label: "Expires",
-            value: reward.expiresAt ? formatDate(reward.expiresAt) : "No expiry",
-          },
-          {
-            label: "Redeemed",
-            value: reward.redeemedAt ? formatDate(reward.redeemedAt) : "Not yet",
-          },
-        ];
+          ${
+            reward.ctaHref && reward.ctaHref !== "#"
+              ? `
+                <a href="${escapeHtml(reward.ctaHref)}" style="
+                  display:inline-flex;
+                  align-items:center;
+                  justify-content:center;
+                  padding:12px 16px;
+                  border-radius:14px;
+                  border:0;
+                  font-weight:700;
+                  text-decoration:none;
+                  background:linear-gradient(135deg, rgba(216,176,94,0.95), rgba(162,124,48,0.96));
+                  color:#140f07;
+                  box-shadow:0 14px 30px rgba(216,176,94,0.18);
+                ">
+                  ${escapeHtml(reward.ctaLabel)}
+                </a>
+              `
+              : `
+                <span style="
+                  display:inline-flex;
+                  align-items:center;
+                  justify-content:center;
+                  padding:12px 16px;
+                  border-radius:14px;
+                  border:1px solid rgba(255,255,255,0.08);
+                  font-weight:700;
+                  color:rgba(244,234,211,0.72);
+                  background:rgba(255,255,255,0.04);
+                ">
+                  Details
+                </span>
+              `
+          }
+        </div>
+      </article>
+    `;
+  }
 
-        statItems.forEach((item) => {
-          const box = document.createElement("div");
-          box.style.padding = "14px";
-          box.style.borderRadius = "16px";
-          box.style.background = "rgba(255,255,255,0.03)";
-          box.style.border = "1px solid rgba(255,255,255,0.07)";
-          box.innerHTML = `
-            <div style="font-size:0.78rem;color:rgba(244,234,211,0.64);margin-bottom:6px;letter-spacing:0.04em;text-transform:uppercase;">
-              ${escapeHtml(item.label)}
-            </div>
-            <div style="font-size:0.98rem;color:#f8f3e8;font-weight:700;">
-              ${escapeHtml(item.value)}
-            </div>
-          `;
-          stats.appendChild(box);
-        });
+  function renderRewards(rewards = []) {
+    const containers = document.querySelectorAll(
+      "[data-rewards-grid], #rewards-grid, #portal-rewards-grid"
+    );
 
-        const bottom = document.createElement("div");
-        bottom.style.display = "flex";
-        bottom.style.alignItems = "center";
-        bottom.style.justifyContent = "space-between";
-        bottom.style.flexWrap = "wrap";
-        bottom.style.gap = "12px";
+    if (!containers.length) return;
 
-        const codeText = document.createElement("div");
-        codeText.style.color = "rgba(244,234,211,0.72)";
-        codeText.style.fontSize = "0.92rem";
-        codeText.innerHTML = reward.code
-          ? `<strong style="color:#f4ead3;">Code:</strong> ${escapeHtml(reward.code)}`
-          : `<strong style="color:#f4ead3;">Last updated:</strong> ${escapeHtml(
-              formatDateTime(reward.createdAt || reward.expiresAt || reward.redeemedAt)
-            )}`;
+    const normalized = rewards.map(normalizeReward);
 
-        const action =
-          reward.ctaHref && reward.ctaHref !== "#"
-            ? document.createElement("a")
-            : document.createElement("button");
-
-        if (action.tagName === "A") {
-          action.href = reward.ctaHref;
-          action.target = "_self";
-          action.rel = "noopener noreferrer";
-        } else {
-          action.type = "button";
-          action.disabled = true;
-        }
-
-        action.textContent = reward.ctaLabel || "View Reward";
-        action.style.display = "inline-flex";
-        action.style.alignItems = "center";
-        action.style.justifyContent = "center";
-        action.style.padding = "12px 16px";
-        action.style.borderRadius = "14px";
-        action.style.border = "0";
-        action.style.fontWeight = "700";
-        action.style.textDecoration = "none";
-        action.style.background =
-          "linear-gradient(135deg, rgba(216,176,94,0.95), rgba(162,124,48,0.96))";
-        action.style.color = "#140f07";
-        action.style.boxShadow = "0 14px 30px rgba(216,176,94,0.18)";
-
-        bottom.appendChild(codeText);
-        bottom.appendChild(action);
-
-        card.appendChild(top);
-        card.appendChild(stats);
-        card.appendChild(bottom);
-
-        container.appendChild(card);
-      });
+    containers.forEach((container) => {
+      container.innerHTML = normalized.length
+        ? normalized.map(rewardCardHtml).join("")
+        : buildEmptyRewardHtml();
     });
   }
 
-  async function loadRewards() {
-    state.isLoading = true;
+  function normalizeNotice(notice = {}, index = 0) {
+    return {
+      id: normalizeText(notice.id || `notice-${index + 1}`),
+      title: normalizeText(notice.title || notice.name || `Reward Notice ${index + 1}`),
+      body: normalizeText(
+        notice.body || notice.message || notice.description,
+        "Important Card Leo Rewards update available."
+      ),
+    };
+  }
 
-    const pageStatus =
-      document.querySelector("[data-rewards-page-status]") ||
-      document.querySelector("#rewards-page-status") ||
-      document.querySelector("[data-rewards-status]");
+  function renderNotices(notices = []) {
+    const containers = document.querySelectorAll(
+      "[data-rewards-notices], [data-notices-list], #rewards-notices"
+    );
 
-    clearStatus(pageStatus);
+    if (!containers.length) return;
 
+    const list = notices.length
+      ? notices.map(normalizeNotice)
+      : [
+          {
+            id: "welcome",
+            title: "Rewards dashboard connected",
+            body: "Your member rewards dashboard is active and ready to display new activity.",
+          },
+        ];
+
+    containers.forEach((container) => {
+      container.innerHTML = list
+        .map(
+          (item) => `
+            <div style="
+              padding:16px;
+              border-radius:18px;
+              background:rgba(255,255,255,0.035);
+              border:1px solid rgba(255,255,255,0.07);
+              margin-bottom:12px;
+            ">
+              <strong style="display:block;color:#f8f3e8;margin-bottom:6px;">
+                ${escapeHtml(item.title)}
+              </strong>
+              <p style="margin:0;color:rgba(244,234,211,0.72);line-height:1.6;">
+                ${escapeHtml(item.body)}
+              </p>
+            </div>
+          `
+        )
+        .join("");
+    });
+  }
+
+  function renderCycles(cycles = []) {
+    const containers = document.querySelectorAll(
+      "[data-rewards-cycles], [data-cycles-list], #rewards-cycles"
+    );
+
+    if (!containers.length) return;
+
+    containers.forEach((container) => {
+      if (!cycles.length) {
+        container.innerHTML = `
+          <div style="color:rgba(244,234,211,0.72);line-height:1.6;">
+            Company-building cycles will appear here after eligible membership activity.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = cycles
+        .map((cycle, index) => {
+          const cycleNumber = cycle.cycleNumber || cycle.cycle_number || index + 1;
+          const status = cycle.cycleStatus || cycle.cycle_status || "open";
+          const paidMonths = cycle.paidMonthsCount || cycle.paid_months_count || 0;
+          const requiredMonths = cycle.requiredPaidMonths || cycle.required_paid_months || 4;
+
+          return `
+            <div style="
+              padding:16px;
+              border-radius:18px;
+              background:rgba(255,255,255,0.035);
+              border:1px solid rgba(255,255,255,0.07);
+              margin-bottom:12px;
+            ">
+              <strong style="display:block;color:#f8f3e8;margin-bottom:6px;">
+                Cycle ${escapeHtml(cycleNumber)} · ${escapeHtml(titleCase(status))}
+              </strong>
+              <p style="margin:0;color:rgba(244,234,211,0.72);line-height:1.6;">
+                Paid months: ${escapeHtml(paidMonths)} / ${escapeHtml(requiredMonths)}
+                · Released: ${escapeHtml(money(cycle.companyBuildingReleased || cycle.company_building_released || 0))}
+              </p>
+            </div>
+          `;
+        })
+        .join("");
+    });
+  }
+
+  function renderPayload(payload, fallback = {}) {
+    const parsed = inferRewardsPayload(payload, fallback);
+
+    state.raw = parsed.raw;
+    state.member = parsed.member;
+    state.profile = parsed.profile;
+    state.rewardAccount = parsed.rewardAccount;
+    state.rewards = parsed.rewards;
+    state.payouts = parsed.payouts;
+    state.payments = parsed.payments;
+    state.cycles = parsed.cycles;
+    state.notices = parsed.notices;
+
+    applyMember(parsed.member);
+    applySupport(parsed.support);
+    applySummary(parsed.summary, parsed.rewards, parsed.rewardAccount);
+    renderRewards(parsed.rewards);
+    renderNotices(parsed.notices);
+    renderCycles(parsed.cycles);
+
+    setHidden("[data-rewards-loading]", true);
+    setHidden("[data-rewards-ready]", false);
+
+    return parsed;
+  }
+
+  async function loadSessionFirst() {
+    const result = await fetchJson(CONFIG.meEndpoint, {
+      method: "GET",
+    });
+
+    if (!result.response.ok) {
+      throw new Error(result.message || "Unable to verify your session.");
+    }
+
+    if (result.data.authenticated !== true) {
+      redirectToLogin();
+      return null;
+    }
+
+    if (!isObject(result.data.member) && !isObject(result.data.profile)) {
+      throw new Error("Your session is active, but your member details were not returned.");
+    }
+
+    return renderPayload({
+      success: true,
+      data: {
+        member: result.data.member || result.data.profile || {},
+        profile: result.data.profile || null,
+        support: result.data.support || null,
+        summary: {
+          totalRewards: 0,
+          activeRewards: 0,
+          pendingRewards: 0,
+          accessLevel:
+            result.data.member?.accessLevel ||
+            result.data.member?.tier ||
+            "member",
+          statusLabel:
+            result.data.member?.memberStatus ||
+            result.data.member?.status ||
+            "Active Member",
+        },
+        rewards: [],
+        notices: [
+          {
+            title: "Rewards dashboard connected",
+            body: "Your member session is active. Reward activity will appear as your account earns or receives rewards.",
+          },
+        ],
+      },
+    });
+  }
+
+  async function loadRewardsEnhancement(fallbackPayload) {
     try {
       const result = await fetchJson(CONFIG.rewardsEndpoint, {
         method: "GET",
       });
 
       if (result.response.status === 401) {
-        window.location.href = CONFIG.loginPage;
-        return false;
+        redirectToLogin();
+        return null;
       }
 
       if (result.response.status === 403) {
-        window.location.href = CONFIG.unauthorizedPage;
-        return false;
+        redirectToUnauthorized();
+        return null;
       }
 
       if (!result.response.ok) {
-        throw new Error(
-          normalizeText(result.data?.message) || "Unable to load your rewards."
-        );
+        return fallbackPayload || null;
       }
 
-      const payload = inferRewardsPayload(result.data);
+      return renderPayload(result.payload, fallbackPayload || {});
+    } catch (error) {
+      console.warn("Rewards enhancement skipped:", error);
+      return fallbackPayload || null;
+    }
+  }
 
-      state.rewards = Array.isArray(payload.rewards) ? payload.rewards : [];
-      applyMember(payload.member);
-      applySupport(payload.support);
-      applySummary(payload.summary, state.rewards);
-      renderRewards(state.rewards);
+  async function loadRewards() {
+    if (state.isLoading) return false;
+
+    state.isLoading = true;
+
+    const pageStatus = getStatusNode();
+    clearStatus(pageStatus);
+    setHidden("[data-rewards-loading]", false);
+
+    try {
+      const sessionPayload = await loadSessionFirst();
+
+      if (!sessionPayload) return false;
+
+      await loadRewardsEnhancement(sessionPayload);
 
       return true;
     } catch (error) {
@@ -595,24 +1063,42 @@
         "error",
         error?.message || "We could not load your rewards right now."
       );
+
       return false;
     } finally {
       state.isLoading = false;
+      setHidden("[data-rewards-loading]", true);
     }
   }
 
   function bindLogoutButtons() {
-    document.addEventListener("click", async (event) => {
-      const trigger = event.target.closest("[data-logout]");
-      if (!trigger) return;
+    if (window.CardLeoAuthGuard?.bindLogoutButtons) {
+      window.CardLeoAuthGuard.bindLogoutButtons(CONFIG.authGuardOptions);
+      return;
+    }
 
-      event.preventDefault();
+    document.querySelectorAll("[data-logout], [data-member-logout]").forEach((button) => {
+      if (button.dataset.rewardsLogoutBound === "true") return;
 
-      if (window.CardLeoAuthGuard?.logout) {
-        await window.CardLeoAuthGuard.logout(CONFIG.authGuardOptions);
-      } else {
+      button.dataset.rewardsLogoutBound = "true";
+
+      button.addEventListener("click", async (event) => {
+        event.preventDefault();
+
+        try {
+          await fetch(CONFIG.logoutEndpoint, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+            },
+          });
+        } catch {
+          // Still redirect.
+        }
+
         window.location.href = CONFIG.loginPage;
-      }
+      });
     });
   }
 
@@ -622,26 +1108,44 @@
       if (!trigger) return;
 
       event.preventDefault();
-      await loadRewards();
+
+      const originalText = "value" in trigger ? trigger.value : trigger.textContent;
+
+      try {
+        if ("disabled" in trigger) trigger.disabled = true;
+
+        if ("value" in trigger) {
+          trigger.value = "Refreshing...";
+        } else {
+          trigger.textContent = "Refreshing...";
+        }
+
+        await loadRewards();
+      } finally {
+        if ("disabled" in trigger) trigger.disabled = false;
+
+        if ("value" in trigger) {
+          trigger.value = originalText;
+        } else {
+          trigger.textContent = originalText;
+        }
+      }
     });
   }
 
   async function init() {
+    const pageStatus = getStatusNode();
+
     try {
+      bindLogoutButtons();
+      bindRefreshButtons();
+
       if (window.CardLeoAuthGuard?.init) {
         await window.CardLeoAuthGuard.init(CONFIG.authGuardOptions);
       }
 
-      bindLogoutButtons();
-      bindRefreshButtons();
-
       await loadRewards();
     } catch (error) {
-      const pageStatus =
-        document.querySelector("[data-rewards-page-status]") ||
-        document.querySelector("#rewards-page-status") ||
-        document.querySelector("[data-rewards-status]");
-
       setStatus(
         pageStatus,
         "error",
@@ -649,6 +1153,37 @@
       );
     }
   }
+
+  window.addEventListener("cardleo:auth-ready", (event) => {
+    const detail = event?.detail || {};
+
+    if (detail.member && !state.authReady) {
+      state.authReady = true;
+
+      renderPayload({
+        success: true,
+        data: {
+          member: detail.member,
+          profile: detail.profile || null,
+          support: detail.support || null,
+          rewards: [],
+          summary: {
+            totalRewards: 0,
+            activeRewards: 0,
+            pendingRewards: 0,
+            accessLevel: detail.member.accessLevel || detail.member.tier || "member",
+            statusLabel: detail.member.status || "Active Member",
+          },
+          notices: [
+            {
+              title: "Rewards dashboard connected",
+              body: "Your member session is verified.",
+            },
+          ],
+        },
+      });
+    }
+  });
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
@@ -659,14 +1194,9 @@
   window.CardLeoPortalRewards = {
     init,
     reload: loadRewards,
+    render: renderPayload,
     getState: function () {
-      return {
-        member: state.member,
-        rewards: state.rewards,
-        summary: state.summary,
-        support: state.support,
-        isLoading: state.isLoading,
-      };
+      return { ...state };
     },
   };
 })();

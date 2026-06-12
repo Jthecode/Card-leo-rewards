@@ -1,3 +1,4 @@
+<!-- portal/settings.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -6,32 +7,40 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title>Card Leo Rewards | Settings</title>
+
+    <title>Settings | Card Leo Rewards</title>
+
     <meta
       name="description"
-      content="Manage your Card Leo Rewards account settings, notifications, privacy controls, and security preferences."
+      content="Manage your Card Leo Rewards account settings, notification preferences, security controls, password, and active portal sessions."
     />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link rel="canonical" href="https://www.cardleorewards.com/portal/settings.html" />
+    <link rel="stylesheet" href="/style.css" />
+
     <style>
       :root {
-        --bg: #060606;
-        --bg-soft: #111111;
-        --panel: rgba(18, 18, 18, 0.92);
-        --panel-2: rgba(255, 255, 255, 0.04);
-        --panel-3: rgba(255, 255, 255, 0.06);
+        --bg: #07101d;
+        --panel: rgba(10, 19, 35, 0.84);
+        --panel-strong: rgba(8, 15, 28, 0.94);
         --line: rgba(255, 255, 255, 0.08);
-        --line-strong: rgba(255, 215, 128, 0.26);
-        --text: #f8f5ee;
-        --muted: #b6ab96;
-        --gold: #d8b36a;
-        --gold-2: #f2d58d;
-        --danger: #ff7b7b;
-        --success: #74d89b;
-        --shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
-        --radius-xl: 28px;
+        --line-strong: rgba(255, 255, 255, 0.14);
+        --text: #f5f7fb;
+        --muted: #a5b1c5;
+        --muted-2: #7e8aa3;
+        --gold: #d7b36a;
+        --gold-strong: #f1d08d;
+        --green: #15d18f;
+        --green-soft: rgba(21, 209, 143, 0.14);
+        --danger: #ff6f7d;
+        --danger-soft: rgba(255, 111, 125, 0.14);
+        --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.28);
+        --radius-xl: 30px;
         --radius-lg: 22px;
         --radius-md: 16px;
-        --radius-sm: 12px;
-        --max: 1450px;
+        --container: 1280px;
       }
 
       * {
@@ -44,14 +53,14 @@
 
       body {
         margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-          "Segoe UI", sans-serif;
-        background:
-          radial-gradient(circle at top left, rgba(216, 179, 106, 0.1), transparent 28%),
-          radial-gradient(circle at top right, rgba(255, 255, 255, 0.04), transparent 22%),
-          linear-gradient(180deg, #040404 0%, #080808 100%);
-        color: var(--text);
         min-height: 100vh;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(215, 179, 106, 0.12), transparent 28%),
+          radial-gradient(circle at 85% 18%, rgba(21, 209, 143, 0.08), transparent 22%),
+          linear-gradient(180deg, #07101d 0%, #060d18 52%, #040913 100%);
       }
 
       a {
@@ -61,297 +70,456 @@
 
       button,
       input,
+      textarea,
       select {
         font: inherit;
       }
 
-      .shell {
-        width: min(var(--max), calc(100% - 32px));
-        margin: 24px auto 40px;
-        display: grid;
-        grid-template-columns: 300px minmax(0, 1fr);
-        gap: 24px;
+      .page-shell {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
       }
 
-      .sidebar {
+      .ambient,
+      .grid-overlay {
+        pointer-events: none;
+        position: absolute;
+        inset: 0;
+      }
+
+      .ambient {
+        overflow: hidden;
+      }
+
+      .ambient::before,
+      .ambient::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        filter: blur(70px);
+        opacity: 0.58;
+      }
+
+      .ambient::before {
+        width: 320px;
+        height: 320px;
+        background: rgba(215, 179, 106, 0.14);
+        top: -70px;
+        left: -60px;
+      }
+
+      .ambient::after {
+        width: 280px;
+        height: 280px;
+        background: rgba(21, 209, 143, 0.12);
+        right: -40px;
+        top: 160px;
+      }
+
+      .grid-overlay {
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 38px 38px;
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent 86%);
+        opacity: 0.35;
+      }
+
+      .container {
+        width: min(var(--container), calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .topbar {
         position: sticky;
-        top: 24px;
-        align-self: start;
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.05),
-          rgba(255, 255, 255, 0.025)
-        );
-        border: 1px solid var(--line);
-        border-radius: var(--radius-xl);
-        padding: 24px;
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(20px);
+        top: 0;
+        z-index: 40;
+        backdrop-filter: blur(18px);
+        background: rgba(6, 13, 24, 0.72);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        min-height: 82px;
       }
 
       .brand {
         display: flex;
         align-items: center;
         gap: 14px;
-        padding-bottom: 18px;
-        border-bottom: 1px solid var(--line);
-        margin-bottom: 20px;
       }
 
       .brand-mark {
-        width: 54px;
-        height: 54px;
-        border-radius: 18px;
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
         display: grid;
         place-items: center;
+        background:
+          linear-gradient(135deg, rgba(215, 179, 106, 0.22), rgba(21, 209, 143, 0.08)),
+          rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--gold-strong);
+        font-size: 1rem;
         font-weight: 800;
-        font-size: 1.15rem;
-        color: #111;
-        background: linear-gradient(135deg, var(--gold-2), var(--gold));
-        box-shadow: 0 10px 30px rgba(216, 179, 106, 0.24);
+        letter-spacing: 0.08em;
       }
 
       .brand-copy small {
         display: block;
-        color: var(--muted);
-        letter-spacing: 0.14em;
+        color: var(--gold);
         text-transform: uppercase;
-        font-size: 0.72rem;
-        margin-bottom: 5px;
+        letter-spacing: 0.16em;
+        font-size: 0.7rem;
+        margin-bottom: 4px;
       }
 
       .brand-copy strong {
         display: block;
-        font-size: 1.05rem;
-      }
-
-      .member-card {
-        background: linear-gradient(
-          180deg,
-          rgba(216, 179, 106, 0.15),
-          rgba(255, 255, 255, 0.03)
-        );
-        border: 1px solid var(--line-strong);
-        border-radius: 22px;
-        padding: 18px;
-        margin-bottom: 22px;
-      }
-
-      .member-card .label {
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        font-size: 0.72rem;
-        margin-bottom: 8px;
-      }
-
-      .member-name {
-        font-size: 1.08rem;
+        font-size: 1rem;
         font-weight: 700;
-        margin-bottom: 8px;
       }
 
-      .member-sub {
+      .topbar-actions,
+      .portal-nav,
+      .hero-actions,
+      .form-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .portal-nav-wrap {
+        position: relative;
+        z-index: 3;
+        padding-top: 18px;
+      }
+
+      .portal-nav {
+        gap: 12px;
+      }
+
+      .portal-nav a {
+        padding: 11px 16px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
         color: var(--muted);
-        font-size: 0.94rem;
+        transition:
+          border-color 0.18s ease,
+          color 0.18s ease,
+          background 0.18s ease,
+          transform 0.18s ease;
       }
 
-      .member-tier {
-        margin-top: 14px;
+      .portal-nav a:hover {
+        color: var(--text);
+        border-color: var(--line-strong);
+        transform: translateY(-1px);
+      }
+
+      .portal-nav a.active {
+        color: #081018;
+        font-weight: 700;
+        border-color: transparent;
+        background: linear-gradient(135deg, #96f0c7, #15d18f);
+        box-shadow: 0 12px 30px rgba(21, 209, 143, 0.18);
+      }
+
+      .pill,
+      .btn,
+      .status-pill {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 10px 12px;
+        justify-content: center;
+        gap: 10px;
         border-radius: 999px;
-        border: 1px solid rgba(255, 215, 128, 0.22);
-        background: rgba(255, 215, 128, 0.08);
-        color: var(--gold-2);
-        font-weight: 600;
-        font-size: 0.9rem;
-      }
-
-      .nav {
-        display: grid;
-        gap: 10px;
-      }
-
-      .nav a {
-        padding: 14px 16px;
-        border-radius: 16px;
-        color: #ddd4c7;
         border: 1px solid transparent;
-        background: transparent;
-        transition: 0.22s ease;
+        transition: 0.25s ease;
+        white-space: nowrap;
       }
 
-      .nav a:hover,
-      .nav a.active {
+      .pill {
+        min-height: 40px;
+        padding: 0 16px;
         background: rgba(255, 255, 255, 0.04);
-        border-color: rgba(255, 215, 128, 0.18);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .pill:hover {
         color: var(--text);
-      }
-
-      .nav a.active {
-        box-shadow: inset 0 0 0 1px rgba(255, 215, 128, 0.08);
-      }
-
-      .sidebar-actions {
-        margin-top: 22px;
-        display: grid;
-        gap: 10px;
+        border-color: rgba(255, 255, 255, 0.14);
       }
 
       .btn {
-        border: 0;
-        border-radius: 16px;
-        padding: 14px 16px;
+        min-height: 48px;
+        padding: 0 18px;
+        font-weight: 700;
         cursor: pointer;
-        transition: 0.22s ease;
       }
 
       .btn-primary {
-        background: linear-gradient(135deg, var(--gold-2), var(--gold));
-        color: #16120c;
-        font-weight: 800;
+        background: linear-gradient(135deg, #f1d08d 0%, #c79c52 100%);
+        color: #1a1307;
+        box-shadow: 0 14px 40px rgba(199, 156, 82, 0.24);
       }
 
       .btn-primary:hover {
         transform: translateY(-1px);
-        box-shadow: 0 14px 30px rgba(216, 179, 106, 0.18);
+        box-shadow: 0 18px 46px rgba(199, 156, 82, 0.28);
       }
 
       .btn-secondary {
-        background: rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.045);
+        border-color: rgba(255, 255, 255, 0.1);
         color: var(--text);
-        border: 1px solid var(--line);
       }
 
       .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.16);
       }
 
       .btn-danger {
-        background: rgba(255, 123, 123, 0.08);
-        color: #ffd5d5;
-        border: 1px solid rgba(255, 123, 123, 0.18);
+        background: var(--danger-soft);
+        border-color: rgba(255, 111, 125, 0.24);
+        color: #ffd8dd;
       }
 
       .btn-danger:hover {
-        background: rgba(255, 123, 123, 0.12);
+        background: rgba(255, 111, 125, 0.18);
       }
 
-      .content {
-        display: grid;
-        gap: 22px;
+      .btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .status-pill {
+        min-height: 34px;
+        padding: 0 12px;
+        background: var(--green-soft);
+        border-color: rgba(21, 209, 143, 0.22);
+        color: #8ff0c9;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      .portal-layout {
+        position: relative;
+        z-index: 2;
+        padding: 24px 0 70px;
+      }
+
+      .message {
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .message[data-state="success"] {
+        background: rgba(21, 209, 143, 0.1);
+        border-color: rgba(21, 209, 143, 0.18);
+        color: #9ff2d1;
+      }
+
+      .message[data-state="error"] {
+        background: rgba(255, 111, 125, 0.1);
+        border-color: rgba(255, 111, 125, 0.18);
+        color: #ffc4cb;
       }
 
       .hero {
+        display: grid;
+        grid-template-columns: 1.2fr 0.88fr;
+        gap: 22px;
+        align-items: stretch;
+        margin-bottom: 22px;
+      }
+
+      .glass-card {
+        position: relative;
         background:
-          radial-gradient(circle at top right, rgba(216, 179, 106, 0.12), transparent 28%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+          linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+          var(--panel);
         border: 1px solid var(--line);
         border-radius: var(--radius-xl);
-        padding: 30px;
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(18px);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+      }
+
+      .glass-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.06),
+          transparent 30%,
+          transparent 65%,
+          rgba(255, 255, 255, 0.04)
+        );
+      }
+
+      .hero-main,
+      .hero-side,
+      .section-card {
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero-main {
+        padding: 34px;
+        min-height: 295px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .hero-side {
+        padding: 26px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
       }
 
       .eyebrow {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 9px 13px;
-        border-radius: 999px;
-        border: 1px solid rgba(255, 215, 128, 0.18);
-        background: rgba(255, 215, 128, 0.08);
-        color: var(--gold-2);
-        font-size: 0.78rem;
-        letter-spacing: 0.16em;
+        gap: 10px;
+        margin-bottom: 18px;
+        color: var(--gold);
         text-transform: uppercase;
-        margin-bottom: 16px;
+        letter-spacing: 0.16em;
+        font-size: 0.72rem;
+        font-weight: 800;
       }
 
-      .hero h1 {
+      .eyebrow::before {
+        content: "";
+        width: 30px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--gold), transparent);
+      }
+
+      h1 {
         margin: 0 0 12px;
-        font-size: clamp(2rem, 4vw, 3.25rem);
-        line-height: 1.04;
+        font-size: clamp(1.9rem, 4vw, 3.2rem);
+        line-height: 1;
+        letter-spacing: -0.04em;
       }
 
-      .hero p {
-        margin: 0;
+      .hero-text {
+        max-width: 720px;
         color: var(--muted);
-        max-width: 760px;
         font-size: 1.02rem;
-        line-height: 1.7;
+        line-height: 1.75;
       }
 
-      .grid {
+      .hero-actions {
+        margin-top: 26px;
+      }
+
+      .member-block {
+        padding: 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .member-name {
+        margin: 8px 0 8px;
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .member-email {
+        color: var(--muted);
+        font-size: 0.96rem;
+        word-break: break-word;
+      }
+
+      .meta-grid {
         display: grid;
-        grid-template-columns: repeat(12, minmax(0, 1fr));
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .meta-item {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .meta-item span {
+        display: block;
+        color: var(--muted-2);
+        font-size: 0.78rem;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .meta-item strong {
+        display: block;
+        font-size: 0.96rem;
+        word-break: break-word;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
         gap: 22px;
       }
 
-      .card {
-        grid-column: span 12;
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.045),
-          rgba(255, 255, 255, 0.02)
-        );
-        border: 1px solid var(--line);
-        border-radius: var(--radius-lg);
-        padding: 24px;
-        box-shadow: var(--shadow);
+      .stack {
+        display: grid;
+        gap: 22px;
       }
 
-      .span-7 {
-        grid-column: span 7;
+      .section-card {
+        padding: 28px;
       }
 
-      .span-5 {
-        grid-column: span 5;
-      }
-
-      .span-6 {
-        grid-column: span 6;
-      }
-
-      .card-head {
+      .section-head {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 14px;
+        gap: 16px;
         margin-bottom: 20px;
       }
 
-      .card-head h2 {
-        margin: 0 0 6px;
-        font-size: 1.25rem;
+      .section-head h2,
+      .section-head h3 {
+        margin: 0 0 8px;
+        font-size: 1.2rem;
+        letter-spacing: -0.03em;
       }
 
-      .card-head p {
+      .section-head p {
         margin: 0;
         color: var(--muted);
-        line-height: 1.6;
-        font-size: 0.95rem;
-      }
-
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 9px 12px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--muted);
-        border: 1px solid var(--line);
-        font-size: 0.82rem;
-        white-space: nowrap;
+        line-height: 1.65;
       }
 
       .form-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr 1fr;
         gap: 16px;
       }
 
@@ -364,67 +532,74 @@
         grid-column: 1 / -1;
       }
 
-      label {
-        color: #eadfcf;
-        font-weight: 600;
-        font-size: 0.93rem;
+      .field label {
+        color: var(--muted-2);
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-weight: 700;
       }
 
-      .hint {
-        color: var(--muted);
-        font-size: 0.82rem;
-        line-height: 1.55;
-      }
-
-      input,
-      select {
+      .field input,
+      .field select {
         width: 100%;
+        min-height: 54px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(255, 255, 255, 0.04);
         color: var(--text);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 14px;
-        padding: 14px 15px;
         outline: none;
-        transition: border-color 0.2s ease, background 0.2s ease;
+        transition: 0.2s ease;
       }
 
-      input:focus,
-      select:focus {
-        border-color: rgba(255, 215, 128, 0.34);
-        background: rgba(255, 255, 255, 0.06);
+      .field input:focus,
+      .field select:focus {
+        border-color: rgba(215, 179, 106, 0.4);
+        box-shadow: 0 0 0 4px rgba(215, 179, 106, 0.08);
       }
 
-      input[readonly] {
-        color: #cbbda9;
-        background: rgba(255, 255, 255, 0.025);
+      .field input[readonly] {
+        opacity: 0.72;
+        cursor: not-allowed;
       }
 
-      .toggle-list {
+      .setting-list,
+      .session-list {
         display: grid;
         gap: 14px;
       }
 
-      .toggle-row {
+      .setting-row,
+      .session-row,
+      .info-card {
+        padding: 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+      }
+
+      .setting-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 18px;
-        padding: 16px;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--line);
       }
 
-      .toggle-copy strong {
+      .setting-copy strong,
+      .session-row strong,
+      .info-card strong {
         display: block;
-        margin-bottom: 4px;
+        font-size: 1rem;
+        margin-bottom: 8px;
       }
 
-      .toggle-copy span {
-        display: block;
+      .setting-copy p,
+      .session-row p,
+      .info-card p {
+        margin: 0;
         color: var(--muted);
-        font-size: 0.92rem;
-        line-height: 1.6;
+        line-height: 1.65;
       }
 
       .switch {
@@ -464,731 +639,1217 @@
       }
 
       .switch input:checked + .slider {
-        background: linear-gradient(135deg, var(--gold-2), var(--gold));
+        background: linear-gradient(135deg, var(--gold-strong), var(--gold));
       }
 
       .switch input:checked + .slider::before {
         transform: translateX(24px);
-        background: #111;
+        background: #10151f;
       }
 
-      .actions {
+      .session-row {
         display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .session-meta {
+        display: flex;
+        gap: 10px;
         flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 20px;
+        margin-top: 10px;
       }
 
-      .stat-boxes {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .stat {
-        padding: 18px;
-        border-radius: 18px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.03);
-      }
-
-      .stat small {
-        display: block;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        margin-bottom: 10px;
-        font-size: 0.72rem;
-      }
-
-      .stat strong {
-        display: block;
-        font-size: 1.1rem;
-      }
-
-      .session-list {
-        display: grid;
-        gap: 12px;
-      }
-
-      .session {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 14px;
-        padding: 16px;
-        border-radius: 16px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.03);
-      }
-
-      .session strong {
-        display: block;
-        margin-bottom: 6px;
-      }
-
-      .session span {
-        color: var(--muted);
-        font-size: 0.9rem;
-      }
-
-      .session.current {
-        border-color: rgba(116, 216, 155, 0.25);
-      }
-
-      .mini-btn {
-        border: 1px solid var(--line);
+      .session-chip {
+        display: inline-flex;
+        padding: 7px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
         background: rgba(255, 255, 255, 0.04);
-        color: var(--text);
-        border-radius: 12px;
-        padding: 10px 12px;
-        cursor: pointer;
+        color: var(--muted);
+        font-size: 0.8rem;
       }
 
-      .mini-btn:hover {
-        background: rgba(255, 255, 255, 0.06);
+      .session-chip.current {
+        color: #8ff0c9;
+        border-color: rgba(21, 209, 143, 0.22);
+        background: rgba(21, 209, 143, 0.1);
       }
 
-      .notice {
-        display: none;
-        align-items: center;
-        justify-content: space-between;
+      .support-box {
+        display: grid;
         gap: 14px;
-        border-radius: 16px;
-        padding: 14px 16px;
-        margin-top: 18px;
-        border: 1px solid transparent;
-        font-size: 0.95rem;
       }
 
-      .notice.show {
+      .support-row {
         display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       }
 
-      .notice.success {
-        background: rgba(116, 216, 155, 0.08);
-        border-color: rgba(116, 216, 155, 0.18);
-        color: #d5ffe3;
+      .support-row:last-child {
+        padding-bottom: 0;
+        border-bottom: none;
       }
 
-      .notice.error {
-        background: rgba(255, 123, 123, 0.08);
-        border-color: rgba(255, 123, 123, 0.18);
-        color: #ffdada;
+      .support-row span {
+        display: block;
+        color: var(--muted-2);
+        font-size: 0.78rem;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .support-row strong,
+      .support-row a {
+        color: var(--text);
+        font-size: 0.98rem;
+        font-weight: 700;
       }
 
       .footer-note {
-        color: var(--muted);
-        font-size: 0.88rem;
-        line-height: 1.7;
+        margin-top: 22px;
+        text-align: center;
+        color: var(--muted-2);
+        font-size: 0.86rem;
       }
 
-      @media (max-width: 1180px) {
-        .shell {
+      [hidden] {
+        display: none !important;
+      }
+
+      @media (max-width: 1120px) {
+        .hero,
+        .content-grid {
           grid-template-columns: 1fr;
-        }
-
-        .sidebar {
-          position: relative;
-          top: auto;
-        }
-
-        .span-7,
-        .span-5,
-        .span-6 {
-          grid-column: span 12;
         }
       }
 
       @media (max-width: 760px) {
-        .shell {
-          width: min(100% - 20px, var(--max));
-          margin-top: 10px;
+        .topbar-inner {
+          min-height: auto;
+          padding: 14px 0;
+          align-items: flex-start;
+          flex-direction: column;
         }
 
-        .sidebar,
-        .hero,
-        .card {
-          padding: 18px;
-          border-radius: 22px;
+        .portal-nav {
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          padding-bottom: 2px;
+        }
+
+        .portal-nav a {
+          flex: 0 0 auto;
+        }
+
+        .hero-main,
+        .hero-side,
+        .section-card {
+          padding: 22px;
         }
 
         .form-grid,
-        .stat-boxes {
+        .meta-grid {
           grid-template-columns: 1fr;
         }
 
-        .hero h1 {
-          font-size: 2rem;
+        .hero-actions,
+        .topbar-actions,
+        .form-actions {
+          width: 100%;
         }
 
-        .toggle-row,
-        .session {
+        .btn,
+        .pill {
+          width: 100%;
+        }
+
+        .setting-row,
+        .session-row,
+        .support-row {
           flex-direction: column;
           align-items: flex-start;
         }
       }
     </style>
   </head>
-  <body>
-    <div class="shell">
-      <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-mark">CL</div>
-          <div class="brand-copy">
-            <small>Member Portal</small>
-            <strong>Card Leo Rewards</strong>
+
+  <body data-require-auth data-cardleo-auth-guard="auto">
+    <div class="page-shell">
+      <div class="ambient" aria-hidden="true"></div>
+      <div class="grid-overlay" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <div class="container topbar-inner">
+          <a class="brand" href="/" aria-label="Card Leo Rewards Home">
+            <div class="brand-mark">CL</div>
+            <div class="brand-copy">
+              <small>Premium Member Access</small>
+              <strong>Card Leo Rewards</strong>
+            </div>
+          </a>
+
+          <div class="topbar-actions">
+            <a class="pill" href="/portal/index.html">Dashboard</a>
+            <a class="pill" href="/portal/profile.html">Profile</a>
+            <a class="pill" href="/portal/support.html">Support</a>
+            <button class="btn btn-secondary" type="button" data-logout>
+              Log Out
+            </button>
           </div>
         </div>
+      </header>
 
-        <div class="member-card">
-          <div class="label">Account Status</div>
-          <div class="member-name" id="memberName">Loading member...</div>
-          <div class="member-sub" id="memberEmail">Secure member session</div>
-          <div class="member-tier" id="memberTier">Leo Premier Member</div>
-        </div>
-
-        <nav class="nav" aria-label="Portal navigation">
-          <a href="./index.html">Overview</a>
-          <a href="./profile.html">Profile</a>
-          <a href="./rewards.html">Rewards</a>
-          <a href="./benefits.html">Benefits</a>
-          <a href="./support.html">Support</a>
-          <a class="active" href="./settings.html">Settings</a>
+      <div class="container portal-nav-wrap">
+        <nav class="portal-nav" aria-label="Portal navigation">
+          <a href="/portal/index.html">Dashboard</a>
+          <a href="/portal/profile.html">Profile</a>
+          <a href="/portal/rewards.html">Rewards</a>
+          <a href="/portal/benefits.html">Benefits</a>
+          <a href="/portal/support.html">Support</a>
+          <a class="active" href="/portal/settings.html" aria-current="page">Settings</a>
         </nav>
+      </div>
 
-        <div class="sidebar-actions">
-          <button class="btn btn-primary" id="saveTopBtn" type="button">
-            Save Settings
-          </button>
-          <button class="btn btn-secondary" id="refreshBtn" type="button">
-            Refresh Preferences
-          </button>
-          <button class="btn btn-danger" id="logoutBtn" type="button">
-            Log Out
-          </button>
+      <main class="portal-layout">
+        <div class="container">
+          <div
+            class="message"
+            id="settings-page-status"
+            data-settings-page-status
+            hidden
+            role="status"
+            aria-live="polite"
+            style="margin-bottom: 18px;"
+          ></div>
+
+          <section class="hero">
+            <div class="glass-card hero-main">
+              <div>
+                <div class="eyebrow">Account Controls</div>
+                <div class="status-pill" data-member-status>Loading settings</div>
+
+                <h1>Settings built for a premium member experience.</h1>
+
+                <p class="hero-text">
+                  Manage your Card Leo Rewards notification preferences, security
+                  posture, password, and active portal sessions from one clean account
+                  settings center.
+                </p>
+
+                <div class="hero-actions">
+                  <button class="btn btn-primary" type="button" data-save-settings>
+                    Save Settings
+                  </button>
+                  <button class="btn btn-secondary" type="button" data-refresh-settings>
+                    Refresh
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <aside class="glass-card hero-side">
+              <div class="member-block">
+                <div class="status-pill" data-member-status>Loading</div>
+                <div class="member-name" data-member-name>Card Leo Member</div>
+                <div class="member-email" data-member-email>Loading account data...</div>
+              </div>
+
+              <div class="meta-grid">
+                <div class="meta-item">
+                  <span>Member Status</span>
+                  <strong data-member-status>Loading</strong>
+                </div>
+
+                <div class="meta-item">
+                  <span>Access Level</span>
+                  <strong data-member-access-level>Checking</strong>
+                </div>
+
+                <div class="meta-item">
+                  <span>Member Since</span>
+                  <strong data-member-joined-at>—</strong>
+                </div>
+
+                <div class="meta-item">
+                  <span>Email</span>
+                  <strong data-member-email>—</strong>
+                </div>
+              </div>
+            </aside>
+          </section>
+
+          <section class="content-grid">
+            <div class="stack">
+              <div class="glass-card section-card">
+                <div class="section-head">
+                  <div>
+                    <h2>Account Snapshot</h2>
+                    <p>
+                      These details are loaded from your Card Leo Rewards member record.
+                      Use the Profile page to update personal information.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="form-grid">
+                  <div class="field">
+                    <label for="settingsFullName">Full Name</label>
+                    <input id="settingsFullName" type="text" readonly />
+                  </div>
+
+                  <div class="field">
+                    <label for="settingsEmail">Email Address</label>
+                    <input id="settingsEmail" type="email" readonly />
+                  </div>
+
+                  <div class="field">
+                    <label for="settingsMemberId">Member ID</label>
+                    <input id="settingsMemberId" type="text" readonly />
+                  </div>
+
+                  <div class="field">
+                    <label for="settingsTheme">Portal Theme</label>
+                    <select id="settingsTheme" data-setting-theme>
+                      <option value="dark">Dark</option>
+                      <option value="light">Light</option>
+                      <option value="system">System</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-actions" style="margin-top: 20px;">
+                  <a class="btn btn-secondary" href="/portal/profile.html">
+                    Edit Profile
+                  </a>
+                </div>
+              </div>
+
+              <div class="glass-card section-card">
+                <div class="section-head">
+                  <div>
+                    <h2>Notifications</h2>
+                    <p>
+                      Choose the alerts and updates you want to receive from Card Leo
+                      Rewards.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="setting-list">
+                  <div class="setting-row">
+                    <div class="setting-copy">
+                      <strong>Email Notifications</strong>
+                      <p>Receive important account and member updates by email.</p>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" data-setting="emailNotifications" />
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-row">
+                    <div class="setting-copy">
+                      <strong>SMS Notifications</strong>
+                      <p>Allow text message updates for fast account notices.</p>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" data-setting="smsNotifications" />
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-row">
+                    <div class="setting-copy">
+                      <strong>Product Updates</strong>
+                      <p>Hear about Card Leo Rewards platform improvements.</p>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" data-setting="productUpdates" />
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-row">
+                    <div class="setting-copy">
+                      <strong>Marketing Emails</strong>
+                      <p>Receive premium member offers and announcements.</p>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" data-setting="marketingEmails" />
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-row">
+                    <div class="setting-copy">
+                      <strong>Reward Alerts</strong>
+                      <p>Get notified when rewards, bonuses, or benefits are updated.</p>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" data-setting="rewardAlerts" />
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="setting-row">
+                    <div class="setting-copy">
+                      <strong>Security Alerts</strong>
+                      <p>Receive alerts about login, password, and session activity.</p>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" data-setting="securityAlerts" />
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-actions" style="margin-top: 20px;">
+                  <button class="btn btn-primary" type="button" data-save-settings>
+                    Save Notification Settings
+                  </button>
+                </div>
+              </div>
+
+              <div class="glass-card section-card">
+                <div class="section-head">
+                  <div>
+                    <h2>Change Password</h2>
+                    <p>
+                      Update your password using your current portal login password.
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  class="message"
+                  data-password-status
+                  hidden
+                  role="status"
+                  aria-live="polite"
+                  style="margin-bottom: 16px;"
+                ></div>
+
+                <form id="passwordForm" novalidate>
+                  <div class="form-grid">
+                    <div class="field full">
+                      <label for="currentPassword">Current Password</label>
+                      <input
+                        id="currentPassword"
+                        name="currentPassword"
+                        type="password"
+                        autocomplete="current-password"
+                        placeholder="Enter current password"
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label for="newPassword">New Password</label>
+                      <input
+                        id="newPassword"
+                        name="newPassword"
+                        type="password"
+                        autocomplete="new-password"
+                        placeholder="Enter new password"
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label for="confirmNewPassword">Confirm New Password</label>
+                      <input
+                        id="confirmNewPassword"
+                        name="confirmNewPassword"
+                        type="password"
+                        autocomplete="new-password"
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-actions" style="margin-top: 20px;">
+                    <button class="btn btn-primary" type="submit">
+                      Change Password
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <aside class="stack">
+              <div class="glass-card section-card">
+                <div class="section-head">
+                  <div>
+                    <h3>Privacy & Security</h3>
+                    <p>
+                      Keep your member account protected with stronger access controls.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="setting-list">
+                  <div class="setting-row">
+                    <div class="setting-copy">
+                      <strong>Two-Factor Status</strong>
+                      <p>
+                        Toggle your portal two-factor preference. Full two-factor
+                        enforcement can be connected later.
+                      </p>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" data-setting-security="twoFactorEnabled" />
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="info-card">
+                    <strong>Email Verification</strong>
+                    <p>
+                      Current state:
+                      <span data-security-email-verified>Checking</span>
+                    </p>
+                  </div>
+
+                  <div class="info-card">
+                    <strong>Password Last Changed</strong>
+                    <p data-security-password-updated>Not available yet</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="glass-card section-card">
+                <div class="section-head">
+                  <div>
+                    <h3>Active Sessions</h3>
+                    <p>
+                      Review and manage the sessions tied to your Card Leo Rewards portal.
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  class="message"
+                  data-sessions-status
+                  hidden
+                  role="status"
+                  aria-live="polite"
+                  style="margin-bottom: 16px;"
+                ></div>
+
+                <div class="session-list" data-session-list>
+                  <div class="session-row">
+                    <div>
+                      <strong>Loading sessions...</strong>
+                      <p>Please wait while we check your active portal sessions.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-actions" style="margin-top: 20px;">
+                  <button class="btn btn-secondary" type="button" data-refresh-sessions>
+                    Refresh Sessions
+                  </button>
+
+                  <button class="btn btn-danger" type="button" data-signout-others>
+                    Sign Out Other Sessions
+                  </button>
+                </div>
+              </div>
+
+              <div class="glass-card section-card">
+                <div class="section-head">
+                  <div>
+                    <h3>Support Details</h3>
+                    <p>
+                      Reach our team if you need help with account settings or access.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="support-box">
+                  <div class="support-row">
+                    <div>
+                      <span>Email</span>
+                      <a
+                        data-support-email
+                        href="mailto:support@cardleorewards.com"
+                      >
+                        support@cardleorewards.com
+                      </a>
+                    </div>
+                  </div>
+
+                  <div class="support-row">
+                    <div>
+                      <span>Phone</span>
+                      <strong data-support-phone>Not listed</strong>
+                    </div>
+                  </div>
+
+                  <div class="support-row">
+                    <div>
+                      <span>Hours</span>
+                      <strong data-support-hours>Mon–Fri, 9:00 AM–6:00 PM</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="margin-top: 18px;">
+                  <a
+                    class="btn btn-secondary"
+                    href="/portal/support.html"
+                    style="width: 100%;"
+                  >
+                    Open Member Support
+                  </a>
+                </div>
+              </div>
+            </aside>
+          </section>
+
+          <div class="footer-note">
+            Card Leo Rewards Member Portal · Account Settings
+          </div>
         </div>
-      </aside>
-
-      <main class="content">
-        <section class="hero">
-          <div class="eyebrow">Account Controls</div>
-          <h1>Settings built for a premium member experience.</h1>
-          <p>
-            Manage your profile preferences, notifications, privacy controls,
-            and security settings for your Card Leo Rewards account. Your
-            choices are designed to keep your membership experience smooth,
-            secure, and personalized.
-          </p>
-        </section>
-
-        <section class="grid">
-          <article class="card span-7">
-            <div class="card-head">
-              <div>
-                <h2>Account Preferences</h2>
-                <p>
-                  Review your member identity, communication preferences, and
-                  regional account settings.
-                </p>
-              </div>
-              <div class="pill">Personalization</div>
-            </div>
-
-            <form id="settingsForm">
-              <div class="form-grid">
-                <div class="field">
-                  <label for="fullName">Full Name</label>
-                  <input id="fullName" name="fullName" type="text" placeholder="Your full name" />
-                </div>
-
-                <div class="field">
-                  <label for="email">Email Address</label>
-                  <input id="email" name="email" type="email" readonly />
-                  <div class="hint">Your email is tied to your login account.</div>
-                </div>
-
-                <div class="field">
-                  <label for="phone">Phone Number</label>
-                  <input id="phone" name="phone" type="tel" placeholder="(555) 555-5555" />
-                </div>
-
-                <div class="field">
-                  <label for="memberId">Member ID</label>
-                  <input id="memberId" name="memberId" type="text" readonly />
-                </div>
-
-                <div class="field">
-                  <label for="timezone">Timezone</label>
-                  <select id="timezone" name="timezone">
-                    <option value="America/New_York">Eastern Time</option>
-                    <option value="America/Chicago">Central Time</option>
-                    <option value="America/Denver">Mountain Time</option>
-                    <option value="America/Los_Angeles">Pacific Time</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label for="theme">Portal Theme</label>
-                  <select id="theme" name="theme">
-                    <option value="luxury-dark">Luxury Dark</option>
-                    <option value="classic-gold">Classic Gold</option>
-                    <option value="minimal-night">Minimal Night</option>
-                  </select>
-                </div>
-
-                <div class="field full">
-                  <label for="language">Language</label>
-                  <select id="language" name="language">
-                    <option value="en">English</option>
-                    <option value="es">Spanish</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="actions">
-                <button class="btn btn-primary" type="submit">Save Preferences</button>
-                <button class="btn btn-secondary" type="button" id="resetBtn">
-                  Reset to Defaults
-                </button>
-              </div>
-            </form>
-
-            <div class="notice" id="settingsNotice"></div>
-          </article>
-
-          <article class="card span-5">
-            <div class="card-head">
-              <div>
-                <h2>Membership Snapshot</h2>
-                <p>
-                  A quick look at your account profile, status, and account health.
-                </p>
-              </div>
-              <div class="pill">Live Status</div>
-            </div>
-
-            <div class="stat-boxes">
-              <div class="stat">
-                <small>Membership Tier</small>
-                <strong id="statTier">Leo Premier</strong>
-              </div>
-              <div class="stat">
-                <small>Account Security</small>
-                <strong>Protected</strong>
-              </div>
-              <div class="stat">
-                <small>Portal Access</small>
-                <strong>Active</strong>
-              </div>
-              <div class="stat">
-                <small>Notifications</small>
-                <strong id="notifSummary">Customized</strong>
-              </div>
-            </div>
-          </article>
-
-          <article class="card span-6">
-            <div class="card-head">
-              <div>
-                <h2>Notifications</h2>
-                <p>
-                  Control how Card Leo Rewards contacts you about offers,
-                  account alerts, and member updates.
-                </p>
-              </div>
-              <div class="pill">Communications</div>
-            </div>
-
-            <div class="toggle-list">
-              <div class="toggle-row">
-                <div class="toggle-copy">
-                  <strong>Rewards &amp; offers</strong>
-                  <span>Receive new reward drops, limited perks, and special promotions.</span>
-                </div>
-                <label class="switch">
-                  <input type="checkbox" id="notifRewards" checked />
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="toggle-row">
-                <div class="toggle-copy">
-                  <strong>Account alerts</strong>
-                  <span>Get important notices for account activity and updates.</span>
-                </div>
-                <label class="switch">
-                  <input type="checkbox" id="notifAlerts" checked />
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="toggle-row">
-                <div class="toggle-copy">
-                  <strong>Text message updates</strong>
-                  <span>Enable SMS notices for fast account and membership updates.</span>
-                </div>
-                <label class="switch">
-                  <input type="checkbox" id="notifSms" />
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="toggle-row">
-                <div class="toggle-copy">
-                  <strong>Partner experiences</strong>
-                  <span>Hear about premium partner offers, events, and exclusive access.</span>
-                </div>
-                <label class="switch">
-                  <input type="checkbox" id="notifPartners" />
-                  <span class="slider"></span>
-                </label>
-              </div>
-            </div>
-          </article>
-
-          <article class="card span-6">
-            <div class="card-head">
-              <div>
-                <h2>Privacy &amp; Security</h2>
-                <p>
-                  Keep your member account protected with stronger access and privacy settings.
-                </p>
-              </div>
-              <div class="pill">Security</div>
-            </div>
-
-            <div class="toggle-list">
-              <div class="toggle-row">
-                <div class="toggle-copy">
-                  <strong>Two-step sign-in prompt</strong>
-                  <span>Add an extra confirmation step for sensitive account activity.</span>
-                </div>
-                <label class="switch">
-                  <input type="checkbox" id="security2fa" checked />
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="toggle-row">
-                <div class="toggle-copy">
-                  <strong>Private profile visibility</strong>
-                  <span>Limit internal visibility of your profile and member preferences.</span>
-                </div>
-                <label class="switch">
-                  <input type="checkbox" id="privacyProfile" checked />
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="toggle-row">
-                <div class="toggle-copy">
-                  <strong>Email login notifications</strong>
-                  <span>Receive a notice whenever your account is accessed from a new session.</span>
-                </div>
-                <label class="switch">
-                  <input type="checkbox" id="securityLoginAlerts" checked />
-                  <span class="slider"></span>
-                </label>
-              </div>
-            </div>
-
-            <div class="actions">
-              <button class="btn btn-secondary" type="button" id="passwordBtn">
-                Change Password
-              </button>
-            </div>
-          </article>
-
-          <article class="card span-12">
-            <div class="card-head">
-              <div>
-                <h2>Active Sessions</h2>
-                <p>
-                  Monitor your current sessions and keep your account secure across devices.
-                </p>
-              </div>
-              <div class="pill">Session Management</div>
-            </div>
-
-            <div class="session-list">
-              <div class="session current">
-                <div>
-                  <strong>Current Browser Session</strong>
-                  <span id="currentSessionText">Windows • Chrome • Active now</span>
-                </div>
-                <button class="mini-btn" type="button" disabled>Current</button>
-              </div>
-
-              <div class="session">
-                <div>
-                  <strong>Mobile Session</strong>
-                  <span>iPhone • Last active recently</span>
-                </div>
-                <button class="mini-btn" type="button">Sign Out</button>
-              </div>
-            </div>
-
-            <div class="actions">
-              <button class="btn btn-danger" type="button" id="signOutAllBtn">
-                Sign Out of All Other Sessions
-              </button>
-            </div>
-
-            <p class="footer-note">
-              For higher-security environments, enable account alerts and review active
-              sessions regularly to keep your Card Leo Rewards membership protected.
-            </p>
-          </article>
-        </section>
       </main>
     </div>
 
+    <script src="/assets/js/auth-guard.js" defer></script>
+
     <script>
-      const STORAGE_KEY = "cardleo_portal_settings_v1";
-
-      const els = {
-        memberName: document.getElementById("memberName"),
-        memberEmail: document.getElementById("memberEmail"),
-        memberTier: document.getElementById("memberTier"),
-        statTier: document.getElementById("statTier"),
-        notifSummary: document.getElementById("notifSummary"),
-        currentSessionText: document.getElementById("currentSessionText"),
-        notice: document.getElementById("settingsNotice"),
-        form: document.getElementById("settingsForm"),
-        saveTopBtn: document.getElementById("saveTopBtn"),
-        refreshBtn: document.getElementById("refreshBtn"),
-        logoutBtn: document.getElementById("logoutBtn"),
-        resetBtn: document.getElementById("resetBtn"),
-        signOutAllBtn: document.getElementById("signOutAllBtn"),
-        passwordBtn: document.getElementById("passwordBtn"),
-        fullName: document.getElementById("fullName"),
-        email: document.getElementById("email"),
-        phone: document.getElementById("phone"),
-        memberId: document.getElementById("memberId"),
-        timezone: document.getElementById("timezone"),
-        theme: document.getElementById("theme"),
-        language: document.getElementById("language"),
-        notifRewards: document.getElementById("notifRewards"),
-        notifAlerts: document.getElementById("notifAlerts"),
-        notifSms: document.getElementById("notifSms"),
-        notifPartners: document.getElementById("notifPartners"),
-        security2fa: document.getElementById("security2fa"),
-        privacyProfile: document.getElementById("privacyProfile"),
-        securityLoginAlerts: document.getElementById("securityLoginAlerts"),
-      };
-
-      function defaultSettings() {
-        return {
-          fullName: "Leo Member",
-          email: "member@cardleorewards.com",
-          phone: "",
-          memberId: "CLR-100001",
-          timezone: "America/New_York",
-          theme: "luxury-dark",
-          language: "en",
-          tier: "Leo Premier Member",
-          notifRewards: true,
-          notifAlerts: true,
-          notifSms: false,
-          notifPartners: false,
-          security2fa: true,
-          privacyProfile: true,
-          securityLoginAlerts: true,
+      (function () {
+        const CONFIG = {
+          settingsEndpoint: "/api/portal/settings",
+          sessionsEndpoint: "/api/portal/sessions",
+          changePasswordEndpoint: "/api/portal/change-password",
+          loginPage: "/login.html",
+          unauthorizedPage: "/unauthorized.html",
+          authGuardOptions: {
+            meEndpoint: "/api/auth/me",
+            logoutEndpoint: "/api/auth/logout",
+            loginPage: "/login.html",
+            unauthorizedPage: "/unauthorized.html",
+            fallbackPortalOverviewEndpoint: "/api/portal/overview",
+            redirectOnFail: true,
+            requirePortalAccess: true,
+            showLoader: true,
+            debug: false,
+          },
         };
-      }
 
-      function showNotice(type, message) {
-        els.notice.className = `notice show ${type}`;
-        els.notice.textContent = message;
-      }
-
-      function clearNotice() {
-        els.notice.className = "notice";
-        els.notice.textContent = "";
-      }
-
-      function getStoredSettings() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return defaultSettings();
-          return { ...defaultSettings(), ...JSON.parse(raw) };
-        } catch {
-          return defaultSettings();
-        }
-      }
-
-      function saveStoredSettings(settings) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      }
-
-      function collectSettings() {
-        return {
-          fullName: els.fullName.value.trim() || "Leo Member",
-          email: els.email.value.trim() || "member@cardleorewards.com",
-          phone: els.phone.value.trim(),
-          memberId: els.memberId.value.trim() || "CLR-100001",
-          timezone: els.timezone.value,
-          theme: els.theme.value,
-          language: els.language.value,
-          tier: els.memberTier.textContent.trim() || "Leo Premier Member",
-          notifRewards: els.notifRewards.checked,
-          notifAlerts: els.notifAlerts.checked,
-          notifSms: els.notifSms.checked,
-          notifPartners: els.notifPartners.checked,
-          security2fa: els.security2fa.checked,
-          privacyProfile: els.privacyProfile.checked,
-          securityLoginAlerts: els.securityLoginAlerts.checked,
+        const state = {
+          member: null,
+          settings: null,
+          support: null,
+          sessions: [],
+          loading: false,
+          saving: false,
         };
-      }
 
-      function applySettings(settings) {
-        els.fullName.value = settings.fullName || "";
-        els.email.value = settings.email || "";
-        els.phone.value = settings.phone || "";
-        els.memberId.value = settings.memberId || "";
-        els.timezone.value = settings.timezone || "America/New_York";
-        els.theme.value = settings.theme || "luxury-dark";
-        els.language.value = settings.language || "en";
-        els.notifRewards.checked = !!settings.notifRewards;
-        els.notifAlerts.checked = !!settings.notifAlerts;
-        els.notifSms.checked = !!settings.notifSms;
-        els.notifPartners.checked = !!settings.notifPartners;
-        els.security2fa.checked = !!settings.security2fa;
-        els.privacyProfile.checked = !!settings.privacyProfile;
-        els.securityLoginAlerts.checked = !!settings.securityLoginAlerts;
-
-        const memberName = settings.fullName || "Leo Member";
-        const memberEmail = settings.email || "member@cardleorewards.com";
-        const tier = settings.tier || "Leo Premier Member";
-
-        els.memberName.textContent = memberName;
-        els.memberEmail.textContent = memberEmail;
-        els.memberTier.textContent = tier;
-        els.statTier.textContent = tier.replace(" Member", "");
-
-        updateNotificationSummary();
-      }
-
-      function updateNotificationSummary() {
-        const enabled = [
-          els.notifRewards.checked,
-          els.notifAlerts.checked,
-          els.notifSms.checked,
-          els.notifPartners.checked,
-        ].filter(Boolean).length;
-
-        if (enabled >= 4) {
-          els.notifSummary.textContent = "All Enabled";
-        } else if (enabled === 0) {
-          els.notifSummary.textContent = "Off";
-        } else {
-          els.notifSummary.textContent = `${enabled} Enabled`;
+        function isObject(value) {
+          return !!value && typeof value === "object" && !Array.isArray(value);
         }
-      }
 
-      async function hydrateFromApi() {
-        try {
-          const response = await fetch("/api/auth/me", {
-            method: "GET",
-            headers: { Accept: "application/json" },
+        function normalizeText(value, fallback = "") {
+          const text = String(value ?? "").trim();
+          return text || fallback;
+        }
+
+        function titleCase(value) {
+          return String(value || "")
+            .split(/[\s_-]+/)
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(" ");
+        }
+
+        function formatDateTime(value) {
+          if (!value) return "—";
+
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return "—";
+
+          return new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          }).format(date);
+        }
+
+        function setText(selector, value) {
+          document.querySelectorAll(selector).forEach((node) => {
+            node.textContent = normalizeText(value);
           });
+        }
 
-          if (!response.ok) {
-            throw new Error("Unable to load member session.");
+        function setStatus(target, type, message) {
+          const el =
+            typeof target === "string" ? document.querySelector(target) : target;
+
+          if (!el) return;
+
+          if (!message) {
+            el.hidden = true;
+            el.textContent = "";
+            el.dataset.state = "";
+            return;
           }
 
-          const data = await response.json();
-          const stored = getStoredSettings();
+          el.hidden = false;
+          el.textContent = message;
+          el.dataset.state = type || "info";
+        }
 
-          const merged = {
-            ...stored,
-            fullName:
-              data?.user?.name ||
-              data?.user?.fullName ||
-              stored.fullName,
-            email:
-              data?.user?.email ||
-              stored.email,
-            memberId:
-              data?.user?.memberId ||
-              stored.memberId,
-            tier:
-              data?.user?.tier ||
-              stored.tier,
+        function unwrap(payload) {
+          if (!isObject(payload)) return {};
+          return isObject(payload.data) ? payload.data : payload;
+        }
+
+        async function fetchJson(url, options = {}) {
+          const response = await fetch(url, {
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+              ...(options.headers || {}),
+            },
+            ...options,
+          });
+
+          let payload = null;
+
+          try {
+            payload = await response.json();
+          } catch {
+            payload = {};
+          }
+
+          if (response.status === 401) {
+            window.location.href =
+              CONFIG.loginPage +
+              "?next=" +
+              encodeURIComponent(window.location.pathname + window.location.search);
+            return null;
+          }
+
+          if (response.status === 403) {
+            window.location.href = CONFIG.unauthorizedPage;
+            return null;
+          }
+
+          if (!response.ok || payload?.success === false) {
+            throw new Error(
+              payload?.message || `Request failed with status ${response.status}`
+            );
+          }
+
+          return {
+            response,
+            payload,
+            data: unwrap(payload),
+          };
+        }
+
+        function getMemberName(member = {}) {
+          return (
+            normalizeText(member.name) ||
+            normalizeText(member.fullName) ||
+            normalizeText(member.full_name) ||
+            [member.firstName || member.first_name, member.lastName || member.last_name]
+              .map(normalizeText)
+              .filter(Boolean)
+              .join(" ") ||
+            "Card Leo Member"
+          );
+        }
+
+        function applyMember(member = {}) {
+          state.member = member;
+
+          const fullName = getMemberName(member);
+          const email = normalizeText(member.email, "");
+          const status = titleCase(member.status || member.memberStatus || "member");
+          const accessLevel = titleCase(
+            member.accessLevel || member.access_level || member.role || "member"
+          );
+
+          setText("[data-member-name]", fullName);
+          setText("[data-member-email]", email || "—");
+          setText("[data-member-status]", status);
+          setText("[data-member-access-level]", accessLevel);
+          setText(
+            "[data-member-joined-at]",
+            member.joinedAt || member.createdAt || member.created_at
+              ? formatDateTime(member.joinedAt || member.createdAt || member.created_at)
+              : "—"
+          );
+
+          const fullNameInput = document.getElementById("settingsFullName");
+          const emailInput = document.getElementById("settingsEmail");
+          const memberIdInput = document.getElementById("settingsMemberId");
+
+          if (fullNameInput) fullNameInput.value = fullName;
+          if (emailInput) emailInput.value = email;
+          if (memberIdInput) {
+            memberIdInput.value =
+              member.signupId ||
+              member.signup_id ||
+              member.portalUserId ||
+              member.portal_user_id ||
+              member.id ||
+              "";
+          }
+
+          document.body.dataset.memberName = fullName;
+          document.body.dataset.memberEmail = email;
+          document.body.dataset.memberStatus = status;
+        }
+
+        function applySupport(support = {}) {
+          state.support = support;
+
+          const email = normalizeText(support.email, "support@cardleorewards.com");
+          const phone = normalizeText(support.phone, "Not listed");
+          const hours = normalizeText(support.hours, "Mon–Fri, 9:00 AM–6:00 PM");
+
+          document.querySelectorAll("[data-support-email]").forEach((node) => {
+            node.textContent = email;
+            if (node.tagName === "A") node.href = "mailto:" + email;
+          });
+
+          setText("[data-support-phone]", phone);
+          setText("[data-support-hours]", hours);
+        }
+
+        function applySettings(settings = {}) {
+          state.settings = settings;
+
+          const preferences = isObject(settings.preferences)
+            ? settings.preferences
+            : {};
+          const security = isObject(settings.security) ? settings.security : {};
+
+          const defaults = {
+            emailNotifications: true,
+            smsNotifications: false,
+            productUpdates: true,
+            marketingEmails: true,
+            rewardAlerts: true,
+            securityAlerts: true,
+            theme: "dark",
           };
 
-          saveStoredSettings(merged);
-          applySettings(merged);
-        } catch {
-          applySettings(getStoredSettings());
-        }
-      }
+          Object.entries(defaults).forEach(([key, fallback]) => {
+            if (key === "theme") return;
 
-      async function handleLogout() {
-        try {
-          await fetch("/api/auth/logout", {
-            method: "POST",
-            headers: { Accept: "application/json" },
+            const input = document.querySelector(`[data-setting="${key}"]`);
+            if (input) input.checked = Boolean(preferences[key] ?? fallback);
           });
-        } catch {}
 
-        window.location.href = "/login.html";
-      }
+          const theme = document.querySelector("[data-setting-theme]");
+          if (theme) {
+            const value = normalizeText(preferences.theme || defaults.theme).toLowerCase();
+            theme.value = ["dark", "light", "system"].includes(value) ? value : "dark";
+          }
 
-      function handleSave() {
-        clearNotice();
-        const settings = collectSettings();
-        saveStoredSettings(settings);
-        applySettings(settings);
-        showNotice("success", "Your settings have been saved successfully.");
-      }
-
-      function handleReset() {
-        clearNotice();
-        const defaults = defaultSettings();
-        saveStoredSettings(defaults);
-        applySettings(defaults);
-        showNotice("success", "Your settings have been reset to default preferences.");
-      }
-
-      function initEventListeners() {
-        els.form.addEventListener("submit", function (event) {
-          event.preventDefault();
-          handleSave();
-        });
-
-        els.saveTopBtn.addEventListener("click", handleSave);
-        els.refreshBtn.addEventListener("click", hydrateFromApi);
-        els.resetBtn.addEventListener("click", handleReset);
-        els.logoutBtn.addEventListener("click", handleLogout);
-
-        els.signOutAllBtn.addEventListener("click", function () {
-          showNotice(
-            "success",
-            "All other sessions have been signed out successfully."
+          const twoFactor = document.querySelector(
+            '[data-setting-security="twoFactorEnabled"]'
           );
-        });
+          if (twoFactor) {
+            twoFactor.checked = Boolean(security.twoFactorEnabled ?? false);
+          }
 
-        els.passwordBtn.addEventListener("click", function () {
-          window.location.href = "/reset-password.html";
-        });
+          setText(
+            "[data-security-email-verified]",
+            security.emailVerified ? "Verified" : "Not verified"
+          );
 
-        [
-          els.notifRewards,
-          els.notifAlerts,
-          els.notifSms,
-          els.notifPartners,
-        ].forEach((input) => {
-          input.addEventListener("change", updateNotificationSummary);
-        });
+          setText(
+            "[data-security-password-updated]",
+            security.passwordLastChangedAt
+              ? formatDateTime(security.passwordLastChangedAt)
+              : "Not available yet"
+          );
+        }
 
-        const ua = navigator.userAgent || "Browser Session";
-        els.currentSessionText.textContent = `${ua.includes("Chrome") ? "Windows • Chrome" : "Secure Browser Session"} • Active now`;
-      }
+        function collectSettingsPayload() {
+          const preferences = {
+            emailNotifications: Boolean(
+              document.querySelector('[data-setting="emailNotifications"]')?.checked
+            ),
+            smsNotifications: Boolean(
+              document.querySelector('[data-setting="smsNotifications"]')?.checked
+            ),
+            productUpdates: Boolean(
+              document.querySelector('[data-setting="productUpdates"]')?.checked
+            ),
+            marketingEmails: Boolean(
+              document.querySelector('[data-setting="marketingEmails"]')?.checked
+            ),
+            rewardAlerts: Boolean(
+              document.querySelector('[data-setting="rewardAlerts"]')?.checked
+            ),
+            securityAlerts: Boolean(
+              document.querySelector('[data-setting="securityAlerts"]')?.checked
+            ),
+            theme:
+              document.querySelector("[data-setting-theme]")?.value ||
+              state.settings?.preferences?.theme ||
+              "dark",
+          };
 
-      initEventListeners();
-      hydrateFromApi();
+          const security = {
+            twoFactorEnabled: Boolean(
+              document.querySelector('[data-setting-security="twoFactorEnabled"]')
+                ?.checked
+            ),
+          };
+
+          return { preferences, security };
+        }
+
+        async function loadSettings() {
+          if (state.loading) return;
+
+          state.loading = true;
+          setStatus("[data-settings-page-status]", "", "");
+
+          try {
+            const result = await fetchJson(CONFIG.settingsEndpoint, {
+              method: "GET",
+            });
+
+            if (!result) return;
+
+            const data = result.data;
+
+            applyMember(data.member || {});
+            applySettings(data.settings || {});
+            applySupport(data.support || {});
+
+            setStatus(
+              "[data-settings-page-status]",
+              "success",
+              "Settings loaded successfully."
+            );
+          } catch (error) {
+            setStatus(
+              "[data-settings-page-status]",
+              "error",
+              error?.message || "Unable to load settings right now."
+            );
+          } finally {
+            state.loading = false;
+          }
+        }
+
+        async function saveSettings() {
+          if (state.saving) return;
+
+          state.saving = true;
+          setStatus("[data-settings-page-status]", "", "");
+
+          document.querySelectorAll("[data-save-settings]").forEach((button) => {
+            button.disabled = true;
+            button.dataset.originalText =
+              button.dataset.originalText || button.textContent;
+            button.textContent = "Saving...";
+          });
+
+          try {
+            const result = await fetchJson(CONFIG.settingsEndpoint, {
+              method: "POST",
+              body: JSON.stringify(collectSettingsPayload()),
+            });
+
+            if (!result) return;
+
+            applyMember(result.data.member || state.member || {});
+            applySettings(result.data.settings || {});
+            applySupport(result.data.support || state.support || {});
+
+            setStatus(
+              "[data-settings-page-status]",
+              "success",
+              result.payload?.message || "Settings saved successfully."
+            );
+          } catch (error) {
+            setStatus(
+              "[data-settings-page-status]",
+              "error",
+              error?.message || "We could not save your settings right now."
+            );
+          } finally {
+            state.saving = false;
+
+            document.querySelectorAll("[data-save-settings]").forEach((button) => {
+              button.disabled = false;
+              button.textContent = button.dataset.originalText || "Save Settings";
+            });
+          }
+        }
+
+        function renderSessions(sessions = []) {
+          const container = document.querySelector("[data-session-list]");
+          if (!container) return;
+
+          state.sessions = sessions;
+
+          if (!sessions.length) {
+            container.innerHTML = `
+              <div class="session-row">
+                <div>
+                  <strong>No saved sessions found</strong>
+                  <p>Your current browser may be the only active session.</p>
+                </div>
+              </div>
+            `;
+            return;
+          }
+
+          container.innerHTML = sessions
+            .map((session) => {
+              const current = Boolean(session.current);
+              const id = normalizeText(session.id);
+              const label = normalizeText(session.label, "Portal Session");
+              const browser = normalizeText(session.browser, "Browser");
+              const os = normalizeText(session.os, "Device");
+              const deviceType = normalizeText(session.deviceType, "desktop");
+              const ip = normalizeText(session.ipAddressMasked || session.ipAddress, "");
+              const lastActive = formatDateTime(session.lastActiveAt);
+              const createdAt = formatDateTime(session.createdAt);
+
+              return `
+                <div class="session-row" data-session-id="${id}">
+                  <div>
+                    <strong>${label}</strong>
+                    <p>${browser} • ${os} • ${titleCase(deviceType)}</p>
+                    <div class="session-meta">
+                      <span class="session-chip ${current ? "current" : ""}">
+                        ${current ? "Current Session" : "Saved Session"}
+                      </span>
+                      <span class="session-chip">Last active: ${lastActive}</span>
+                      <span class="session-chip">Created: ${createdAt}</span>
+                      ${ip ? `<span class="session-chip">IP: ${ip}</span>` : ""}
+                    </div>
+                  </div>
+
+                  ${
+                    current
+                      ? `<button class="btn btn-secondary" type="button" disabled>Current</button>`
+                      : `<button class="btn btn-danger" type="button" data-revoke-session="${id}">Revoke</button>`
+                  }
+                </div>
+              `;
+            })
+            .join("");
+        }
+
+        async function loadSessions() {
+          setStatus("[data-sessions-status]", "", "");
+
+          try {
+            const result = await fetchJson(CONFIG.sessionsEndpoint, {
+              method: "GET",
+            });
+
+            if (!result) return;
+
+            const sessions = result.data?.sessions?.sessions || [];
+            renderSessions(Array.isArray(sessions) ? sessions : []);
+
+            setStatus(
+              "[data-sessions-status]",
+              "success",
+              "Sessions loaded successfully."
+            );
+          } catch (error) {
+            setStatus(
+              "[data-sessions-status]",
+              "error",
+              error?.message || "Unable to load active sessions right now."
+            );
+          }
+        }
+
+        async function sessionAction(action, sessionId = "") {
+          setStatus("[data-sessions-status]", "", "");
+
+          try {
+            const result = await fetchJson(CONFIG.sessionsEndpoint, {
+              method: "POST",
+              body: JSON.stringify({
+                action,
+                sessionId,
+              }),
+            });
+
+            if (!result) return;
+
+            if (result.data?.signedOut) {
+              window.location.href = CONFIG.loginPage;
+              return;
+            }
+
+            const sessions = result.data?.sessions?.sessions || [];
+            renderSessions(Array.isArray(sessions) ? sessions : []);
+
+            setStatus(
+              "[data-sessions-status]",
+              "success",
+              result.payload?.message || "Sessions updated successfully."
+            );
+          } catch (error) {
+            setStatus(
+              "[data-sessions-status]",
+              "error",
+              error?.message || "Unable to update sessions right now."
+            );
+          }
+        }
+
+        async function changePassword(event) {
+          event.preventDefault();
+
+          const form = event.currentTarget;
+          const statusNode = document.querySelector("[data-password-status]");
+
+          const currentPassword = form.currentPassword.value;
+          const newPassword = form.newPassword.value;
+          const confirmNewPassword = form.confirmNewPassword.value;
+
+          if (!currentPassword || !newPassword || !confirmNewPassword) {
+            setStatus(statusNode, "error", "Please complete all password fields.");
+            return;
+          }
+
+          if (newPassword !== confirmNewPassword) {
+            setStatus(statusNode, "error", "New password and confirmation do not match.");
+            return;
+          }
+
+          const submit = form.querySelector('[type="submit"]');
+          const originalText = submit?.textContent;
+
+          if (submit) {
+            submit.disabled = true;
+            submit.textContent = "Changing...";
+          }
+
+          try {
+            const result = await fetchJson(CONFIG.changePasswordEndpoint, {
+              method: "POST",
+              body: JSON.stringify({
+                currentPassword,
+                newPassword,
+                confirmNewPassword,
+                signOutOtherSessions: true,
+              }),
+            });
+
+            if (!result) return;
+
+            form.reset();
+
+            setStatus(
+              statusNode,
+              "success",
+              result.payload?.message || "Password changed successfully."
+            );
+
+            await loadSettings();
+            await loadSessions();
+          } catch (error) {
+            setStatus(
+              statusNode,
+              "error",
+              error?.message || "Unable to change password right now."
+            );
+          } finally {
+            if (submit) {
+              submit.disabled = false;
+              submit.textContent = originalText || "Change Password";
+            }
+          }
+        }
+
+        function bindEvents() {
+          document.querySelectorAll("[data-save-settings]").forEach((button) => {
+            button.addEventListener("click", saveSettings);
+          });
+
+          document.querySelectorAll("[data-refresh-settings]").forEach((button) => {
+            button.addEventListener("click", loadSettings);
+          });
+
+          document.querySelectorAll("[data-refresh-sessions]").forEach((button) => {
+            button.addEventListener("click", loadSessions);
+          });
+
+          document.querySelectorAll("[data-signout-others]").forEach((button) => {
+            button.addEventListener("click", () => sessionAction("sign_out_others"));
+          });
+
+          document.addEventListener("click", (event) => {
+            const revokeButton = event.target.closest("[data-revoke-session]");
+            if (!revokeButton) return;
+
+            event.preventDefault();
+
+            const sessionId = revokeButton.getAttribute("data-revoke-session");
+            if (!sessionId) return;
+
+            sessionAction("revoke_session", sessionId);
+          });
+
+          const passwordForm = document.getElementById("passwordForm");
+          if (passwordForm) {
+            passwordForm.addEventListener("submit", changePassword);
+          }
+        }
+
+        async function init() {
+          try {
+            if (window.CardLeoAuthGuard?.init) {
+              await window.CardLeoAuthGuard.init(CONFIG.authGuardOptions);
+            }
+          } catch (error) {
+            console.warn("[portal/settings] auth guard skipped:", error);
+          }
+
+          bindEvents();
+
+          await loadSettings();
+          await loadSessions();
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init);
+        } else {
+          init();
+        }
+
+        window.CardLeoPortalSettings = {
+          init,
+          reload: async function () {
+            await loadSettings();
+            await loadSessions();
+          },
+          save: saveSettings,
+          loadSessions,
+          sessionAction,
+          getState: function () {
+            return { ...state };
+          },
+        };
+      })();
     </script>
   </body>
 </html>

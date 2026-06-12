@@ -1,3 +1,4 @@
+<!-- portal/index.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -13,11 +14,8 @@
       name="description"
       content="Card Leo Rewards member portal dashboard. View your membership status, rewards, benefits, profile details, and premium member actions."
     />
-    <meta
-      name="keywords"
-      content="Card Leo Rewards, member portal, rewards dashboard, premium membership, account overview"
-    />
     <meta name="theme-color" content="#0b1020" />
+    <meta name="robots" content="noindex, nofollow" />
 
     <meta property="og:title" content="Card Leo Rewards | Member Portal" />
     <meta
@@ -63,7 +61,6 @@
         --radius-xl: 30px;
         --radius-lg: 22px;
         --radius-md: 16px;
-        --radius-sm: 12px;
         --container: 1280px;
       }
 
@@ -77,8 +74,8 @@
 
       body {
         margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-          "Segoe UI", sans-serif;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
         background:
           radial-gradient(circle at top left, rgba(215, 179, 106, 0.12), transparent 28%),
           radial-gradient(circle at 85% 20%, rgba(21, 209, 143, 0.08), transparent 22%),
@@ -90,11 +87,6 @@
       a {
         color: inherit;
         text-decoration: none;
-      }
-
-      img {
-        max-width: 100%;
-        display: block;
       }
 
       button,
@@ -221,6 +213,45 @@
         flex-wrap: wrap;
       }
 
+      .portal-nav-wrap {
+        position: relative;
+        z-index: 3;
+        padding-top: 18px;
+      }
+
+      .portal-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .portal-nav a {
+        padding: 11px 16px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--muted);
+        transition:
+          border-color 0.18s ease,
+          color 0.18s ease,
+          background 0.18s ease,
+          transform 0.18s ease;
+      }
+
+      .portal-nav a:hover {
+        color: var(--text);
+        border-color: var(--line-strong);
+        transform: translateY(-1px);
+      }
+
+      .portal-nav a.active {
+        color: #081018;
+        font-weight: 700;
+        border-color: transparent;
+        background: linear-gradient(135deg, #96f0c7, #15d18f);
+        box-shadow: 0 12px 30px rgba(21, 209, 143, 0.18);
+      }
+
       .pill,
       .btn,
       .status-pill {
@@ -303,7 +334,69 @@
       .portal-layout {
         position: relative;
         z-index: 2;
-        padding: 34px 0 70px;
+        padding: 24px 0 70px;
+      }
+
+      .status-box {
+        display: none;
+        margin-bottom: 18px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.035);
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .status-box.show {
+        display: block;
+      }
+
+      .status-box.error {
+        color: #ffd9de;
+        border-color: rgba(255, 111, 125, 0.3);
+        background: rgba(255, 111, 125, 0.08);
+      }
+
+      .status-box.success {
+        color: #dffced;
+        border-color: rgba(21, 209, 143, 0.24);
+        background: rgba(21, 209, 143, 0.09);
+      }
+
+      .loading-panel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        min-height: 220px;
+        padding: 28px;
+        border-radius: var(--radius-xl);
+        background: rgba(10, 19, 35, 0.82);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow-lg);
+        color: var(--muted);
+      }
+
+      .loading-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--gold-strong), var(--gold));
+        animation: pulse 1s infinite ease-in-out;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 0.35;
+          transform: scale(0.85);
+        }
+
+        50% {
+          opacity: 1;
+          transform: scale(1);
+        }
       }
 
       .hero {
@@ -463,6 +556,7 @@
       .meta-item strong {
         display: block;
         font-size: 0.96rem;
+        word-break: break-word;
       }
 
       .dashboard-grid {
@@ -526,6 +620,10 @@
         border-radius: 20px;
         background: rgba(255, 255, 255, 0.035);
         border: 1px solid rgba(255, 255, 255, 0.07);
+        transition:
+          border-color 0.2s ease,
+          transform 0.2s ease,
+          background 0.2s ease;
       }
 
       .action-card:hover,
@@ -643,6 +741,7 @@
         font-size: 0.86rem;
       }
 
+      [hidden],
       .hidden {
         display: none !important;
       }
@@ -660,6 +759,16 @@
           padding: 14px 0;
           align-items: flex-start;
           flex-direction: column;
+        }
+
+        .portal-nav {
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          padding-bottom: 2px;
+        }
+
+        .portal-nav a {
+          flex: 0 0 auto;
         }
 
         .hero-main,
@@ -692,8 +801,8 @@
 
   <body data-require-auth data-cardleo-auth-guard="auto">
     <div class="page-shell">
-      <div class="ambient"></div>
-      <div class="grid-overlay"></div>
+      <div class="ambient" aria-hidden="true"></div>
+      <div class="grid-overlay" aria-hidden="true"></div>
 
       <header class="topbar">
         <div class="container topbar-inner">
@@ -709,235 +818,280 @@
             <a class="pill" href="/about.html">About</a>
             <a class="pill" href="/portal/support.html">Support</a>
             <a class="pill" href="/portal/settings.html">Settings</a>
-            <button class="btn btn-secondary" id="logoutButton" type="button" data-logout>
+            <button class="btn btn-secondary" type="button" data-logout data-member-logout>
               Log Out
             </button>
           </div>
         </div>
       </header>
 
+      <div class="container portal-nav-wrap">
+        <nav class="portal-nav" aria-label="Portal navigation">
+          <a class="active" href="/portal/index.html" aria-current="page">Dashboard</a>
+          <a href="/portal/profile.html">Profile</a>
+          <a href="/portal/rewards.html">Rewards</a>
+          <a href="/portal/benefits.html">Benefits</a>
+          <a href="/portal/support.html">Support</a>
+          <a href="/portal/settings.html">Settings</a>
+        </nav>
+      </div>
+
       <main class="portal-layout">
         <div class="container">
-          <section class="hero">
-            <div class="glass-card hero-main">
-              <div>
-                <div class="eyebrow">Member Dashboard</div>
+          <div
+            class="status-box"
+            id="dashboardStatus"
+            role="status"
+            aria-live="polite"
+          ></div>
 
-                <div class="status-pill pending" id="heroStatusBadge">Loading account</div>
-
-                <h1 id="heroHeading">Welcome back.</h1>
-
-                <p class="hero-text" id="heroDescription">
-                  We’re preparing your Card Leo Rewards premium member experience.
-                  Your dashboard will show your account status, access details,
-                  benefits, and member support tools.
-                </p>
-
-                <div class="hero-badges" id="heroBadges">
-                  <div class="mini-chip">Premium Access</div>
-                  <div class="mini-chip">Rewards Overview</div>
-                  <div class="mini-chip">Account Management</div>
-                </div>
-
-                <div class="hero-actions">
-                  <a class="btn btn-primary" href="/portal/rewards.html">View Rewards</a>
-                  <a class="btn btn-secondary" href="/portal/profile.html">Open Profile</a>
-                </div>
-              </div>
+          <section data-dashboard-loading>
+            <div class="loading-panel">
+              <span class="loading-dot"></span>
+              <span>Loading your Card Leo Rewards dashboard...</span>
             </div>
-
-            <aside class="glass-card hero-side">
-              <div class="spotlight-label">Member Snapshot</div>
-
-              <div class="member-block">
-                <div class="status-pill pending" id="memberStatusBadge">Loading</div>
-                <div class="member-name" id="memberName" data-member-name>
-                  Card Leo Member
-                </div>
-                <div class="member-email" id="memberEmail" data-member-email>
-                  Loading account data...
-                </div>
-              </div>
-
-              <div class="meta-grid">
-                <div class="meta-item">
-                  <span>Member Status</span>
-                  <strong id="metaStatus" data-member-status>Loading</strong>
-                </div>
-                <div class="meta-item">
-                  <span>Portal Access</span>
-                  <strong id="metaAccess">Checking</strong>
-                </div>
-                <div class="meta-item">
-                  <span>Member Since</span>
-                  <strong id="metaCreated">—</strong>
-                </div>
-                <div class="meta-item">
-                  <span>Location</span>
-                  <strong id="metaLocation">—</strong>
-                </div>
-              </div>
-            </aside>
           </section>
 
-          <section class="dashboard-grid">
-            <div class="stack">
-              <div class="glass-card section-card">
-                <div class="section-head">
-                  <div>
-                    <h2>Quick Actions</h2>
-                    <p>
-                      Move through your Card Leo Rewards account faster with direct
-                      member actions.
-                    </p>
+          <div data-dashboard-ready hidden>
+            <section class="hero">
+              <div class="glass-card hero-main">
+                <div>
+                  <div class="eyebrow">Member Dashboard</div>
+
+                  <div class="status-pill pending" id="heroStatusBadge">
+                    Loading account
                   </div>
-                </div>
 
-                <div class="quick-grid" id="quickActions">
-                  <a class="action-card" href="/portal/profile.html">
-                    <strong>Review Profile</strong>
-                    <p>View and manage your member details and account information.</p>
-                    <span class="action-link">Open profile →</span>
-                  </a>
+                  <h1 id="heroHeading">Welcome back.</h1>
 
-                  <a class="action-card" href="/portal/rewards.html">
-                    <strong>Browse Rewards</strong>
-                    <p>See featured perks, premium opportunities, and member access.</p>
-                    <span class="action-link">View rewards →</span>
-                  </a>
-
-                  <a class="action-card" href="/portal/benefits.html">
-                    <strong>Explore Benefits</strong>
-                    <p>Review the full premium value of your Card Leo Rewards membership.</p>
-                    <span class="action-link">See benefits →</span>
-                  </a>
-
-                  <a class="action-card" href="/portal/support.html">
-                    <strong>Contact Support</strong>
-                    <p>Reach our team for account help, onboarding, and member questions.</p>
-                    <span class="action-link">Get support →</span>
-                  </a>
-                </div>
-              </div>
-
-              <div class="glass-card section-card">
-                <div class="section-head">
-                  <div>
-                    <h2>Rewards & Access</h2>
-                    <p>
-                      A premium snapshot of your program access, member perks, and
-                      account visibility.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="reward-grid" id="rewardsGrid">
-                  <div class="reward-card">
-                    <strong>Loading rewards overview...</strong>
-                    <p>Please wait while we pull your portal data.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="glass-card section-card">
-                <div class="section-head">
-                  <div>
-                    <h2>Member Activity</h2>
-                    <p>
-                      High-level visibility into your account journey and current
-                      position in the Card Leo Rewards experience.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="timeline" id="activityTimeline">
-                  <div class="timeline-item">
-                    <strong>Portal loading</strong>
-                    <p>Your latest membership activity will appear here.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <aside class="stack">
-              <div class="glass-card section-card">
-                <div class="section-head">
-                  <div>
-                    <h3>Announcements</h3>
-                    <p>
-                      Important updates tied to your account and Card Leo Rewards access.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="notice-list" id="announcementsList">
-                  <div class="notice-item">
-                    <strong>Loading announcements</strong>
-                    <p>We’re retrieving your current member notices now.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="glass-card section-card">
-                <div class="highlight-card">
-                  <div class="spotlight-label">Premium Positioning</div>
-                  <h3 style="margin: 10px 0 10px; font-size: 1.25rem;">
-                    Your membership should feel first-class.
-                  </h3>
-                  <p style="margin: 0; color: var(--muted); line-height: 1.7;">
-                    Card Leo Rewards is designed to deliver a polished member
-                    experience with premium onboarding, curated benefits, and direct
-                    support when you need it most.
+                  <p class="hero-text" id="heroDescription">
+                    We’re preparing your Card Leo Rewards premium member experience.
+                    Your dashboard will show your account status, access details,
+                    benefits, and member support tools.
                   </p>
+
+                  <div class="hero-badges" id="heroBadges">
+                    <div class="mini-chip" data-member-access-level>Premium Access</div>
+                    <div class="mini-chip">Rewards Overview</div>
+                    <div class="mini-chip">Account Management</div>
+                  </div>
+
+                  <div class="hero-actions">
+                    <a class="btn btn-primary" href="/portal/rewards.html">
+                      View Rewards
+                    </a>
+                    <a class="btn btn-secondary" href="/portal/profile.html">
+                      Open Profile
+                    </a>
+                  </div>
                 </div>
               </div>
 
-              <div class="glass-card section-card">
-                <div class="section-head">
-                  <div>
-                    <h3>Support Details</h3>
-                    <p>
-                      Direct channels and operating hours for your member experience.
+              <aside class="glass-card hero-side">
+                <div class="spotlight-label">Member Snapshot</div>
+
+                <div class="member-block">
+                  <div class="status-pill pending" id="memberStatusBadge">
+                    Loading
+                  </div>
+                  <div class="member-name" id="memberName" data-member-name>
+                    Card Leo Member
+                  </div>
+                  <div class="member-email" id="memberEmail" data-member-email>
+                    Loading account data...
+                  </div>
+                </div>
+
+                <div class="meta-grid">
+                  <div class="meta-item">
+                    <span>Member Status</span>
+                    <strong id="metaStatus" data-member-status>Loading</strong>
+                  </div>
+                  <div class="meta-item">
+                    <span>Portal Access</span>
+                    <strong id="metaAccess">Checking</strong>
+                  </div>
+                  <div class="meta-item">
+                    <span>Member Since</span>
+                    <strong id="metaCreated">—</strong>
+                  </div>
+                  <div class="meta-item">
+                    <span>Location</span>
+                    <strong id="metaLocation">—</strong>
+                  </div>
+                </div>
+              </aside>
+            </section>
+
+            <section class="dashboard-grid">
+              <div class="stack">
+                <div class="glass-card section-card">
+                  <div class="section-head">
+                    <div>
+                      <h2>Quick Actions</h2>
+                      <p>
+                        Move through your Card Leo Rewards account faster with direct
+                        member actions.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="quick-grid" id="quickActions">
+                    <a class="action-card" href="/portal/profile.html">
+                      <strong>Review Profile</strong>
+                      <p>View and manage your member details and account information.</p>
+                      <span class="action-link">Open profile →</span>
+                    </a>
+
+                    <a class="action-card" href="/portal/rewards.html">
+                      <strong>Browse Rewards</strong>
+                      <p>See featured perks, premium opportunities, and member access.</p>
+                      <span class="action-link">View rewards →</span>
+                    </a>
+
+                    <a class="action-card" href="/portal/benefits.html">
+                      <strong>Explore Benefits</strong>
+                      <p>Review the full premium value of your Card Leo Rewards membership.</p>
+                      <span class="action-link">See benefits →</span>
+                    </a>
+
+                    <a class="action-card" href="/portal/support.html">
+                      <strong>Contact Support</strong>
+                      <p>Reach our team for account help, onboarding, and member questions.</p>
+                      <span class="action-link">Get support →</span>
+                    </a>
+                  </div>
+                </div>
+
+                <div class="glass-card section-card">
+                  <div class="section-head">
+                    <div>
+                      <h2>Rewards & Access</h2>
+                      <p>
+                        A premium snapshot of your program access, member perks, and
+                        account visibility.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="reward-grid" id="rewardsGrid">
+                    <div class="reward-card">
+                      <strong>Loading rewards overview...</strong>
+                      <p>Please wait while we pull your portal data.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="glass-card section-card">
+                  <div class="section-head">
+                    <div>
+                      <h2>Member Activity</h2>
+                      <p>
+                        High-level visibility into your account journey and current
+                        position in the Card Leo Rewards experience.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="timeline" id="activityTimeline">
+                    <div class="timeline-item">
+                      <strong>Portal loading</strong>
+                      <p>Your latest membership activity will appear here.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <aside class="stack">
+                <div class="glass-card section-card">
+                  <div class="section-head">
+                    <div>
+                      <h3>Announcements</h3>
+                      <p>
+                        Important updates tied to your account and Card Leo Rewards access.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="notice-list" id="announcementsList">
+                    <div class="notice-item">
+                      <strong>Loading announcements</strong>
+                      <p>We’re retrieving your current member notices now.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="glass-card section-card">
+                  <div class="highlight-card">
+                    <div class="spotlight-label">Premium Positioning</div>
+                    <h3 style="margin: 10px 0 10px; font-size: 1.25rem;">
+                      Your membership should feel first-class.
+                    </h3>
+                    <p style="margin: 0; color: var(--muted); line-height: 1.7;">
+                      Card Leo Rewards is designed to deliver a polished member
+                      experience with premium onboarding, curated benefits, and direct
+                      support when you need it most.
                     </p>
                   </div>
                 </div>
 
-                <div class="support-box">
-                  <div class="support-row">
+                <div class="glass-card section-card">
+                  <div class="section-head">
                     <div>
-                      <span>Email</span>
-                      <a id="supportEmail" href="mailto:support@cardleorewards.com">
-                        support@cardleorewards.com
-                      </a>
+                      <h3>Support Details</h3>
+                      <p>
+                        Direct channels and operating hours for your member experience.
+                      </p>
                     </div>
                   </div>
 
-                  <div class="support-row">
-                    <div>
-                      <span>Phone</span>
-                      <strong id="supportPhone">Not listed</strong>
+                  <div class="support-box">
+                    <div class="support-row">
+                      <div>
+                        <span>Email</span>
+                        <a
+                          id="supportEmail"
+                          data-support-email-link
+                          href="mailto:support@cardleorewards.com"
+                        >
+                          support@cardleorewards.com
+                        </a>
+                      </div>
+                    </div>
+
+                    <div class="support-row">
+                      <div>
+                        <span>Phone</span>
+                        <strong id="supportPhone" data-support-phone>Not listed</strong>
+                      </div>
+                    </div>
+
+                    <div class="support-row">
+                      <div>
+                        <span>Hours</span>
+                        <strong id="supportHours" data-support-hours>
+                          Mon–Fri, 9:00 AM – 5:00 PM
+                        </strong>
+                      </div>
                     </div>
                   </div>
 
-                  <div class="support-row">
-                    <div>
-                      <span>Hours</span>
-                      <strong id="supportHours">Mon–Fri, 9:00 AM – 5:00 PM</strong>
-                    </div>
+                  <div style="margin-top: 18px;">
+                    <a
+                      class="btn btn-secondary"
+                      href="/portal/support.html"
+                      style="width: 100%;"
+                    >
+                      Open Member Support
+                    </a>
                   </div>
                 </div>
+              </aside>
+            </section>
 
-                <div style="margin-top: 18px;">
-                  <a class="btn btn-secondary" href="/portal/support.html" style="width: 100%;">
-                    Open Member Support
-                  </a>
-                </div>
-              </div>
-            </aside>
-          </section>
-
-          <div class="footer-note">
-            Card Leo Rewards Member Portal · Premium Access Dashboard
+            <div class="footer-note">
+              Card Leo Rewards Member Portal · Premium Access Dashboard
+            </div>
           </div>
         </div>
       </main>
@@ -946,652 +1100,949 @@
     <script src="/assets/js/auth-guard.js"></script>
 
     <script>
-      const els = {
-        heroHeading: document.getElementById("heroHeading"),
-        heroDescription: document.getElementById("heroDescription"),
-        heroStatusBadge: document.getElementById("heroStatusBadge"),
-
-        memberName: document.getElementById("memberName"),
-        memberEmail: document.getElementById("memberEmail"),
-        memberStatusBadge: document.getElementById("memberStatusBadge"),
-
-        metaStatus: document.getElementById("metaStatus"),
-        metaAccess: document.getElementById("metaAccess"),
-        metaCreated: document.getElementById("metaCreated"),
-        metaLocation: document.getElementById("metaLocation"),
-
-        quickActions: document.getElementById("quickActions"),
-        rewardsGrid: document.getElementById("rewardsGrid"),
-        activityTimeline: document.getElementById("activityTimeline"),
-        announcementsList: document.getElementById("announcementsList"),
-
-        supportEmail: document.getElementById("supportEmail"),
-        supportPhone: document.getElementById("supportPhone"),
-        supportHours: document.getElementById("supportHours"),
-
-        logoutButton: document.getElementById("logoutButton"),
-      };
-
-      let dashboardRendered = false;
-
-      function isObject(value) {
-        return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-      }
-
-      function normalizeText(value, fallback = "") {
-        const text = String(value ?? "").trim();
-        return text || fallback;
-      }
-
-      function escapeHtml(value) {
-        return String(value ?? "")
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#39;");
-      }
-
-      function formatDate(value) {
-        if (!value) return "—";
-
-        const date = new Date(value);
-
-        if (Number.isNaN(date.getTime())) return "—";
-
-        return new Intl.DateTimeFormat("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }).format(date);
-      }
-
-      function titleCase(value) {
-        return String(value || "")
-          .split(/[\s_-]+/)
-          .filter(Boolean)
-          .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-          .join(" ");
-      }
-
-      function normalizeStatus(value) {
-        return normalizeText(value || "active").toLowerCase();
-      }
-
-      function getFullName(member) {
-        const full =
-          normalizeText(member?.fullName) ||
-          normalizeText(member?.full_name) ||
-          normalizeText(member?.name);
-
-        if (full) return full;
-
-        const firstName = normalizeText(member?.firstName || member?.first_name);
-        const lastName = normalizeText(member?.lastName || member?.last_name);
-        const joined = [firstName, lastName].filter(Boolean).join(" ");
-
-        return joined || "Valued Member";
-      }
-
-      function getCreatedAt(member) {
-        return (
-          member?.createdAt ||
-          member?.created_at ||
-          member?.joinedAt ||
-          member?.joined_at ||
-          null
-        );
-      }
-
-      function getLocationText(member) {
-        const city = normalizeText(member?.city);
-        const state = normalizeText(member?.state);
-
-        if (city && state) return `${city}, ${state}`;
-        if (city) return city;
-        if (state) return state;
-
-        return "Not provided";
-      }
-
-      function getPortalAccess(member) {
-        if (typeof member?.portalAccess === "boolean") return member.portalAccess;
-        if (typeof member?.portal_access === "boolean") return member.portal_access;
-
-        const status = normalizeStatus(
-          member?.status ||
-            member?.memberStatus ||
-            member?.member_status ||
-            "active"
-        );
-
-        return ["active", "approved", "invited"].includes(status);
-      }
-
-      function getStatusLabel(member) {
-        const raw = normalizeStatus(
-          member?.memberStatus ||
-            member?.member_status ||
-            member?.status ||
-            "active"
-        );
-
-        if (raw === "approved" || raw === "invited") return "Active";
-        return titleCase(raw || "Active");
-      }
-
-      function getStatusClass(statusLabel) {
-        const value = normalizeText(statusLabel).toLowerCase();
-
-        if (
-          value.includes("pending") ||
-          value.includes("review") ||
-          value.includes("submitted")
-        ) {
-          return "pending";
-        }
-
-        if (
-          value.includes("declined") ||
-          value.includes("suspended") ||
-          value.includes("error") ||
-          value.includes("denied")
-        ) {
-          return "error";
-        }
-
-        return "";
-      }
-
-      function setStatusBadge(element, label) {
-        if (!element) return;
-
-        const cleanLabel = normalizeText(label, "Unknown");
-
-        element.textContent = cleanLabel;
-        element.className = "status-pill";
-
-        const extraClass = getStatusClass(cleanLabel);
-
-        if (extraClass) {
-          element.classList.add(extraClass);
-        }
-      }
-
-      function unwrapApiPayload(payload) {
-        if (!isObject(payload)) return {};
-        return isObject(payload.data) ? payload.data : payload;
-      }
-
-      async function fetchJson(url, options = {}) {
-        const response = await fetch(url, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-            ...(options.headers || {}),
+      (function () {
+        const CONFIG = {
+          meEndpoint: "/api/auth/me",
+          overviewEndpoint: "/api/portal/overview",
+          logoutEndpoint: "/api/auth/logout",
+          loginPage: "/login.html",
+          unauthorizedPage: "/unauthorized.html",
+          authGuardOptions: {
+            meEndpoint: "/api/auth/me",
+            logoutEndpoint: "/api/auth/logout",
+            loginPage: "/login.html",
+            unauthorizedPage: "/unauthorized.html",
+            fallbackPortalOverviewEndpoint: "/api/portal/overview",
+            redirectOnFail: true,
+            requirePortalAccess: true,
+            showLoader: true,
+            autoBindLogout: true,
+            debug: false,
           },
-          ...options,
-        });
-
-        const payload = await response.json().catch(() => ({}));
-
-        return {
-          response,
-          payload,
-          data: unwrapApiPayload(payload),
         };
-      }
 
-      function getMemberFromMePayload(payload) {
-        const data = unwrapApiPayload(payload);
+        const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
 
-        if (data.authenticated !== true) return null;
-        if (isObject(data.member)) return data.member;
-        if (isObject(data.profile)) return data.profile;
-
-        return null;
-      }
-
-      function getSupportFromPayload(payload) {
-        const data = unwrapApiPayload(payload);
-        const support =
-          data.support ||
-          data.overview?.support ||
-          data.settings?.support ||
-          data.member?.support ||
-          {};
-
-        return isObject(support) ? support : {};
-      }
-
-      function getOverviewFromPayload(payload) {
-        const data = unwrapApiPayload(payload);
-
-        if (isObject(data.overview)) return data.overview;
-
-        return {
-          member: data.member || null,
-          actions: data.actions || [],
-          rewards: data.rewards || data.benefits || [],
-          announcements: data.announcements || data.notices || [],
-          support: data.support || {},
+        const state = {
+          member: null,
+          profile: null,
+          overview: null,
+          support: null,
+          rendered: false,
+          loading: false,
         };
-      }
 
-      function renderActions(actions, member) {
-        const portalAccess = getPortalAccess(member);
+        const els = {
+          dashboardStatus: document.getElementById("dashboardStatus"),
 
-        const list =
-          Array.isArray(actions) && actions.length
-            ? actions
-            : [
-                {
-                  label: "Review Profile",
-                  href: "/portal/profile.html",
-                  description: "View and manage your member details.",
-                },
-                {
-                  label: "Browse Rewards",
-                  href: "/portal/rewards.html",
-                  description: "See featured perks and premium opportunities.",
-                },
-                {
-                  label: "Explore Benefits",
-                  href: "/portal/benefits.html",
-                  description: "Review your full membership value.",
-                },
-                {
-                  label: "Contact Support",
-                  href: "/portal/support.html",
-                  description: "Reach our team for help and questions.",
-                },
-              ];
+          loading: document.querySelector("[data-dashboard-loading]"),
+          ready: document.querySelector("[data-dashboard-ready]"),
 
-        els.quickActions.innerHTML = list
-          .map((action) => {
-            const label = normalizeText(action.label, "Open");
-            const href = normalizeText(action.href, "#");
-            const description =
-              normalizeText(action.description) || "Open this member action.";
+          heroHeading: document.getElementById("heroHeading"),
+          heroDescription: document.getElementById("heroDescription"),
+          heroStatusBadge: document.getElementById("heroStatusBadge"),
 
-            return `
-              <a class="action-card" href="${escapeHtml(href)}">
-                <strong>${escapeHtml(label)}</strong>
-                <p>${escapeHtml(description)}</p>
-                <span class="action-link">Open →</span>
-              </a>
-            `;
-          })
-          .join("");
+          memberName: document.getElementById("memberName"),
+          memberEmail: document.getElementById("memberEmail"),
+          memberStatusBadge: document.getElementById("memberStatusBadge"),
 
-        if (!portalAccess) {
-          els.quickActions.insertAdjacentHTML(
-            "afterbegin",
-            `
-              <a class="action-card" href="/thank-you.html">
-                <strong>Application Status</strong>
-                <p>Your account is not fully enabled yet. Review your submission status here.</p>
-                <span class="action-link">Check status →</span>
-              </a>
-            `
-          );
-        }
-      }
+          metaStatus: document.getElementById("metaStatus"),
+          metaAccess: document.getElementById("metaAccess"),
+          metaCreated: document.getElementById("metaCreated"),
+          metaLocation: document.getElementById("metaLocation"),
 
-      function renderRewards(rewards, member) {
-        const portalAccess = getPortalAccess(member);
+          quickActions: document.getElementById("quickActions"),
+          rewardsGrid: document.getElementById("rewardsGrid"),
+          activityTimeline: document.getElementById("activityTimeline"),
+          announcementsList: document.getElementById("announcementsList"),
 
-        const list =
-          Array.isArray(rewards) && rewards.length
-            ? rewards
-            : [
-                {
-                  title: "Member Portal Access",
-                  description: "Your Card Leo Rewards dashboard is connected to your account.",
-                  active: portalAccess,
-                },
-                {
-                  title: "Rewards Overview",
-                  description: "Review premium rewards, benefits, and member opportunities.",
-                  active: portalAccess,
-                },
-                {
-                  title: "Account Management",
-                  description: "Update your profile, settings, support requests, and account details.",
-                  active: true,
-                },
-              ];
+          supportEmail: document.getElementById("supportEmail"),
+          supportPhone: document.getElementById("supportPhone"),
+          supportHours: document.getElementById("supportHours"),
+        };
 
-        els.rewardsGrid.innerHTML = list
-          .map((reward) => {
-            const title = normalizeText(reward.title || reward.name, "Member Benefit");
-            const description = normalizeText(
-              reward.description || reward.body,
-              "Premium Card Leo Rewards access."
-            );
-
-            const active =
-              reward.active === true ||
-              reward.unlocked === true ||
-              reward.locked === false;
-
-            return `
-              <div class="reward-card">
-                <strong>${escapeHtml(title)}</strong>
-                <p>${escapeHtml(description)}</p>
-                <div style="margin-top: 14px;">
-                  <span class="status-pill ${active ? "" : "pending"}">
-                    ${active ? "Available" : "Pending Access"}
-                  </span>
-                </div>
-              </div>
-            `;
-          })
-          .join("");
-      }
-
-      function renderAnnouncements(announcements) {
-        const list =
-          Array.isArray(announcements) && announcements.length
-            ? announcements
-            : [
-                {
-                  title: "Welcome to Card Leo Rewards",
-                  body: "Your account is connected to the premium member experience.",
-                },
-              ];
-
-        els.announcementsList.innerHTML = list
-          .map((item) => {
-            const title = normalizeText(item.title, "Portal Update");
-            const body = normalizeText(
-              item.body || item.message || item.description,
-              "Your member update will appear here."
-            );
-
-            return `
-              <div class="notice-item">
-                <strong>${escapeHtml(title)}</strong>
-                <p>${escapeHtml(body)}</p>
-              </div>
-            `;
-          })
-          .join("");
-      }
-
-      function renderTimeline(member) {
-        const portalAccess = getPortalAccess(member);
-        const statusLabel = getStatusLabel(member);
-        const createdAt = getCreatedAt(member);
-
-        const items = [
-          {
-            title: "Account Record Found",
-            body: createdAt
-              ? `Your account record was created on ${formatDate(createdAt)}.`
-              : "Your account record is connected to the portal.",
-          },
-          {
-            title: "Current Membership Status",
-            body: `Your current account status is ${statusLabel}.`,
-          },
-          {
-            title: "Portal Visibility",
-            body: portalAccess
-              ? "Your portal access is enabled and ready to use."
-              : "Your portal access is still pending review or approval.",
-          },
-        ];
-
-        els.activityTimeline.innerHTML = items
-          .map(
-            (item) => `
-              <div class="timeline-item">
-                <strong>${escapeHtml(item.title)}</strong>
-                <p>${escapeHtml(item.body)}</p>
-              </div>
-            `
-          )
-          .join("");
-      }
-
-      function renderSupport(support) {
-        const email = normalizeText(support?.email, "support@cardleorewards.com");
-        const phone = normalizeText(support?.phone, "Not listed");
-        const hours = normalizeText(support?.hours, "Mon–Fri, 9:00 AM – 5:00 PM");
-
-        els.supportEmail.textContent = email;
-        els.supportEmail.href = `mailto:${email}`;
-        els.supportPhone.textContent = phone;
-        els.supportHours.textContent = hours;
-      }
-
-      function renderMember(member, overview = {}) {
-        dashboardRendered = true;
-
-        const fullName = getFullName(member);
-        const firstName = normalizeText(
-          member?.firstName ||
-            member?.first_name ||
-            fullName.split(/\s+/)[0],
-          "Member"
-        );
-        const email = normalizeText(member?.email, "No email available");
-        const statusLabel = getStatusLabel(member);
-        const portalAccess = getPortalAccess(member);
-
-        els.heroHeading.textContent = `Welcome back, ${firstName}.`;
-        els.heroDescription.textContent = portalAccess
-          ? "Your premium dashboard is active. Review your rewards, member benefits, support details, and account information from one central portal."
-          : "Your account is in progress. You can still review your information, check your status, and stay connected while your member access is finalized.";
-
-        setStatusBadge(els.heroStatusBadge, statusLabel);
-        setStatusBadge(els.memberStatusBadge, statusLabel);
-
-        els.memberName.textContent = fullName;
-        els.memberEmail.textContent = email;
-
-        els.metaStatus.textContent = statusLabel;
-        els.metaAccess.textContent = portalAccess ? "Enabled" : "Pending";
-        els.metaCreated.textContent = formatDate(getCreatedAt(member));
-        els.metaLocation.textContent = getLocationText(member);
-
-        renderActions(overview?.actions, member);
-        renderRewards(overview?.rewards || overview?.benefits, member);
-        renderAnnouncements(overview?.announcements || overview?.notices);
-        renderTimeline(member);
-        renderSupport(overview?.support || {});
-      }
-
-      function renderFallbackState(title, description, isError = false) {
-        if (dashboardRendered) return;
-
-        els.heroHeading.textContent = title;
-        els.heroDescription.textContent = description;
-
-        const badgeText = isError ? "Access issue" : "Portal status";
-
-        setStatusBadge(els.heroStatusBadge, badgeText);
-        setStatusBadge(els.memberStatusBadge, badgeText);
-
-        if (isError) {
-          els.heroStatusBadge.classList.add("error");
-          els.memberStatusBadge.classList.add("error");
-        } else {
-          els.heroStatusBadge.classList.add("pending");
-          els.memberStatusBadge.classList.add("pending");
+        function isObject(value) {
+          return Boolean(value) && typeof value === "object" && !Array.isArray(value);
         }
 
-        els.memberName.textContent = "Card Leo Rewards";
-        els.memberEmail.textContent = "Please review your account access.";
+        function normalizeText(value, fallback = "") {
+          const text = String(value ?? "").trim();
+          return text || fallback;
+        }
 
-        els.metaStatus.textContent = isError ? "Unavailable" : "Pending";
-        els.metaAccess.textContent = isError ? "Restricted" : "Pending";
-        els.metaCreated.textContent = "—";
-        els.metaLocation.textContent = "—";
+        function normalizeEmail(value) {
+          return normalizeText(value).toLowerCase();
+        }
 
-        els.rewardsGrid.innerHTML = `
-          <div class="reward-card">
-            <strong>Portal access not fully available</strong>
-            <p>You can still contact support and review your account while member access is being finalized.</p>
-          </div>
-        `;
+        function escapeHtml(value) {
+          return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+        }
 
-        els.announcementsList.innerHTML = `
-          <div class="notice-item">
-            <strong>${escapeHtml(title)}</strong>
-            <p>${escapeHtml(description)}</p>
-          </div>
-        `;
+        function titleCase(value) {
+          return String(value || "")
+            .split(/[\s_-]+/)
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(" ");
+        }
 
-        els.activityTimeline.innerHTML = `
-          <div class="timeline-item">
-            <strong>Access update</strong>
-            <p>${escapeHtml(description)}</p>
-          </div>
-        `;
-      }
+        function formatDate(value) {
+          if (!value) return "—";
 
-      async function loadPortalOverviewEnhancement(memberFromSession) {
-        try {
-          const { response, payload } = await fetchJson("/api/portal/overview");
+          const date = new Date(value);
 
-          if (!response.ok) {
-            renderMember(memberFromSession, {
-              support: {},
-              announcements: [
-                {
-                  title: "Dashboard connected",
-                  body: "Your account is active. Some overview details are still being prepared.",
-                },
-              ],
-            });
-            return;
-          }
+          if (Number.isNaN(date.getTime())) return "—";
 
-          const data = unwrapApiPayload(payload);
-          const overview = getOverviewFromPayload(payload);
-          const overviewMember =
-            data.member ||
-            overview.member ||
-            memberFromSession;
+          return new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          }).format(date);
+        }
 
-          renderMember(
-            {
-              ...memberFromSession,
-              ...(isObject(overviewMember) ? overviewMember : {}),
-            },
-            {
-              ...overview,
-              support: getSupportFromPayload(payload),
-            }
-          );
-        } catch (error) {
-          console.warn("Portal overview enhancement skipped:", error);
-
-          renderMember(memberFromSession, {
-            announcements: [
-              {
-                title: "Dashboard connected",
-                body: "Your member session is active. Refresh later for additional overview details.",
-              },
-            ],
+        function setText(selector, value) {
+          document.querySelectorAll(selector).forEach((node) => {
+            node.textContent = normalizeText(value);
           });
         }
-      }
 
-      async function loadDashboardFromSession() {
-        try {
-          const { response, payload, data } = await fetchJson("/api/auth/me");
-
-          if (!response.ok || data.authenticated !== true) {
-            window.location.href = `/login.html?next=${encodeURIComponent(
-              window.location.pathname + window.location.search
-            )}`;
-            return;
-          }
-
-          const member = getMemberFromMePayload(payload);
-
-          if (!member) {
-            renderFallbackState(
-              "We could not locate your member record.",
-              "Your session is active, but the member details were not returned. Please log out, log back in, or contact support.",
-              true
-            );
-            return;
-          }
-
-          renderMember(member, {
-            support: getSupportFromPayload(payload),
-          });
-
-          await loadPortalOverviewEnhancement(member);
-        } catch (error) {
-          console.error("Dashboard session error:", error);
-
-          renderFallbackState(
-            "We couldn’t load your dashboard right now.",
-            "Please refresh this page or contact support if the problem continues.",
-            true
-          );
+        function setReady(isReady) {
+          if (els.loading) els.loading.hidden = Boolean(isReady);
+          if (els.ready) els.ready.hidden = !isReady;
         }
-      }
 
-      async function handleLogout() {
-        const originalLabel = els.logoutButton.textContent;
+        function showStatus(message = "", type = "") {
+          if (!els.dashboardStatus) return;
 
-        els.logoutButton.disabled = true;
-        els.logoutButton.textContent = "Logging out...";
+          if (!message) {
+            els.dashboardStatus.className = "status-box";
+            els.dashboardStatus.textContent = "";
+            return;
+          }
 
-        try {
-          const response = await fetch("/api/auth/logout", {
-            method: "POST",
+          els.dashboardStatus.className = `status-box show ${type}`.trim();
+          els.dashboardStatus.textContent = message;
+        }
+
+        function unwrapApiPayload(payload) {
+          if (!isObject(payload)) return {};
+          return isObject(payload.data) ? payload.data : payload;
+        }
+
+        async function fetchJson(url, options = {}) {
+          const response = await fetch(url, {
+            method: "GET",
             credentials: "include",
             headers: {
               Accept: "application/json",
+              ...(options.headers || {}),
             },
+            ...options,
           });
 
-          if (!response.ok) {
-            throw new Error("Logout failed.");
+          const payload = await response.json().catch(() => ({}));
+          const data = unwrapApiPayload(payload);
+
+          return {
+            response,
+            payload,
+            data,
+            message: normalizeText(payload?.message || data?.message),
+          };
+        }
+
+        function getFullName(member = {}, profile = {}) {
+          const full =
+            normalizeText(member.fullName) ||
+            normalizeText(member.full_name) ||
+            normalizeText(member.name) ||
+            normalizeText(profile.fullName) ||
+            normalizeText(profile.full_name) ||
+            normalizeText(profile.name);
+
+          if (full) return full;
+
+          const firstName =
+            normalizeText(member.firstName || member.first_name) ||
+            normalizeText(profile.firstName || profile.first_name);
+
+          const lastName =
+            normalizeText(member.lastName || member.last_name) ||
+            normalizeText(profile.lastName || profile.last_name);
+
+          return [firstName, lastName].filter(Boolean).join(" ") || "Card Leo Member";
+        }
+
+        function normalizeStatus(value) {
+          return normalizeText(value || "active").toLowerCase();
+        }
+
+        function getStatusLabel(member = {}, profile = {}) {
+          const raw = normalizeStatus(
+            member.memberStatus ||
+              member.member_status ||
+              member.status ||
+              profile.memberStatus ||
+              profile.member_status ||
+              profile.status ||
+              "active"
+          );
+
+          if (raw === "approved" || raw === "invited") return "Active";
+          if (raw === "reviewing") return "Reviewing";
+
+          return titleCase(raw || "Active");
+        }
+
+        function getStatusClass(statusLabel) {
+          const value = normalizeText(statusLabel).toLowerCase();
+
+          if (
+            value.includes("pending") ||
+            value.includes("review") ||
+            value.includes("submitted")
+          ) {
+            return "pending";
           }
 
-          window.location.href = "/login.html";
-        } catch (error) {
-          console.error("Logout error:", error);
-          els.logoutButton.disabled = false;
-          els.logoutButton.textContent = originalLabel;
-          alert("We couldn't log you out right now. Please try again.");
+          if (
+            value.includes("declined") ||
+            value.includes("suspended") ||
+            value.includes("error") ||
+            value.includes("denied") ||
+            value.includes("disabled")
+          ) {
+            return "error";
+          }
+
+          return "";
         }
-      }
 
-      els.logoutButton.addEventListener("click", handleLogout);
+        function getPortalAccess(member = {}, profile = {}) {
+          if (typeof member.portalAccess === "boolean") return member.portalAccess;
+          if (typeof member.portal_access === "boolean") return member.portal_access;
 
-      window.addEventListener("cardleo:auth-ready", async (event) => {
-        const member = event?.detail?.member;
+          const status = normalizeStatus(
+            member.memberStatus ||
+              member.member_status ||
+              member.status ||
+              profile.memberStatus ||
+              profile.member_status ||
+              profile.status ||
+              "active"
+          );
 
-        if (member && !dashboardRendered) {
-          renderMember(member, {
-            support: {},
-          });
-
-          await loadPortalOverviewEnhancement(member);
+          return ACTIVE_STATUSES.has(status);
         }
-      });
 
-      window.addEventListener("cardleo:auth-failed", () => {
-        if (!dashboardRendered) {
-          renderFallbackState(
-            "Please log in again.",
-            "Your session could not be verified. Redirecting you to login.",
-            true
+        function getCreatedAt(member = {}, profile = {}) {
+          return (
+            member.createdAt ||
+            member.created_at ||
+            member.joinedAt ||
+            member.joined_at ||
+            profile.createdAt ||
+            profile.created_at ||
+            null
           );
         }
-      });
 
-      loadDashboardFromSession();
+        function getLocationText(member = {}, profile = {}) {
+          const city = normalizeText(member.city || profile.city);
+          const state = normalizeText(member.state || profile.state);
+
+          if (city && state) return `${city}, ${state}`;
+          if (city) return city;
+          if (state) return state;
+
+          return "Not provided";
+        }
+
+        function normalizeMember(member = {}, profile = {}) {
+          const safeMember = isObject(member) ? member : {};
+          const safeProfile = isObject(profile) ? profile : {};
+          const fullName = getFullName(safeMember, safeProfile);
+          const statusLabel = getStatusLabel(safeMember, safeProfile);
+          const status = normalizeStatus(
+            safeMember.memberStatus ||
+              safeMember.member_status ||
+              safeMember.status ||
+              safeProfile.memberStatus ||
+              safeProfile.member_status ||
+              safeProfile.status ||
+              "active"
+          );
+
+          const tier = normalizeText(
+            safeMember.tier ||
+              safeMember.accessLevel ||
+              safeMember.access_level ||
+              safeProfile.tier ||
+              "core"
+          ).toLowerCase();
+
+          return {
+            ...safeMember,
+            id:
+              safeMember.id ||
+              safeMember.signupId ||
+              safeMember.signup_id ||
+              safeProfile.id ||
+              "",
+            signupId:
+              safeMember.signupId ||
+              safeMember.signup_id ||
+              safeMember.id ||
+              safeProfile.signupId ||
+              safeProfile.signup_id ||
+              safeProfile.id ||
+              "",
+            portalUserId:
+              safeMember.portalUserId ||
+              safeMember.portal_user_id ||
+              safeProfile.portalUserId ||
+              safeProfile.portal_user_id ||
+              "",
+            firstName:
+              safeMember.firstName ||
+              safeMember.first_name ||
+              safeProfile.firstName ||
+              safeProfile.first_name ||
+              fullName.split(/\s+/)[0] ||
+              "Member",
+            lastName:
+              safeMember.lastName ||
+              safeMember.last_name ||
+              safeProfile.lastName ||
+              safeProfile.last_name ||
+              "",
+            fullName,
+            full_name: fullName,
+            name: fullName,
+            email: normalizeEmail(safeMember.email || safeProfile.email),
+            phone: safeMember.phone || safeProfile.phone || "",
+            city: safeMember.city || safeProfile.city || "",
+            state: safeMember.state || safeProfile.state || "",
+            status,
+            statusLabel,
+            memberStatus: status,
+            member_status: status,
+            tier,
+            tierLabel: titleCase(tier),
+            accessLevel:
+              safeMember.accessLevel ||
+              safeMember.access_level ||
+              safeProfile.accessLevel ||
+              safeProfile.access_level ||
+              titleCase(tier || "member"),
+            portalAccess: getPortalAccess({ ...safeMember, status }, safeProfile),
+            createdAt: getCreatedAt(safeMember, safeProfile),
+            locationText: getLocationText(safeMember, safeProfile),
+          };
+        }
+
+        function setStatusBadge(element, label) {
+          if (!element) return;
+
+          const cleanLabel = normalizeText(label, "Unknown");
+
+          element.textContent = cleanLabel;
+          element.className = "status-pill";
+
+          const extraClass = getStatusClass(cleanLabel);
+
+          if (extraClass) {
+            element.classList.add(extraClass);
+          }
+        }
+
+        function extractMemberFromMe(data = {}) {
+          if (data.authenticated !== true) return null;
+
+          if (isObject(data.member)) return data.member;
+          if (isObject(data.profile)) return data.profile;
+          if (isObject(data.user)) {
+            return {
+              id: data.user.id,
+              email: data.user.email,
+              fullName:
+                data.user.user_metadata?.full_name ||
+                data.user.user_metadata?.name ||
+                "",
+              firstName: data.user.user_metadata?.first_name || "",
+              lastName: data.user.user_metadata?.last_name || "",
+              status: data.user.user_metadata?.status || "active",
+            };
+          }
+
+          return null;
+        }
+
+        function extractOverview(payload = {}) {
+          const data = unwrapApiPayload(payload);
+
+          if (isObject(data.overview)) return data.overview;
+
+          return {
+            member: data.member || null,
+            profile: data.profile || null,
+            actions: data.actions || [],
+            rewards: data.rewards || data.benefits || [],
+            benefits: data.benefits || [],
+            announcements: data.announcements || data.notices || [],
+            notices: data.notices || [],
+            support: data.support || {},
+            summary: data.summary || {},
+          };
+        }
+
+        function extractSupport(payload = {}) {
+          const data = unwrapApiPayload(payload);
+          const overview = extractOverview(payload);
+
+          const support =
+            data.support ||
+            overview.support ||
+            data.settings?.support ||
+            data.member?.support ||
+            {};
+
+          return isObject(support) ? support : {};
+        }
+
+        function renderMemberBindings(member) {
+          setText("[data-member-name]", member.fullName || "Card Leo Member");
+          setText("[data-member-email]", member.email || "");
+          setText("[data-member-status]", member.statusLabel || "Active");
+          setText("[data-member-tier]", member.tierLabel || "Core");
+          setText("[data-member-access-level]", titleCase(member.accessLevel || "member"));
+
+          document.body.dataset.memberName = member.fullName || "";
+          document.body.dataset.memberEmail = member.email || "";
+          document.body.dataset.memberStatus = member.status || "";
+          document.body.dataset.memberTier = member.tier || "";
+          document.body.dataset.memberId = member.id || member.signupId || "";
+        }
+
+        function renderActions(actions, member) {
+          const portalAccess = member.portalAccess;
+
+          const list =
+            Array.isArray(actions) && actions.length
+              ? actions
+              : [
+                  {
+                    label: "Review Profile",
+                    href: "/portal/profile.html",
+                    description: "View and manage your member details.",
+                  },
+                  {
+                    label: "Browse Rewards",
+                    href: "/portal/rewards.html",
+                    description: "See featured perks and premium opportunities.",
+                  },
+                  {
+                    label: "Explore Benefits",
+                    href: "/portal/benefits.html",
+                    description: "Review your full membership value.",
+                  },
+                  {
+                    label: "Contact Support",
+                    href: "/portal/support.html",
+                    description: "Reach our team for help and questions.",
+                  },
+                ];
+
+          const cards = list
+            .map((action) => {
+              const label = normalizeText(action.label || action.title, "Open");
+              const href = normalizeText(action.href || action.url, "#");
+              const description =
+                normalizeText(action.description || action.body) ||
+                "Open this member action.";
+
+              return `
+                <a class="action-card" href="${escapeHtml(href)}">
+                  <strong>${escapeHtml(label)}</strong>
+                  <p>${escapeHtml(description)}</p>
+                  <span class="action-link">Open →</span>
+                </a>
+              `;
+            })
+            .join("");
+
+          els.quickActions.innerHTML = cards;
+
+          if (!portalAccess) {
+            els.quickActions.insertAdjacentHTML(
+              "afterbegin",
+              `
+                <a class="action-card" href="/thank-you.html">
+                  <strong>Application Status</strong>
+                  <p>Your account is not fully enabled yet. Review your submission status here.</p>
+                  <span class="action-link">Check status →</span>
+                </a>
+              `
+            );
+          }
+        }
+
+        function normalizeRewardItem(reward = {}, index = 0) {
+          const title = normalizeText(
+            reward.title || reward.name || reward.label,
+            `Member Benefit ${index + 1}`
+          );
+
+          const description = normalizeText(
+            reward.description || reward.body || reward.summary,
+            "Premium Card Leo Rewards access."
+          );
+
+          const unlocked =
+            reward.active === true ||
+            reward.unlocked === true ||
+            reward.locked === false ||
+            normalizeStatus(reward.status || reward.state) === "active";
+
+          return {
+            title,
+            description,
+            unlocked,
+            badge: unlocked ? "Available" : "Pending Access",
+          };
+        }
+
+        function renderRewards(rewards, member) {
+          const portalAccess = member.portalAccess;
+
+          const list =
+            Array.isArray(rewards) && rewards.length
+              ? rewards.map(normalizeRewardItem)
+              : [
+                  {
+                    title: "Member Portal Access",
+                    description: "Your Card Leo Rewards dashboard is connected to your account.",
+                    unlocked: portalAccess,
+                    badge: portalAccess ? "Available" : "Pending Access",
+                  },
+                  {
+                    title: "Rewards Overview",
+                    description: "Review premium rewards, benefits, and member opportunities.",
+                    unlocked: portalAccess,
+                    badge: portalAccess ? "Available" : "Pending Access",
+                  },
+                  {
+                    title: "Account Management",
+                    description: "Update your profile, settings, support requests, and account details.",
+                    unlocked: true,
+                    badge: "Available",
+                  },
+                ];
+
+          els.rewardsGrid.innerHTML = list
+            .map((reward) => {
+              return `
+                <div class="reward-card">
+                  <strong>${escapeHtml(reward.title)}</strong>
+                  <p>${escapeHtml(reward.description)}</p>
+                  <div style="margin-top: 14px;">
+                    <span class="status-pill ${reward.unlocked ? "" : "pending"}">
+                      ${escapeHtml(reward.badge)}
+                    </span>
+                  </div>
+                </div>
+              `;
+            })
+            .join("");
+        }
+
+        function renderAnnouncements(announcements) {
+          const list =
+            Array.isArray(announcements) && announcements.length
+              ? announcements
+              : [
+                  {
+                    title: "Welcome to Card Leo Rewards",
+                    body: "Your account is connected to the premium member experience.",
+                  },
+                ];
+
+          els.announcementsList.innerHTML = list
+            .map((item) => {
+              const title = normalizeText(item.title || item.name, "Portal Update");
+              const body = normalizeText(
+                item.body || item.message || item.description,
+                "Your member update will appear here."
+              );
+
+              return `
+                <div class="notice-item">
+                  <strong>${escapeHtml(title)}</strong>
+                  <p>${escapeHtml(body)}</p>
+                </div>
+              `;
+            })
+            .join("");
+        }
+
+        function renderTimeline(member) {
+          const portalAccess = member.portalAccess;
+          const statusLabel = member.statusLabel;
+          const createdAt = member.createdAt;
+
+          const items = [
+            {
+              title: "Account Record Found",
+              body: createdAt
+                ? `Your account record was created on ${formatDate(createdAt)}.`
+                : "Your account record is connected to the portal.",
+            },
+            {
+              title: "Current Membership Status",
+              body: `Your current account status is ${statusLabel}.`,
+            },
+            {
+              title: "Portal Visibility",
+              body: portalAccess
+                ? "Your portal access is enabled and ready to use."
+                : "Your portal access is still pending review or approval.",
+            },
+          ];
+
+          els.activityTimeline.innerHTML = items
+            .map(
+              (item) => `
+                <div class="timeline-item">
+                  <strong>${escapeHtml(item.title)}</strong>
+                  <p>${escapeHtml(item.body)}</p>
+                </div>
+              `
+            )
+            .join("");
+        }
+
+        function renderSupport(support = {}) {
+          const email = normalizeText(support.email || support.supportEmail, "support@cardleorewards.com");
+          const phone = normalizeText(support.phone, "Not listed");
+          const hours = normalizeText(support.hours || support.availability, "Mon–Fri, 9:00 AM – 5:00 PM");
+
+          if (els.supportEmail) {
+            els.supportEmail.textContent = email;
+            els.supportEmail.href = `mailto:${email}`;
+          }
+
+          if (els.supportPhone) els.supportPhone.textContent = phone;
+          if (els.supportHours) els.supportHours.textContent = hours;
+        }
+
+        function renderDashboard(memberInput, overview = {}) {
+          const member = normalizeMember(
+            {
+              ...memberInput,
+              ...(isObject(overview.member) ? overview.member : {}),
+            },
+            isObject(overview.profile) ? overview.profile : {}
+          );
+
+          state.member = member;
+          state.profile = overview.profile || null;
+          state.overview = overview || {};
+          state.support = overview.support || {};
+
+          state.rendered = true;
+
+          const fullName = member.fullName || "Card Leo Member";
+          const firstName = normalizeText(member.firstName || fullName.split(/\s+/)[0], "Member");
+          const email = normalizeText(member.email, "No email available");
+          const statusLabel = member.statusLabel;
+          const portalAccess = member.portalAccess;
+
+          els.heroHeading.textContent = `Welcome back, ${firstName}.`;
+          els.heroDescription.textContent = portalAccess
+            ? "Your premium dashboard is active. Review your rewards, member benefits, support details, and account information from one central portal."
+            : "Your account is in progress. You can still review your information, check your status, and stay connected while your member access is finalized.";
+
+          setStatusBadge(els.heroStatusBadge, statusLabel);
+          setStatusBadge(els.memberStatusBadge, statusLabel);
+
+          els.memberName.textContent = fullName;
+          els.memberEmail.textContent = email;
+
+          els.metaStatus.textContent = statusLabel;
+          els.metaAccess.textContent = portalAccess ? "Enabled" : "Pending";
+          els.metaCreated.textContent = formatDate(member.createdAt);
+          els.metaLocation.textContent = member.locationText || "Not provided";
+
+          renderMemberBindings(member);
+          renderActions(overview.actions, member);
+          renderRewards(overview.rewards || overview.benefits, member);
+          renderAnnouncements(overview.announcements || overview.notices);
+          renderTimeline(member);
+          renderSupport(overview.support || {});
+
+          setReady(true);
+        }
+
+        function renderFallbackState(title, description, isError = false) {
+          if (state.rendered) return;
+
+          els.heroHeading.textContent = title;
+          els.heroDescription.textContent = description;
+
+          const badgeText = isError ? "Access issue" : "Portal status";
+
+          setStatusBadge(els.heroStatusBadge, badgeText);
+          setStatusBadge(els.memberStatusBadge, badgeText);
+
+          if (isError) {
+            els.heroStatusBadge.classList.add("error");
+            els.memberStatusBadge.classList.add("error");
+          } else {
+            els.heroStatusBadge.classList.add("pending");
+            els.memberStatusBadge.classList.add("pending");
+          }
+
+          els.memberName.textContent = "Card Leo Rewards";
+          els.memberEmail.textContent = "Please review your account access.";
+
+          els.metaStatus.textContent = isError ? "Unavailable" : "Pending";
+          els.metaAccess.textContent = isError ? "Restricted" : "Pending";
+          els.metaCreated.textContent = "—";
+          els.metaLocation.textContent = "—";
+
+          els.rewardsGrid.innerHTML = `
+            <div class="reward-card">
+              <strong>Portal access not fully available</strong>
+              <p>You can still contact support and review your account while member access is being finalized.</p>
+            </div>
+          `;
+
+          els.announcementsList.innerHTML = `
+            <div class="notice-item">
+              <strong>${escapeHtml(title)}</strong>
+              <p>${escapeHtml(description)}</p>
+            </div>
+          `;
+
+          els.activityTimeline.innerHTML = `
+            <div class="timeline-item">
+              <strong>Access update</strong>
+              <p>${escapeHtml(description)}</p>
+            </div>
+          `;
+
+          setReady(true);
+        }
+
+        async function loadPortalOverviewEnhancement(memberFromSession) {
+          try {
+            const { response, payload } = await fetchJson(CONFIG.overviewEndpoint);
+
+            if (response.status === 401) {
+              redirectToLogin();
+              return;
+            }
+
+            if (!response.ok) {
+              renderDashboard(memberFromSession, {
+                support: {},
+                announcements: [
+                  {
+                    title: "Dashboard connected",
+                    body: "Your account is active. Some overview details are still being prepared.",
+                  },
+                ],
+              });
+              return;
+            }
+
+            const overview = extractOverview(payload);
+            const support = extractSupport(payload);
+
+            renderDashboard(memberFromSession, {
+              ...overview,
+              support,
+            });
+          } catch (error) {
+            console.warn("[portal/index] overview enhancement skipped:", error);
+
+            renderDashboard(memberFromSession, {
+              announcements: [
+                {
+                  title: "Dashboard connected",
+                  body: "Your member session is active. Refresh later for additional overview details.",
+                },
+              ],
+              support: {},
+            });
+          }
+        }
+
+        function redirectToLogin() {
+          const next = `${window.location.pathname}${window.location.search || ""}`;
+          window.location.href = `${CONFIG.loginPage}?next=${encodeURIComponent(next)}`;
+        }
+
+        async function loadDashboardFromSession() {
+          if (state.loading) return;
+
+          state.loading = true;
+          showStatus("");
+          setReady(false);
+
+          try {
+            const { response, payload, data } = await fetchJson(CONFIG.meEndpoint);
+
+            if (response.status === 401 || data.authenticated !== true) {
+              redirectToLogin();
+              return;
+            }
+
+            if (!response.ok) {
+              throw new Error(
+                normalizeText(payload?.message || data?.message) ||
+                  "Unable to verify your session."
+              );
+            }
+
+            const member = extractMemberFromMe(data);
+
+            if (!member) {
+              renderFallbackState(
+                "We could not locate your member record.",
+                "Your session is active, but member details were not returned. Please log out, log back in, or contact support.",
+                true
+              );
+              showStatus(
+                "Your session is active, but member details were not returned.",
+                "error"
+              );
+              return;
+            }
+
+            renderDashboard(member, {
+              support: extractSupport(payload),
+            });
+
+            await loadPortalOverviewEnhancement(member);
+          } catch (error) {
+            console.error("[portal/index] dashboard session error:", error);
+
+            renderFallbackState(
+              "We couldn’t load your dashboard right now.",
+              "Please refresh this page or contact support if the problem continues.",
+              true
+            );
+
+            showStatus(
+              error?.message ||
+                "Something went wrong while loading your dashboard.",
+              "error"
+            );
+          } finally {
+            state.loading = false;
+          }
+        }
+
+        async function handleLogout(event) {
+          const button = event.currentTarget;
+          const originalLabel = button.textContent;
+
+          button.disabled = true;
+          button.textContent = "Logging out...";
+
+          try {
+            if (window.CardLeoAuthGuard?.logout) {
+              await window.CardLeoAuthGuard.logout(CONFIG.authGuardOptions);
+              return;
+            }
+
+            await fetch(CONFIG.logoutEndpoint, {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                Accept: "application/json",
+              },
+            });
+
+            window.location.href = CONFIG.loginPage;
+          } catch (error) {
+            console.error("[portal/index] logout error:", error);
+            button.disabled = false;
+            button.textContent = originalLabel;
+            alert("We couldn't log you out right now. Please try again.");
+          }
+        }
+
+        function bindLogoutButtons() {
+          document.querySelectorAll("[data-logout], [data-member-logout]").forEach((button) => {
+            if (button.dataset.dashboardLogoutBound === "true") return;
+
+            button.dataset.dashboardLogoutBound = "true";
+            button.addEventListener("click", handleLogout);
+          });
+        }
+
+        function bindAuthEvents() {
+          window.addEventListener("cardleo:auth-ready", async (event) => {
+            const detail = event?.detail || {};
+            const member = detail.member || detail.profile || null;
+
+            if (member && !state.rendered) {
+              renderDashboard(member, {
+                support: detail.support || {},
+              });
+
+              await loadPortalOverviewEnhancement(member);
+            }
+          });
+
+          window.addEventListener("cardleo:auth-failed", () => {
+            if (!state.rendered) {
+              renderFallbackState(
+                "Please log in again.",
+                "Your session could not be verified. Redirecting you to login.",
+                true
+              );
+            }
+          });
+        }
+
+        async function init() {
+          bindLogoutButtons();
+          bindAuthEvents();
+
+          try {
+            if (window.CardLeoAuthGuard?.init) {
+              await window.CardLeoAuthGuard.init(CONFIG.authGuardOptions);
+            }
+          } catch (error) {
+            console.warn("[portal/index] auth guard skipped:", error);
+          }
+
+          await loadDashboardFromSession();
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init);
+        } else {
+          init();
+        }
+
+        window.CardLeoPortalDashboard = {
+          init,
+          reload: loadDashboardFromSession,
+          render: renderDashboard,
+          getState: function () {
+            return { ...state };
+          },
+        };
+      })();
     </script>
   </body>
 </html>

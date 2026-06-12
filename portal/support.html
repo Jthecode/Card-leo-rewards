@@ -7,13 +7,18 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title>Card Leo Rewards | Member Support</title>
+
+    <title>Support | Card Leo Rewards</title>
+
     <meta
       name="description"
       content="Access Card Leo Rewards member support, submit account requests, review support guidance, and manage premium assistance."
     />
     <meta name="theme-color" content="#0b1020" />
-    <link rel="stylesheet" href="../style.css" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link rel="canonical" href="https://www.cardleorewards.com/portal/support.html" />
+    <link rel="stylesheet" href="/style.css" />
 
     <style>
       :root {
@@ -58,8 +63,8 @@
           radial-gradient(circle at top left, rgba(47, 208, 143, 0.13), transparent 28%),
           radial-gradient(circle at top right, rgba(212, 169, 79, 0.15), transparent 24%),
           linear-gradient(180deg, #040913 0%, #07111f 48%, #081221 100%);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-          "Segoe UI", sans-serif;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
       a {
@@ -468,6 +473,7 @@
       .member-item-value {
         margin-top: 8px;
         font-weight: 700;
+        word-break: break-word;
       }
 
       .section {
@@ -733,6 +739,7 @@
           opacity: 0.35;
           transform: scale(0.85);
         }
+
         50% {
           opacity: 1;
           transform: scale(1);
@@ -744,6 +751,10 @@
         color: var(--muted-2);
         font-size: 0.85rem;
         text-align: center;
+      }
+
+      [hidden] {
+        display: none !important;
       }
 
       @media (max-width: 1080px) {
@@ -772,6 +783,7 @@
 
         .portal-topbar-actions {
           width: 100%;
+          flex-wrap: wrap;
         }
 
         .portal-topbar-actions .button {
@@ -794,11 +806,18 @@
         .form-grid {
           grid-template-columns: 1fr;
         }
+
+        .section-head,
+        .timeline-head,
+        .faq-question {
+          align-items: flex-start;
+          flex-direction: column;
+        }
       }
     </style>
   </head>
 
-  <body>
+  <body data-require-auth data-cardleo-auth-guard="auto">
     <div class="portal-shell">
       <main class="portal-container">
         <header class="portal-topbar">
@@ -814,23 +833,35 @@
           </div>
 
           <div class="portal-topbar-actions">
-            <a class="button button-ghost" href="./rewards.html">Rewards</a>
-            <button class="button button-primary" id="logoutButton" type="button">
+            <a class="button button-ghost" href="/portal/rewards.html">Rewards</a>
+            <a class="button button-ghost" href="/portal/settings.html">Settings</a>
+            <button
+              class="button button-primary"
+              id="logoutButton"
+              type="button"
+              data-logout
+              data-member-logout
+            >
               Logout
             </button>
           </div>
         </header>
 
         <nav class="portal-nav" aria-label="Portal navigation">
-          <a href="./index.html">Dashboard</a>
-          <a href="./profile.html">Profile</a>
-          <a href="./rewards.html">Rewards</a>
-          <a href="./benefits.html">Benefits</a>
-          <a class="active" href="./support.html" aria-current="page">Support</a>
-          <a href="./settings.html">Settings</a>
+          <a href="/portal/index.html">Dashboard</a>
+          <a href="/portal/profile.html">Profile</a>
+          <a href="/portal/rewards.html">Rewards</a>
+          <a href="/portal/benefits.html">Benefits</a>
+          <a class="active" href="/portal/support.html" aria-current="page">Support</a>
+          <a href="/portal/settings.html">Settings</a>
         </nav>
 
-        <div class="status-banner" id="statusBanner"></div>
+        <div
+          class="status-banner"
+          id="statusBanner"
+          role="status"
+          aria-live="polite"
+        ></div>
 
         <section class="hero">
           <article class="panel hero-card">
@@ -868,20 +899,30 @@
             <div class="member-top">
               <div class="member-avatar" id="memberAvatar">CL</div>
               <div>
-                <h2 class="member-name" id="memberName">Member</h2>
-                <p class="member-email" id="memberEmail">Loading your account...</p>
+                <h2 class="member-name" id="memberName" data-member-name>Member</h2>
+                <p class="member-email" id="memberEmail" data-member-email>
+                  Loading your account...
+                </p>
               </div>
             </div>
 
             <div class="member-grid">
               <div class="member-item">
                 <div class="member-item-label">Access Level</div>
-                <div class="member-item-value" id="memberAccessLevel">—</div>
+                <div
+                  class="member-item-value"
+                  id="memberAccessLevel"
+                  data-member-access-level
+                >
+                  —
+                </div>
               </div>
 
               <div class="member-item">
                 <div class="member-item-label">Status</div>
-                <div class="member-item-value" id="memberStatus">—</div>
+                <div class="member-item-value" id="memberStatus" data-member-status>
+                  —
+                </div>
               </div>
 
               <div class="member-item">
@@ -908,8 +949,12 @@
             </div>
 
             <div class="section-actions">
-              <a class="button button-ghost" href="./benefits.html">View Benefits</a>
-              <a class="button button-ghost" href="./profile.html">Update Profile</a>
+              <a class="button button-ghost" href="/portal/benefits.html">
+                View Benefits
+              </a>
+              <a class="button button-ghost" href="/portal/profile.html">
+                Update Profile
+              </a>
             </div>
           </div>
 
@@ -957,7 +1002,12 @@
                 member support channel.
               </p>
 
-              <div class="form-status" id="formStatus"></div>
+              <div
+                class="form-status"
+                id="formStatus"
+                role="status"
+                aria-live="polite"
+              ></div>
 
               <form id="supportForm" novalidate>
                 <div class="form-grid">
@@ -983,6 +1033,9 @@
                       <option value="benefits">Benefits</option>
                       <option value="profile-update">Profile Update</option>
                       <option value="technical">Technical Support</option>
+                      <option value="billing">Billing</option>
+                      <option value="verification">Verification</option>
+                      <option value="referral">Referral</option>
                       <option value="general">General Question</option>
                     </select>
                   </label>
@@ -1004,6 +1057,7 @@
                       <option value="email">Email</option>
                       <option value="phone">Phone</option>
                       <option value="portal">Portal update</option>
+                      <option value="sms">SMS</option>
                     </select>
                   </label>
 
@@ -1030,6 +1084,9 @@
                   </button>
                   <button class="button button-ghost" type="button" id="resetButton">
                     Reset Form
+                  </button>
+                  <button class="button button-soft" type="button" id="refreshSupportButton">
+                    Refresh Support
                   </button>
                 </div>
               </form>
@@ -1100,491 +1157,180 @@
       </main>
     </div>
 
+    <script src="/assets/js/auth-guard.js" defer></script>
+
     <script>
-      const state = {
-        payload: null,
-      };
-
-      const els = {
-        statusBanner: document.getElementById("statusBanner"),
-        formStatus: document.getElementById("formStatus"),
-        logoutButton: document.getElementById("logoutButton"),
-        supportForm: document.getElementById("supportForm"),
-        submitButton: document.getElementById("submitButton"),
-        resetButton: document.getElementById("resetButton"),
-
-        heroAccessBadge: document.getElementById("heroAccessBadge"),
-        heroSupportBadge: document.getElementById("heroSupportBadge"),
-        heroPriorityBadge: document.getElementById("heroPriorityBadge"),
-        heroCopy: document.getElementById("heroCopy"),
-        heroChannel: document.getElementById("heroChannel"),
-        heroPriority: document.getElementById("heroPriority"),
-        heroRequestCount: document.getElementById("heroRequestCount"),
-
-        memberAvatar: document.getElementById("memberAvatar"),
-        memberName: document.getElementById("memberName"),
-        memberEmail: document.getElementById("memberEmail"),
-        memberAccessLevel: document.getElementById("memberAccessLevel"),
-        memberStatus: document.getElementById("memberStatus"),
-        memberId: document.getElementById("memberId"),
-        memberSupportRoute: document.getElementById("memberSupportRoute"),
-
-        summarySupportEmail: document.getElementById("summarySupportEmail"),
-        summarySupportHours: document.getElementById("summarySupportHours"),
-        summaryPriorityTier: document.getElementById("summaryPriorityTier"),
-        summaryLastUpdated: document.getElementById("summaryLastUpdated"),
-
-        guidanceCopy: document.getElementById("guidanceCopy"),
-        guidanceList: document.getElementById("guidanceList"),
-        channelList: document.getElementById("channelList"),
-        timelineList: document.getElementById("timelineList"),
-        faqList: document.getElementById("faqList"),
-      };
-
-      function escapeHtml(value) {
-        return String(value ?? "")
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#39;");
-      }
-
-      function isObject(value) {
-        return value !== null && typeof value === "object" && !Array.isArray(value);
-      }
-
-      function toArray(value) {
-        return Array.isArray(value) ? value : [];
-      }
-
-      function firstDefined(...values) {
-        for (const value of values) {
-          if (value !== undefined && value !== null && value !== "") return value;
-        }
-        return "";
-      }
-
-      function safeNumber(value, fallback = 0) {
-        const num = Number(value);
-        return Number.isFinite(num) ? num : fallback;
-      }
-
-      function toTitleCase(value) {
-        return String(value || "")
-          .replace(/[_-]+/g, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .replace(/\b\w/g, (char) => char.toUpperCase());
-      }
-
-      function getInitials(name) {
-        const parts = String(name || "")
-          .trim()
-          .split(/\s+/)
-          .filter(Boolean);
-
-        if (!parts.length) return "CL";
-
-        return parts
-          .slice(0, 2)
-          .map((part) => part.charAt(0).toUpperCase())
-          .join("");
-      }
-
-      function formatDateTime(value) {
-        if (!value) return "—";
-
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return String(value);
-
-        return date.toLocaleString([], {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        });
-      }
-
-      function showBanner(message, type = "") {
-        if (!message) {
-          els.statusBanner.className = "status-banner";
-          els.statusBanner.textContent = "";
-          return;
-        }
-
-        els.statusBanner.className = `status-banner show ${type}`.trim();
-        els.statusBanner.textContent = message;
-      }
-
-      function showFormStatus(message, type = "") {
-        if (!message) {
-          els.formStatus.className = "form-status";
-          els.formStatus.textContent = "";
-          return;
-        }
-
-        els.formStatus.className = `form-status show ${type}`.trim();
-        els.formStatus.textContent = message;
-      }
-
-      function normalizePayload(payload) {
-        const root = isObject(payload) ? payload : {};
-        const data = isObject(root.data) ? root.data : {};
-
-        const memberRaw = isObject(root.member)
-          ? root.member
-          : isObject(data.member)
-            ? data.member
-            : {};
-
-        const profileRaw = isObject(root.profile)
-          ? root.profile
-          : isObject(data.profile)
-            ? data.profile
-            : {};
-
-        const supportRaw = isObject(root.support)
-          ? root.support
-          : isObject(data.support)
-            ? data.support
-            : {};
-
-        const summaryRaw = isObject(root.summary)
-          ? root.summary
-          : isObject(data.summary)
-            ? data.summary
-            : {};
-
-        const memberName = firstDefined(
-          memberRaw.fullName,
-          memberRaw.name,
-          `${firstDefined(profileRaw.firstName, memberRaw.firstName, "").trim()} ${firstDefined(
-            profileRaw.lastName,
-            memberRaw.lastName,
-            ""
-          ).trim()}`.trim(),
-          "Card Leo Member"
-        );
-
-        const recentRequests = toArray(
-          firstDefined(
-            supportRaw.recentRequests,
-            supportRaw.requests,
-            root.recentRequests,
-            data.recentRequests,
-            []
-          )
-        );
-
-        const supportEmail = firstDefined(
-          supportRaw.email,
-          supportRaw.supportEmail,
-          supportRaw.contactEmail,
-          "support@cardleorewards.com"
-        );
-
-        const supportHours = firstDefined(
-          supportRaw.hours,
-          supportRaw.availability,
-          supportRaw.supportHours,
-          "Member support hours unavailable"
-        );
-
-        const priorityTier = toTitleCase(
-          firstDefined(
-            supportRaw.priorityTier,
-            supportRaw.priority,
-            summaryRaw.priorityTier,
-            "Premium"
-          )
-        );
-
-        const primaryRoute = toTitleCase(
-          firstDefined(
-            supportRaw.primaryRoute,
-            supportRaw.channel,
-            supportRaw.supportRoute,
-            "Member Support"
-          )
-        );
-
-        const guidance = toArray(
-          firstDefined(supportRaw.guidance, supportRaw.notes, root.guidance, [])
-        );
-
-        const channels = toArray(
-          firstDefined(supportRaw.channels, supportRaw.contactOptions, [])
-        );
-
-        const faq = toArray(firstDefined(supportRaw.faq, root.faq, data.faq, []));
-
-        return {
-          member: {
-            fullName: memberName,
-            email: firstDefined(profileRaw.email, memberRaw.email, "Member account"),
-            accessLevel: toTitleCase(
-              firstDefined(
-                memberRaw.accessLevel,
-                memberRaw.membershipLevel,
-                summaryRaw.accessLevel,
-                "Premium Access"
-              )
-            ),
-            statusLabel: toTitleCase(
-              firstDefined(memberRaw.statusLabel, memberRaw.status, "Active")
-            ),
-            memberId: firstDefined(
-              memberRaw.memberId,
-              memberRaw.portalUserId,
-              memberRaw.signupId,
-              profileRaw.signupId,
-              "—"
-            ),
-          },
-          support: {
-            email: supportEmail,
-            hours: supportHours,
-            priorityTier,
-            primaryRoute,
-            lastUpdated: firstDefined(
-              supportRaw.lastUpdated,
-              supportRaw.updatedAt,
-              root.fetchedAt,
-              new Date().toISOString()
-            ),
-            recentRequests,
-            guidance,
-            channels,
-            faq,
+      (function () {
+        const CONFIG = {
+          supportEndpoint: "/api/portal/support",
+          logoutEndpoint: "/api/auth/logout",
+          loginPage: "/login.html",
+          unauthorizedPage: "/unauthorized.html",
+          authGuardOptions: {
+            meEndpoint: "/api/auth/me",
+            logoutEndpoint: "/api/auth/logout",
+            loginPage: "/login.html",
+            unauthorizedPage: "/unauthorized.html",
+            fallbackPortalOverviewEndpoint: "/api/portal/overview",
+            redirectOnFail: true,
+            requirePortalAccess: true,
+            showLoader: true,
+            debug: false,
           },
         };
-      }
 
-      function buildGuidance(model) {
-        const items = [];
+        const state = {
+          payload: null,
+          loading: false,
+          submitting: false,
+        };
 
-        items.push(`Your current access level is ${model.member.accessLevel}.`);
-        items.push(`Your support requests are routed through ${model.support.primaryRoute}.`);
-        items.push(`Your current priority posture is ${model.support.priorityTier}.`);
-        items.push(`Primary support email: ${model.support.email}.`);
-        items.push(`Availability: ${model.support.hours}.`);
+        const els = {
+          statusBanner: document.getElementById("statusBanner"),
+          formStatus: document.getElementById("formStatus"),
+          logoutButton: document.getElementById("logoutButton"),
+          supportForm: document.getElementById("supportForm"),
+          submitButton: document.getElementById("submitButton"),
+          resetButton: document.getElementById("resetButton"),
+          refreshSupportButton: document.getElementById("refreshSupportButton"),
 
-        return items;
-      }
+          heroAccessBadge: document.getElementById("heroAccessBadge"),
+          heroSupportBadge: document.getElementById("heroSupportBadge"),
+          heroPriorityBadge: document.getElementById("heroPriorityBadge"),
+          heroCopy: document.getElementById("heroCopy"),
+          heroChannel: document.getElementById("heroChannel"),
+          heroPriority: document.getElementById("heroPriority"),
+          heroRequestCount: document.getElementById("heroRequestCount"),
 
-      function buildChannels(model) {
-        if (model.support.channels.length) {
-          return model.support.channels.map((item) => {
-            if (isObject(item)) {
-              return `${firstDefined(item.label, item.name, "Support Channel")}: ${firstDefined(
-                item.value,
-                item.detail,
-                item.description,
-                "Available"
-              )}`;
+          memberAvatar: document.getElementById("memberAvatar"),
+          memberName: document.getElementById("memberName"),
+          memberEmail: document.getElementById("memberEmail"),
+          memberAccessLevel: document.getElementById("memberAccessLevel"),
+          memberStatus: document.getElementById("memberStatus"),
+          memberId: document.getElementById("memberId"),
+          memberSupportRoute: document.getElementById("memberSupportRoute"),
+
+          summarySupportEmail: document.getElementById("summarySupportEmail"),
+          summarySupportHours: document.getElementById("summarySupportHours"),
+          summaryPriorityTier: document.getElementById("summaryPriorityTier"),
+          summaryLastUpdated: document.getElementById("summaryLastUpdated"),
+
+          guidanceCopy: document.getElementById("guidanceCopy"),
+          guidanceList: document.getElementById("guidanceList"),
+          channelList: document.getElementById("channelList"),
+          timelineList: document.getElementById("timelineList"),
+          faqList: document.getElementById("faqList"),
+        };
+
+        function escapeHtml(value) {
+          return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+        }
+
+        function isObject(value) {
+          return value !== null && typeof value === "object" && !Array.isArray(value);
+        }
+
+        function toArray(value) {
+          return Array.isArray(value) ? value : [];
+        }
+
+        function firstDefined(...values) {
+          for (const value of values) {
+            if (value !== undefined && value !== null && String(value).trim() !== "") {
+              return value;
             }
-            return String(item);
+          }
+
+          return "";
+        }
+
+        function toTitleCase(value) {
+          return String(value || "")
+            .replace(/[_-]+/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+        }
+
+        function normalizeText(value, fallback = "") {
+          const text = String(value ?? "").trim();
+          return text || fallback;
+        }
+
+        function getInitials(name) {
+          const parts = String(name || "")
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+          if (!parts.length) return "CL";
+
+          return parts
+            .slice(0, 2)
+            .map((part) => part.charAt(0).toUpperCase())
+            .join("");
+        }
+
+        function formatDateTime(value) {
+          if (!value) return "—";
+
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return String(value);
+
+          return date.toLocaleString([], {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
           });
         }
 
-        return [
-          `Email: ${model.support.email}`,
-          `Primary route: ${model.support.primaryRoute}`,
-          `Priority tier: ${model.support.priorityTier}`,
-        ];
-      }
+        function showBanner(message, type = "") {
+          if (!message) {
+            els.statusBanner.className = "status-banner";
+            els.statusBanner.textContent = "";
+            return;
+          }
 
-      function buildFaq(model) {
-        if (model.support.faq.length) {
-          return model.support.faq.map((item, index) => {
-            if (isObject(item)) {
-              return {
-                id: firstDefined(item.id, `faq-${index + 1}`),
-                question: firstDefined(item.question, item.title, `Question ${index + 1}`),
-                answer: firstDefined(
-                  item.answer,
-                  item.body,
-                  item.description,
-                  "Please contact member support for additional details."
-                ),
-              };
-            }
-
-            return {
-              id: `faq-${index + 1}`,
-              question: `Question ${index + 1}`,
-              answer: String(item),
-            };
-          });
+          els.statusBanner.className = `status-banner show ${type}`.trim();
+          els.statusBanner.textContent = message;
         }
 
-        return [
-          {
-            id: "faq-1",
-            question: "How do I request help with a reward or benefit?",
-            answer:
-              "Use the support request form on this page and select the most relevant category so your request is routed correctly.",
-          },
-          {
-            id: "faq-2",
-            question: "How is my support priority determined?",
-            answer:
-              "Your support posture is tied to your current account standing, access level, and member support configuration.",
-          },
-          {
-            id: "faq-3",
-            question: "Where will I receive updates?",
-            answer:
-              "Updates may be delivered through your support email route, portal notes, or the communication preference you choose when submitting a request.",
-          },
-        ];
-      }
+        function showFormStatus(message, type = "") {
+          if (!message) {
+            els.formStatus.className = "form-status";
+            els.formStatus.textContent = "";
+            return;
+          }
 
-      function renderHeader(model) {
-        els.heroAccessBadge.textContent = model.member.accessLevel;
-        els.heroSupportBadge.textContent = model.member.statusLabel;
-        els.heroPriorityBadge.textContent = `${model.support.priorityTier} Priority`;
-
-        els.heroCopy.textContent = `Your Card Leo Rewards account currently routes support through ${model.support.primaryRoute} with a ${model.support.priorityTier.toLowerCase()} service posture designed for your ${model.member.accessLevel.toLowerCase()} membership experience.`;
-
-        els.heroChannel.textContent = model.support.primaryRoute;
-        els.heroPriority.textContent = model.support.priorityTier;
-        els.heroRequestCount.textContent = String(model.support.recentRequests.length);
-
-        els.memberAvatar.textContent = getInitials(model.member.fullName);
-        els.memberName.textContent = model.member.fullName;
-        els.memberEmail.textContent = model.member.email;
-        els.memberAccessLevel.textContent = model.member.accessLevel;
-        els.memberStatus.textContent = model.member.statusLabel;
-        els.memberId.textContent = model.member.memberId || "—";
-        els.memberSupportRoute.textContent = model.support.primaryRoute;
-
-        els.summarySupportEmail.textContent = model.support.email;
-        els.summarySupportHours.textContent = model.support.hours;
-        els.summaryPriorityTier.textContent = model.support.priorityTier;
-        els.summaryLastUpdated.textContent = formatDateTime(model.support.lastUpdated);
-      }
-
-      function renderGuidance(model) {
-        const guidanceItems = model.support.guidance.length
-          ? model.support.guidance.map((item) => String(item))
-          : buildGuidance(model);
-
-        els.guidanceCopy.textContent = `Your current support route is aligned to your ${model.member.accessLevel} level and ${model.member.statusLabel} member standing.`;
-
-        els.guidanceList.innerHTML = guidanceItems
-          .map((item) => `<li>${escapeHtml(item)}</li>`)
-          .join("");
-      }
-
-      function renderChannels(model) {
-        const channels = buildChannels(model);
-
-        els.channelList.innerHTML = channels
-          .map((item) => `<li>${escapeHtml(item)}</li>`)
-          .join("");
-      }
-
-      function supportPillClass(value) {
-        const normalized = String(value || "").toLowerCase();
-
-        if (normalized.includes("open") || normalized.includes("resolved")) return "is-live";
-        if (normalized.includes("urgent")) return "is-danger";
-        if (normalized.includes("pending") || normalized.includes("in review")) return "is-pending";
-        return "is-premium";
-      }
-
-      function renderTimeline(model) {
-        const items = model.support.recentRequests;
-
-        if (!items.length) {
-          els.timelineList.innerHTML = `
-            <div class="empty-state">
-              No visible support requests are attached to this account yet. Use the form
-              above to submit your first request.
-            </div>
-          `;
-          return;
+          els.formStatus.className = `form-status show ${type}`.trim();
+          els.formStatus.textContent = message;
         }
 
-        els.timelineList.innerHTML = items
-          .map((item, index) => {
-            const raw = isObject(item) ? item : {};
-            const title = firstDefined(
-              raw.subject,
-              raw.title,
-              raw.name,
-              `Support Request ${index + 1}`
-            );
-            const status = toTitleCase(firstDefined(raw.status, raw.state, "Open"));
-            const createdAt = formatDateTime(firstDefined(raw.createdAt, raw.date, raw.submittedAt));
-            const category = toTitleCase(firstDefined(raw.category, "General"));
-            const message = firstDefined(
-              raw.message,
-              raw.description,
-              raw.summary,
-              "Support request submitted through the member portal."
-            );
-
-            return `
-              <article class="timeline-item">
-                <div class="timeline-head">
-                  <h4 class="timeline-title">${escapeHtml(title)}</h4>
-                  <span class="pill ${supportPillClass(status)}">${escapeHtml(status)}</span>
-                </div>
-                <p class="timeline-meta">${escapeHtml(category)} • ${escapeHtml(createdAt)}</p>
-                <p class="timeline-copy">${escapeHtml(message)}</p>
-              </article>
-            `;
-          })
-          .join("");
-      }
-
-      function renderFaq(model) {
-        const faqItems = buildFaq(model);
-
-        els.faqList.innerHTML = faqItems
-          .map(
-            (item) => `
-              <article class="faq-item">
-                <div class="faq-question">
-                  <h4 class="faq-title">${escapeHtml(item.question)}</h4>
-                  <span class="pill is-premium">Support</span>
-                </div>
-                <p class="faq-answer">${escapeHtml(item.answer)}</p>
-              </article>
-            `
-          )
-          .join("");
-      }
-
-      function validateForm(payload) {
-        if (!payload.subject.trim()) return "Please enter a support subject.";
-        if (!payload.category.trim()) return "Please select a support category.";
-        if (!payload.priority.trim()) return "Please select a priority level.";
-        if (!payload.message.trim()) return "Please enter a support message.";
-        if (payload.message.trim().length < 10) {
-          return "Please provide a little more detail so support can help effectively.";
+        function unwrapPayload(payload) {
+          if (!isObject(payload)) return {};
+          return isObject(payload.data) ? payload.data : payload;
         }
-        return "";
-      }
 
-      async function fetchSupportData() {
-        showBanner("");
-        showFormStatus("");
-
-        try {
-          const response = await fetch("../api/portal/support", {
-            method: "GET",
+        async function fetchJson(url, options = {}) {
+          const response = await fetch(url, {
+            credentials: "include",
             headers: {
               Accept: "application/json",
+              "Content-Type": "application/json",
+              ...(options.headers || {}),
             },
-            credentials: "include",
+            ...options,
           });
 
           let payload = {};
+
           try {
             payload = await response.json();
           } catch {
@@ -1592,189 +1338,616 @@
           }
 
           if (response.status === 401) {
-            window.location.href = "../login.html?next=/portal/support.html";
-            return;
+            window.location.href =
+              CONFIG.loginPage +
+              "?next=" +
+              encodeURIComponent(window.location.pathname + window.location.search);
+            return null;
           }
 
           if (response.status === 403) {
-            showBanner(
-              payload?.message ||
-                "Your member account exists, but portal support access is not enabled yet.",
-              "error"
-            );
-
-            els.timelineList.innerHTML = `
-              <div class="empty-state">
-                Your account exists, but premium support access is not enabled yet.
-                Please contact support through your main onboarding route for assistance.
-              </div>
-            `;
-            return;
+            window.location.href = CONFIG.unauthorizedPage;
+            return null;
           }
 
-          if (response.status === 404) {
-            showBanner(
-              payload?.message ||
-                "We could not locate a member record for this account.",
-              "error"
-            );
-
-            els.timelineList.innerHTML = `
-              <div class="empty-state">
-                A matching member record could not be found. Please contact support if
-                you believe this is an error.
-              </div>
-            `;
-            return;
-          }
-
-          if (!response.ok) {
+          if (!response.ok || payload?.success === false) {
             throw new Error(
-              payload?.message || "Unable to load your support details right now."
+              payload?.message || `Request failed with status ${response.status}`
             );
           }
 
+          return {
+            response,
+            payload,
+            data: unwrapPayload(payload),
+          };
+        }
+
+        function normalizePayload(payload) {
+          const root = isObject(payload) ? payload : {};
+          const data = unwrapPayload(root);
+
+          const memberRaw = isObject(data.member)
+            ? data.member
+            : isObject(root.member)
+              ? root.member
+              : {};
+
+          const profileRaw = isObject(data.profile)
+            ? data.profile
+            : isObject(root.profile)
+              ? root.profile
+              : {};
+
+          const supportRaw = isObject(data.support)
+            ? data.support
+            : isObject(root.support)
+              ? root.support
+              : {};
+
+          const summaryRaw = isObject(data.summary)
+            ? data.summary
+            : isObject(root.summary)
+              ? root.summary
+              : {};
+
+          const memberName = firstDefined(
+            memberRaw.fullName,
+            memberRaw.full_name,
+            memberRaw.name,
+            `${firstDefined(
+              profileRaw.firstName,
+              profileRaw.first_name,
+              memberRaw.firstName,
+              memberRaw.first_name,
+              ""
+            ).trim()} ${firstDefined(
+              profileRaw.lastName,
+              profileRaw.last_name,
+              memberRaw.lastName,
+              memberRaw.last_name,
+              ""
+            ).trim()}`.trim(),
+            "Card Leo Member"
+          );
+
+          const recentRequests = toArray(
+            firstDefined(
+              supportRaw.recentRequests,
+              supportRaw.requests,
+              data.recentRequests,
+              root.recentRequests,
+              []
+            )
+          );
+
+          const supportEmail = firstDefined(
+            supportRaw.email,
+            supportRaw.supportEmail,
+            supportRaw.contactEmail,
+            "support@cardleorewards.com"
+          );
+
+          const supportHours = firstDefined(
+            supportRaw.hours,
+            supportRaw.availability,
+            supportRaw.supportHours,
+            "Member support hours unavailable"
+          );
+
+          const priorityTier = toTitleCase(
+            firstDefined(
+              supportRaw.priorityTier,
+              supportRaw.priority,
+              summaryRaw.priorityTier,
+              "Premium"
+            )
+          );
+
+          const primaryRoute = toTitleCase(
+            firstDefined(
+              supportRaw.primaryRoute,
+              supportRaw.channel,
+              supportRaw.supportRoute,
+              "Member Support"
+            )
+          );
+
+          const guidance = toArray(
+            firstDefined(supportRaw.guidance, supportRaw.notes, data.guidance, [])
+          );
+
+          const channels = toArray(
+            firstDefined(supportRaw.channels, supportRaw.contactOptions, [])
+          );
+
+          const faq = toArray(firstDefined(supportRaw.faq, data.faq, root.faq, []));
+
+          return {
+            member: {
+              fullName: memberName,
+              email: firstDefined(profileRaw.email, memberRaw.email, "Member account"),
+              accessLevel: toTitleCase(
+                firstDefined(
+                  memberRaw.accessLevel,
+                  memberRaw.access_level,
+                  memberRaw.membershipLevel,
+                  summaryRaw.accessLevel,
+                  "Premium Access"
+                )
+              ),
+              statusLabel: toTitleCase(
+                firstDefined(
+                  memberRaw.statusLabel,
+                  memberRaw.status,
+                  memberRaw.memberStatus,
+                  "Active"
+                )
+              ),
+              memberId: firstDefined(
+                memberRaw.memberId,
+                memberRaw.id,
+                memberRaw.portalUserId,
+                memberRaw.portal_user_id,
+                memberRaw.signupId,
+                memberRaw.signup_id,
+                profileRaw.signupId,
+                "—"
+              ),
+            },
+            support: {
+              email: supportEmail,
+              hours: supportHours,
+              priorityTier,
+              primaryRoute,
+              lastUpdated: firstDefined(
+                supportRaw.lastUpdated,
+                supportRaw.updatedAt,
+                data.fetchedAt,
+                root.fetchedAt,
+                new Date().toISOString()
+              ),
+              recentRequests,
+              guidance,
+              channels,
+              faq,
+            },
+          };
+        }
+
+        function buildGuidance(model) {
+          return [
+            `Your current access level is ${model.member.accessLevel}.`,
+            `Your support requests are routed through ${model.support.primaryRoute}.`,
+            `Your current priority posture is ${model.support.priorityTier}.`,
+            `Primary support email: ${model.support.email}.`,
+            `Availability: ${model.support.hours}.`,
+          ];
+        }
+
+        function buildChannels(model) {
+          if (model.support.channels.length) {
+            return model.support.channels.map((item) => {
+              if (isObject(item)) {
+                return `${firstDefined(item.label, item.name, "Support Channel")}: ${firstDefined(
+                  item.value,
+                  item.detail,
+                  item.description,
+                  "Available"
+                )}`;
+              }
+
+              return String(item);
+            });
+          }
+
+          return [
+            `Email: ${model.support.email}`,
+            `Primary route: ${model.support.primaryRoute}`,
+            `Priority tier: ${model.support.priorityTier}`,
+          ];
+        }
+
+        function buildFaq(model) {
+          if (model.support.faq.length) {
+            return model.support.faq.map((item, index) => {
+              if (isObject(item)) {
+                return {
+                  id: firstDefined(item.id, `faq-${index + 1}`),
+                  question: firstDefined(item.question, item.title, `Question ${index + 1}`),
+                  answer: firstDefined(
+                    item.answer,
+                    item.body,
+                    item.description,
+                    "Please contact member support for additional details."
+                  ),
+                };
+              }
+
+              return {
+                id: `faq-${index + 1}`,
+                question: `Question ${index + 1}`,
+                answer: String(item),
+              };
+            });
+          }
+
+          return [
+            {
+              id: "faq-1",
+              question: "How do I request help with a reward or benefit?",
+              answer:
+                "Use the support request form on this page and select the most relevant category so your request is routed correctly.",
+            },
+            {
+              id: "faq-2",
+              question: "How is my support priority determined?",
+              answer:
+                "Your support posture is tied to your current account standing, access level, and member support configuration.",
+            },
+            {
+              id: "faq-3",
+              question: "Where will I receive updates?",
+              answer:
+                "Updates may be delivered through your support email route, portal notes, or the communication preference you choose when submitting a request.",
+            },
+          ];
+        }
+
+        function renderHeader(model) {
+          els.heroAccessBadge.textContent = model.member.accessLevel;
+          els.heroSupportBadge.textContent = model.member.statusLabel;
+          els.heroPriorityBadge.textContent = `${model.support.priorityTier} Priority`;
+
+          els.heroCopy.textContent = `Your Card Leo Rewards account currently routes support through ${model.support.primaryRoute} with a ${model.support.priorityTier.toLowerCase()} service posture designed for your ${model.member.accessLevel.toLowerCase()} membership experience.`;
+
+          els.heroChannel.textContent = model.support.primaryRoute;
+          els.heroPriority.textContent = model.support.priorityTier;
+          els.heroRequestCount.textContent = String(model.support.recentRequests.length);
+
+          els.memberAvatar.textContent = getInitials(model.member.fullName);
+          els.memberName.textContent = model.member.fullName;
+          els.memberEmail.textContent = model.member.email;
+          els.memberAccessLevel.textContent = model.member.accessLevel;
+          els.memberStatus.textContent = model.member.statusLabel;
+          els.memberId.textContent = model.member.memberId || "—";
+          els.memberSupportRoute.textContent = model.support.primaryRoute;
+
+          document.body.dataset.memberName = model.member.fullName;
+          document.body.dataset.memberEmail = model.member.email;
+          document.body.dataset.memberStatus = model.member.statusLabel;
+
+          els.summarySupportEmail.textContent = model.support.email;
+          els.summarySupportHours.textContent = model.support.hours;
+          els.summaryPriorityTier.textContent = model.support.priorityTier;
+          els.summaryLastUpdated.textContent = formatDateTime(model.support.lastUpdated);
+        }
+
+        function renderGuidance(model) {
+          const guidanceItems = model.support.guidance.length
+            ? model.support.guidance.map((item) => String(item))
+            : buildGuidance(model);
+
+          els.guidanceCopy.textContent = `Your current support route is aligned to your ${model.member.accessLevel} level and ${model.member.statusLabel} member standing.`;
+
+          els.guidanceList.innerHTML = guidanceItems
+            .map((item) => `<li>${escapeHtml(item)}</li>`)
+            .join("");
+        }
+
+        function renderChannels(model) {
+          const channels = buildChannels(model);
+
+          els.channelList.innerHTML = channels
+            .map((item) => `<li>${escapeHtml(item)}</li>`)
+            .join("");
+        }
+
+        function supportPillClass(value) {
+          const normalized = String(value || "").toLowerCase();
+
+          if (normalized.includes("open") || normalized.includes("resolved")) {
+            return "is-live";
+          }
+
+          if (normalized.includes("urgent")) return "is-danger";
+
+          if (normalized.includes("pending") || normalized.includes("in review")) {
+            return "is-pending";
+          }
+
+          return "is-premium";
+        }
+
+        function renderTimeline(model) {
+          const items = model.support.recentRequests;
+
+          if (!items.length) {
+            els.timelineList.innerHTML = `
+              <div class="empty-state">
+                No visible support requests are attached to this account yet. Use the form
+                above to submit your first request.
+              </div>
+            `;
+            return;
+          }
+
+          els.timelineList.innerHTML = items
+            .map((item, index) => {
+              const raw = isObject(item) ? item : {};
+              const title = firstDefined(
+                raw.subject,
+                raw.title,
+                raw.name,
+                `Support Request ${index + 1}`
+              );
+              const status = toTitleCase(firstDefined(raw.status, raw.state, "Open"));
+              const createdAt = formatDateTime(
+                firstDefined(raw.createdAt, raw.created_at, raw.date, raw.submittedAt)
+              );
+              const category = toTitleCase(firstDefined(raw.category, raw.topic, "General"));
+              const message = firstDefined(
+                raw.message,
+                raw.description,
+                raw.summary,
+                "Support request submitted through the member portal."
+              );
+
+              return `
+                <article class="timeline-item">
+                  <div class="timeline-head">
+                    <h4 class="timeline-title">${escapeHtml(title)}</h4>
+                    <span class="pill ${supportPillClass(status)}">${escapeHtml(status)}</span>
+                  </div>
+                  <p class="timeline-meta">${escapeHtml(category)} • ${escapeHtml(createdAt)}</p>
+                  <p class="timeline-copy">${escapeHtml(message)}</p>
+                </article>
+              `;
+            })
+            .join("");
+        }
+
+        function renderFaq(model) {
+          const faqItems = buildFaq(model);
+
+          els.faqList.innerHTML = faqItems
+            .map(
+              (item) => `
+                <article class="faq-item">
+                  <div class="faq-question">
+                    <h4 class="faq-title">${escapeHtml(item.question)}</h4>
+                    <span class="pill is-premium">Support</span>
+                  </div>
+                  <p class="faq-answer">${escapeHtml(item.answer)}</p>
+                </article>
+              `
+            )
+            .join("");
+        }
+
+        function renderSupport(payload) {
           state.payload = payload;
 
           const model = normalizePayload(payload);
+
           renderHeader(model);
           renderGuidance(model);
           renderChannels(model);
           renderTimeline(model);
           renderFaq(model);
-
-          showBanner("Your support portal has been loaded successfully.", "success");
-        } catch (error) {
-          console.error("[portal/support] load error:", error);
-
-          showBanner(
-            error?.message ||
-              "Something went wrong while loading support details. Please try again.",
-            "error"
-          );
-
-          els.timelineList.innerHTML = `
-            <div class="empty-state">
-              We couldn’t load your support activity right now. Refresh this page or try again shortly.
-            </div>
-          `;
-
-          els.guidanceCopy.textContent =
-            "We couldn’t load your guidance details right now.";
-          els.guidanceList.innerHTML = `<li>Please refresh the page or try again later.</li>`;
-          els.channelList.innerHTML = `<li>Support channel data is temporarily unavailable.</li>`;
-          els.faqList.innerHTML = `
-            <div class="empty-state">
-              Support FAQ is temporarily unavailable. Please try again later.
-            </div>
-          `;
-        }
-      }
-
-      async function handleSupportSubmit(event) {
-        event.preventDefault();
-        showFormStatus("");
-
-        const payload = {
-          subject: document.getElementById("subject").value,
-          category: document.getElementById("category").value,
-          priority: document.getElementById("priority").value,
-          preferredResponse: document.getElementById("preferredResponse").value,
-          message: document.getElementById("message").value,
-        };
-
-        const validationMessage = validateForm(payload);
-        if (validationMessage) {
-          showFormStatus(validationMessage, "error");
-          return;
         }
 
-        const originalText = els.submitButton.textContent;
-        els.submitButton.disabled = true;
-        els.submitButton.textContent = "Sending...";
-
-        try {
-          const response = await fetch("../api/portal/support", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify(payload),
-          });
-
-          let result = {};
-          try {
-            result = await response.json();
-          } catch {
-            result = {};
+        function validateForm(payload) {
+          if (!payload.subject.trim()) return "Please enter a support subject.";
+          if (payload.subject.trim().length > 120) {
+            return "Support subject must be 120 characters or fewer.";
           }
 
-          if (response.status === 401) {
-            window.location.href = "../login.html?next=/portal/support.html";
+          if (!payload.category.trim()) return "Please select a support category.";
+          if (!payload.priority.trim()) return "Please select a priority level.";
+          if (!payload.message.trim()) return "Please enter a support message.";
+
+          if (payload.message.trim().length < 10) {
+            return "Please provide a little more detail so support can help effectively.";
+          }
+
+          if (payload.message.trim().length > 2500) {
+            return "Support message must be 2500 characters or fewer.";
+          }
+
+          return "";
+        }
+
+        async function fetchSupportData() {
+          if (state.loading) return;
+
+          state.loading = true;
+          showBanner("");
+          showFormStatus("");
+
+          if (els.refreshSupportButton) {
+            els.refreshSupportButton.disabled = true;
+          }
+
+          try {
+            const result = await fetchJson(CONFIG.supportEndpoint, {
+              method: "GET",
+            });
+
+            if (!result) return;
+
+            renderSupport(result.payload);
+
+            showBanner(
+              result.payload?.message || "Your support portal has been loaded successfully.",
+              "success"
+            );
+          } catch (error) {
+            console.error("[portal/support] load error:", error);
+
+            showBanner(
+              error?.message ||
+                "Something went wrong while loading support details. Please try again.",
+              "error"
+            );
+
+            els.timelineList.innerHTML = `
+              <div class="empty-state">
+                We couldn’t load your support activity right now. Refresh this page or try again shortly.
+              </div>
+            `;
+
+            els.guidanceCopy.textContent =
+              "We couldn’t load your guidance details right now.";
+            els.guidanceList.innerHTML = `<li>Please refresh the page or try again later.</li>`;
+            els.channelList.innerHTML = `<li>Support channel data is temporarily unavailable.</li>`;
+            els.faqList.innerHTML = `
+              <div class="empty-state">
+                Support FAQ is temporarily unavailable. Please try again later.
+              </div>
+            `;
+          } finally {
+            state.loading = false;
+
+            if (els.refreshSupportButton) {
+              els.refreshSupportButton.disabled = false;
+            }
+          }
+        }
+
+        async function handleSupportSubmit(event) {
+          event.preventDefault();
+
+          if (state.submitting) return;
+
+          showFormStatus("");
+
+          const payload = {
+            subject: document.getElementById("subject").value,
+            category: document.getElementById("category").value,
+            priority: document.getElementById("priority").value,
+            preferredResponse: document.getElementById("preferredResponse").value,
+            message: document.getElementById("message").value,
+          };
+
+          const validationMessage = validateForm(payload);
+
+          if (validationMessage) {
+            showFormStatus(validationMessage, "error");
             return;
           }
 
-          if (!response.ok) {
-            throw new Error(
-              result?.message || "Your support request could not be submitted."
+          const originalText = els.submitButton.textContent;
+
+          state.submitting = true;
+          els.submitButton.disabled = true;
+          els.submitButton.textContent = "Sending...";
+
+          try {
+            const result = await fetchJson(CONFIG.supportEndpoint, {
+              method: "POST",
+              body: JSON.stringify(payload),
+            });
+
+            if (!result) return;
+
+            showFormStatus(
+              result.payload?.message ||
+                "Your support request has been submitted successfully.",
+              "success"
             );
+
+            els.supportForm.reset();
+
+            renderSupport(result.payload);
+            await fetchSupportData();
+          } catch (error) {
+            console.error("[portal/support] submit error:", error);
+
+            showFormStatus(
+              error?.message ||
+                "Something went wrong while sending your support request.",
+              "error"
+            );
+          } finally {
+            state.submitting = false;
+            els.submitButton.disabled = false;
+            els.submitButton.textContent = originalText;
+          }
+        }
+
+        function handleFormReset() {
+          els.supportForm.reset();
+          showFormStatus("");
+        }
+
+        async function handleLogout(event) {
+          if (event) event.preventDefault();
+
+          if (window.CardLeoAuthGuard?.logout) {
+            await window.CardLeoAuthGuard.logout(CONFIG.authGuardOptions);
+            return;
           }
 
-          showFormStatus(
-            result?.message ||
-              "Your support request has been submitted successfully.",
-            "success"
-          );
+          const originalText = els.logoutButton.textContent;
+          els.logoutButton.disabled = true;
+          els.logoutButton.textContent = "Logging out...";
 
-          els.supportForm.reset();
+          try {
+            await fetch(CONFIG.logoutEndpoint, {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+              },
+              credentials: "include",
+            });
+          } catch (error) {
+            console.error("[portal/support] logout error:", error);
+          } finally {
+            window.location.href = CONFIG.loginPage;
+            els.logoutButton.disabled = false;
+            els.logoutButton.textContent = originalText;
+          }
+        }
+
+        function bindEvents() {
+          els.supportForm.addEventListener("submit", handleSupportSubmit);
+          els.resetButton.addEventListener("click", handleFormReset);
+          els.logoutButton.addEventListener("click", handleLogout);
+
+          if (els.refreshSupportButton) {
+            els.refreshSupportButton.addEventListener("click", fetchSupportData);
+          }
+        }
+
+        async function init() {
+          try {
+            if (window.CardLeoAuthGuard?.init) {
+              await window.CardLeoAuthGuard.init(CONFIG.authGuardOptions);
+            }
+          } catch (error) {
+            console.warn("[portal/support] auth guard skipped:", error);
+          }
+
+          bindEvents();
           await fetchSupportData();
-        } catch (error) {
-          console.error("[portal/support] submit error:", error);
-          showFormStatus(
-            error?.message ||
-              "Something went wrong while sending your support request.",
-            "error"
-          );
-        } finally {
-          els.submitButton.disabled = false;
-          els.submitButton.textContent = originalText;
         }
-      }
 
-      function handleFormReset() {
-        els.supportForm.reset();
-        showFormStatus("");
-      }
-
-      async function handleLogout() {
-        const originalText = els.logoutButton.textContent;
-        els.logoutButton.disabled = true;
-        els.logoutButton.textContent = "Logging out...";
-
-        try {
-          await fetch("../api/auth/logout", {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-            },
-            credentials: "include",
-          });
-        } catch (error) {
-          console.error("[portal/support] logout error:", error);
-        } finally {
-          window.location.href = "../login.html";
-          els.logoutButton.disabled = false;
-          els.logoutButton.textContent = originalText;
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init);
+        } else {
+          init();
         }
-      }
 
-      els.supportForm.addEventListener("submit", handleSupportSubmit);
-      els.resetButton.addEventListener("click", handleFormReset);
-      els.logoutButton.addEventListener("click", handleLogout);
-
-      fetchSupportData();
+        window.CardLeoPortalSupport = {
+          init,
+          reload: fetchSupportData,
+          submit: handleSupportSubmit,
+          getState: function () {
+            return { ...state };
+          },
+        };
+      })();
     </script>
   </body>
 </html>

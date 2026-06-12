@@ -1,15 +1,18 @@
 // api/portal/activity.js
-
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 import {
   ok,
   unauthorized,
-  notFound,
+  forbidden,
   methodNotAllowed,
   serverError,
   setNoStore,
 } from "../../lib/responses.js";
-import { getAccessTokenFromRequest } from "../../lib/cookies.js";
+import {
+  clearAuthCookies,
+  safeJsonParse,
+  getSessionCookieName,
+} from "../../lib/cookies.js";
 import {
   logRequestStart,
   logRequestSuccess,
@@ -18,16 +21,50 @@ import {
 
 const DEFAULT_LIMIT = 25;
 const MAX_LIMIT = 100;
-const VALID_CATEGORIES = ["all", "account", "rewards", "support", "referrals", "system"];
+
+const VALID_CATEGORIES = [
+  "all",
+  "account",
+  "rewards",
+  "support",
+  "referrals",
+  "system",
+];
+
+const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
+
+const POSSIBLE_SESSION_COOKIE_NAMES = [
+  "cardleo_session",
+  "card_leo_session",
+  "member_session",
+  "portal_session",
+  "session",
+];
+
+function normalizeText(value) {
+  return String(value ?? "").trim();
+}
+
+function normalizeEmail(value) {
+  return normalizeText(value).toLowerCase();
+}
+
+function normalizeStatus(value) {
+  return normalizeText(value).toLowerCase();
+}
 
 function toPositiveInteger(value, fallback = DEFAULT_LIMIT) {
   const num = Number(value);
-  if (!Number.isFinite(num) || num <= 0) return fallback;
+
+  if (!Number.isFinite(num) || num <= 0) {
+    return fallback;
+  }
+
   return Math.min(Math.floor(num), MAX_LIMIT);
 }
 
 function normalizeCategory(value) {
-  const category = String(value || "all").trim().toLowerCase();
+  const category = normalizeText(value || "all").toLowerCase();
   return VALID_CATEGORIES.includes(category) ? category : "all";
 }
 
@@ -41,13 +78,336 @@ function titleCase(value) {
 
 function safeDate(value) {
   if (!value) return null;
+
   const date = new Date(value);
+
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 function money(value) {
   const num = Number(value || 0);
   return Number.isFinite(num) ? Number(num.toFixed(2)) : 0;
+}
+
+function getUnixNow() {
+  return Math.floor(Date.now() / 1000);
+}
+
+function getClientIp(req) {
+  const forwardedFor = req.headers?.["x-forwarded-for"];
+
+  if (typeof forwardedFor === "string" && forwardedFor.trim()) {
+    return forwardedFor.split(",")[0].trim();
+  }
+
+  return req.socket?.remoteAddress || null;
+}
+
+function parseCookieHeader(req) {
+  const cookieHeader = req?.headers?.cookie || "";
+
+  return String(cookieHeader)
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .reduce((cookies, part) => {
+      const index = part.indexOf("=");
+
+      if (index === -1) return cookies;
+
+      const name = part.slice(0, index).trim();
+      const value = part.slice(index + 1).trim();
+
+      if (name) {
+        cookies[name] = value;
+      }
+
+      return cookies;
+    }, {});
+}
+
+function decodeCookieValue(value) {
+  const raw = String(value || "");
+
+  if (!raw) return "";
+
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
+function readSessionCookie(req) {
+  const cookies = parseCookieHeader(req);
+  const configuredName = getSessionCookieName?.();
+
+  const names = Array.from(
+    new Set(
+      [configuredName, ...POSSIBLE_SESSION_COOKIE_NAMES]
+        .map(normalizeText)
+        .filter(Boolean)
+    )
+  );
+
+  for (const name of names) {
+    if (!cookies[name]) continue;
+
+    const decoded = decodeCookieValue(cookies[name]);
+    const parsed = safeJsonParse(decoded, null);
+
+    if (parsed && typeof parsed === "object") {
+      return {
+        name,
+        value: parsed,
+      };
+    }
+  }
+
+  return null;
+}
+
+function getSessionExpiresAt(sessionCookie) {
+  const value = sessionCookie?.value || {};
+
+  const candidates = [value.expires_at, value.session?.expires_at];
+
+  for (const candidate of candidates) {
+    const num = Number(candidate);
+
+    if (Number.isFinite(num) && num > 0) {
+      return num;
+    }
+  }
+
+  return 0;
+}
+
+function isSessionExpired(sessionCookie) {
+  const expiresAt = getSessionExpiresAt(sessionCookie);
+
+  if (!expiresAt) return true;
+
+  return expiresAt <= getUnixNow();
+}
+
+function getSessionMemberId(sessionCookie) {
+  const value = sessionCookie?.value || {};
+
+  return normalizeText(
+    value.member?.id ||
+      value.profile?.id ||
+      value.user?.id ||
+      value.id
+  );
+}
+
+function getSessionEmail(sessionCookie) {
+  const value = sessionCookie?.value || {};
+
+  return normalizeEmail(
+    value.member?.email ||
+      value.profile?.email ||
+      value.user?.email ||
+      value.email
+  );
+}
+
+function getDisplayName(member) {
+  const fullName = normalizeText(member?.full_name);
+
+  if (fullName) return fullName;
+
+  const joined = [member?.first_name, member?.last_name]
+    .map(normalizeText)
+    .filter(Boolean)
+    .join(" ");
+
+  return joined || "Card Leo Member";
+}
+
+function sanitizeMember(member) {
+  if (!member) return null;
+
+  return {
+    id: member.id || null,
+    email: member.email || null,
+    firstName: member.first_name || "",
+    lastName: member.last_name || "",
+    fullName: getDisplayName(member),
+    phone: member.phone || "",
+    city: member.city || "",
+    state: member.state || "",
+    interest: member.interest || "",
+    status: member.status || "",
+    tier: member.tier || "core",
+    referralCode: member.referral_code || "",
+    portalUserId: member.portal_user_id || null,
+    portalLoginUrl: member.portal_login_url || "/portal/index.html",
+    emailVerified: Boolean(member.email_verified),
+    emailVerifiedAt: member.email_verified_at || null,
+    createdAt: member.created_at || null,
+    updatedAt: member.updated_at || null,
+    role: "member",
+  };
+}
+
+function isMissingOptionalTableOrColumn(error) {
+  const code = String(error?.code || "");
+  const message = String(error?.message || "").toLowerCase();
+  const details = String(error?.details || "").toLowerCase();
+
+  return (
+    code === "42P01" ||
+    code === "42703" ||
+    code === "PGRST204" ||
+    code === "PGRST205" ||
+    message.includes("does not exist") ||
+    message.includes("could not find") ||
+    message.includes("schema cache") ||
+    details.includes("does not exist") ||
+    details.includes("could not find") ||
+    details.includes("schema cache")
+  );
+}
+
+async function getAuthenticatedMember(req, res) {
+  const sessionCookie = readSessionCookie(req);
+
+  if (!sessionCookie?.value) {
+    return {
+      member: null,
+      response: unauthorized(res, "Unauthorized. Please sign in."),
+    };
+  }
+
+  if (isSessionExpired(sessionCookie)) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Session expired. Please sign in again."),
+    };
+  }
+
+  if (sessionCookie.value.authenticated !== true) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Session invalid. Please sign in again."),
+    };
+  }
+
+  const memberId = getSessionMemberId(sessionCookie);
+  const email = getSessionEmail(sessionCookie);
+
+  let query = supabaseAdmin
+    .from("signups")
+    .select(
+      [
+        "id",
+        "first_name",
+        "last_name",
+        "full_name",
+        "email",
+        "phone",
+        "city",
+        "state",
+        "interest",
+        "agreed",
+        "status",
+        "tier",
+        "referral_code",
+        "email_verified",
+        "email_verified_at",
+        "portal_user_id",
+        "portal_login_url",
+        "created_at",
+        "updated_at",
+      ].join(", ")
+    );
+
+  if (memberId) {
+    query = query.eq("id", memberId);
+  } else if (email) {
+    query = query.eq("email", email);
+  } else {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Session missing member information."),
+    };
+  }
+
+  let result = await query.maybeSingle();
+
+  if (result.error && isMissingOptionalTableOrColumn(result.error)) {
+    let fallbackQuery = supabaseAdmin
+      .from("signups")
+      .select(
+        [
+          "id",
+          "first_name",
+          "last_name",
+          "full_name",
+          "email",
+          "phone",
+          "city",
+          "state",
+          "interest",
+          "agreed",
+          "status",
+          "portal_user_id",
+          "portal_login_url",
+          "created_at",
+          "updated_at",
+        ].join(", ")
+      );
+
+    if (memberId) {
+      fallbackQuery = fallbackQuery.eq("id", memberId);
+    } else {
+      fallbackQuery = fallbackQuery.eq("email", email);
+    }
+
+    result = await fallbackQuery.maybeSingle();
+  }
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  if (!result.data?.id) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Account not found. Please sign in again."),
+    };
+  }
+
+  const status = normalizeStatus(result.data.status || "pending");
+
+  if (!ACTIVE_STATUSES.has(status)) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: forbidden(
+        res,
+        status === "pending" || status === "reviewing"
+          ? "Your account is pending approval."
+          : "Your account is not active."
+      ),
+    };
+  }
+
+  return {
+    member: result.data,
+    response: null,
+  };
 }
 
 function activityTypeToCategory(type) {
@@ -73,14 +433,22 @@ function activityTypeToCategory(type) {
     return "rewards";
   }
 
-  if (["support_ticket_created", "support_ticket_replied", "support_updated"].includes(normalized)) {
+  if (
+    ["support_ticket_created", "support_ticket_replied", "support_updated"].includes(
+      normalized
+    )
+  ) {
     return "support";
   }
 
   if (
-    ["referral_invited", "referral_opened", "referral_registered", "referral_rewarded"].includes(
-      normalized
-    )
+    [
+      "referral_invited",
+      "referral_opened",
+      "referral_registered",
+      "referral_activated",
+      "referral_rewarded",
+    ].includes(normalized)
   ) {
     return "referrals";
   }
@@ -93,17 +461,18 @@ function activityTypeToCategory(type) {
 }
 
 function mapMemberActivityRow(row) {
-  const category = activityTypeToCategory(row.activity_type);
+  const activityType = row.activity_type || row.type || "account_activity";
+  const category = activityTypeToCategory(activityType);
 
   return {
     id: `member_activity:${row.id}`,
     source: "member_activity",
     category,
-    type: row.activity_type,
-    title: row.title || titleCase(row.activity_type),
+    type: activityType,
+    title: row.title || titleCase(activityType),
     description: row.description || null,
-    status: null,
-    badge: titleCase(category),
+    status: row.status || null,
+    badge: row.badge || titleCase(category),
     occurredAt: safeDate(row.occurred_at || row.created_at),
     createdAt: safeDate(row.created_at),
     metadata: row.metadata || {},
@@ -111,23 +480,27 @@ function mapMemberActivityRow(row) {
 }
 
 function mapRewardTransactionRow(row) {
+  const amount = money(row.amount);
+
   return {
     id: `reward_transaction:${row.id}`,
     source: "reward_transactions",
     category: "rewards",
-    type: row.transaction_type || "reward_activity",
-    title: row.title || titleCase(row.transaction_type || "reward activity"),
+    type: row.transaction_type || row.type || "reward_activity",
+    title:
+      row.title ||
+      titleCase(row.transaction_type || row.type || "reward activity"),
     description:
       row.description ||
-      `${money(row.amount)} USD • ${titleCase(row.transaction_status || "posted")}`,
-    status: row.transaction_status || null,
-    badge: `$${money(row.amount).toFixed(2)}`,
-    occurredAt: safeDate(row.posted_at || row.created_at),
+      `${amount} USD • ${titleCase(row.transaction_status || row.status || "posted")}`,
+    status: row.transaction_status || row.status || null,
+    badge: `$${amount.toFixed(2)}`,
+    occurredAt: safeDate(row.posted_at || row.occurred_at || row.created_at),
     createdAt: safeDate(row.created_at),
     metadata: {
-      amount: money(row.amount),
-      transactionType: row.transaction_type || null,
-      transactionStatus: row.transaction_status || null,
+      amount,
+      transactionType: row.transaction_type || row.type || null,
+      transactionStatus: row.transaction_status || row.status || null,
       referenceType: row.reference_type || null,
       referenceId: row.reference_id || null,
       currencyCode: row.currency_code || "USD",
@@ -147,7 +520,7 @@ function mapSupportTicketRow(row) {
     )}`,
     status: row.status || null,
     badge: row.ticket_number || "Ticket",
-    occurredAt: safeDate(row.last_message_at || row.created_at),
+    occurredAt: safeDate(row.last_message_at || row.updated_at || row.created_at),
     createdAt: safeDate(row.created_at),
     metadata: {
       ticketId: row.id,
@@ -159,8 +532,12 @@ function mapSupportTicketRow(row) {
   };
 }
 
-function mapReferralRow(row, profileId) {
-  const isReferrer = row.referrer_profile_id === profileId;
+function mapReferralRow(row, memberId) {
+  const isReferrer =
+    row.referrer_profile_id === memberId ||
+    row.referrer_member_id === memberId ||
+    row.referrer_signup_id === memberId;
+
   const stateTitleMap = {
     invited: "Referral Invite Sent",
     opened: "Referral Invite Opened",
@@ -206,6 +583,146 @@ function mapReferralRow(row, profileId) {
   };
 }
 
+function buildAccountLifecycleItems(member) {
+  const items = [];
+
+  if (member.created_at) {
+    items.push({
+      id: `account:created:${member.id}`,
+      source: "signups",
+      category: "account",
+      type: "account_created",
+      title: "Account Created",
+      description: "Your Card Leo Rewards account was created.",
+      status: member.status || null,
+      badge: "Account",
+      occurredAt: safeDate(member.created_at),
+      createdAt: safeDate(member.created_at),
+      metadata: {
+        memberId: member.id,
+        email: member.email,
+        source: "signups",
+      },
+    });
+  }
+
+  if (member.email_verified_at) {
+    items.push({
+      id: `account:email_verified:${member.id}`,
+      source: "signups",
+      category: "account",
+      type: "email_verified",
+      title: "Email Verified",
+      description: "Your email address was verified successfully.",
+      status: "verified",
+      badge: "Verified",
+      occurredAt: safeDate(member.email_verified_at),
+      createdAt: safeDate(member.email_verified_at),
+      metadata: {
+        memberId: member.id,
+        email: member.email,
+      },
+    });
+  }
+
+  if (member.updated_at && member.updated_at !== member.created_at) {
+    items.push({
+      id: `account:updated:${member.id}`,
+      source: "signups",
+      category: "account",
+      type: "account_updated",
+      title: "Account Updated",
+      description: "Your account information was updated.",
+      status: member.status || null,
+      badge: titleCase(member.status || "Updated"),
+      occurredAt: safeDate(member.updated_at),
+      createdAt: safeDate(member.updated_at),
+      metadata: {
+        memberId: member.id,
+      },
+    });
+  }
+
+  if (member.status) {
+    items.push({
+      id: `account:status:${member.id}:${member.status}`,
+      source: "signups",
+      category: "account",
+      type: "account_status",
+      title: `Account ${titleCase(member.status)}`,
+      description:
+        normalizeStatus(member.status) === "active"
+          ? "Your member account is active."
+          : `Your current account status is ${titleCase(member.status)}.`,
+      status: member.status,
+      badge: titleCase(member.status),
+      occurredAt: safeDate(member.updated_at || member.created_at),
+      createdAt: safeDate(member.created_at),
+      metadata: {
+        memberId: member.id,
+        status: member.status,
+      },
+    });
+  }
+
+  return items;
+}
+
+async function queryOptionalByColumns({
+  table,
+  memberId,
+  columns,
+  limit,
+}) {
+  for (const column of columns) {
+    const { data, error } = await supabaseAdmin
+      .from(table)
+      .select("*")
+      .eq(column, memberId)
+      .limit(limit);
+
+    if (!error) {
+      return data || [];
+    }
+
+    if (isMissingOptionalTableOrColumn(error)) {
+      continue;
+    }
+
+    throw error;
+  }
+
+  return [];
+}
+
+async function queryOptionalReferrals({ memberId, limit }) {
+  const expressions = [
+    `referrer_profile_id.eq.${memberId},referred_profile_id.eq.${memberId}`,
+    `referrer_member_id.eq.${memberId},referred_member_id.eq.${memberId}`,
+    `referrer_signup_id.eq.${memberId},referred_signup_id.eq.${memberId}`,
+  ];
+
+  for (const expression of expressions) {
+    const { data, error } = await supabaseAdmin
+      .from("referrals")
+      .select("*")
+      .or(expression)
+      .limit(limit);
+
+    if (!error) {
+      return data || [];
+    }
+
+    if (isMissingOptionalTableOrColumn(error)) {
+      continue;
+    }
+
+    throw error;
+  }
+
+  return [];
+}
+
 function filterByCategory(items, category) {
   if (category === "all") return items;
   return items.filter((item) => item.category === category);
@@ -215,6 +732,7 @@ function sortByOccurredAtDesc(items) {
   return [...items].sort((a, b) => {
     const aTime = new Date(a.occurredAt || a.createdAt || 0).getTime();
     const bTime = new Date(b.occurredAt || b.createdAt || 0).getTime();
+
     return bTime - aTime;
   });
 }
@@ -245,25 +763,6 @@ function summarizeFeed(items) {
   return summary;
 }
 
-async function getAuthenticatedUser(req) {
-  const accessToken = getAccessTokenFromRequest(req);
-
-  if (!accessToken) {
-    return { user: null, error: "Missing access token." };
-  }
-
-  const { data, error } = await supabaseAdmin.auth.getUser(accessToken);
-
-  if (error || !data?.user) {
-    return {
-      user: null,
-      error: error?.message || "Unable to authenticate this request.",
-    };
-  }
-
-  return { user: data.user, error: null };
-}
-
 export default async function handler(req, res) {
   setNoStore(res);
   logRequestStart(req, { scope: "portal_activity" });
@@ -273,99 +772,58 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { user, error: authError } = await getAuthenticatedUser(req);
+    const { member, response } = await getAuthenticatedMember(req, res);
 
-    if (!user) {
-      return unauthorized(res, authError || "Unauthorized.");
+    if (!member) {
+      return response;
     }
 
-    const profileId = user.id;
+    const memberId = member.id;
     const limit = toPositiveInteger(req.query?.limit, DEFAULT_LIMIT);
     const category = normalizeCategory(req.query?.category);
+    const queryLimit = Math.max(limit, 20);
 
     const [
-      profileResult,
-      memberActivityResult,
-      rewardTransactionsResult,
-      supportTicketsResult,
-      referralsResult,
+      memberActivityRows,
+      rewardTransactionRows,
+      supportTicketRows,
+      referralRows,
     ] = await Promise.all([
-      supabaseAdmin
-        .from("profiles")
-        .select(
-          "id, email, first_name, last_name, full_name, member_status, role, tier, referral_code, created_at"
-        )
-        .eq("id", profileId)
-        .maybeSingle(),
+      queryOptionalByColumns({
+        table: "member_activity",
+        memberId,
+        columns: ["member_id", "signup_id", "profile_id"],
+        limit: queryLimit,
+      }),
 
-      supabaseAdmin
-        .from("member_activity")
-        .select(
-          "id, activity_type, title, description, metadata, occurred_at, created_at"
-        )
-        .eq("profile_id", profileId)
-        .order("occurred_at", { ascending: false })
-        .limit(Math.max(limit, 20)),
+      queryOptionalByColumns({
+        table: "reward_transactions",
+        memberId,
+        columns: ["member_id", "signup_id", "profile_id"],
+        limit: queryLimit,
+      }),
 
-      supabaseAdmin
-        .from("reward_transactions")
-        .select(
-          "id, transaction_type, transaction_status, amount, currency_code, title, description, reference_type, reference_id, posted_at, created_at"
-        )
-        .eq("profile_id", profileId)
-        .order("posted_at", { ascending: false })
-        .limit(Math.max(limit, 20)),
+      queryOptionalByColumns({
+        table: "support_tickets",
+        memberId,
+        columns: ["member_id", "signup_id", "profile_id"],
+        limit: queryLimit,
+      }),
 
-      supabaseAdmin
-        .from("support_tickets")
-        .select(
-          "id, ticket_number, subject, category, priority, status, source, last_message_at, created_at"
-        )
-        .eq("profile_id", profileId)
-        .order("last_message_at", { ascending: false })
-        .limit(Math.max(limit, 20)),
-
-      supabaseAdmin
-        .from("referrals")
-        .select(
-          "id, referrer_profile_id, referred_profile_id, referral_code, invite_code, referred_email, status, source, channel, invited_at, opened_at, registered_at, activated_at, rewarded_at, created_at"
-        )
-        .or(`referrer_profile_id.eq.${profileId},referred_profile_id.eq.${profileId}`)
-        .order("created_at", { ascending: false })
-        .limit(Math.max(limit, 20)),
+      queryOptionalReferrals({
+        memberId,
+        limit: queryLimit,
+      }),
     ]);
 
-    if (profileResult.error) {
-      return serverError(res, "Unable to load member profile.", {
-        error: profileResult.error.message,
-      });
-    }
-
-    if (!profileResult.data) {
-      return notFound(res, "Member profile not found.");
-    }
-
-    const queryErrors = [
-      memberActivityResult.error,
-      rewardTransactionsResult.error,
-      supportTicketsResult.error,
-      referralsResult.error,
-    ].filter(Boolean);
-
-    if (queryErrors.length > 0) {
-      return serverError(res, "Unable to load activity feed.", {
-        error: queryErrors[0].message || "Unknown activity query error.",
-      });
-    }
-
-    const memberActivityItems = (memberActivityResult.data || []).map(mapMemberActivityRow);
-    const rewardItems = (rewardTransactionsResult.data || []).map(mapRewardTransactionRow);
-    const supportItems = (supportTicketsResult.data || []).map(mapSupportTicketRow);
-    const referralItems = (referralsResult.data || []).map((row) =>
-      mapReferralRow(row, profileId)
-    );
+    const accountItems = buildAccountLifecycleItems(member);
+    const memberActivityItems = memberActivityRows.map(mapMemberActivityRow);
+    const rewardItems = rewardTransactionRows.map(mapRewardTransactionRow);
+    const supportItems = supportTicketRows.map(mapSupportTicketRow);
+    const referralItems = referralRows.map((row) => mapReferralRow(row, memberId));
 
     const combinedFeed = sortByOccurredAtDesc([
+      ...accountItems,
       ...memberActivityItems,
       ...rewardItems,
       ...supportItems,
@@ -374,31 +832,32 @@ export default async function handler(req, res) {
 
     const filteredFeed = filterByCategory(combinedFeed, category).slice(0, limit);
     const summary = summarizeFeed(filteredFeed);
+    const safeMember = sanitizeMember(member);
 
     logRequestSuccess(req, {
       scope: "portal_activity",
-      profileId,
+      memberId,
+      email: member.email,
       requestedCategory: category,
       returnedItems: filteredFeed.length,
+      ip: getClientIp(req),
     });
 
     return ok(
       res,
       {
         summary: {
-          profileId: profileResult.data.id,
-          memberName:
-            profileResult.data.full_name ||
-            [profileResult.data.first_name, profileResult.data.last_name]
-              .filter(Boolean)
-              .join(" "),
-          email: profileResult.data.email,
-          memberStatus: profileResult.data.member_status,
-          tier: profileResult.data.tier,
+          memberId: safeMember.id,
+          profileId: safeMember.id,
+          memberName: safeMember.fullName,
+          email: safeMember.email,
+          memberStatus: safeMember.status,
+          tier: safeMember.tier || "core",
           requestedCategory: category,
           requestedLimit: limit,
           totals: summary,
         },
+        member: safeMember,
         filters: {
           categories: VALID_CATEGORIES,
           activeCategory: category,
@@ -409,13 +868,18 @@ export default async function handler(req, res) {
       "Activity loaded successfully."
     );
   } catch (error) {
-    logRequestError(req, error, { scope: "portal_activity_unexpected" });
+    logRequestError(req, error, {
+      scope: "portal_activity_unexpected",
+    });
 
     return serverError(
       res,
       "Failed to load portal activity.",
       process.env.NODE_ENV === "development"
-        ? { error: error?.message || "Unknown error." }
+        ? {
+            error: error?.message || "Unknown error.",
+            code: error?.code || null,
+          }
         : null
     );
   }

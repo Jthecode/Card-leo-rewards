@@ -1,22 +1,30 @@
 // api/portal/rewards.js
-
-import { getPortalOverview } from "../../lib/portal.js";
-import { getRewardDashboard } from "../../lib/rewards.js";
+import { supabaseAdmin } from "../../lib/supabase-admin.js";
 import {
   ok,
   unauthorized,
   forbidden,
-  notFound,
   methodNotAllowed,
   serverError,
   setNoStore,
 } from "../../lib/responses.js";
-import { getSessionCookieFromRequest, safeJsonParse } from "../../lib/cookies.js";
+import {
+  clearAuthCookies,
+  safeJsonParse,
+  getSessionCookieName,
+} from "../../lib/cookies.js";
 import {
   logRequestStart,
   logRequestSuccess,
   logRequestError,
 } from "../../lib/logger.js";
+
+const DEFAULT_PORTAL_PATH = "/portal/index.html";
+const DEFAULT_TIMEZONE = "America/New_York";
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 50;
+
+const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
 
 const SESSION_COOKIE_NAMES = [
   "cardleo_session",
@@ -27,7 +35,64 @@ const SESSION_COOKIE_NAMES = [
 ];
 
 function isObject(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function normalizeText(value) {
+  return String(value ?? "").trim();
+}
+
+function normalizeEmail(value) {
+  return normalizeText(value).toLowerCase();
+}
+
+function normalizeStatus(value) {
+  return normalizeText(value || "pending").toLowerCase();
+}
+
+function normalizeTier(value) {
+  const tier = normalizeText(value || "core").toLowerCase();
+
+  if (["core", "silver", "gold", "platinum", "vip"].includes(tier)) {
+    return tier;
+  }
+
+  return "core";
+}
+
+function titleCase(value) {
+  return String(value || "")
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function money(value) {
+  const num = Number(value || 0);
+  return Number.isFinite(num) ? Number(num.toFixed(2)) : 0;
+}
+
+function safeDate(value) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function getUnixNow() {
+  return Math.floor(Date.now() / 1000);
+}
+
+function toPositiveInteger(value, fallback = DEFAULT_LIMIT) {
+  const num = Number(value);
+
+  if (!Number.isFinite(num) || num <= 0) {
+    return fallback;
+  }
+
+  return Math.min(Math.floor(num), MAX_LIMIT);
 }
 
 function firstNonEmpty(...values) {
@@ -36,402 +101,681 @@ function firstNonEmpty(...values) {
       return value;
     }
   }
+
   return "";
 }
 
-function normalizeText(value) {
-  return String(value || "").trim();
+function getClientIp(req) {
+  const forwardedFor = req.headers?.["x-forwarded-for"];
+
+  if (typeof forwardedFor === "string" && forwardedFor.trim()) {
+    return forwardedFor.split(",")[0].trim();
+  }
+
+  return req.socket?.remoteAddress || null;
 }
 
-function normalizeEmail(value) {
-  return normalizeText(value).toLowerCase();
-}
+function parseCookies(req) {
+  if (req?.cookies && typeof req.cookies === "object") {
+    return req.cookies;
+  }
 
-function parseCookieHeader(cookieHeader = "") {
-  return String(cookieHeader)
+  const header = req?.headers?.cookie || "";
+
+  return String(header)
     .split(";")
     .map((part) => part.trim())
     .filter(Boolean)
-    .reduce((acc, part) => {
-      const eqIndex = part.indexOf("=");
-      if (eqIndex === -1) return acc;
+    .reduce((cookies, part) => {
+      const index = part.indexOf("=");
 
-      const key = part.slice(0, eqIndex).trim();
-      const value = part.slice(eqIndex + 1).trim();
+      if (index === -1) return cookies;
 
-      if (!key) return acc;
+      const name = part.slice(0, index).trim();
+      const value = part.slice(index + 1).trim();
 
-      acc[key] = value;
-      return acc;
+      if (!name) return cookies;
+
+      try {
+        cookies[name] = decodeURIComponent(value);
+      } catch {
+        cookies[name] = value;
+      }
+
+      return cookies;
     }, {});
 }
 
-function safeDecodeURIComponent(value) {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
-}
+function readSessionCookie(req) {
+  const cookies = parseCookies(req);
+  const configuredName = getSessionCookieName?.();
 
-function tryParseJson(value) {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
-}
-
-function tryParseBase64Json(value) {
-  try {
-    const decoded = Buffer.from(String(value), "base64").toString("utf8");
-    return JSON.parse(decoded);
-  } catch {
-    return null;
-  }
-}
-
-function getCookieBag(req) {
-  const parsedHeaderCookies = parseCookieHeader(req?.headers?.cookie || "");
-  const runtimeCookies = isObject(req?.cookies) ? req.cookies : {};
-
-  return {
-    ...parsedHeaderCookies,
-    ...runtimeCookies,
-  };
-}
-
-function readSessionPayload(rawValue) {
-  if (!rawValue) return null;
-
-  if (isObject(rawValue)) return rawValue;
-
-  const decoded = safeDecodeURIComponent(String(rawValue).trim());
-  if (!decoded) return null;
-
-  const parsedJson = tryParseJson(decoded);
-  if (parsedJson) return parsedJson;
-
-  const parsedBase64Json = tryParseBase64Json(decoded);
-  if (parsedBase64Json) return parsedBase64Json;
-
-  if (decoded.includes("@")) {
-    return { email: decoded };
-  }
-
-  return null;
-}
-
-function getSessionFromRequest(req) {
-  const directSessionCookie = getSessionCookieFromRequest(req);
-
-  if (directSessionCookie) {
-    const parsedDirect =
-      safeJsonParse(directSessionCookie, null) ||
-      tryParseBase64Json(directSessionCookie);
-
-    if (parsedDirect) {
-      return parsedDirect;
-    }
-  }
-
-  const cookies = getCookieBag(req);
-
-  for (const cookieName of SESSION_COOKIE_NAMES) {
-    const rawValue = cookies[cookieName];
-    const parsed = readSessionPayload(rawValue);
-
-    if (parsed) {
-      return parsed;
-    }
-  }
-
-  return null;
-}
-
-function extractIdentity(session) {
-  const user = isObject(session?.user) ? session.user : {};
-  const member = isObject(session?.member) ? session.member : {};
-  const profile = isObject(session?.profile) ? session.profile : {};
-
-  const email = normalizeEmail(
-    firstNonEmpty(
-      session?.email,
-      user?.email,
-      profile?.email,
-      member?.email
+  const names = Array.from(
+    new Set(
+      [configuredName, ...SESSION_COOKIE_NAMES]
+        .map(normalizeText)
+        .filter(Boolean)
     )
   );
 
-  const portalUserId = String(
-    firstNonEmpty(
-      session?.portalUserId,
-      session?.userId,
-      session?.memberId,
-      user?.id,
-      member?.portalUserId,
-      member?.memberId,
-      profile?.portalUserId
-    ) || ""
-  ).trim();
+  for (const name of names) {
+    const raw = cookies[name];
 
-  const signupId = String(
-    firstNonEmpty(
-      session?.signupId,
-      profile?.signupId,
-      member?.signupId,
-      session?.recordId
-    ) || ""
-  ).trim();
+    if (!raw) continue;
 
-  return {
-    email,
-    portalUserId,
-    signupId,
-  };
-}
+    const parsed = safeJsonParse(raw, null);
 
-function hasIdentity(identity) {
-  return Boolean(identity?.email || identity?.portalUserId || identity?.signupId);
-}
-
-function coerceBoolean(value) {
-  if (typeof value === "boolean") return value;
-  if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
-    if (["true", "1", "yes", "enabled", "active", "approved"].includes(normalized)) {
-      return true;
-    }
-    if (["false", "0", "no", "disabled", "inactive", "pending"].includes(normalized)) {
-      return false;
+    if (isObject(parsed)) {
+      return {
+        cookieName: name,
+        raw,
+        data: parsed,
+      };
     }
   }
-  if (typeof value === "number") return value > 0;
+
   return null;
 }
 
-function getPortalAccess(overview, member) {
-  const directChecks = [
-    overview?.portalAccess,
-    overview?.accessGranted,
-    overview?.isAllowed,
-    member?.portalAccess,
-    member?.accessGranted,
-    member?.isAllowed,
+function getSessionExpiresAt(sessionMeta) {
+  const session = sessionMeta?.data || {};
+
+  const candidates = [
+    session.expires_at,
+    session.session?.expires_at,
   ];
 
-  for (const value of directChecks) {
-    const result = coerceBoolean(value);
-    if (result !== null) return result;
+  for (const candidate of candidates) {
+    const num = Number(candidate);
+
+    if (Number.isFinite(num) && num > 0) {
+      return num;
+    }
   }
 
-  const status = String(
-    firstNonEmpty(
-      member?.status,
-      member?.memberStatus,
-      overview?.status,
-      overview?.memberStatus,
-      ""
-    )
-  )
-    .trim()
-    .toLowerCase();
+  return 0;
+}
 
-  if (["approved", "active", "enabled", "live"].includes(status)) return true;
-  if (["pending", "disabled", "blocked", "denied", "inactive"].includes(status)) {
-    return false;
+function isSessionExpired(sessionMeta) {
+  const expiresAt = getSessionExpiresAt(sessionMeta);
+
+  if (!expiresAt) return true;
+
+  return expiresAt <= getUnixNow();
+}
+
+function getSessionMemberId(sessionMeta) {
+  const session = sessionMeta?.data || {};
+
+  return normalizeText(
+    session.member?.id ||
+      session.profile?.id ||
+      session.user?.id ||
+      session.signupId ||
+      session.signup_id ||
+      session.memberId ||
+      session.member_id ||
+      session.id
+  );
+}
+
+function getSessionEmail(sessionMeta) {
+  const session = sessionMeta?.data || {};
+
+  return normalizeEmail(
+    session.member?.email ||
+      session.profile?.email ||
+      session.user?.email ||
+      session.email ||
+      session.userEmail
+  );
+}
+
+function isMissingOptionalTableOrColumn(error) {
+  const code = String(error?.code || "");
+  const message = String(error?.message || "").toLowerCase();
+  const details = String(error?.details || "").toLowerCase();
+
+  return (
+    code === "42P01" ||
+    code === "42703" ||
+    code === "PGRST204" ||
+    code === "PGRST205" ||
+    message.includes("does not exist") ||
+    message.includes("could not find") ||
+    message.includes("schema cache") ||
+    details.includes("does not exist") ||
+    details.includes("could not find") ||
+    details.includes("schema cache")
+  );
+}
+
+function getDisplayName(member) {
+  const fullName = normalizeText(member?.full_name);
+
+  if (fullName) return fullName;
+
+  const joined = [member?.first_name, member?.last_name]
+    .map(normalizeText)
+    .filter(Boolean)
+    .join(" ");
+
+  return joined || "Card Leo Member";
+}
+
+function normalizeMemberStatus(value) {
+  const status = normalizeStatus(value);
+
+  if (["active", "approved", "invited"].includes(status)) return "active";
+  if (["pending", "reviewing"].includes(status)) return "pending";
+  if (["disabled", "suspended", "paused"].includes(status)) return "suspended";
+  if (["denied", "closed"].includes(status)) return status;
+
+  return status || "pending";
+}
+
+function sanitizeMember(member) {
+  if (!member) return null;
+
+  const status = normalizeStatus(member.status);
+  const tier = normalizeTier(member.tier || "core");
+
+  return {
+    id: member.id || null,
+    signupId: member.id || null,
+    portalUserId: member.portal_user_id || null,
+    email: member.email || null,
+    firstName: member.first_name || "",
+    lastName: member.last_name || "",
+    fullName: getDisplayName(member),
+    name: getDisplayName(member),
+    phone: member.phone || "",
+    city: member.city || "",
+    state: member.state || "",
+    interest: member.interest || "",
+    status: member.status || "",
+    memberStatus: normalizeMemberStatus(member.status),
+    tier,
+    tierLabel: titleCase(tier),
+    referralCode: member.referral_code || "",
+    portalLoginUrl: member.portal_login_url || DEFAULT_PORTAL_PATH,
+    portalAccess: ACTIVE_STATUSES.has(status),
+    accessLevel: "member",
+    emailVerified: Boolean(member.email_verified),
+    emailVerifiedAt: member.email_verified_at || null,
+    joinedAt: member.created_at || null,
+    createdAt: member.created_at || null,
+    updatedAt: member.updated_at || null,
+    role: "member",
+  };
+}
+
+async function getSignupRecord({ signupId, email }) {
+  const extendedFields = [
+    "id",
+    "email",
+    "status",
+    "first_name",
+    "last_name",
+    "full_name",
+    "phone",
+    "city",
+    "state",
+    "interest",
+    "tier",
+    "referral_code",
+    "email_verified",
+    "email_verified_at",
+    "created_at",
+    "updated_at",
+    "portal_login_url",
+    "portal_user_id",
+  ].join(", ");
+
+  const baseFields = [
+    "id",
+    "email",
+    "status",
+    "first_name",
+    "last_name",
+    "full_name",
+    "phone",
+    "city",
+    "state",
+    "interest",
+    "created_at",
+    "updated_at",
+    "portal_login_url",
+    "portal_user_id",
+  ].join(", ");
+
+  let query = supabaseAdmin.from("signups").select(extendedFields).limit(1);
+
+  if (signupId) {
+    query = query.eq("id", signupId);
+  } else {
+    query = query.eq("email", email);
   }
 
-  return true;
+  let result = await query.maybeSingle();
+
+  if (result.error && isMissingOptionalTableOrColumn(result.error)) {
+    let fallbackQuery = supabaseAdmin.from("signups").select(baseFields).limit(1);
+
+    if (signupId) {
+      fallbackQuery = fallbackQuery.eq("id", signupId);
+    } else {
+      fallbackQuery = fallbackQuery.eq("email", email);
+    }
+
+    result = await fallbackQuery.maybeSingle();
+  }
+
+  return result;
+}
+
+async function getAuthenticatedMember(req, res) {
+  const sessionMeta = readSessionCookie(req);
+
+  if (!sessionMeta?.data) {
+    return {
+      member: null,
+      response: unauthorized(res, "You must be logged in to view rewards."),
+    };
+  }
+
+  if (isSessionExpired(sessionMeta)) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Session expired. Please sign in again."),
+    };
+  }
+
+  if (sessionMeta.data.authenticated !== true) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Session invalid. Please sign in again."),
+    };
+  }
+
+  const signupId = getSessionMemberId(sessionMeta);
+  const email = getSessionEmail(sessionMeta);
+
+  if (!signupId && !email) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Your session is missing a valid portal identity."),
+    };
+  }
+
+  const { data: member, error } = await getSignupRecord({
+    signupId,
+    email,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  if (!member?.id) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "No member record was found for this account."),
+    };
+  }
+
+  const status = normalizeStatus(member.status || "pending");
+
+  if (!ACTIVE_STATUSES.has(status)) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: forbidden(
+        res,
+        status === "pending" || status === "reviewing"
+          ? "Your account is pending approval."
+          : "Your member account exists, but rewards access is not enabled yet.",
+        {
+          member: sanitizeMember(member),
+        }
+      ),
+    };
+  }
+
+  return {
+    member,
+    response: null,
+  };
+}
+
+async function queryOptionalSingleByMemberColumns({ table, memberId, columns }) {
+  for (const column of columns) {
+    const { data, error } = await supabaseAdmin
+      .from(table)
+      .select("*")
+      .eq(column, memberId)
+      .maybeSingle();
+
+    if (!error) {
+      return data || null;
+    }
+
+    if (isMissingOptionalTableOrColumn(error)) {
+      continue;
+    }
+
+    throw error;
+  }
+
+  return null;
+}
+
+async function queryOptionalListByMemberColumns({
+  table,
+  memberId,
+  columns,
+  limit = DEFAULT_LIMIT,
+}) {
+  for (const column of columns) {
+    const { data, error } = await supabaseAdmin
+      .from(table)
+      .select("*")
+      .eq(column, memberId)
+      .limit(limit);
+
+    if (!error) {
+      return data || [];
+    }
+
+    if (isMissingOptionalTableOrColumn(error)) {
+      continue;
+    }
+
+    throw error;
+  }
+
+  return [];
+}
+
+function sortByDateDesc(items, keys = ["postedAt", "paidAt", "createdAt"]) {
+  return [...items].sort((a, b) => {
+    const aValue = keys.map((key) => a?.[key]).find(Boolean);
+    const bValue = keys.map((key) => b?.[key]).find(Boolean);
+
+    const aTime = new Date(aValue || 0).getTime();
+    const bTime = new Date(bValue || 0).getTime();
+
+    return bTime - aTime;
+  });
 }
 
 function normalizeRewardStatus(value) {
-  const status = String(value || "").trim().toLowerCase();
+  const status = normalizeText(value).toLowerCase();
 
   if (!status) return "posted";
-  if (["pending", "posted", "voided", "paid", "released"].includes(status)) {
-    return status;
-  }
 
   return status;
 }
 
-function money(value) {
-  const num = Number(value || 0);
-  return Number.isFinite(num) ? Number(num.toFixed(2)) : 0;
-}
-
-function normalizeTransactions(transactions) {
-  if (!Array.isArray(transactions)) return [];
-
-  return transactions.map((tx, index) => {
-    const item = isObject(tx) ? tx : {};
-
-    return {
-      id: firstNonEmpty(item.id, `reward-tx-${index + 1}`),
-      title: firstNonEmpty(item.title, item.transactionType, `Reward Activity ${index + 1}`),
-      description: firstNonEmpty(
-        item.description,
-        "Card Leo Rewards activity."
-      ),
-      status: normalizeRewardStatus(
-        firstNonEmpty(item.transactionStatus, item.status, "posted")
-      ),
-      amount: money(item.amount),
-      type: firstNonEmpty(item.transactionType, item.type, "manual_adjustment"),
-      referenceType: firstNonEmpty(item.referenceType, item.reference_type, ""),
-      referenceId: firstNonEmpty(item.referenceId, item.reference_id, ""),
-      postedAt: firstNonEmpty(item.postedAt, item.createdAt, ""),
-      metadata: isObject(item.metadata) ? item.metadata : {},
-      sourceProfileId: firstNonEmpty(item.sourceProfileId, ""),
-      relatedProfileId: firstNonEmpty(item.relatedProfileId, ""),
-    };
-  });
-}
-
-function normalizePayouts(payouts) {
-  if (!Array.isArray(payouts)) return [];
-
-  return payouts.map((payout, index) => {
-    const item = isObject(payout) ? payout : {};
-
-    return {
-      id: firstNonEmpty(item.id, `reward-payout-${index + 1}`),
-      payoutType: firstNonEmpty(item.payoutType, item.type, "manual"),
-      payoutStatus: firstNonEmpty(item.payoutStatus, item.status, "pending"),
-      amount: money(item.amount),
-      periodStart: firstNonEmpty(item.periodStart, ""),
-      periodEnd: firstNonEmpty(item.periodEnd, ""),
-      paidAt: firstNonEmpty(item.paidAt, ""),
-      notes: firstNonEmpty(item.notes, ""),
-      externalPayoutId: firstNonEmpty(item.externalPayoutId, ""),
-      metadata: isObject(item.metadata) ? item.metadata : {},
-    };
-  });
-}
-
-function normalizePayments(payments) {
-  if (!Array.isArray(payments)) return [];
-
-  return payments.map((payment, index) => {
-    const item = isObject(payment) ? payment : {};
-
-    return {
-      id: firstNonEmpty(item.id, `membership-payment-${index + 1}`),
-      paymentMonth: Number(item.paymentMonth || 0),
-      amountCharged: money(item.amountCharged),
-      cardleoAmount: money(item.cardleoAmount),
-      directReferralAmount: money(item.directReferralAmount),
-      overrideAmount: money(item.overrideAmount),
-      companyBuildingAmount: money(item.companyBuildingAmount),
-      paymentStatus: firstNonEmpty(item.paymentStatus, "paid"),
-      billingPeriodStart: firstNonEmpty(item.billingPeriodStart, ""),
-      billingPeriodEnd: firstNonEmpty(item.billingPeriodEnd, ""),
-      paidAt: firstNonEmpty(item.paidAt, ""),
-      externalPaymentId: firstNonEmpty(item.externalPaymentId, ""),
-    };
-  });
-}
-
-function normalizeCycles(cycles) {
-  if (!Array.isArray(cycles)) return [];
-
-  return cycles.map((cycle, index) => {
-    const item = isObject(cycle) ? cycle : {};
-
-    return {
-      id: firstNonEmpty(item.id, `membership-cycle-${index + 1}`),
-      cycleNumber: Number(item.cycleNumber || 0),
-      cycleStartDate: firstNonEmpty(item.cycleStartDate, ""),
-      cycleEndDate: firstNonEmpty(item.cycleEndDate, ""),
-      paidMonthsCount: Number(item.paidMonthsCount || 0),
-      requiredPaidMonths: Number(item.requiredPaidMonths || 4),
-      companyBuildingAccrued: money(item.companyBuildingAccrued),
-      companyBuildingReleased: money(item.companyBuildingReleased),
-      cycleStatus: firstNonEmpty(item.cycleStatus, "open"),
-      completedAt: firstNonEmpty(item.completedAt, ""),
-      releasedAt: firstNonEmpty(item.releasedAt, ""),
-      forfeitedAt: firstNonEmpty(item.forfeitedAt, ""),
-    };
-  });
-}
-
-function buildSummary(rewardDashboard, member) {
-  const summary = isObject(rewardDashboard?.summary) ? rewardDashboard.summary : {};
-  const account = isObject(rewardDashboard?.account) ? rewardDashboard.account : {};
+function mapRewardTransactionRow(row, index = 0) {
+  const amount = money(row.amount);
 
   return {
-    membershipMonthlyAmount: money(summary.membershipMonthlyAmount || 20),
-    cardleoAmount: money(summary.cardleoAmount || 10),
-    directReferralAmount: money(summary.directReferralAmount || 7),
-    overrideReferralAmount: money(summary.overrideReferralAmount || 1),
-    companyBuildingAmount: money(summary.companyBuildingAmount || 2),
-    companyBuildingCycleMonths: Number(summary.companyBuildingCycleMonths || 4),
-    totalCardleoAllocated: money(
-      summary.totalCardleoAllocated ?? account.totalCardleoAllocated
+    id: firstNonEmpty(row.id, `reward-tx-${index + 1}`),
+    title: firstNonEmpty(
+      row.title,
+      titleCase(row.transaction_type || row.type || "reward activity")
     ),
+    description: firstNonEmpty(
+      row.description,
+      `${amount.toFixed(2)} ${row.currency_code || "USD"} • ${titleCase(
+        row.transaction_status || row.status || "posted"
+      )}`
+    ),
+    status: normalizeRewardStatus(row.transaction_status || row.status || "posted"),
+    amount,
+    type: firstNonEmpty(row.transaction_type, row.type, "manual_adjustment"),
+    referenceType: firstNonEmpty(row.reference_type, row.referenceType, ""),
+    referenceId: firstNonEmpty(row.reference_id, row.referenceId, ""),
+    currencyCode: row.currency_code || "USD",
+    postedAt: safeDate(row.posted_at || row.occurred_at || row.created_at),
+    createdAt: safeDate(row.created_at),
+    metadata: isObject(row.metadata) ? row.metadata : {},
+    sourceProfileId: firstNonEmpty(row.source_profile_id, row.sourceProfileId, ""),
+    relatedProfileId: firstNonEmpty(row.related_profile_id, row.relatedProfileId, ""),
+  };
+}
+
+function mapPayoutRow(row, index = 0) {
+  return {
+    id: firstNonEmpty(row.id, `reward-payout-${index + 1}`),
+    payoutType: firstNonEmpty(row.payout_type, row.payoutType, row.type, "manual"),
+    payoutStatus: firstNonEmpty(row.payout_status, row.payoutStatus, row.status, "pending"),
+    amount: money(row.amount),
+    periodStart: safeDate(row.period_start || row.periodStart),
+    periodEnd: safeDate(row.period_end || row.periodEnd),
+    paidAt: safeDate(row.paid_at || row.paidAt || row.created_at),
+    notes: firstNonEmpty(row.notes, ""),
+    externalPayoutId: firstNonEmpty(row.external_payout_id, row.externalPayoutId, ""),
+    metadata: isObject(row.metadata) ? row.metadata : {},
+    createdAt: safeDate(row.created_at),
+  };
+}
+
+function mapPaymentRow(row, index = 0) {
+  return {
+    id: firstNonEmpty(row.id, `membership-payment-${index + 1}`),
+    paymentMonth: Number(row.payment_month || row.paymentMonth || 0),
+    amountCharged: money(row.amount_charged || row.amountCharged || row.amount),
+    cardleoAmount: money(row.cardleo_amount || row.cardleoAmount),
+    directReferralAmount: money(row.direct_referral_amount || row.directReferralAmount),
+    overrideAmount: money(row.override_amount || row.overrideAmount),
+    companyBuildingAmount: money(row.company_building_amount || row.companyBuildingAmount),
+    paymentStatus: firstNonEmpty(row.payment_status, row.paymentStatus, row.status, "paid"),
+    billingPeriodStart: safeDate(row.billing_period_start || row.billingPeriodStart),
+    billingPeriodEnd: safeDate(row.billing_period_end || row.billingPeriodEnd),
+    paidAt: safeDate(row.paid_at || row.paidAt || row.created_at),
+    externalPaymentId: firstNonEmpty(row.external_payment_id, row.externalPaymentId, ""),
+    createdAt: safeDate(row.created_at),
+  };
+}
+
+function mapCycleRow(row, index = 0) {
+  return {
+    id: firstNonEmpty(row.id, `membership-cycle-${index + 1}`),
+    cycleNumber: Number(row.cycle_number || row.cycleNumber || index + 1),
+    cycleStartDate: safeDate(row.cycle_start_date || row.cycleStartDate),
+    cycleEndDate: safeDate(row.cycle_end_date || row.cycleEndDate),
+    paidMonthsCount: Number(row.paid_months_count || row.paidMonthsCount || 0),
+    requiredPaidMonths: Number(row.required_paid_months || row.requiredPaidMonths || 4),
+    companyBuildingAccrued: money(row.company_building_accrued || row.companyBuildingAccrued),
+    companyBuildingReleased: money(row.company_building_released || row.companyBuildingReleased),
+    cycleStatus: firstNonEmpty(row.cycle_status, row.cycleStatus, row.status, "open"),
+    completedAt: safeDate(row.completed_at || row.completedAt),
+    releasedAt: safeDate(row.released_at || row.releasedAt),
+    forfeitedAt: safeDate(row.forfeited_at || row.forfeitedAt),
+    createdAt: safeDate(row.created_at),
+  };
+}
+
+function buildDefaultRewardAccount(member) {
+  return {
+    signup_id: member?.id || null,
+    member_id: member?.id || null,
+    account_status: ACTIVE_STATUSES.has(normalizeStatus(member?.status))
+      ? "active"
+      : "pending",
+    total_cardleo_allocated: 0,
+    total_direct_referral_earned: 0,
+    total_override_earned: 0,
+    company_building_pending: 0,
+    company_building_released: 0,
+    company_building_forfeited: 0,
+    total_member_revenue_processed: 0,
+    total_rewards_earned: 0,
+    total_rewards_paid: 0,
+    last_membership_paid_at: null,
+    last_direct_referral_at: null,
+    last_override_at: null,
+    last_company_building_release_at: null,
+  };
+}
+
+function normalizeRewardAccount(account, member) {
+  const base = account || buildDefaultRewardAccount(member);
+
+  return {
+    signupId: base.signup_id || base.signupId || member?.id || null,
+    memberId: base.member_id || base.memberId || member?.id || null,
+    accountStatus: base.account_status || base.accountStatus || "active",
+    totalCardleoAllocated: money(base.total_cardleo_allocated || base.totalCardleoAllocated),
     totalDirectReferralEarned: money(
-      summary.totalDirectReferralEarned ?? account.totalDirectReferralEarned
+      base.total_direct_referral_earned || base.totalDirectReferralEarned
     ),
-    totalOverrideEarned: money(
-      summary.totalOverrideEarned ?? account.totalOverrideEarned
-    ),
+    totalOverrideEarned: money(base.total_override_earned || base.totalOverrideEarned),
     companyBuildingPending: money(
-      summary.companyBuildingPending ?? account.companyBuildingPending
+      base.company_building_pending || base.companyBuildingPending
     ),
     companyBuildingReleased: money(
-      summary.companyBuildingReleased ?? account.companyBuildingReleased
+      base.company_building_released || base.companyBuildingReleased
     ),
     companyBuildingForfeited: money(
-      summary.companyBuildingForfeited ?? account.companyBuildingForfeited
+      base.company_building_forfeited || base.companyBuildingForfeited
     ),
-    totalRewardsEarned: money(
-      summary.totalRewardsEarned ?? account.totalRewardsEarned
+    totalMemberRevenueProcessed: money(
+      base.total_member_revenue_processed || base.totalMemberRevenueProcessed
     ),
-    totalRewardsPaid: money(
-      summary.totalRewardsPaid ?? account.totalRewardsPaid
+    totalRewardsEarned: money(base.total_rewards_earned || base.totalRewardsEarned),
+    totalRewardsPaid: money(base.total_rewards_paid || base.totalRewardsPaid),
+    lastMembershipPaidAt: safeDate(
+      base.last_membership_paid_at || base.lastMembershipPaidAt
     ),
-    accessLevel: firstNonEmpty(
-      member?.accessLevel,
-      member?.membershipLevel,
-      "Premium Access"
+    lastDirectReferralAt: safeDate(
+      base.last_direct_referral_at || base.lastDirectReferralAt
     ),
-    statusLabel: firstNonEmpty(
-      member?.statusLabel,
-      member?.status,
-      "Active"
+    lastOverrideAt: safeDate(base.last_override_at || base.lastOverrideAt),
+    lastCompanyBuildingReleaseAt: safeDate(
+      base.last_company_building_release_at || base.lastCompanyBuildingReleaseAt
     ),
   };
 }
 
-function normalizeNotices(overview) {
-  const notices =
-    (Array.isArray(overview?.notices) && overview.notices) ||
-    (Array.isArray(overview?.announcements) && overview.announcements) ||
-    [];
+function sumTransactionsByType(transactions, typeIncludes) {
+  return transactions.reduce((total, tx) => {
+    const type = normalizeText(tx.type).toLowerCase();
+    const matches = typeIncludes.some((part) => type.includes(part));
+    return matches ? total + money(tx.amount) : total;
+  }, 0);
+}
 
-  return notices.map((notice, index) => {
-    const item = isObject(notice) ? notice : {};
+function buildSummary({
+  rewardAccount,
+  transactions,
+  payouts,
+  payments,
+  cycles,
+  member,
+}) {
+  const txTotal = transactions.reduce((total, tx) => total + money(tx.amount), 0);
+  const payoutTotal = payouts.reduce((total, payout) => total + money(payout.amount), 0);
 
-    if (!isObject(notice)) {
-      return {
-        id: `notice-${index + 1}`,
-        title: `Notice ${index + 1}`,
-        body: String(notice || ""),
-      };
-    }
+  const accountRewardsEarned =
+    rewardAccount.totalRewardsEarned > 0
+      ? rewardAccount.totalRewardsEarned
+      : txTotal;
 
-    return {
-      id: firstNonEmpty(item.id, `notice-${index + 1}`),
-      title: firstNonEmpty(item.title, item.name, `Notice ${index + 1}`),
-      body: firstNonEmpty(
-        item.body,
-        item.message,
-        item.description,
-        "Important member update available."
-      ),
-    };
-  });
+  const accountRewardsPaid =
+    rewardAccount.totalRewardsPaid > 0
+      ? rewardAccount.totalRewardsPaid
+      : payoutTotal;
+
+  return {
+    membershipMonthlyAmount: 20,
+    cardleoAmount: 10,
+    directReferralAmount: 7,
+    overrideReferralAmount: 1,
+    companyBuildingAmount: 2,
+    companyBuildingCycleMonths: 4,
+
+    totalCardleoAllocated:
+      rewardAccount.totalCardleoAllocated ||
+      sumTransactionsByType(transactions, ["cardleo"]),
+
+    totalDirectReferralEarned:
+      rewardAccount.totalDirectReferralEarned ||
+      sumTransactionsByType(transactions, ["direct_referral", "direct referral"]),
+
+    totalOverrideEarned:
+      rewardAccount.totalOverrideEarned ||
+      sumTransactionsByType(transactions, ["override"]),
+
+    companyBuildingPending: rewardAccount.companyBuildingPending,
+    companyBuildingReleased: rewardAccount.companyBuildingReleased,
+    companyBuildingForfeited: rewardAccount.companyBuildingForfeited,
+
+    totalRewardsEarned: money(accountRewardsEarned),
+    totalRewardsPaid: money(accountRewardsPaid),
+    availableRewardsBalance: money(accountRewardsEarned - accountRewardsPaid),
+
+    transactionCount: transactions.length,
+    payoutCount: payouts.length,
+    paymentCount: payments.length,
+    cycleCount: cycles.length,
+
+    accessLevel: "Premium Access",
+    statusLabel: titleCase(member?.status || "Active"),
+  };
+}
+
+function buildNotices({ member, rewardAccount }) {
+  const notices = [];
+
+  if (!member?.email_verified && !member?.email_verified_at) {
+    notices.push({
+      id: "verify-email",
+      type: "warning",
+      title: "Verify your email",
+      body: "Verify your email address to complete account setup and strengthen reward eligibility.",
+    });
+  }
+
+  if (rewardAccount.totalRewardsEarned <= 0) {
+    notices.push({
+      id: "rewards-start",
+      type: "info",
+      title: "Rewards will appear here",
+      body: "Your rewards dashboard is ready. Earnings will show once eligible activity is recorded.",
+    });
+  }
+
+  if (rewardAccount.companyBuildingPending > 0) {
+    notices.push({
+      id: "company-building-pending",
+      type: "info",
+      title: "Company-building earnings pending",
+      body: "Complete the required paid membership cycle to unlock pending company-building earnings.",
+    });
+  }
+
+  return notices;
+}
+
+function buildSupportPayload() {
+  return {
+    email: "support@cardleorewards.com",
+    phone: "",
+    hours: "Mon–Fri, 9:00 AM–6:00 PM",
+    endpoint: "/api/contact",
+  };
 }
 
 export default async function handler(req, res) {
@@ -443,143 +787,148 @@ export default async function handler(req, res) {
   }
 
   try {
-    const session = getSessionFromRequest(req);
-
-    if (!session) {
-      return unauthorized(res, "You must be logged in to view rewards.");
-    }
-
-    const identity = extractIdentity(session);
-
-    if (!hasIdentity(identity)) {
-      return unauthorized(
-        res,
-        "Your session is missing a valid portal identity."
-      );
-    }
-
-    const overview = await getPortalOverview({
-      email: identity.email,
-      portalUserId: identity.portalUserId,
-      signupId: identity.signupId,
-    });
-
-    if (!overview || !isObject(overview)) {
-      return notFound(
-        res,
-        "We could not find a member record for this account."
-      );
-    }
-
-    const member = isObject(overview.member)
-      ? overview.member
-      : isObject(overview.data?.member)
-        ? overview.data.member
-        : null;
+    const { member, response } = await getAuthenticatedMember(req, res);
 
     if (!member) {
-      return notFound(
-        res,
-        "No member record was found for this account."
-      );
+      return response;
     }
 
-    const portalAccess = getPortalAccess(overview, member);
+    const safeMember = sanitizeMember(member);
+    const memberId = safeMember.id;
+    const limit = toPositiveInteger(req.query?.limit, DEFAULT_LIMIT);
+    const queryLimit = Math.max(limit, DEFAULT_LIMIT);
 
-    if (!portalAccess) {
-      return forbidden(
-        res,
-        "Your member account exists, but portal rewards access is not enabled yet.",
-        {
-          member: {
-            memberId: firstNonEmpty(
-              member.memberId,
-              member.portalUserId,
-              member.signupId,
-              ""
-            ),
-            email: firstNonEmpty(member.email, identity.email, ""),
-            status: firstNonEmpty(member.status, member.statusLabel, "pending"),
-            accessLevel: firstNonEmpty(
-              member.accessLevel,
-              member.membershipLevel,
-              "Pending Access"
-            ),
-          },
-        }
-      );
-    }
+    const [
+      rewardAccountRaw,
+      rewardTransactionRows,
+      payoutRows,
+      paymentRows,
+      cycleRows,
+    ] = await Promise.all([
+      queryOptionalSingleByMemberColumns({
+        table: "reward_accounts",
+        memberId,
+        columns: ["member_id", "signup_id", "profile_id"],
+      }),
 
-    const profile = isObject(overview.profile)
-      ? overview.profile
-      : isObject(overview.data?.profile)
-        ? overview.data.profile
-        : {};
+      queryOptionalListByMemberColumns({
+        table: "reward_transactions",
+        memberId,
+        columns: ["member_id", "signup_id", "profile_id"],
+        limit: queryLimit,
+      }),
 
-    const rewardProfileId = firstNonEmpty(
-      profile?.id,
-      member?.profileId,
-      member?.portalUserId,
-      identity.portalUserId
-    );
+      queryOptionalListByMemberColumns({
+        table: "reward_payouts",
+        memberId,
+        columns: ["member_id", "signup_id", "profile_id"],
+        limit: queryLimit,
+      }),
 
-    let rewardDashboard = {
-      account: null,
-      recentTransactions: [],
-      recentPayouts: [],
-      recentPayments: [],
-      cycles: [],
-      summary: {},
-    };
+      queryOptionalListByMemberColumns({
+        table: "membership_payments",
+        memberId,
+        columns: ["member_id", "signup_id", "profile_id"],
+        limit: queryLimit,
+      }),
 
-    if (rewardProfileId) {
-      rewardDashboard = await getRewardDashboard(rewardProfileId, {
-        recentLimit: 10,
-      });
-    }
+      queryOptionalListByMemberColumns({
+        table: "membership_cycles",
+        memberId,
+        columns: ["member_id", "signup_id", "profile_id"],
+        limit: queryLimit,
+      }),
+    ]);
 
-    const transactions = normalizeTransactions(
-      rewardDashboard?.recentTransactions || []
-    );
-    const payouts = normalizePayouts(rewardDashboard?.recentPayouts || []);
-    const payments = normalizePayments(rewardDashboard?.recentPayments || []);
-    const cycles = normalizeCycles(rewardDashboard?.cycles || []);
-    const notices = normalizeNotices(overview);
-    const summary = buildSummary(rewardDashboard, member);
+    const rewardAccount = normalizeRewardAccount(rewardAccountRaw, member);
+
+    const transactions = sortByDateDesc(
+      rewardTransactionRows.map(mapRewardTransactionRow),
+      ["postedAt", "createdAt"]
+    ).slice(0, limit);
+
+    const payouts = sortByDateDesc(
+      payoutRows.map(mapPayoutRow),
+      ["paidAt", "createdAt"]
+    ).slice(0, limit);
+
+    const payments = sortByDateDesc(
+      paymentRows.map(mapPaymentRow),
+      ["paidAt", "createdAt"]
+    ).slice(0, limit);
+
+    const cycles = sortByDateDesc(
+      cycleRows.map(mapCycleRow),
+      ["cycleStartDate", "createdAt"]
+    ).slice(0, limit);
+
+    const summary = buildSummary({
+      rewardAccount,
+      transactions,
+      payouts,
+      payments,
+      cycles,
+      member,
+    });
+
+    const notices = buildNotices({
+      member,
+      rewardAccount,
+    });
 
     logRequestSuccess(req, {
       scope: "portal_rewards",
-      email: identity.email,
-      profileId: rewardProfileId || "",
+      memberId,
+      email: safeMember.email,
       transactionCount: transactions.length,
       payoutCount: payouts.length,
+      ip: getClientIp(req),
     });
 
     return ok(
       res,
       {
-        member,
-        profile,
-        rewardAccount: rewardDashboard?.account || null,
+        member: safeMember,
+        profile: {
+          id: safeMember.id,
+          email: safeMember.email,
+          first_name: safeMember.firstName,
+          last_name: safeMember.lastName,
+          full_name: safeMember.fullName,
+          status: safeMember.status,
+          tier: safeMember.tier,
+          role: "member",
+        },
+        rewardAccount,
         rewards: transactions,
+        transactions,
         payouts,
         membershipPayments: payments,
         cycles,
         summary,
         notices,
-        support: isObject(overview.support) ? overview.support : null,
+        support: buildSupportPayload(),
+        filters: {
+          limit,
+        },
+        timezone: DEFAULT_TIMEZONE,
         fetchedAt: new Date().toISOString(),
       },
       "Rewards loaded successfully."
     );
   } catch (error) {
-    logRequestError(req, error, { scope: "portal_rewards_unexpected" });
+    logRequestError(req, error, {
+      scope: "portal_rewards_unexpected",
+    });
 
     return serverError(
       res,
       "Something went wrong while loading member rewards.",
       process.env.NODE_ENV === "development"
-        ? { error: String(error?.message || error) }
+        ? {
+            error: String(error?.message || error),
+            code: error?.code || null,
+          }
         : null
     );
   }

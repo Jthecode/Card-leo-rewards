@@ -1,15 +1,18 @@
 // api/portal/referrals.js
-
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 import {
   ok,
   unauthorized,
-  notFound,
+  forbidden,
   methodNotAllowed,
   serverError,
   setNoStore,
 } from "../../lib/responses.js";
-import { getAccessTokenFromRequest } from "../../lib/cookies.js";
+import {
+  clearAuthCookies,
+  safeJsonParse,
+  getSessionCookieName,
+} from "../../lib/cookies.js";
 import {
   logRequestStart,
   logRequestSuccess,
@@ -18,6 +21,18 @@ import {
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
+const DEFAULT_PORTAL_PATH = "/portal/index.html";
+
+const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
+
+const SESSION_COOKIE_NAMES = [
+  "cardleo_session",
+  "card_leo_session",
+  "member_session",
+  "portal_session",
+  "session",
+];
+
 const VALID_STATUSES = [
   "all",
   "invited",
@@ -30,32 +45,64 @@ const VALID_STATUSES = [
   "cancelled",
 ];
 
-function toPositiveInteger(value, fallback = DEFAULT_LIMIT) {
-  const num = Number(value);
-  if (!Number.isFinite(num) || num <= 0) return fallback;
-  return Math.min(Math.floor(num), MAX_LIMIT);
+function isObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function normalizeText(value) {
+  return String(value ?? "").trim();
+}
+
+function normalizeEmail(value) {
+  return normalizeText(value).toLowerCase();
+}
+
+function normalizeMemberStatus(value) {
+  return normalizeText(value || "pending").toLowerCase();
+}
+
+function normalizeTier(value) {
+  const tier = normalizeText(value || "core").toLowerCase();
+
+  if (["core", "silver", "gold", "platinum", "vip"].includes(tier)) {
+    return tier;
+  }
+
+  return "core";
 }
 
 function normalizeStatus(value) {
-  const normalized = String(value || "all").trim().toLowerCase();
+  const normalized = normalizeText(value || "all").toLowerCase();
   return VALID_STATUSES.includes(normalized) ? normalized : "all";
 }
 
 function normalizeChannel(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase();
+  return normalizeText(value).toLowerCase();
 }
 
 function normalizeSource(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase();
+  return normalizeText(value).toLowerCase();
+}
+
+function toPositiveInteger(value, fallback = DEFAULT_LIMIT) {
+  const num = Number(value);
+
+  if (!Number.isFinite(num) || num <= 0) {
+    return fallback;
+  }
+
+  return Math.min(Math.floor(num), MAX_LIMIT);
+}
+
+function getUnixNow() {
+  return Math.floor(Date.now() / 1000);
 }
 
 function safeDate(value) {
   if (!value) return null;
+
   const date = new Date(value);
+
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
@@ -72,6 +119,363 @@ function money(value) {
   return Number.isFinite(num) ? Number(num.toFixed(2)) : 0;
 }
 
+function getClientIp(req) {
+  const forwardedFor = req.headers?.["x-forwarded-for"];
+
+  if (typeof forwardedFor === "string" && forwardedFor.trim()) {
+    return forwardedFor.split(",")[0].trim();
+  }
+
+  return req.socket?.remoteAddress || null;
+}
+
+function parseCookies(req) {
+  if (req?.cookies && typeof req.cookies === "object") {
+    return req.cookies;
+  }
+
+  const header = req?.headers?.cookie || "";
+
+  return String(header)
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .reduce((cookies, part) => {
+      const index = part.indexOf("=");
+
+      if (index === -1) return cookies;
+
+      const name = part.slice(0, index).trim();
+      const value = part.slice(index + 1).trim();
+
+      if (!name) return cookies;
+
+      try {
+        cookies[name] = decodeURIComponent(value);
+      } catch {
+        cookies[name] = value;
+      }
+
+      return cookies;
+    }, {});
+}
+
+function readSessionCookie(req) {
+  const cookies = parseCookies(req);
+  const configuredName = getSessionCookieName?.();
+
+  const names = Array.from(
+    new Set(
+      [configuredName, ...SESSION_COOKIE_NAMES]
+        .map(normalizeText)
+        .filter(Boolean)
+    )
+  );
+
+  for (const name of names) {
+    const raw = cookies[name];
+
+    if (!raw) continue;
+
+    const parsed = safeJsonParse(raw, null);
+
+    if (isObject(parsed)) {
+      return {
+        cookieName: name,
+        raw,
+        data: parsed,
+      };
+    }
+  }
+
+  return null;
+}
+
+function getSessionExpiresAt(sessionMeta) {
+  const session = sessionMeta?.data || {};
+
+  const candidates = [
+    session.expires_at,
+    session.session?.expires_at,
+  ];
+
+  for (const candidate of candidates) {
+    const num = Number(candidate);
+
+    if (Number.isFinite(num) && num > 0) {
+      return num;
+    }
+  }
+
+  return 0;
+}
+
+function isSessionExpired(sessionMeta) {
+  const expiresAt = getSessionExpiresAt(sessionMeta);
+
+  if (!expiresAt) return true;
+
+  return expiresAt <= getUnixNow();
+}
+
+function getSessionMemberId(sessionMeta) {
+  const session = sessionMeta?.data || {};
+
+  return normalizeText(
+    session.member?.id ||
+      session.profile?.id ||
+      session.user?.id ||
+      session.signupId ||
+      session.signup_id ||
+      session.memberId ||
+      session.member_id ||
+      session.id
+  );
+}
+
+function getSessionEmail(sessionMeta) {
+  const session = sessionMeta?.data || {};
+
+  return normalizeEmail(
+    session.member?.email ||
+      session.profile?.email ||
+      session.user?.email ||
+      session.email ||
+      session.userEmail
+  );
+}
+
+function isMissingOptionalTableOrColumn(error) {
+  const code = String(error?.code || "");
+  const message = String(error?.message || "").toLowerCase();
+  const details = String(error?.details || "").toLowerCase();
+
+  return (
+    code === "42P01" ||
+    code === "42703" ||
+    code === "PGRST204" ||
+    code === "PGRST205" ||
+    message.includes("does not exist") ||
+    message.includes("could not find") ||
+    message.includes("schema cache") ||
+    details.includes("does not exist") ||
+    details.includes("could not find") ||
+    details.includes("schema cache")
+  );
+}
+
+function getDisplayName(member) {
+  const fullName = normalizeText(member?.full_name);
+
+  if (fullName) return fullName;
+
+  const joined = [member?.first_name, member?.last_name]
+    .map(normalizeText)
+    .filter(Boolean)
+    .join(" ");
+
+  return joined || "Card Leo Member";
+}
+
+function getFallbackReferralCode(member) {
+  const saved = normalizeText(member?.referral_code);
+
+  if (saved) return saved;
+
+  const id = normalizeText(member?.id).replace(/-/g, "").slice(0, 8);
+
+  if (id) {
+    return `CL-${id.toUpperCase()}`;
+  }
+
+  const emailPrefix = normalizeText(member?.email).split("@")[0];
+
+  if (emailPrefix) {
+    return `CL-${emailPrefix.replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase()}`;
+  }
+
+  return "";
+}
+
+function sanitizeMember(member) {
+  if (!member) return null;
+
+  const status = normalizeMemberStatus(member.status);
+  const tier = normalizeTier(member.tier);
+  const referralCode = getFallbackReferralCode(member);
+
+  return {
+    id: member.id || null,
+    signupId: member.id || null,
+    portalUserId: member.portal_user_id || null,
+    email: member.email || null,
+    firstName: member.first_name || "",
+    lastName: member.last_name || "",
+    fullName: getDisplayName(member),
+    name: getDisplayName(member),
+    phone: member.phone || "",
+    city: member.city || "",
+    state: member.state || "",
+    interest: member.interest || "",
+    status: member.status || "",
+    memberStatus: ACTIVE_STATUSES.has(status) ? "active" : status,
+    tier,
+    tierLabel: titleCase(tier),
+    referralCode,
+    portalLoginUrl: member.portal_login_url || DEFAULT_PORTAL_PATH,
+    portalAccess: ACTIVE_STATUSES.has(status),
+    emailVerified: Boolean(member.email_verified),
+    emailVerifiedAt: member.email_verified_at || null,
+    createdAt: member.created_at || null,
+    updatedAt: member.updated_at || null,
+    role: "member",
+  };
+}
+
+async function getSignupRecord({ signupId, email }) {
+  const extendedFields = [
+    "id",
+    "email",
+    "status",
+    "first_name",
+    "last_name",
+    "full_name",
+    "phone",
+    "city",
+    "state",
+    "interest",
+    "tier",
+    "referral_code",
+    "email_verified",
+    "email_verified_at",
+    "created_at",
+    "updated_at",
+    "portal_login_url",
+    "portal_user_id",
+  ].join(", ");
+
+  const baseFields = [
+    "id",
+    "email",
+    "status",
+    "first_name",
+    "last_name",
+    "full_name",
+    "phone",
+    "city",
+    "state",
+    "interest",
+    "created_at",
+    "updated_at",
+    "portal_login_url",
+    "portal_user_id",
+  ].join(", ");
+
+  let query = supabaseAdmin.from("signups").select(extendedFields).limit(1);
+
+  if (signupId) {
+    query = query.eq("id", signupId);
+  } else {
+    query = query.eq("email", email);
+  }
+
+  let result = await query.maybeSingle();
+
+  if (result.error && isMissingOptionalTableOrColumn(result.error)) {
+    let fallbackQuery = supabaseAdmin.from("signups").select(baseFields).limit(1);
+
+    if (signupId) {
+      fallbackQuery = fallbackQuery.eq("id", signupId);
+    } else {
+      fallbackQuery = fallbackQuery.eq("email", email);
+    }
+
+    result = await fallbackQuery.maybeSingle();
+  }
+
+  return result;
+}
+
+async function getAuthenticatedMember(req, res) {
+  const sessionMeta = readSessionCookie(req);
+
+  if (!sessionMeta?.data) {
+    return {
+      member: null,
+      response: unauthorized(res, "Unauthorized. Please sign in."),
+    };
+  }
+
+  if (isSessionExpired(sessionMeta)) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Session expired. Please sign in again."),
+    };
+  }
+
+  if (sessionMeta.data.authenticated !== true) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Session invalid. Please sign in again."),
+    };
+  }
+
+  const signupId = getSessionMemberId(sessionMeta);
+  const email = getSessionEmail(sessionMeta);
+
+  if (!signupId && !email) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Session missing member information."),
+    };
+  }
+
+  const { data: member, error } = await getSignupRecord({
+    signupId,
+    email,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  if (!member?.id) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Account not found. Please sign in again."),
+    };
+  }
+
+  const status = normalizeMemberStatus(member.status || "pending");
+
+  if (!ACTIVE_STATUSES.has(status)) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: forbidden(
+        res,
+        status === "pending" || status === "reviewing"
+          ? "Your account is pending approval."
+          : "Your account is not active."
+      ),
+    };
+  }
+
+  return {
+    member,
+    response: null,
+  };
+}
+
 function getStatusLabel(status) {
   const map = {
     invited: "Invited",
@@ -84,7 +488,7 @@ function getStatusLabel(status) {
     cancelled: "Cancelled",
   };
 
-  return map[String(status || "").toLowerCase()] || titleCase(status || "unknown");
+  return map[normalizeText(status).toLowerCase()] || titleCase(status || "Unknown");
 }
 
 function getStatusTone(status) {
@@ -99,19 +503,7 @@ function getStatusTone(status) {
     cancelled: "danger",
   };
 
-  return map[String(status || "").toLowerCase()] || "neutral";
-}
-
-function getReferralOccurredAt(row) {
-  return (
-    row.rewarded_at ||
-    row.activated_at ||
-    row.registered_at ||
-    row.opened_at ||
-    row.invited_at ||
-    row.created_at ||
-    null
-  );
+  return map[normalizeText(status).toLowerCase()] || "neutral";
 }
 
 function getReferralProgress(status) {
@@ -126,66 +518,97 @@ function getReferralProgress(status) {
     cancelled: 0,
   };
 
-  return map[String(status || "").toLowerCase()] ?? 0;
+  return map[normalizeText(status).toLowerCase()] ?? 0;
 }
 
-function buildShareLink(referralCode, origin) {
-  if (!referralCode) return null;
-
-  const safeOrigin =
-    String(origin || "").trim() ||
-    "https://www.cardleorewards.com";
-
-  try {
-    const url = new URL("/signup.html", safeOrigin);
-    url.searchParams.set("ref", referralCode);
-    return url.toString();
-  } catch {
-    return `${safeOrigin.replace(/\/+$/, "")}/signup.html?ref=${encodeURIComponent(
-      referralCode
-    )}`;
-  }
+function getReferralOccurredAt(row) {
+  return (
+    row.rewarded_at ||
+    row.activated_at ||
+    row.registered_at ||
+    row.opened_at ||
+    row.invited_at ||
+    row.created_at ||
+    null
+  );
 }
 
 function parseOrigin(req) {
-  const forwardedProto = req.headers["x-forwarded-proto"];
-  const forwardedHost = req.headers["x-forwarded-host"];
-  const host = forwardedHost || req.headers.host || "";
+  const forwardedProto = req.headers?.["x-forwarded-proto"];
+  const forwardedHost = req.headers?.["x-forwarded-host"];
+  const host = forwardedHost || req.headers?.host || "";
   const proto = forwardedProto || (host.includes("localhost") ? "http" : "https");
 
   if (!host) return "https://www.cardleorewards.com";
+
   return `${proto}://${host}`;
 }
 
-function mapReferralRow(row, profile) {
-  const status = String(row.status || "invited").toLowerCase();
+function buildShareLink(referralCode, origin) {
+  const code = normalizeText(referralCode);
+
+  if (!code) return null;
+
+  const safeOrigin =
+    normalizeText(origin) || "https://www.cardleorewards.com";
+
+  try {
+    const url = new URL("/signup.html", safeOrigin);
+    url.searchParams.set("ref", code);
+    return url.toString();
+  } catch {
+    return `${safeOrigin.replace(/\/+$/, "")}/signup.html?ref=${encodeURIComponent(code)}`;
+  }
+}
+
+function mapReferralRow(row, member) {
+  const status = normalizeText(row.status || "invited").toLowerCase();
   const occurredAt = getReferralOccurredAt(row);
+  const referralCode = row.referral_code || getFallbackReferralCode(member);
 
   return {
     id: row.id,
     referralId: row.id,
-    referralCode: row.referral_code || profile?.referral_code || null,
+
+    referralCode,
     inviteCode: row.invite_code || null,
+
+    referrerSignupId:
+      row.referrer_signup_id ||
+      row.referrer_member_id ||
+      row.referrer_profile_id ||
+      null,
+
+    referredSignupId:
+      row.referred_signup_id ||
+      row.referred_member_id ||
+      row.referred_profile_id ||
+      null,
+
     referredEmail: row.referred_email || null,
     referredFirstName: row.referred_first_name || null,
     referredLastName: row.referred_last_name || null,
     referredName:
-      [row.referred_first_name, row.referred_last_name].filter(Boolean).join(" ") ||
-      null,
-    referredSignupId: row.referred_signup_id || null,
-    referredProfileId: row.referred_profile_id || null,
+      [row.referred_first_name, row.referred_last_name]
+        .map(normalizeText)
+        .filter(Boolean)
+        .join(" ") || null,
+
     rewardTransactionId: row.reward_transaction_id || null,
     rewardAmount: money(row.reward_amount),
+
     status,
     statusLabel: getStatusLabel(status),
     statusTone: getStatusTone(status),
     progressPercent: getReferralProgress(status),
+
     source: row.source || null,
     sourceLabel: titleCase(row.source || ""),
     channel: row.channel || null,
     channelLabel: titleCase(row.channel || ""),
     notes: row.notes || null,
-    metadata: row.metadata || {},
+    metadata: isObject(row.metadata) ? row.metadata : {},
+
     invitedAt: safeDate(row.invited_at),
     openedAt: safeDate(row.opened_at),
     registeredAt: safeDate(row.registered_at),
@@ -207,8 +630,8 @@ function mapEventRow(row) {
     eventLabel: titleCase(row.event_type || ""),
     title: row.title || titleCase(row.event_type || "event"),
     description: row.description || null,
-    metadata: row.metadata || {},
-    occurredAt: safeDate(row.occurred_at),
+    metadata: isObject(row.metadata) ? row.metadata : {},
+    occurredAt: safeDate(row.occurred_at || row.created_at),
     createdAt: safeDate(row.created_at),
   };
 }
@@ -269,13 +692,12 @@ function summarizeReferrals(referrals) {
     summary.activated +
     summary.rewardPending +
     summary.rewarded;
-  const rewardedCount = summary.rewarded;
 
   summary.conversionRatePercent =
     conversionBase > 0 ? Math.round((convertedCount / conversionBase) * 100) : 0;
 
   summary.rewardRatePercent =
-    conversionBase > 0 ? Math.round((rewardedCount / conversionBase) * 100) : 0;
+    conversionBase > 0 ? Math.round((summary.rewarded / conversionBase) * 100) : 0;
 
   summary.totalRewardAmount = money(summary.totalRewardAmount);
 
@@ -283,6 +705,7 @@ function summarizeReferrals(referrals) {
     const latest = [...referrals].sort((a, b) => {
       const aTime = new Date(a.occurredAt || a.createdAt || 0).getTime();
       const bTime = new Date(b.occurredAt || b.createdAt || 0).getTime();
+
       return bTime - aTime;
     })[0];
 
@@ -293,7 +716,7 @@ function summarizeReferrals(referrals) {
 }
 
 function filterReferrals(referrals, status, channel, source, search) {
-  const normalizedSearch = String(search || "").trim().toLowerCase();
+  const normalizedSearch = normalizeText(search).toLowerCase();
 
   return referrals.filter((item) => {
     if (status !== "all" && item.status !== status) return false;
@@ -325,27 +748,106 @@ function sortReferralsByOccurredAtDesc(referrals) {
   return [...referrals].sort((a, b) => {
     const aTime = new Date(a.occurredAt || a.createdAt || 0).getTime();
     const bTime = new Date(b.occurredAt || b.createdAt || 0).getTime();
+
     return bTime - aTime;
   });
 }
 
-async function getAuthenticatedUser(req) {
-  const accessToken = getAccessTokenFromRequest(req);
+async function queryReferralsForMember({ memberId, referralCode }) {
+  const attempts = [
+    {
+      type: "or",
+      expression: `referrer_signup_id.eq.${memberId},referred_signup_id.eq.${memberId}`,
+    },
+    {
+      type: "or",
+      expression: `referrer_member_id.eq.${memberId},referred_member_id.eq.${memberId}`,
+    },
+    {
+      type: "or",
+      expression: `referrer_profile_id.eq.${memberId},referred_profile_id.eq.${memberId}`,
+    },
+  ];
 
-  if (!accessToken) {
-    return { user: null, error: "Missing access token." };
+  if (referralCode) {
+    attempts.push({
+      type: "eq",
+      column: "referral_code",
+      value: referralCode,
+    });
   }
 
-  const { data, error } = await supabaseAdmin.auth.getUser(accessToken);
+  for (const attempt of attempts) {
+    let query = supabaseAdmin
+      .from("referrals")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(MAX_LIMIT);
 
-  if (error || !data?.user) {
-    return {
-      user: null,
-      error: error?.message || "Unable to authenticate this request.",
-    };
+    if (attempt.type === "or") {
+      query = query.or(attempt.expression);
+    } else {
+      query = query.eq(attempt.column, attempt.value);
+    }
+
+    const { data, error } = await query;
+
+    if (!error) {
+      return data || [];
+    }
+
+    if (isMissingOptionalTableOrColumn(error)) {
+      continue;
+    }
+
+    throw error;
   }
 
-  return { user: data.user, error: null };
+  return [];
+}
+
+async function queryReferralEvents(referralIds) {
+  if (!referralIds.length) return {};
+
+  const { data, error } = await supabaseAdmin
+    .from("referral_events")
+    .select("*")
+    .in("referral_id", referralIds)
+    .order("occurred_at", { ascending: false });
+
+  if (error) {
+    if (isMissingOptionalTableOrColumn(error)) {
+      return {};
+    }
+
+    throw error;
+  }
+
+  return (data || []).reduce((acc, row) => {
+    const key = row.referral_id;
+
+    if (!acc[key]) acc[key] = [];
+
+    acc[key].push(mapEventRow(row));
+    return acc;
+  }, {});
+}
+
+function buildEmptyReferralGuidance(member, origin) {
+  const referralCode = getFallbackReferralCode(member);
+
+  return {
+    referralCode,
+    shareLink: buildShareLink(referralCode, origin),
+    headline: "Start sharing your Card Leo Rewards link.",
+    message:
+      "Your referral activity will appear here once people register through your link or referral code.",
+    steps: [
+      "Copy your referral link.",
+      "Share it with someone interested in Card Leo Rewards.",
+      "Track invites, registrations, activations, and rewards from this page.",
+    ],
+  };
 }
 
 export default async function handler(req, res) {
@@ -357,85 +859,29 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { user, error: authError } = await getAuthenticatedUser(req);
+    const { member, response } = await getAuthenticatedMember(req, res);
 
-    if (!user) {
-      return unauthorized(res, authError || "Unauthorized.");
+    if (!member) {
+      return response;
     }
 
-    const profileId = user.id;
+    const safeMember = sanitizeMember(member);
+    const memberId = safeMember.id;
+    const referralCode = safeMember.referralCode;
+
     const limit = toPositiveInteger(req.query?.limit, DEFAULT_LIMIT);
     const status = normalizeStatus(req.query?.status);
     const channel = normalizeChannel(req.query?.channel);
     const source = normalizeSource(req.query?.source);
-    const search = String(req.query?.search || "").trim();
+    const search = normalizeText(req.query?.search);
     const origin = parseOrigin(req);
 
-    const [profileResult, referralsResult] = await Promise.all([
-      supabaseAdmin
-        .from("profiles")
-        .select(
-          "id, email, first_name, last_name, full_name, member_status, role, tier, referral_code, created_at"
-        )
-        .eq("id", profileId)
-        .maybeSingle(),
+    const referralRows = await queryReferralsForMember({
+      memberId,
+      referralCode,
+    });
 
-      supabaseAdmin
-        .from("referrals")
-        .select(
-          [
-            "id",
-            "referrer_profile_id",
-            "referred_signup_id",
-            "referred_profile_id",
-            "reward_transaction_id",
-            "reward_amount",
-            "referral_code",
-            "invite_code",
-            "referred_email",
-            "referred_first_name",
-            "referred_last_name",
-            "status",
-            "source",
-            "channel",
-            "notes",
-            "metadata",
-            "invited_at",
-            "opened_at",
-            "registered_at",
-            "activated_at",
-            "rewarded_at",
-            "expired_at",
-            "cancelled_at",
-            "created_at",
-            "updated_at",
-          ].join(", ")
-        )
-        .eq("referrer_profile_id", profileId)
-        .order("created_at", { ascending: false })
-        .limit(MAX_LIMIT),
-    ]);
-
-    if (profileResult.error) {
-      return serverError(res, "Unable to load member profile.", {
-        error: profileResult.error.message,
-      });
-    }
-
-    if (!profileResult.data) {
-      return notFound(res, "Member profile not found.");
-    }
-
-    if (referralsResult.error) {
-      return serverError(res, "Unable to load referrals.", {
-        error: referralsResult.error.message,
-      });
-    }
-
-    const profile = profileResult.data;
-    const referrals = (referralsResult.data || []).map((row) =>
-      mapReferralRow(row, profile)
-    );
+    const referrals = referralRows.map((row) => mapReferralRow(row, member));
 
     const filteredReferrals = sortReferralsByOccurredAtDesc(
       filterReferrals(referrals, status, channel, source, search)
@@ -444,28 +890,7 @@ export default async function handler(req, res) {
     const pagedReferrals = filteredReferrals.slice(0, limit);
     const visibleReferralIds = pagedReferrals.map((item) => item.id);
 
-    let eventsByReferralId = {};
-
-    if (visibleReferralIds.length > 0) {
-      const eventsResult = await supabaseAdmin
-        .from("referral_events")
-        .select("id, referral_id, event_type, title, description, metadata, occurred_at, created_at")
-        .in("referral_id", visibleReferralIds)
-        .order("occurred_at", { ascending: false });
-
-      if (eventsResult.error) {
-        return serverError(res, "Unable to load referral timeline events.", {
-          error: eventsResult.error.message,
-        });
-      }
-
-      eventsByReferralId = (eventsResult.data || []).reduce((acc, row) => {
-        const key = row.referral_id;
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(mapEventRow(row));
-        return acc;
-      }, {});
-    }
+    const eventsByReferralId = await queryReferralEvents(visibleReferralIds);
 
     const enrichedReferrals = pagedReferrals.map((referral) => ({
       ...referral,
@@ -492,28 +917,38 @@ export default async function handler(req, res) {
     ).sort();
 
     const summary = summarizeReferrals(filteredReferrals);
+    const shareLink = buildShareLink(referralCode, origin);
 
     logRequestSuccess(req, {
       scope: "portal_referrals",
-      profileId,
+      memberId,
+      email: safeMember.email,
       returnedReferrals: enrichedReferrals.length,
       statusFilter: status,
+      ip: getClientIp(req),
     });
 
     return ok(
       res,
       {
         summary: {
-          profileId: profile.id,
-          memberName:
-            profile.full_name ||
-            [profile.first_name, profile.last_name].filter(Boolean).join(" "),
-          email: profile.email,
-          memberStatus: profile.member_status,
-          tier: profile.tier,
-          referralCode: profile.referral_code || null,
-          shareLink: buildShareLink(profile.referral_code, origin),
+          profileId: safeMember.id,
+          memberId: safeMember.id,
+          memberName: safeMember.fullName,
+          email: safeMember.email,
+          memberStatus: safeMember.memberStatus,
+          tier: safeMember.tier,
+          tierLabel: safeMember.tierLabel,
+          referralCode,
+          shareLink,
           totals: summary,
+        },
+        member: safeMember,
+        referral: {
+          code: referralCode,
+          shareLink,
+          signupUrl: shareLink,
+          emptyState: buildEmptyReferralGuidance(member, origin),
         },
         filters: {
           statuses: VALID_STATUSES,
@@ -530,13 +965,18 @@ export default async function handler(req, res) {
       "Referrals loaded successfully."
     );
   } catch (error) {
-    logRequestError(req, error, { scope: "portal_referrals_unexpected" });
+    logRequestError(req, error, {
+      scope: "portal_referrals_unexpected",
+    });
 
     return serverError(
       res,
       "Failed to load portal referrals.",
       process.env.NODE_ENV === "development"
-        ? { error: error?.message || "Unknown error." }
+        ? {
+            error: error?.message || "Unknown error.",
+            code: error?.code || null,
+          }
         : null
     );
   }

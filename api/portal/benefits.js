@@ -1,15 +1,18 @@
 // api/portal/benefits.js
-
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 import {
   ok,
   unauthorized,
-  notFound,
+  forbidden,
   methodNotAllowed,
   serverError,
   setNoStore,
 } from "../../lib/responses.js";
-import { getAccessTokenFromRequest } from "../../lib/cookies.js";
+import {
+  clearAuthCookies,
+  safeJsonParse,
+  getSessionCookieName,
+} from "../../lib/cookies.js";
 import {
   logRequestStart,
   logRequestSuccess,
@@ -17,6 +20,17 @@ import {
 } from "../../lib/logger.js";
 
 const DEFAULT_TIMEZONE = "America/New_York";
+const DEFAULT_PORTAL_PATH = "/portal/index.html";
+
+const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
+
+const POSSIBLE_SESSION_COOKIE_NAMES = [
+  "cardleo_session",
+  "card_leo_session",
+  "member_session",
+  "portal_session",
+  "session",
+];
 
 const BASE_BENEFITS = [
   {
@@ -110,21 +124,53 @@ const BASE_BENEFITS = [
 ];
 
 function normalizeText(value) {
-  return String(value || "").trim();
+  return String(value ?? "").trim();
+}
+
+function normalizeEmail(value) {
+  return normalizeText(value).toLowerCase();
+}
+
+function normalizeStatus(value) {
+  return normalizeText(value || "pending").toLowerCase();
 }
 
 function normalizeTier(value) {
-  const tier = String(value || "core").trim().toLowerCase();
-  if (["core", "silver", "gold", "platinum", "vip"].includes(tier)) return tier;
+  const tier = normalizeText(value || "core").toLowerCase();
+
+  if (["core", "silver", "gold", "platinum", "vip"].includes(tier)) {
+    return tier;
+  }
+
   return "core";
 }
 
 function normalizeMemberStatus(value) {
-  const status = String(value || "pending").trim().toLowerCase();
-  if (["pending", "active", "paused", "suspended", "closed"].includes(status)) {
-    return status;
-  }
-  return "pending";
+  const status = normalizeStatus(value);
+
+  if (["active", "approved", "invited"].includes(status)) return "active";
+  if (["pending", "reviewing"].includes(status)) return "pending";
+  if (["disabled", "suspended", "paused"].includes(status)) return "suspended";
+  if (["denied", "closed"].includes(status)) return status;
+
+  return status || "pending";
+}
+
+function getUnixNow() {
+  return Math.floor(Date.now() / 1000);
+}
+
+function titleCase(value) {
+  return String(value || "")
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function money(value) {
+  const num = Number(value || 0);
+  return Number.isFinite(num) ? Number(num.toFixed(2)) : 0;
 }
 
 function getTierRank(tier) {
@@ -142,21 +188,426 @@ function getTierRank(tier) {
 function getNextTier(tier) {
   const tiers = ["core", "silver", "gold", "platinum", "vip"];
   const currentIndex = tiers.indexOf(normalizeTier(tier));
-  if (currentIndex < 0 || currentIndex === tiers.length - 1) return null;
+
+  if (currentIndex < 0 || currentIndex === tiers.length - 1) {
+    return null;
+  }
+
   return tiers[currentIndex + 1];
 }
 
-function titleCase(value) {
-  return String(value || "")
-    .split(/[\s_-]+/)
+function parseCookieHeader(req) {
+  const cookieHeader = req?.headers?.cookie || "";
+
+  return String(cookieHeader)
+    .split(";")
+    .map((part) => part.trim())
     .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .reduce((cookies, part) => {
+      const index = part.indexOf("=");
+
+      if (index === -1) return cookies;
+
+      const name = part.slice(0, index).trim();
+      const value = part.slice(index + 1).trim();
+
+      if (name) cookies[name] = value;
+
+      return cookies;
+    }, {});
+}
+
+function decodeCookieValue(value) {
+  const raw = String(value || "");
+
+  if (!raw) return "";
+
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
+function readSessionCookie(req) {
+  const cookies = parseCookieHeader(req);
+  const configuredName = getSessionCookieName?.();
+
+  const names = Array.from(
+    new Set(
+      [configuredName, ...POSSIBLE_SESSION_COOKIE_NAMES]
+        .map(normalizeText)
+        .filter(Boolean)
+    )
+  );
+
+  for (const name of names) {
+    if (!cookies[name]) continue;
+
+    const decoded = decodeCookieValue(cookies[name]);
+    const parsed = safeJsonParse(decoded, null);
+
+    if (parsed && typeof parsed === "object") {
+      return {
+        name,
+        value: parsed,
+      };
+    }
+  }
+
+  return null;
+}
+
+function getSessionExpiresAt(sessionCookie) {
+  const value = sessionCookie?.value || {};
+  const candidates = [value.expires_at, value.session?.expires_at];
+
+  for (const candidate of candidates) {
+    const num = Number(candidate);
+
+    if (Number.isFinite(num) && num > 0) {
+      return num;
+    }
+  }
+
+  return 0;
+}
+
+function isSessionExpired(sessionCookie) {
+  const expiresAt = getSessionExpiresAt(sessionCookie);
+
+  if (!expiresAt) return true;
+
+  return expiresAt <= getUnixNow();
+}
+
+function getSessionMemberId(sessionCookie) {
+  const value = sessionCookie?.value || {};
+
+  return normalizeText(
+    value.member?.id ||
+      value.profile?.id ||
+      value.user?.id ||
+      value.id
+  );
+}
+
+function getSessionEmail(sessionCookie) {
+  const value = sessionCookie?.value || {};
+
+  return normalizeEmail(
+    value.member?.email ||
+      value.profile?.email ||
+      value.user?.email ||
+      value.email
+  );
+}
+
+function isMissingOptionalTableOrColumn(error) {
+  const code = String(error?.code || "");
+  const message = String(error?.message || "").toLowerCase();
+  const details = String(error?.details || "").toLowerCase();
+
+  return (
+    code === "42P01" ||
+    code === "42703" ||
+    code === "PGRST204" ||
+    code === "PGRST205" ||
+    message.includes("does not exist") ||
+    message.includes("could not find") ||
+    message.includes("schema cache") ||
+    details.includes("does not exist") ||
+    details.includes("could not find") ||
+    details.includes("schema cache")
+  );
+}
+
+function getDisplayName(member) {
+  const fullName = normalizeText(member?.full_name);
+
+  if (fullName) return fullName;
+
+  const joined = [member?.first_name, member?.last_name]
+    .map(normalizeText)
+    .filter(Boolean)
     .join(" ");
+
+  return joined || "Card Leo Member";
+}
+
+function sanitizeMember(member) {
+  if (!member) return null;
+
+  return {
+    id: member.id || null,
+    email: member.email || null,
+    firstName: member.first_name || "",
+    lastName: member.last_name || "",
+    fullName: getDisplayName(member),
+    phone: member.phone || "",
+    city: member.city || "",
+    state: member.state || "",
+    interest: member.interest || "",
+    status: member.status || "",
+    memberStatus: normalizeMemberStatus(member.status),
+    tier: normalizeTier(member.tier || "core"),
+    referralCode: member.referral_code || "",
+    portalUserId: member.portal_user_id || null,
+    portalLoginUrl: member.portal_login_url || DEFAULT_PORTAL_PATH,
+    emailVerified: Boolean(member.email_verified),
+    emailVerifiedAt: member.email_verified_at || null,
+    createdAt: member.created_at || null,
+    updatedAt: member.updated_at || null,
+    role: "member",
+  };
+}
+
+async function getAuthenticatedMember(req, res) {
+  const sessionCookie = readSessionCookie(req);
+
+  if (!sessionCookie?.value) {
+    return {
+      member: null,
+      response: unauthorized(res, "Unauthorized. Please sign in."),
+    };
+  }
+
+  if (isSessionExpired(sessionCookie)) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Session expired. Please sign in again."),
+    };
+  }
+
+  if (sessionCookie.value.authenticated !== true) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Session invalid. Please sign in again."),
+    };
+  }
+
+  const memberId = getSessionMemberId(sessionCookie);
+  const email = getSessionEmail(sessionCookie);
+
+  let query = supabaseAdmin.from("signups").select(
+    [
+      "id",
+      "first_name",
+      "last_name",
+      "full_name",
+      "email",
+      "phone",
+      "city",
+      "state",
+      "interest",
+      "agreed",
+      "status",
+      "tier",
+      "referral_code",
+      "email_verified",
+      "email_verified_at",
+      "portal_user_id",
+      "portal_login_url",
+      "created_at",
+      "updated_at",
+    ].join(", ")
+  );
+
+  if (memberId) {
+    query = query.eq("id", memberId);
+  } else if (email) {
+    query = query.eq("email", email);
+  } else {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Session missing member information."),
+    };
+  }
+
+  let result = await query.maybeSingle();
+
+  if (result.error && isMissingOptionalTableOrColumn(result.error)) {
+    let fallbackQuery = supabaseAdmin.from("signups").select(
+      [
+        "id",
+        "first_name",
+        "last_name",
+        "full_name",
+        "email",
+        "phone",
+        "city",
+        "state",
+        "interest",
+        "agreed",
+        "status",
+        "portal_user_id",
+        "portal_login_url",
+        "created_at",
+        "updated_at",
+      ].join(", ")
+    );
+
+    if (memberId) {
+      fallbackQuery = fallbackQuery.eq("id", memberId);
+    } else {
+      fallbackQuery = fallbackQuery.eq("email", email);
+    }
+
+    result = await fallbackQuery.maybeSingle();
+  }
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  if (!result.data?.id) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(res, "Account not found. Please sign in again."),
+    };
+  }
+
+  const status = normalizeStatus(result.data.status || "pending");
+
+  if (!ACTIVE_STATUSES.has(status)) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: forbidden(
+        res,
+        status === "pending" || status === "reviewing"
+          ? "Your account is pending approval."
+          : "Your account is not active."
+      ),
+    };
+  }
+
+  return {
+    member: result.data,
+    response: null,
+  };
+}
+
+async function getFeatureFlags() {
+  const fallback = {
+    rewards_enabled: true,
+    referrals_enabled: true,
+    support_enabled: true,
+    benefits_enabled: true,
+  };
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("system_settings")
+      .select("value")
+      .eq("key", "portal.features")
+      .maybeSingle();
+
+    if (error && isMissingOptionalTableOrColumn(error)) return fallback;
+    if (error) throw error;
+
+    return {
+      rewards_enabled: data?.value?.rewards_enabled !== false,
+      referrals_enabled: data?.value?.referrals_enabled !== false,
+      support_enabled: data?.value?.support_enabled !== false,
+      benefits_enabled: data?.value?.benefits_enabled !== false,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function buildDefaultOnboarding(member) {
+  const safeMember = sanitizeMember(member);
+  const emailVerified = Boolean(
+    member?.email_verified || member?.email_verified_at
+  );
+  const profileCompleted = Boolean(
+    normalizeText(member?.first_name) &&
+      normalizeText(member?.last_name) &&
+      normalizeText(member?.email) &&
+      normalizeText(member?.phone)
+  );
+  const rewardsActivated = ACTIVE_STATUSES.has(normalizeStatus(member?.status));
+
+  let percent = 0;
+
+  if (profileCompleted) percent += 40;
+  if (emailVerified) percent += 30;
+  if (rewardsActivated) percent += 30;
+
+  return {
+    signup_id: safeMember.id,
+    member_id: safeMember.id,
+    accepted_terms: Boolean(member?.agreed),
+    accepted_privacy: Boolean(member?.agreed),
+    profile_completed: profileCompleted,
+    email_verified: emailVerified,
+    first_login_completed: true,
+    rewards_activated: rewardsActivated,
+    onboarding_percent: Math.max(0, Math.min(100, percent)),
+    onboarding_status: percent >= 100 ? "complete" : "in_progress",
+  };
+}
+
+function buildDefaultRewardAccount(member) {
+  return {
+    signup_id: member?.id || null,
+    member_id: member?.id || null,
+    account_status: ACTIVE_STATUSES.has(normalizeStatus(member?.status))
+      ? "active"
+      : "pending",
+    total_cardleo_allocated: 0,
+    total_direct_referral_earned: 0,
+    total_override_earned: 0,
+    company_building_pending: 0,
+    company_building_released: 0,
+    company_building_forfeited: 0,
+    total_member_revenue_processed: 0,
+    total_rewards_earned: 0,
+    total_rewards_paid: 0,
+    last_membership_paid_at: null,
+    last_direct_referral_at: null,
+    last_override_at: null,
+    last_company_building_release_at: null,
+  };
+}
+
+async function queryOptionalSingleByMemberColumns({ table, memberId, columns }) {
+  for (const column of columns) {
+    const { data, error } = await supabaseAdmin
+      .from(table)
+      .select("*")
+      .eq(column, memberId)
+      .maybeSingle();
+
+    if (!error) {
+      return data || null;
+    }
+
+    if (isMissingOptionalTableOrColumn(error)) {
+      continue;
+    }
+
+    throw error;
+  }
+
+  return null;
 }
 
 function buildStaticBenefits(memberTier, featureFlags = {}) {
   const normalizedTier = normalizeTier(memberTier);
   const tierRank = getTierRank(normalizedTier);
+
   const referralsEnabled = featureFlags.referrals_enabled !== false;
   const benefitsEnabled = featureFlags.benefits_enabled !== false;
   const rewardsEnabled = featureFlags.rewards_enabled !== false;
@@ -166,39 +617,38 @@ function buildStaticBenefits(memberTier, featureFlags = {}) {
 
   return BASE_BENEFITS.filter((benefit) => {
     if (benefit.code === "referral_access" && !referralsEnabled) return false;
+
     if (
       ["reward_tracking", "company_building"].includes(benefit.code) &&
       !rewardsEnabled
     ) {
       return false;
     }
+
     if (
       ["support_access", "priority_support"].includes(benefit.code) &&
       !supportEnabled
     ) {
       return false;
     }
+
     return true;
   })
     .map((benefit) => {
       const requiredTierRank = Math.min(
         ...benefit.tiers.map((tier) => getTierRank(tier))
       );
+
       const unlocked = benefit.tiers.includes(normalizedTier);
       const lockedBecauseTier = !unlocked && tierRank < requiredTierRank;
 
       return {
         ...benefit,
-        requiredTier:
-          benefit.tiers.length === 1
-            ? benefit.tiers[0]
-            : benefit.tiers[0] || "core",
+        requiredTier: benefit.tiers[0] || "core",
         unlocked,
         locked: !unlocked,
         lockedReason: lockedBecauseTier
-          ? `Available starting at ${titleCase(
-              benefit.tiers[0] || "core"
-            )} tier.`
+          ? `Available starting at ${titleCase(benefit.tiers[0] || "core")} tier.`
           : null,
       };
     })
@@ -206,27 +656,30 @@ function buildStaticBenefits(memberTier, featureFlags = {}) {
 }
 
 function buildDynamicBenefits({
-  profile,
+  member,
   onboarding,
   rewardAccount,
   referralsEnabled,
   rewardsEnabled,
 }) {
   const benefits = [];
-  const memberStatus = normalizeMemberStatus(profile?.member_status);
+
+  const memberStatus = normalizeMemberStatus(member?.status);
   const onboardingPercent = Number(onboarding?.onboarding_percent || 0);
   const profileComplete = Boolean(onboarding?.profile_completed);
   const emailVerified =
-    Boolean(onboarding?.email_verified) || Boolean(profile?.email_verified_at);
+    Boolean(onboarding?.email_verified) ||
+    Boolean(member?.email_verified_at) ||
+    Boolean(member?.email_verified);
   const rewardsActive = Boolean(onboarding?.rewards_activated);
 
-  const directEarned = Number(rewardAccount?.total_direct_referral_earned || 0);
-  const overrideEarned = Number(rewardAccount?.total_override_earned || 0);
-  const companyPending = Number(rewardAccount?.company_building_pending || 0);
-  const companyReleased = Number(rewardAccount?.company_building_released || 0);
-  const companyForfeited = Number(rewardAccount?.company_building_forfeited || 0);
-  const totalRewardsEarned = Number(rewardAccount?.total_rewards_earned || 0);
-  const totalRewardsPaid = Number(rewardAccount?.total_rewards_paid || 0);
+  const directEarned = money(rewardAccount?.total_direct_referral_earned);
+  const overrideEarned = money(rewardAccount?.total_override_earned);
+  const companyPending = money(rewardAccount?.company_building_pending);
+  const companyReleased = money(rewardAccount?.company_building_released);
+  const companyForfeited = money(rewardAccount?.company_building_forfeited);
+  const totalRewardsEarned = money(rewardAccount?.total_rewards_earned);
+  const totalRewardsPaid = money(rewardAccount?.total_rewards_paid);
 
   benefits.push({
     code: "account_status",
@@ -324,9 +777,7 @@ function buildDynamicBenefits({
         companyForfeited,
       },
     });
-  }
 
-  if (rewardsEnabled) {
     benefits.push({
       code: "email_verification",
       title: "Verified Account Rewards Access",
@@ -347,9 +798,7 @@ function buildDynamicBenefits({
         emailVerified,
       },
     });
-  }
 
-  if (rewardsEnabled) {
     benefits.push({
       code: "profile_completion_check",
       title: "Profile Completion Reward Eligibility",
@@ -370,9 +819,7 @@ function buildDynamicBenefits({
         profileComplete,
       },
     });
-  }
 
-  if (rewardsEnabled) {
     benefits.push({
       code: "rewards_activation",
       title: "Rewards Program Activation",
@@ -450,7 +897,9 @@ function groupBenefitsByCategory(benefits) {
 
   for (const benefit of benefits) {
     const key = benefit.category || "other";
+
     if (!groups[key]) groups[key] = [];
+
     groups[key].push(benefit);
   }
 
@@ -463,35 +912,6 @@ function groupBenefitsByCategory(benefits) {
   }));
 }
 
-async function getAuthenticatedUser(req) {
-  const accessToken = getAccessTokenFromRequest(req);
-
-  if (!accessToken) {
-    return { user: null, error: "Missing access token." };
-  }
-
-  const { data, error } = await supabaseAdmin.auth.getUser(accessToken);
-
-  if (error || !data?.user) {
-    return {
-      user: null,
-      error: error?.message || "Unable to authenticate this request.",
-    };
-  }
-
-  return { user: data.user, error: null };
-}
-
-async function getFeatureFlags() {
-  const { data } = await supabaseAdmin
-    .from("system_settings")
-    .select("value")
-    .eq("key", "portal.features")
-    .maybeSingle();
-
-  return data?.value || {};
-}
-
 export default async function handler(req, res) {
   setNoStore(res);
   logRequestStart(req, { scope: "portal_benefits" });
@@ -501,107 +921,45 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { user, error: authError } = await getAuthenticatedUser(req);
+    const { member, response } = await getAuthenticatedMember(req, res);
 
-    if (!user) {
-      return unauthorized(res, authError || "Unauthorized.");
+    if (!member) {
+      return response;
     }
 
-    const profileId = user.id;
+    const safeMember = sanitizeMember(member);
+    const memberId = safeMember.id;
 
-    const [
-      profileResult,
-      onboardingResult,
-      rewardAccountResult,
-      featureFlags,
-    ] = await Promise.all([
-      supabaseAdmin
-        .from("profiles")
-        .select(`
-          id,
-          email,
-          first_name,
-          last_name,
-          full_name,
-          member_status,
-          role,
-          tier,
-          referral_code,
-          created_at,
-          email_verified_at
-        `)
-        .eq("id", profileId)
-        .maybeSingle(),
+    const featureFlags = await getFeatureFlags();
 
-      supabaseAdmin
-        .from("member_onboarding")
-        .select(`
-          profile_id,
-          accepted_terms,
-          accepted_privacy,
-          profile_completed,
-          email_verified,
-          first_login_completed,
-          rewards_activated,
-          onboarding_percent,
-          onboarding_status
-        `)
-        .eq("profile_id", profileId)
-        .maybeSingle(),
+    const [onboardingOptional, rewardAccountOptional] = await Promise.all([
+      queryOptionalSingleByMemberColumns({
+        table: "member_onboarding",
+        memberId,
+        columns: ["member_id", "signup_id", "profile_id"],
+      }),
 
-      supabaseAdmin
-        .from("reward_accounts")
-        .select(`
-          profile_id,
-          account_status,
-          total_cardleo_allocated,
-          total_direct_referral_earned,
-          total_override_earned,
-          company_building_pending,
-          company_building_released,
-          company_building_forfeited,
-          total_member_revenue_processed,
-          total_rewards_earned,
-          total_rewards_paid,
-          last_membership_paid_at,
-          last_direct_referral_at,
-          last_override_at,
-          last_company_building_release_at
-        `)
-        .eq("profile_id", profileId)
-        .maybeSingle(),
-
-      getFeatureFlags(),
+      queryOptionalSingleByMemberColumns({
+        table: "reward_accounts",
+        memberId,
+        columns: ["member_id", "signup_id", "profile_id"],
+      }),
     ]);
 
-    if (profileResult.error) {
-      return serverError(res, "Unable to load member profile.", {
-        error: profileResult.error.message,
-      });
-    }
+    const onboarding = onboardingOptional || buildDefaultOnboarding(member);
+    const rewardAccount =
+      rewardAccountOptional || buildDefaultRewardAccount(member);
 
-    const profile = profileResult.data;
-
-    if (!profile) {
-      return notFound(res, "Member profile not found.");
-    }
-
-    const tier = normalizeTier(profile.tier);
+    const tier = normalizeTier(member.tier || "core");
     const nextTier = getNextTier(tier);
-    const featureFlagsSafe = {
-      rewards_enabled: featureFlags?.rewards_enabled !== false,
-      referrals_enabled: featureFlags?.referrals_enabled !== false,
-      support_enabled: featureFlags?.support_enabled !== false,
-      benefits_enabled: featureFlags?.benefits_enabled !== false,
-    };
 
-    const staticBenefits = buildStaticBenefits(tier, featureFlagsSafe);
+    const staticBenefits = buildStaticBenefits(tier, featureFlags);
     const dynamicBenefits = buildDynamicBenefits({
-      profile,
-      onboarding: onboardingResult.data || null,
-      rewardAccount: rewardAccountResult.data || null,
-      referralsEnabled: featureFlagsSafe.referrals_enabled,
-      rewardsEnabled: featureFlagsSafe.rewards_enabled,
+      member,
+      onboarding,
+      rewardAccount,
+      referralsEnabled: featureFlags.referrals_enabled,
+      rewardsEnabled: featureFlags.rewards_enabled,
     });
 
     const benefits = [...dynamicBenefits, ...staticBenefits].sort(
@@ -614,7 +972,8 @@ export default async function handler(req, res) {
 
     logRequestSuccess(req, {
       scope: "portal_benefits",
-      profileId,
+      memberId,
+      email: safeMember.email,
       tier,
       benefitCount: benefits.length,
     });
@@ -623,16 +982,15 @@ export default async function handler(req, res) {
       res,
       {
         summary: {
-          profileId: profile.id,
-          memberName:
-            profile.full_name ||
-            [profile.first_name, profile.last_name].filter(Boolean).join(" "),
-          email: profile.email,
+          profileId: safeMember.id,
+          memberId: safeMember.id,
+          memberName: safeMember.fullName,
+          email: safeMember.email,
           tier,
           tierLabel: titleCase(tier),
           nextTier,
           nextTierLabel: nextTier ? titleCase(nextTier) : null,
-          memberStatus: normalizeMemberStatus(profile.member_status),
+          memberStatus: safeMember.memberStatus,
           timezone: DEFAULT_TIMEZONE,
           totals: {
             benefits: benefits.length,
@@ -640,21 +998,29 @@ export default async function handler(req, res) {
             locked: lockedCount,
           },
         },
-        featureFlags: featureFlagsSafe,
-        onboarding: onboardingResult.data || null,
-        rewardAccount: rewardAccountResult.data || null,
+        member: safeMember,
+        featureFlags,
+        onboarding,
+        rewardAccount,
         benefits,
         groups: grouped,
       },
       "Benefits loaded successfully."
     );
   } catch (error) {
-    logRequestError(req, error, { scope: "portal_benefits_unexpected" });
+    logRequestError(req, error, {
+      scope: "portal_benefits_unexpected",
+    });
 
     return serverError(
       res,
       "Failed to load portal benefits.",
-      { error: error?.message || "Unknown error." }
+      process.env.NODE_ENV === "development"
+        ? {
+            error: error?.message || "Unknown error.",
+            code: error?.code || null,
+          }
+        : null
     );
   }
 }

@@ -1,6 +1,6 @@
 // api/auth/reset-password.js
-import { createClient } from "@supabase/supabase-js";
-import { getSupabaseServerConfig } from "../../lib/env.js";
+import crypto from "crypto";
+import { supabaseAdmin } from "../../lib/supabase-admin.js";
 import {
   ok,
   badRequest,
@@ -17,8 +17,14 @@ import {
   logAuthEvent,
 } from "../../lib/logger.js";
 
+const LOGIN_REDIRECT = "/login.html?passwordReset=1";
+
 function normalizeText(value) {
   return String(value || "").trim();
+}
+
+function normalizeEmail(value) {
+  return normalizeText(value).toLowerCase();
 }
 
 function getRequestBody(req) {
@@ -32,82 +38,157 @@ function getRequestBody(req) {
     }
   }
 
-  return req.body;
-}
-
-function createPublicSupabaseClient() {
-  const { url, anonKey, publishableKey } = getSupabaseServerConfig();
-  const publicKey = anonKey || publishableKey;
-
-  if (!url || !publicKey) {
-    throw new Error(
-      "Supabase environment variables are missing. Add SUPABASE_URL and SUPABASE_ANON_KEY."
-    );
+  if (typeof req.body === "object") {
+    return req.body;
   }
 
-  return createClient(url, publicKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
-    },
+  return {};
+}
+
+function hashValue(value) {
+  return crypto
+    .createHash("sha256")
+    .update(String(value || ""))
+    .digest("hex");
+}
+
+function getResetToken(body = {}) {
+  return normalizeText(
+    body.token ||
+      body.resetToken ||
+      body.reset_token ||
+      body.recoveryToken ||
+      body.recovery_token ||
+      body.accessToken ||
+      body.access_token ||
+      body.code
+  );
+}
+
+function getPassword(body = {}) {
+  return String(
+    body.password ||
+      body.newPassword ||
+      body.new_password ||
+      ""
+  );
+}
+
+function getConfirmPassword(body = {}) {
+  return String(
+    body.confirmPassword ||
+      body.confirm_password ||
+      body.confirmNewPassword ||
+      body.confirm_new_password ||
+      ""
+  );
+}
+
+function isExpired(value) {
+  if (!value) return true;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return true;
+
+  return date.getTime() <= Date.now();
+}
+
+function validateResetPayload({ token, password, confirmPassword }) {
+  const validation = validateResetPasswordInput({
+    token,
+    password,
+    confirmPassword,
   });
+
+  if (validation?.valid) {
+    return validation;
+  }
+
+  const errors = {
+    ...(validation?.errors || {}),
+  };
+
+  if (!token) {
+    errors.token = "Password reset token is required.";
+  }
+
+  if (!password || password.length < 8) {
+    errors.password = "Password must be at least 8 characters.";
+  }
+
+  if (!confirmPassword) {
+    errors.confirmPassword = "Please confirm your password.";
+  }
+
+  if (password && confirmPassword && password !== confirmPassword) {
+    errors.confirmPassword = "Passwords do not match.";
+  }
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    values: {
+      token,
+      password,
+      confirmPassword,
+    },
+  };
 }
 
-async function establishRecoverySession(supabase, options) {
-  const token = normalizeText(options.token);
-  const refreshToken = normalizeText(options.refreshToken);
-  const code = normalizeText(options.code);
+async function findSignupByResetToken({ tokenHash, email }) {
+  let query = supabaseAdmin
+    .from("signups")
+    .select(
+      [
+        "id",
+        "email",
+        "first_name",
+        "last_name",
+        "full_name",
+        "status",
+        "password_hash",
+        "reset_token_hash",
+        "reset_token_expires_at",
+        "reset_requested_at",
+        "created_at",
+        "updated_at",
+      ].join(", ")
+    )
+    .eq("reset_token_hash", tokenHash);
 
-  if (token && refreshToken) {
-    const { data, error } = await supabase.auth.setSession({
-      access_token: token,
-      refresh_token: refreshToken,
-    });
-
-    if (error) {
-      throw new Error(error.message || "Invalid or expired recovery session.");
-    }
-
-    if (!data?.session || !data?.user) {
-      throw new Error("Recovery session could not be established.");
-    }
-
-    return data;
+  if (email) {
+    query = query.eq("email", email);
   }
 
-  if (code) {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await query.maybeSingle();
 
-    if (error) {
-      throw new Error(error.message || "Invalid or expired recovery code.");
-    }
+  return {
+    signup: data || null,
+    error: error || null,
+  };
+}
 
-    if (!data?.session || !data?.user) {
-      throw new Error("Recovery code could not be exchanged for a session.");
-    }
+function getDisplayName(signup) {
+  const fullName = normalizeText(signup?.full_name);
 
-    return data;
-  }
+  if (fullName) return fullName;
 
-  if (token) {
-    const { data, error } = await supabase.auth.verifyOtp({
-      token_hash: token,
-      type: "recovery",
-    });
+  return [signup?.first_name, signup?.last_name]
+    .map(normalizeText)
+    .filter(Boolean)
+    .join(" ");
+}
 
-    if (error) {
-      throw new Error(error.message || "Invalid or expired recovery token.");
-    }
+function sanitizeSignup(signup) {
+  if (!signup) return null;
 
-    if (!data?.session || !data?.user) {
-      throw new Error("Recovery token could not be verified.");
-    }
-
-    return data;
-  }
-
-  throw new Error("A valid recovery token or code is required.");
+  return {
+    id: signup.id || null,
+    email: signup.email || null,
+    fullName: getDisplayName(signup) || "Card Leo Member",
+    status: signup.status || "",
+  };
 }
 
 export default async function handler(req, res) {
@@ -120,11 +201,13 @@ export default async function handler(req, res) {
   try {
     const rateLimit = resetPasswordRateLimit(req, res);
 
-    if (!rateLimit.allowed) {
+    if (rateLimit && !rateLimit.allowed) {
       return badRequest(
         res,
         "Too many password reset attempts. Please try again later.",
-        { retryAfter: rateLimit.retryAfter },
+        {
+          retryAfter: rateLimit.retryAfter ?? null,
+        },
         {
           statusCode: 429,
           error: "rate_limited",
@@ -134,14 +217,13 @@ export default async function handler(req, res) {
 
     const body = getRequestBody(req);
 
-    const accessToken = normalizeText(body.token || body.accessToken);
-    const refreshToken = normalizeText(body.refreshToken);
-    const code = normalizeText(body.code);
-    const password = String(body.password || "");
-    const confirmPassword = String(body.confirmPassword || "");
+    const token = getResetToken(body);
+    const email = normalizeEmail(body.email);
+    const password = getPassword(body);
+    const confirmPassword = getConfirmPassword(body);
 
-    const validation = validateResetPasswordInput({
-      token: accessToken || code || refreshToken,
+    const validation = validateResetPayload({
+      token,
       password,
       confirmPassword,
     });
@@ -154,60 +236,124 @@ export default async function handler(req, res) {
       );
     }
 
-    if (!accessToken && !refreshToken && !code) {
-      return badRequest(res, "Missing recovery token or code.");
+    const tokenHash = hashValue(token);
+
+    const { signup, error: lookupError } = await findSignupByResetToken({
+      tokenHash,
+      email,
+    });
+
+    if (lookupError) {
+      logRequestError(req, lookupError, {
+        scope: "auth_reset_password_lookup",
+        email: email || null,
+      });
+
+      return serverError(
+        res,
+        "Unable to verify this reset link right now."
+      );
     }
 
-    const supabase = createPublicSupabaseClient();
+    if (!signup?.id) {
+      clearAuthCookies(res);
 
-    await establishRecoverySession(supabase, {
-      token: accessToken,
-      refreshToken,
-      code,
-    });
-
-    const { data, error } = await supabase.auth.updateUser({
-      password,
-    });
-
-    if (error) {
-      logRequestError(req, error, { scope: "auth_reset_password_update" });
+      logAuthEvent("Password reset failed.", {
+        email: email || null,
+        reason: "invalid_token",
+      });
 
       return badRequest(
         res,
-        error.message || "We could not update your password with this link."
+        "This password reset link is invalid or has already been used."
+      );
+    }
+
+    if (isExpired(signup.reset_token_expires_at)) {
+      clearAuthCookies(res);
+
+      logAuthEvent("Password reset failed.", {
+        email: signup.email,
+        signupId: signup.id,
+        reason: "expired_token",
+      });
+
+      return badRequest(
+        res,
+        "This password reset link has expired. Please request a new one."
+      );
+    }
+
+    const newPasswordHash = hashValue(password);
+
+    const { data: updatedSignup, error: updateError } = await supabaseAdmin
+      .from("signups")
+      .update({
+        password_hash: newPasswordHash,
+        reset_token_hash: null,
+        reset_token_expires_at: null,
+        reset_requested_at: null,
+        reset_completed_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", signup.id)
+      .select(
+        [
+          "id",
+          "email",
+          "first_name",
+          "last_name",
+          "full_name",
+          "status",
+          "created_at",
+          "updated_at",
+        ].join(", ")
+      )
+      .single();
+
+    if (updateError) {
+      logRequestError(req, updateError, {
+        scope: "auth_reset_password_update",
+        email: signup.email,
+        signupId: signup.id,
+      });
+
+      return serverError(
+        res,
+        "We could not update your password with this link."
       );
     }
 
     clearAuthCookies(res);
 
     logAuthEvent("Password reset successful.", {
-      userId: data?.user?.id || null,
-      email: data?.user?.email || null,
+      signupId: updatedSignup?.id || signup.id,
+      email: updatedSignup?.email || signup.email,
     });
 
     logRequestSuccess(req, {
       scope: "auth_reset_password",
-      userId: data?.user?.id || null,
+      signupId: updatedSignup?.id || signup.id,
+      email: updatedSignup?.email || signup.email,
     });
 
     return ok(
       res,
       {
-        user: data?.user
-          ? {
-              id: data.user.id || null,
-              email: data.user.email || null,
-            }
-          : null,
+        reset: true,
+        member: sanitizeSignup(updatedSignup),
       },
       "Your password has been updated successfully.",
       {
-        redirectTo: "/login.html",
+        redirectTo: LOGIN_REDIRECT,
       }
     );
   } catch (error) {
-    logRequestError(req, error, { scope: "auth_reset_password_unexpected" });
+    clearAuthCookies(res);
+
+    logRequestError(req, error, {
+      scope: "auth_reset_password_unexpected",
+    });
 
     return serverError(
       res,

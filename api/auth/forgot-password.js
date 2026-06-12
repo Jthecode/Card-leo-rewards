@@ -1,6 +1,7 @@
 // api/auth/forgot-password.js
-import { createClient } from "@supabase/supabase-js";
-import { getSupabaseServerConfig, getSiteUrl } from "../../lib/env.js";
+import crypto from "crypto";
+import { supabaseAdmin } from "../../lib/supabase-admin.js";
+import { getSiteUrl } from "../../lib/env.js";
 import {
   ok,
   badRequest,
@@ -16,6 +17,10 @@ import {
   logAuthEvent,
 } from "../../lib/logger.js";
 
+const RESET_TOKEN_BYTES = 32;
+const RESET_TOKEN_TTL_MINUTES = 30;
+const DEFAULT_RESET_PATH = "/reset-password.html";
+
 function getRequestBody(req) {
   if (!req?.body) return {};
 
@@ -27,12 +32,27 @@ function getRequestBody(req) {
     }
   }
 
-  return req.body;
+  if (typeof req.body === "object") {
+    return req.body;
+  }
+
+  return {};
+}
+
+function normalizeString(value) {
+  return String(value ?? "").trim();
+}
+
+function normalizeEmail(value) {
+  return normalizeString(value).toLowerCase();
 }
 
 function getRuntimeSiteUrl(req) {
-  const configured = getSiteUrl();
-  if (configured) return configured.replace(/\/+$/, "");
+  const configured = getSiteUrl?.();
+
+  if (configured) {
+    return String(configured).replace(/\/+$/, "");
+  }
 
   const proto =
     req?.headers?.["x-forwarded-proto"] ||
@@ -46,23 +66,64 @@ function getRuntimeSiteUrl(req) {
   return `${proto}://${host}`.replace(/\/+$/, "");
 }
 
-function createPublicSupabaseClient() {
-  const { url, anonKey, publishableKey } = getSupabaseServerConfig();
-  const publicKey = anonKey || publishableKey;
+function createResetToken() {
+  return crypto.randomBytes(RESET_TOKEN_BYTES).toString("hex");
+}
 
-  if (!url || !publicKey) {
-    throw new Error(
-      "Supabase environment variables are missing. Add SUPABASE_URL and SUPABASE_ANON_KEY."
-    );
-  }
+function hashResetToken(token) {
+  return crypto
+    .createHash("sha256")
+    .update(String(token || ""))
+    .digest("hex");
+}
 
-  return createClient(url, publicKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false,
-    },
-  });
+function getResetExpirationDate() {
+  return new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000);
+}
+
+function shouldExposeResetLinkForTesting() {
+  const value = String(
+    process.env.EXPOSE_PASSWORD_RESET_LINK ||
+      process.env.NEXT_PUBLIC_EXPOSE_PASSWORD_RESET_LINK ||
+      ""
+  )
+    .trim()
+    .toLowerCase();
+
+  return (
+    process.env.NODE_ENV !== "production" ||
+    value === "true" ||
+    value === "1" ||
+    value === "yes"
+  );
+}
+
+function buildResetUrl(req, token, email) {
+  const siteUrl = getRuntimeSiteUrl(req);
+  const params = new URLSearchParams();
+
+  params.set("token", token);
+  params.set("email", email);
+
+  return `${siteUrl}${DEFAULT_RESET_PATH}?${params.toString()}`;
+}
+
+function getGenericSuccessMessage() {
+  return "If that email is eligible for recovery, reset instructions have been created.";
+}
+
+async function storeResetToken({ email, tokenHash, expiresAt }) {
+  return supabaseAdmin
+    .from("signups")
+    .update({
+      reset_token_hash: tokenHash,
+      reset_token_expires_at: expiresAt.toISOString(),
+      reset_requested_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("email", email)
+    .select("id, email, status")
+    .maybeSingle();
 }
 
 export default async function handler(req, res) {
@@ -75,11 +136,13 @@ export default async function handler(req, res) {
   try {
     const rateLimit = forgotPasswordRateLimit(req, res);
 
-    if (!rateLimit.allowed) {
+    if (rateLimit && !rateLimit.allowed) {
       return badRequest(
         res,
         "Too many password reset attempts. Please try again later.",
-        { retryAfter: rateLimit.retryAfter },
+        {
+          retryAfter: rateLimit.retryAfter ?? null,
+        },
         {
           statusCode: 429,
           error: "rate_limited",
@@ -90,51 +153,120 @@ export default async function handler(req, res) {
     const body = getRequestBody(req);
     const validation = validateForgotPasswordInput(body);
 
-    if (!validation.valid) {
-      return badRequest(res, "Email is required.", validation.errors);
+    if (!validation?.valid) {
+      return badRequest(
+        res,
+        "Email is required.",
+        validation?.errors || {}
+      );
     }
 
-    const { email } = validation.values;
+    const email = normalizeEmail(validation.values.email);
 
-    const supabase = createPublicSupabaseClient();
-    const siteUrl = getRuntimeSiteUrl(req);
-    const redirectTo = `${siteUrl}/reset-password.html`;
+    const { data: member, error: lookupError } = await supabaseAdmin
+      .from("signups")
+      .select("id, email, status")
+      .eq("email", email)
+      .maybeSingle();
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo,
-    });
-
-    if (error) {
-      logRequestError(req, error, {
-        scope: "auth_forgot_password_send",
+    if (lookupError) {
+      logRequestError(req, lookupError, {
+        scope: "auth_forgot_password_lookup",
         email,
       });
 
       return serverError(
         res,
-        error.message ||
-          "We could not start the password recovery process."
+        "Unable to start password recovery right now."
       );
     }
 
-    logAuthEvent("Password reset email requested.", {
+    /*
+      Security rule:
+      Do not reveal whether an email exists.
+      If no account exists, still return success.
+    */
+    if (!member?.id) {
+      logAuthEvent("Password reset requested for unknown email.", {
+        email,
+      });
+
+      logRequestSuccess(req, {
+        scope: "auth_forgot_password_unknown_email",
+        email,
+      });
+
+      return ok(
+        res,
+        {
+          email,
+          resetCreated: false,
+        },
+        getGenericSuccessMessage()
+      );
+    }
+
+    const token = createResetToken();
+    const tokenHash = hashResetToken(token);
+    const expiresAt = getResetExpirationDate();
+    const resetUrl = buildResetUrl(req, token, email);
+
+    const { data: updatedMember, error: updateError } = await storeResetToken({
       email,
-      redirectTo,
+      tokenHash,
+      expiresAt,
+    });
+
+    if (updateError) {
+      logRequestError(req, updateError, {
+        scope: "auth_forgot_password_store_token",
+        email,
+        memberId: member.id,
+      });
+
+      return serverError(
+        res,
+        "Unable to create password reset instructions right now."
+      );
+    }
+
+    /*
+      Email sending is not wired here yet.
+      For production, connect this resetUrl to your email sender.
+      For testing, set EXPOSE_PASSWORD_RESET_LINK=true in Vercel to see the URL.
+    */
+    logAuthEvent("Password reset token created.", {
+      email,
+      memberId: updatedMember?.id || member.id,
+      expiresAt: expiresAt.toISOString(),
+      resetUrlExposed: shouldExposeResetLinkForTesting(),
     });
 
     logRequestSuccess(req, {
       scope: "auth_forgot_password",
       email,
+      memberId: updatedMember?.id || member.id,
     });
 
     return ok(
       res,
       {
         email,
+        resetCreated: true,
+        expiresAt: expiresAt.toISOString(),
+        expiresInMinutes: RESET_TOKEN_TTL_MINUTES,
+
+        /*
+          This is only returned when testing is enabled.
+          Do not expose this publicly long-term.
+        */
+        resetUrl: shouldExposeResetLinkForTesting() ? resetUrl : null,
       },
-      "If that email is eligible for recovery, reset instructions have been sent.",
+      getGenericSuccessMessage(),
       {
-        redirectTo,
+        redirectTo: shouldExposeResetLinkForTesting()
+          ? resetUrl
+          : DEFAULT_RESET_PATH,
       }
     );
   } catch (error) {
@@ -145,7 +277,7 @@ export default async function handler(req, res) {
     return serverError(
       res,
       error?.message ||
-        "Something went wrong while trying to send reset instructions."
+        "Something went wrong while trying to start password recovery."
     );
   }
 }

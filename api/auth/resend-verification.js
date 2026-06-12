@@ -1,6 +1,7 @@
 // api/auth/resend-verification.js
-
-import { getServerEnv, getSiteUrl } from "../../lib/env.js";
+import crypto from "crypto";
+import { supabaseAdmin } from "../../lib/supabase-admin.js";
+import { getSiteUrl } from "../../lib/env.js";
 import {
   ok,
   badRequest,
@@ -15,6 +16,11 @@ import { isValidEmail, normalizeEmail } from "../../lib/validation.js";
 import { sendVerifyEmail } from "../../lib/email.js";
 
 const logger = createLogger("api:auth:resend-verification");
+
+const VERIFY_TOKEN_BYTES = 32;
+const VERIFY_TOKEN_TTL_MINUTES = 60;
+const VERIFY_EMAIL_PATH = "/api/auth/verify-email";
+const DEFAULT_NEXT_PATH = "/login.html?verified=1";
 
 function clean(value) {
   if (value === null || value === undefined) return "";
@@ -32,111 +38,200 @@ function getRequestBody(req) {
     }
   }
 
-  return req.body;
+  if (typeof req.body === "object") {
+    return req.body;
+  }
+
+  return {};
 }
 
-function buildVerifyUrl({ tokenHash = "", type = "signup", next = "" } = {}) {
-  const basePath = "/api/auth/verify-email";
-  const url = new URL(getSiteUrl(basePath) || `http://localhost:3000${basePath}`);
+function getRuntimeSiteUrl(req) {
+  const configured = getSiteUrl?.();
 
-  if (clean(tokenHash)) {
-    url.searchParams.set("token_hash", clean(tokenHash));
+  if (configured) {
+    return String(configured).replace(/\/+$/, "");
   }
 
-  url.searchParams.set("type", clean(type) || "signup");
+  const proto =
+    req?.headers?.["x-forwarded-proto"] ||
+    (process.env.NODE_ENV === "production" ? "https" : "http");
 
-  if (clean(next)) {
-    url.searchParams.set("next", clean(next));
+  const host =
+    req?.headers?.["x-forwarded-host"] ||
+    req?.headers?.host ||
+    "localhost:3000";
+
+  return `${proto}://${host}`.replace(/\/+$/, "");
+}
+
+function createVerificationToken() {
+  return crypto.randomBytes(VERIFY_TOKEN_BYTES).toString("hex");
+}
+
+function hashVerificationToken(token) {
+  return crypto
+    .createHash("sha256")
+    .update(String(token || ""))
+    .digest("hex");
+}
+
+function getVerificationExpirationDate() {
+  return new Date(Date.now() + VERIFY_TOKEN_TTL_MINUTES * 60 * 1000);
+}
+
+function getSafeNextPath(value) {
+  const raw = clean(value) || DEFAULT_NEXT_PATH;
+
+  try {
+    const url = new URL(raw, "https://cardleorewards.local");
+
+    if (!url.pathname.startsWith("/")) {
+      return DEFAULT_NEXT_PATH;
+    }
+
+    if (url.pathname.startsWith("/api/")) {
+      return DEFAULT_NEXT_PATH;
+    }
+
+    return `${url.pathname}${url.search || ""}`;
+  } catch {
+    return DEFAULT_NEXT_PATH;
   }
+}
+
+function buildVerifyUrl(req, { token, email, next }) {
+  const siteUrl = getRuntimeSiteUrl(req);
+  const url = new URL(`${siteUrl}${VERIFY_EMAIL_PATH}`);
+
+  url.searchParams.set("token", token);
+  url.searchParams.set("email", email);
+  url.searchParams.set("type", "signup");
+  url.searchParams.set("next", getSafeNextPath(next));
 
   return url.toString();
 }
 
-async function createMagicLinkWithSupabase(env, { email, redirectTo }) {
-  const supabaseUrl = clean(env.supabaseUrl);
-  const publishableKey = clean(env.supabasePublishableKey || env.supabaseAnonKey);
-  const serviceRoleKey = clean(env.supabaseServiceRoleKey);
+function shouldExposeVerifyLinkForTesting() {
+  const value = String(
+    process.env.EXPOSE_VERIFY_EMAIL_LINK ||
+      process.env.NEXT_PUBLIC_EXPOSE_VERIFY_EMAIL_LINK ||
+      ""
+  )
+    .trim()
+    .toLowerCase();
 
-  if (!supabaseUrl || !publishableKey || !serviceRoleKey) {
-    throw new Error("Supabase resend verification is not configured correctly.");
-  }
-
-  const response = await fetch(`${supabaseUrl}/auth/v1/admin/generate_link`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: publishableKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-    },
-    body: JSON.stringify({
-      type: "signup",
-      email,
-      options: {
-        redirect_to: redirectTo,
-      },
-    }),
-  });
-
-  const raw = await response.text();
-  let data = null;
-
-  try {
-    data = raw ? JSON.parse(raw) : null;
-  } catch {
-    data = { raw };
-  }
-
-  return {
-    ok: response.ok,
-    status: response.status,
-    data,
-  };
+  return (
+    process.env.NODE_ENV !== "production" ||
+    value === "true" ||
+    value === "1" ||
+    value === "yes"
+  );
 }
 
-function extractVerificationData(result) {
-  const properties = result?.data?.properties || {};
-  const user = result?.data?.user || null;
+function getDisplayName(member, fallback = "Member") {
+  const fullName = clean(member?.full_name);
+  if (fullName) return fullName;
 
-  return {
-    user,
-    email: clean(user?.email) || clean(properties?.email) || "",
-    actionLink:
-      clean(properties?.action_link) ||
-      clean(properties?.actionLink) ||
-      "",
-    hashedToken:
-      clean(properties?.hashed_token) ||
-      clean(properties?.hashedToken) ||
-      "",
-    emailOtp:
-      clean(properties?.email_otp) ||
-      clean(properties?.emailOtp) ||
-      "",
-  };
+  const joined = [member?.first_name, member?.last_name]
+    .map(clean)
+    .filter(Boolean)
+    .join(" ");
+
+  return joined || fallback;
+}
+
+function getGenericSuccessMessage() {
+  return "If that email is eligible for verification, a new verification email has been created.";
+}
+
+async function findSignupByEmail(email) {
+  return supabaseAdmin
+    .from("signups")
+    .select(
+      [
+        "id",
+        "email",
+        "first_name",
+        "last_name",
+        "full_name",
+        "status",
+        "email_verified",
+        "email_verified_at",
+        "created_at",
+        "updated_at",
+      ].join(", ")
+    )
+    .eq("email", email)
+    .maybeSingle();
+}
+
+async function storeVerificationToken({
+  signupId,
+  tokenHash,
+  expiresAt,
+}) {
+  return supabaseAdmin
+    .from("signups")
+    .update({
+      verification_token_hash: tokenHash,
+      verification_token_expires_at: expiresAt.toISOString(),
+      verification_requested_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", signupId)
+    .select(
+      [
+        "id",
+        "email",
+        "first_name",
+        "last_name",
+        "full_name",
+        "status",
+        "email_verified",
+        "email_verified_at",
+        "verification_token_expires_at",
+      ].join(", ")
+    )
+    .maybeSingle();
+}
+
+async function sendVerificationMessage({ email, fullName, verifyUrl }) {
+  await sendVerifyEmail({
+    to: email,
+    email,
+    fullName,
+    name: fullName,
+    verifyUrl,
+    verificationUrl: verifyUrl,
+    url: verifyUrl,
+    code: "",
+  });
 }
 
 export default async function handler(req, res) {
   setNoStore(res);
 
   if (req.method !== "POST") {
-    return methodNotAllowed(res, ["POST"]);
+    return methodNotAllowed(res, ["POST"], "Method not allowed. Use POST.");
   }
 
   const ipRate = resendVerificationRateLimit(req, res);
 
-  if (!ipRate.allowed) {
+  if (ipRate && !ipRate.allowed) {
     return tooManyRequests(
       res,
       "Too many verification requests. Please try again later.",
-      { retryAfter: ipRate.retryAfter }
+      {
+        retryAfter: ipRate.retryAfter ?? null,
+      }
     );
   }
 
   try {
     const body = getRequestBody(req);
     const email = normalizeEmail(body.email);
-    const fullName = clean(body.fullName || body.name || "Member");
-    const next = clean(body.next || "/login.html?verified=1");
+    const requestedFullName = clean(body.fullName || body.full_name || body.name);
+    const next = getSafeNextPath(body.next || DEFAULT_NEXT_PATH);
 
     if (!email) {
       return badRequest(res, "Email is required.");
@@ -146,60 +241,129 @@ export default async function handler(req, res) {
       return badRequest(res, "Enter a valid email address.");
     }
 
-    const env = getServerEnv();
+    const { data: signup, error: lookupError } = await findSignupByEmail(email);
 
-    const redirectTo = getSiteUrl(
-      `/api/auth/verify-email?type=signup&next=${encodeURIComponent(next)}`
-    );
-
-    const generated = await createMagicLinkWithSupabase(env, {
-      email,
-      redirectTo,
-    });
-
-    if (!generated.ok) {
-      logger.warn("Supabase failed to generate verification link.", {
-        status: generated.status,
+    if (lookupError) {
+      logger.error("Unable to look up signup for verification resend.", {
         email,
-        response: generated.data,
+        error: {
+          name: lookupError?.name || "SupabaseError",
+          message: lookupError?.message || "Unknown lookup error",
+        },
       });
 
-      return badRequest(
+      return fromCaughtError(
         res,
-        "We could not generate a new verification email right now.",
+        lookupError,
+        "Unable to resend verification email right now."
+      );
+    }
+
+    /*
+      Security:
+      Do not reveal whether an email exists.
+      If no signup exists, return success anyway.
+    */
+    if (!signup?.id) {
+      logger.info("Verification resend requested for unknown email.", {
+        email,
+      });
+
+      return ok(
+        res,
         {
-          status: generated.status,
-          reason:
-            clean(generated?.data?.error_description) ||
-            clean(generated?.data?.msg) ||
-            clean(generated?.data?.message) ||
-            "generate_link_failed",
+          sent: true,
+          email,
+          verificationCreated: false,
+        },
+        getGenericSuccessMessage()
+      );
+    }
+
+    if (signup.email_verified === true || signup.email_verified_at) {
+      logger.info("Verification resend skipped because email is already verified.", {
+        email,
+        signupId: signup.id,
+      });
+
+      return ok(
+        res,
+        {
+          sent: true,
+          email,
+          alreadyVerified: true,
+        },
+        "This email is already verified.",
+        {
+          redirectTo: next,
         }
       );
     }
 
-    const details = extractVerificationData(generated);
+    const token = createVerificationToken();
+    const tokenHash = hashVerificationToken(token);
+    const expiresAt = getVerificationExpirationDate();
 
-    const verifyUrl =
-      details.actionLink ||
-      buildVerifyUrl({
-        tokenHash: details.hashedToken,
-        type: "signup",
-        next,
+    const verifyUrl = buildVerifyUrl(req, {
+      token,
+      email,
+      next,
+    });
+
+    const { data: updatedSignup, error: updateError } =
+      await storeVerificationToken({
+        signupId: signup.id,
+        tokenHash,
+        expiresAt,
       });
 
-    await sendVerifyEmail({
-      to: email,
-      fullName,
-      verifyUrl,
-      code: details.emailOtp,
-    });
+    if (updateError) {
+      logger.error("Unable to store verification token.", {
+        email,
+        signupId: signup.id,
+        error: {
+          name: updateError?.name || "SupabaseError",
+          message: updateError?.message || "Unknown update error",
+        },
+      });
+
+      return fromCaughtError(
+        res,
+        updateError,
+        "Unable to create a new verification email right now."
+      );
+    }
+
+    const fullName = requestedFullName || getDisplayName(updatedSignup || signup);
+
+    try {
+      await sendVerificationMessage({
+        email,
+        fullName,
+        verifyUrl,
+      });
+    } catch (emailError) {
+      logger.error("Verification email token created but email send failed.", {
+        email,
+        signupId: signup.id,
+        error: {
+          name: emailError?.name || "EmailError",
+          message: emailError?.message || "Unable to send verification email.",
+        },
+      });
+
+      return fromCaughtError(
+        res,
+        emailError,
+        "Verification was created, but the email could not be sent right now."
+      );
+    }
 
     logger.info("Verification email re-sent successfully.", {
       email,
-      hasActionLink: Boolean(details.actionLink),
-      hasHashedToken: Boolean(details.hashedToken),
-      hasOtp: Boolean(details.emailOtp),
+      signupId: signup.id,
+      expiresAt: expiresAt.toISOString(),
+      verifyUrlExposed: shouldExposeVerifyLinkForTesting(),
     });
 
     return ok(
@@ -207,8 +371,15 @@ export default async function handler(req, res) {
       {
         sent: true,
         email,
+        verificationCreated: true,
+        expiresAt: expiresAt.toISOString(),
+        expiresInMinutes: VERIFY_TOKEN_TTL_MINUTES,
+        verifyUrl: shouldExposeVerifyLinkForTesting() ? verifyUrl : null,
       },
-      "Verification email sent successfully."
+      "Verification email sent successfully.",
+      {
+        redirectTo: shouldExposeVerifyLinkForTesting() ? verifyUrl : next,
+      }
     );
   } catch (error) {
     logger.error("Unexpected resend-verification error.", {

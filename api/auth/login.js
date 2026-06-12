@@ -10,10 +10,7 @@ import {
   serverError,
 } from "../../lib/responses.js";
 import { validateLoginInput } from "../../lib/validation.js";
-import {
-  setSessionCookie,
-  clearAuthCookies,
-} from "../../lib/cookies.js";
+import { setSessionCookie, clearAuthCookies } from "../../lib/cookies.js";
 import { loginRateLimit } from "../../lib/rate-limit.js";
 import {
   logRequestStart,
@@ -23,12 +20,9 @@ import {
 } from "../../lib/logger.js";
 
 const DEFAULT_REDIRECT = "/portal/index.html";
+const LOGIN_PATH = "/login.html";
 
-const ACTIVE_STATUSES = new Set([
-  "active",
-  "approved",
-  "invited",
-]);
+const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
 
 function getRequestBody(req) {
   if (!req?.body) return {};
@@ -60,6 +54,15 @@ function normalizeStatus(value) {
   return normalizeString(value).toLowerCase();
 }
 
+function normalizeBoolean(value) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+
+  const normalized = normalizeString(value).toLowerCase();
+
+  return ["true", "1", "yes", "y", "on"].includes(normalized);
+}
+
 function getClientIp(req) {
   const forwardedFor = req.headers?.["x-forwarded-for"];
 
@@ -71,12 +74,27 @@ function getClientIp(req) {
 }
 
 function hashPassword(password) {
-  return crypto.createHash("sha256").update(String(password || "")).digest("hex");
+  return crypto
+    .createHash("sha256")
+    .update(String(password || ""))
+    .digest("hex");
 }
 
 function safeCompareHash(inputHash, storedHash) {
-  const left = Buffer.from(String(inputHash || ""), "hex");
-  const right = Buffer.from(String(storedHash || ""), "hex");
+  const cleanInput = normalizeString(inputHash);
+  const cleanStored = normalizeString(storedHash);
+
+  if (!cleanInput || !cleanStored) return false;
+
+  let left;
+  let right;
+
+  try {
+    left = Buffer.from(cleanInput, "hex");
+    right = Buffer.from(cleanStored, "hex");
+  } catch {
+    return false;
+  }
 
   if (!left.length || !right.length || left.length !== right.length) {
     return false;
@@ -94,10 +112,12 @@ function getDisplayName(member) {
 
   if (fullName) return fullName;
 
-  return [member?.first_name, member?.last_name]
+  const joined = [member?.first_name, member?.last_name]
     .map(normalizeString)
     .filter(Boolean)
     .join(" ");
+
+  return joined || "Card Leo Member";
 }
 
 function sanitizeMember(member) {
@@ -108,7 +128,7 @@ function sanitizeMember(member) {
     email: member.email || null,
     firstName: member.first_name || "",
     lastName: member.last_name || "",
-    fullName: getDisplayName(member) || "Card Leo Member",
+    fullName: getDisplayName(member),
     phone: member.phone || "",
     city: member.city || "",
     state: member.state || "",
@@ -122,12 +142,48 @@ function sanitizeMember(member) {
   };
 }
 
+function buildUser(member) {
+  const safeMember = sanitizeMember(member);
+
+  if (!safeMember) return null;
+
+  return {
+    id: safeMember.id,
+    email: safeMember.email,
+    role: "member",
+    user_metadata: {
+      full_name: safeMember.fullName,
+      first_name: safeMember.firstName,
+      last_name: safeMember.lastName,
+      status: safeMember.status,
+    },
+    app_metadata: {
+      provider: "cardleo-signups",
+      role: "member",
+    },
+  };
+}
+
+function buildProfile(member) {
+  const safeMember = sanitizeMember(member);
+
+  if (!safeMember) return null;
+
+  return {
+    id: safeMember.id,
+    email: safeMember.email,
+    full_name: safeMember.fullName,
+    first_name: safeMember.firstName,
+    last_name: safeMember.lastName,
+    role: "member",
+    status: safeMember.status,
+  };
+}
+
 function buildCustomSessionCookieValue(member, remember = false) {
   const now = Math.floor(Date.now() / 1000);
   const maxAge = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
   const expiresAt = now + maxAge;
-
-  const safeMember = sanitizeMember(member);
 
   return JSON.stringify({
     authenticated: true,
@@ -135,32 +191,13 @@ function buildCustomSessionCookieValue(member, remember = false) {
     type: "member",
     remember: Boolean(remember),
     created_at: now,
+    checked_at: now,
     expires_at: expiresAt,
-    member: safeMember,
-    user: {
-      id: safeMember.id,
-      email: safeMember.email,
-      role: "member",
-      user_metadata: {
-        full_name: safeMember.fullName,
-        first_name: safeMember.firstName,
-        last_name: safeMember.lastName,
-        status: safeMember.status,
-      },
-      app_metadata: {
-        provider: "cardleo-signups",
-        role: "member",
-      },
-    },
-    profile: {
-      id: safeMember.id,
-      email: safeMember.email,
-      full_name: safeMember.fullName,
-      first_name: safeMember.firstName,
-      last_name: safeMember.lastName,
-      role: "member",
-      status: safeMember.status,
-    },
+    member: sanitizeMember(member),
+    user: buildUser(member),
+    profile: buildProfile(member),
+    role: "member",
+    redirectTo: DEFAULT_REDIRECT,
     session: {
       access_token: null,
       refresh_token: null,
@@ -169,6 +206,25 @@ function buildCustomSessionCookieValue(member, remember = false) {
       token_type: "custom",
     },
   });
+}
+
+function getSafeRedirect(value) {
+  const raw = normalizeString(value);
+
+  if (!raw) return DEFAULT_REDIRECT;
+  if (raw === LOGIN_PATH) return DEFAULT_REDIRECT;
+
+  try {
+    const url = new URL(raw, "https://cardleorewards.local");
+
+    if (!url.pathname.startsWith("/portal")) {
+      return DEFAULT_REDIRECT;
+    }
+
+    return `${url.pathname}${url.search || ""}`;
+  } catch {
+    return DEFAULT_REDIRECT;
+  }
 }
 
 async function touchLastLogin(memberId) {
@@ -194,13 +250,15 @@ export default async function handler(req, res) {
   try {
     const rateLimit = loginRateLimit(req, res);
 
-    if (!rateLimit?.allowed) {
+    if (rateLimit && !rateLimit.allowed) {
       clearAuthCookies(res);
 
       return badRequest(
         res,
         "Too many login attempts. Please try again later.",
-        { retryAfter: rateLimit?.retryAfter ?? null },
+        {
+          retryAfter: rateLimit.retryAfter ?? null,
+        },
         {
           statusCode: 429,
           error: "rate_limited",
@@ -223,7 +281,7 @@ export default async function handler(req, res) {
 
     const safeEmail = normalizeEmail(validation.values.email);
     const password = String(validation.values.password || "");
-    const remember = Boolean(body.remember);
+    const remember = normalizeBoolean(body.remember);
 
     const { data: member, error: lookupError } = await supabaseAdmin
       .from("signups")
@@ -267,6 +325,7 @@ export default async function handler(req, res) {
       logAuthEvent("Login failed.", {
         email: safeEmail,
         reason: "account_not_found",
+        ip: getClientIp(req),
       });
 
       return unauthorized(res, "Invalid email or password.");
@@ -278,11 +337,12 @@ export default async function handler(req, res) {
       logAuthEvent("Login blocked because password is missing.", {
         email: safeEmail,
         memberId: member.id,
+        ip: getClientIp(req),
       });
 
       return forbidden(
         res,
-        "This account does not have a password yet. Please create a new signup or reset the account password."
+        "This account does not have a password yet. Please reset the account password or create a new signup."
       );
     }
 
@@ -296,6 +356,7 @@ export default async function handler(req, res) {
         email: safeEmail,
         memberId: member.id,
         reason: "invalid_password",
+        ip: getClientIp(req),
       });
 
       return unauthorized(res, "Invalid email or password.");
@@ -310,6 +371,7 @@ export default async function handler(req, res) {
         email: safeEmail,
         memberId: member.id,
         status,
+        ip: getClientIp(req),
       });
 
       if (status === "pending" || status === "reviewing") {
@@ -340,15 +402,17 @@ export default async function handler(req, res) {
     }
 
     const sessionCookieValue = buildCustomSessionCookieValue(member, remember);
+    const sessionMaxAge = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
 
     setSessionCookie(res, sessionCookieValue, {
       httpOnly: true,
-      maxAge: remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24,
+      maxAge: sessionMaxAge,
     });
 
     await touchLastLogin(member.id);
 
     const safeMember = sanitizeMember(member);
+    const redirectTo = getSafeRedirect(member.portal_login_url);
 
     logAuthEvent("Login successful.", {
       email: safeEmail,
@@ -365,35 +429,21 @@ export default async function handler(req, res) {
     return ok(
       res,
       {
+        authenticated: true,
         member: safeMember,
-        user: {
-          id: safeMember.id,
-          email: safeMember.email,
-          role: "member",
-          user_metadata: {
-            full_name: safeMember.fullName,
-            first_name: safeMember.firstName,
-            last_name: safeMember.lastName,
-            status: safeMember.status,
-          },
-          app_metadata: {
-            provider: "cardleo-signups",
-            role: "member",
-          },
-        },
+        user: buildUser(member),
+        profile: buildProfile(member),
+        role: "member",
         session: {
           provider: "cardleo-signups",
           token_type: "custom",
           remember,
+          expires_in: sessionMaxAge,
         },
       },
       "Login successful.",
       {
-        redirectTo:
-          normalizeString(member.portal_login_url) &&
-          normalizeString(member.portal_login_url) !== "/login.html"
-            ? normalizeString(member.portal_login_url)
-            : DEFAULT_REDIRECT,
+        redirectTo,
       }
     );
   } catch (error) {

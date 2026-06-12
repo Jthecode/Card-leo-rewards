@@ -1,24 +1,32 @@
 // assets/js/auth-guard.js
-
 (function () {
   const DEFAULTS = {
     meEndpoint: "/api/auth/me",
     logoutEndpoint: "/api/auth/logout",
     loginPage: "/login.html",
     unauthorizedPage: "/unauthorized.html",
-    fallbackPortalOverviewEndpoint: "/api/portal/overview",
     redirectOnFail: true,
     requirePortalAccess: true,
     showLoader: true,
+    autoBindLogout: true,
     debug: false,
   };
+
+  const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
+
+  let currentAuthState = null;
+  let isRunning = false;
 
   function normalizeText(value) {
     return String(value ?? "").trim();
   }
 
+  function normalizeEmail(value) {
+    return normalizeText(value).toLowerCase();
+  }
+
   function isObject(value) {
-    return !!value && typeof value === "object" && !Array.isArray(value);
+    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
   }
 
   function logDebug(enabled, ...args) {
@@ -27,15 +35,24 @@
     }
   }
 
+  function getCurrentPath() {
+    return `${window.location.pathname}${window.location.search || ""}${window.location.hash || ""}`;
+  }
+
   function buildRedirectUrl(target, nextPath) {
     try {
       const url = new URL(target, window.location.origin);
+
       if (nextPath) {
         url.searchParams.set("next", nextPath);
       }
+
       return url.toString();
     } catch {
-      return target;
+      const separator = String(target).includes("?") ? "&" : "?";
+      return nextPath
+        ? `${target}${separator}next=${encodeURIComponent(nextPath)}`
+        : target;
     }
   }
 
@@ -135,76 +152,243 @@
 
   function removeLoader() {
     const loader = document.querySelector("[data-cardleo-auth-loader]");
-    if (loader) {
-      loader.remove();
-    }
+    if (loader) loader.remove();
   }
 
-  function inferMemberPayload(payload) {
-    if (!isObject(payload)) return null;
-
-    if (isObject(payload.member)) return payload.member;
-    if (isObject(payload.user)) return payload.user;
-    if (isObject(payload.profile)) return payload.profile;
-    if (isObject(payload.data?.member)) return payload.data.member;
-    if (isObject(payload.data?.user)) return payload.data.user;
-    if (isObject(payload.data?.profile)) return payload.data.profile;
-    if (isObject(payload.data)) return payload.data;
-
-    return null;
-  }
-
-  function extractPortalAccess(payload) {
-    const member = inferMemberPayload(payload);
-    const portalAccess =
-      member?.portalAccess ??
-      member?.portal_access ??
-      payload?.portalAccess ??
-      payload?.portal_access ??
-      payload?.data?.portalAccess ??
-      payload?.data?.portal_access;
-
-    if (typeof portalAccess === "boolean") return portalAccess;
-    return null;
-  }
-
-  function extractAuthenticatedFlag(payload, member) {
-    const authenticated =
-      payload?.authenticated ??
-      payload?.success ??
-      payload?.loggedIn ??
-      payload?.isAuthenticated ??
-      payload?.data?.authenticated ??
-      payload?.data?.loggedIn ??
-      null;
-
-    if (typeof authenticated === "boolean") {
-      return authenticated;
+  function unwrapApiPayload(payload) {
+    if (!isObject(payload)) {
+      return {
+        root: {},
+        data: {},
+        message: "",
+        success: false,
+      };
     }
 
-    return !!(
-      member?.email ||
-      member?.id ||
-      payload?.session ||
-      payload?.data?.session
-    );
-  }
-
-  function extractAuthState(payload) {
-    const member = inferMemberPayload(payload);
+    const data = isObject(payload.data) ? payload.data : payload;
 
     return {
-      authenticated: extractAuthenticatedFlag(payload, member),
-      member,
-      portalAccess: extractPortalAccess(payload),
+      root: payload,
+      data,
+      message: normalizeText(payload.message || data.message),
+      success: payload.success === true || data.success === true,
     };
   }
 
-  async function safeFetchJson(url, options) {
+  function getUserMetadata(user) {
+    return isObject(user?.user_metadata) ? user.user_metadata : {};
+  }
+
+  function getAppMetadata(user) {
+    return isObject(user?.app_metadata) ? user.app_metadata : {};
+  }
+
+  function pickMember(payload) {
+    const { data } = unwrapApiPayload(payload);
+
+    if (isObject(data.member)) return data.member;
+    if (isObject(data.profile)) return data.profile;
+    if (isObject(data.user)) return data.user;
+
+    return null;
+  }
+
+  function pickUser(payload) {
+    const { data } = unwrapApiPayload(payload);
+    return isObject(data.user) ? data.user : null;
+  }
+
+  function pickProfile(payload) {
+    const { data } = unwrapApiPayload(payload);
+    return isObject(data.profile) ? data.profile : null;
+  }
+
+  function getDisplayName({ member, profile, user }) {
+    const metadata = getUserMetadata(user);
+
+    const fullName =
+      normalizeText(member?.fullName) ||
+      normalizeText(member?.full_name) ||
+      normalizeText(member?.name) ||
+      normalizeText(profile?.fullName) ||
+      normalizeText(profile?.full_name) ||
+      normalizeText(profile?.name) ||
+      normalizeText(metadata.full_name) ||
+      normalizeText(metadata.name);
+
+    if (fullName) return fullName;
+
+    const firstName =
+      normalizeText(member?.firstName || member?.first_name) ||
+      normalizeText(profile?.firstName || profile?.first_name) ||
+      normalizeText(metadata.first_name);
+
+    const lastName =
+      normalizeText(member?.lastName || member?.last_name) ||
+      normalizeText(profile?.lastName || profile?.last_name) ||
+      normalizeText(metadata.last_name);
+
+    const joined = [firstName, lastName].filter(Boolean).join(" ");
+
+    return (
+      joined ||
+      normalizeText(member?.email?.split("@")[0]) ||
+      normalizeText(profile?.email?.split("@")[0]) ||
+      normalizeText(user?.email?.split("@")[0]) ||
+      "Card Leo Member"
+    );
+  }
+
+  function getEmail({ member, profile, user, data }) {
+    return normalizeEmail(
+      data?.email ||
+        data?.userEmail ||
+        member?.email ||
+        profile?.email ||
+        user?.email
+    );
+  }
+
+  function getMemberId({ member, profile, user, data }) {
+    return normalizeText(
+      data?.memberId ||
+        data?.member_id ||
+        data?.signupId ||
+        data?.signup_id ||
+        member?.id ||
+        member?.signupId ||
+        member?.signup_id ||
+        profile?.id ||
+        profile?.signupId ||
+        profile?.signup_id ||
+        user?.id
+    );
+  }
+
+  function getPortalUserId({ member, profile, user }) {
+    const metadata = getUserMetadata(user);
+
+    return normalizeText(
+      member?.portalUserId ||
+        member?.portal_user_id ||
+        profile?.portalUserId ||
+        profile?.portal_user_id ||
+        user?.portalUserId ||
+        user?.portal_user_id ||
+        metadata.portalUserId ||
+        metadata.portal_user_id
+    );
+  }
+
+  function getRole({ member, profile, user, data }) {
+    const metadata = getUserMetadata(user);
+    const appMetadata = getAppMetadata(user);
+
+    return normalizeText(
+      data?.role ||
+        member?.role ||
+        profile?.role ||
+        user?.role ||
+        metadata.role ||
+        appMetadata.role ||
+        "member"
+    ).toLowerCase();
+  }
+
+  function getStatus({ member, profile, data }) {
+    return normalizeText(
+      data?.status ||
+        member?.memberStatus ||
+        member?.member_status ||
+        member?.status ||
+        profile?.memberStatus ||
+        profile?.member_status ||
+        profile?.status ||
+        "active"
+    ).toLowerCase();
+  }
+
+  function getTier({ member, profile }) {
+    return normalizeText(
+      member?.tier ||
+        member?.accessLevel ||
+        member?.access_level ||
+        profile?.tier ||
+        "core"
+    ).toLowerCase();
+  }
+
+  function getPortalAccess({ member, data, authenticated }) {
+    if (typeof data?.portalAccess === "boolean") return data.portalAccess;
+    if (typeof data?.portal_access === "boolean") return data.portal_access;
+    if (typeof member?.portalAccess === "boolean") return member.portalAccess;
+    if (typeof member?.portal_access === "boolean") return member.portal_access;
+
+    const status = getStatus({ member, profile: null, data });
+
+    if (ACTIVE_STATUSES.has(status)) return true;
+    if (["pending", "reviewing", "disabled", "suspended", "denied", "closed"].includes(status)) {
+      return false;
+    }
+
+    return Boolean(authenticated);
+  }
+
+  function extractAuthState(payload, response) {
+    const unwrapped = unwrapApiPayload(payload);
+    const data = unwrapped.data;
+    const member = pickMember(payload);
+    const user = pickUser(payload);
+    const profile = pickProfile(payload);
+
+    const authenticated = data.authenticated === true;
+    const status = getStatus({ member, profile, data });
+
+    const normalizedMember = {
+      ...(isObject(member) ? member : {}),
+      id: getMemberId({ member, profile, user, data }),
+      signupId: normalizeText(member?.signupId || member?.signup_id || getMemberId({ member, profile, user, data })),
+      portalUserId: getPortalUserId({ member, profile, user }),
+      email: getEmail({ member, profile, user, data }),
+      fullName: getDisplayName({ member, profile, user }),
+      name: getDisplayName({ member, profile, user }),
+      role: getRole({ member, profile, user, data }),
+      status,
+      memberStatus: status,
+      tier: getTier({ member, profile }),
+      portalAccess: getPortalAccess({ member, data, authenticated }),
+    };
+
+    return {
+      ok: response?.ok === true,
+      httpStatus: response?.status || 0,
+      success: unwrapped.success,
+      authenticated,
+      member: authenticated ? normalizedMember : null,
+      user: authenticated ? user : null,
+      profile: authenticated ? profile : null,
+      session: isObject(data.session) ? data.session : null,
+      portalAccess: authenticated
+        ? getPortalAccess({ member: normalizedMember, data, authenticated })
+        : false,
+      message: unwrapped.message,
+      redirectTo:
+        normalizeText(data.redirectTo) ||
+        normalizeText(payload?.redirectTo) ||
+        normalizeText(member?.portalLoginUrl) ||
+        normalizeText(member?.portal_login_url) ||
+        "/portal/index.html",
+      data,
+      raw: payload,
+    };
+  }
+
+  async function safeFetchJson(url, options = {}) {
     const response = await fetch(url, {
       credentials: "include",
       headers: {
         Accept: "application/json",
+        ...(options.headers || {}),
       },
       ...options,
     });
@@ -217,137 +401,126 @@
       data = null;
     }
 
-    return { response, data };
+    return {
+      response,
+      data,
+    };
   }
 
   async function getAuthState(config) {
-    const meResult = await safeFetchJson(config.meEndpoint, { method: "GET" });
+    const meResult = await safeFetchJson(config.meEndpoint, {
+      method: "GET",
+    });
+
     logDebug(config.debug, "me endpoint result:", meResult);
 
-    if (meResult.response.ok) {
-      const state = extractAuthState(meResult.data);
-      return {
-        ok: true,
-        source: "me",
-        response: meResult.response,
-        data: meResult.data,
-        ...state,
-      };
-    }
-
-    if (
-      config.requirePortalAccess &&
-      [401, 403, 404].includes(meResult.response.status)
-    ) {
-      const portalResult = await safeFetchJson(config.fallbackPortalOverviewEndpoint, {
-        method: "GET",
-      });
-
-      logDebug(config.debug, "portal overview fallback result:", portalResult);
-
-      if (portalResult.response.ok) {
-        const state = extractAuthState(portalResult.data);
-        return {
-          ok: true,
-          source: "portal-overview",
-          response: portalResult.response,
-          data: portalResult.data,
-          authenticated: true,
-          member: state.member,
-          portalAccess:
-            typeof state.portalAccess === "boolean" ? state.portalAccess : true,
-        };
-      }
-
-      return {
-        ok: false,
-        source: "portal-overview",
-        response: portalResult.response,
-        data: portalResult.data,
-        authenticated: false,
-        member: null,
-        portalAccess: false,
-      };
-    }
+    const state = extractAuthState(meResult.data, meResult.response);
 
     return {
-      ok: false,
       source: "me",
       response: meResult.response,
-      data: meResult.data,
-      authenticated: false,
-      member: null,
-      portalAccess: false,
+      ...state,
     };
+  }
+
+  function setText(selector, value) {
+    if (!selector) return;
+
+    document.querySelectorAll(selector).forEach((node) => {
+      node.textContent = value;
+    });
+  }
+
+  function setValue(selector, value) {
+    if (!selector) return;
+
+    document.querySelectorAll(selector).forEach((node) => {
+      if ("value" in node) {
+        node.value = value;
+      } else {
+        node.textContent = value;
+      }
+    });
   }
 
   function applyMemberBindings(member) {
     if (!isObject(member)) return;
 
-    const fullName =
-      normalizeText(member.name) ||
-      normalizeText(member.fullName || member.full_name) ||
-      [
-        normalizeText(member.firstName || member.first_name),
-        normalizeText(member.lastName || member.last_name),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .trim() ||
-      "Card Leo Member";
-
+    const fullName = normalizeText(member.fullName || member.full_name || member.name) || "Card Leo Member";
     const firstName =
       normalizeText(member.firstName || member.first_name) ||
-      fullName.split(" ")[0] ||
+      fullName.split(/\s+/)[0] ||
       "Member";
 
-    const email = normalizeText(member.email || "");
-    const status = normalizeText(
-      member.status || member.memberStatus || member.member_status || "member"
-    );
-    const accessLevel = normalizeText(
-      member.accessLevel ||
-        member.access_level ||
-        member.tier ||
-        member.role ||
-        "member"
-    );
+    const lastName = normalizeText(member.lastName || member.last_name);
+    const email = normalizeText(member.email);
+    const status = normalizeText(member.memberStatus || member.member_status || member.status || "active");
+    const tier = normalizeText(member.tier || "core");
+    const role = normalizeText(member.role || "member");
+    const accessLevel = normalizeText(member.accessLevel || member.access_level || tier || role);
+    const memberId = normalizeText(member.id || member.signupId || member.signup_id);
+    const portalUserId = normalizeText(member.portalUserId || member.portal_user_id);
 
-    const bindings = {
-      name: fullName,
-      firstName,
-      email,
-      status,
-      accessLevel,
-    };
+    const bindings = [
+      ["[data-member-name]", fullName],
+      ["[data-member-full-name]", fullName],
+      ["[data-member-first-name]", firstName],
+      ["[data-member-last-name]", lastName],
+      ["[data-member-email]", email],
+      ["[data-member-status]", status],
+      ["[data-member-tier]", tier],
+      ["[data-member-role]", role],
+      ["[data-member-access-level]", accessLevel],
+      ["[data-member-accesslevel]", accessLevel],
+      ["[data-member-id]", memberId],
+      ["[data-member-signup-id]", memberId],
+      ["[data-member-portal-user-id]", portalUserId],
+      ["[data-session-name]", fullName],
+      ["[data-session-email]", email],
+      ["[data-session-user-id]", memberId],
+      ["[data-session-role]", role],
+      ["[data-session-status]", status],
+    ];
 
-    Object.entries(bindings).forEach(([key, value]) => {
-      document.querySelectorAll(`[data-member-${key}]`).forEach((node) => {
-        node.textContent = value;
-      });
+    bindings.forEach(([selector, value]) => {
+      setText(selector, value);
     });
+
+    setValue("[data-profile-name-input]", fullName);
+    setValue("[data-profile-email-input]", email);
 
     document.body.dataset.memberName = fullName;
     document.body.dataset.memberEmail = email;
     document.body.dataset.memberStatus = status;
+    document.body.dataset.memberTier = tier;
+    document.body.dataset.memberRole = role;
     document.body.dataset.memberAccessLevel = accessLevel;
+    document.body.dataset.memberId = memberId;
+  }
+
+  function setVisibilityForAuthState(authenticated) {
+    document.querySelectorAll("[data-authenticated]").forEach((node) => {
+      node.hidden = !authenticated;
+    });
+
+    document.querySelectorAll("[data-guest]").forEach((node) => {
+      node.hidden = authenticated;
+    });
   }
 
   function redirectToLogin(config) {
-    const next = window.location.pathname + window.location.search + window.location.hash;
-    const url = buildRedirectUrl(config.loginPage, next);
+    const url = buildRedirectUrl(config.loginPage, getCurrentPath());
     window.location.href = url;
   }
 
   function redirectToUnauthorized(config) {
-    const next = window.location.pathname + window.location.search + window.location.hash;
-    const url = buildRedirectUrl(config.unauthorizedPage, next);
+    const url = buildRedirectUrl(config.unauthorizedPage, getCurrentPath());
     window.location.href = url;
   }
 
-  async function logout(config) {
+  async function logoutMember(config = DEFAULTS) {
     try {
-      await fetch(config.logoutEndpoint, {
+      await fetch(config.logoutEndpoint || DEFAULTS.logoutEndpoint, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -355,14 +528,94 @@
         },
       });
     } catch {
-      // swallow logout network errors and still redirect
+      // Still redirect even if logout network request fails.
     }
 
+    currentAuthState = null;
     redirectToLogin(config);
   }
 
+  function bindLogoutButtons(config) {
+    document.querySelectorAll("[data-logout], [data-member-logout]").forEach((button) => {
+      if (button.dataset.authGuardLogoutBound === "true") return;
+
+      button.dataset.authGuardLogoutBound = "true";
+
+      button.addEventListener("click", async (event) => {
+        event.preventDefault();
+
+        const originalText = "value" in button ? button.value : button.textContent;
+        const canDisable = "disabled" in button;
+
+        try {
+          if ("value" in button) {
+            button.value = "Signing out...";
+          } else {
+            button.textContent = "Signing out...";
+          }
+
+          if (canDisable) {
+            button.disabled = true;
+          }
+
+          await logoutMember(config);
+        } catch (error) {
+          if ("value" in button) {
+            button.value = originalText;
+          } else {
+            button.textContent = originalText;
+          }
+
+          if (canDisable) {
+            button.disabled = false;
+          }
+
+          alert(error?.message || "Unable to sign out right now.");
+        }
+      });
+    });
+  }
+
+  function dispatchReadyEvent(state) {
+    const event = new CustomEvent("cardleo:auth-ready", {
+      detail: {
+        ok: true,
+        member: state.member || null,
+        user: state.user || null,
+        profile: state.profile || null,
+        session: state.session || null,
+        source: state.source,
+        portalAccess: state.portalAccess,
+        authenticated: state.authenticated,
+        redirectTo: state.redirectTo,
+        raw: state.raw,
+        data: state.data,
+      },
+    });
+
+    window.dispatchEvent(event);
+  }
+
+  function dispatchFailureEvent(state) {
+    const event = new CustomEvent("cardleo:auth-failed", {
+      detail: state,
+    });
+
+    window.dispatchEvent(event);
+  }
+
   async function run(options = {}) {
-    const config = { ...DEFAULTS, ...options };
+    if (isRunning) {
+      return currentAuthState;
+    }
+
+    isRunning = true;
+
+    const config = {
+      ...DEFAULTS,
+      ...options,
+    };
+
     const loader = config.showLoader ? createLoader() : null;
 
     document.body.dataset.authGuard = "checking";
@@ -370,24 +623,27 @@
     try {
       const state = await getAuthState(config);
 
+      currentAuthState = state;
+
       logDebug(config.debug, "final auth state:", state);
 
-      if (!state.ok || !state.authenticated) {
+      if (!state.authenticated) {
         document.body.dataset.authGuard = "unauthenticated";
+        setVisibilityForAuthState(false);
+        dispatchFailureEvent({
+          ok: false,
+          status: state.httpStatus || 401,
+          reason: "unauthenticated",
+          ...state,
+        });
 
         if (config.redirectOnFail) {
           redirectToLogin(config);
-          return {
-            ok: false,
-            status: state.response?.status || 401,
-            reason: "unauthenticated",
-            ...state,
-          };
         }
 
         return {
           ok: false,
-          status: state.response?.status || 401,
+          status: state.httpStatus || 401,
           reason: "unauthenticated",
           ...state,
         };
@@ -395,38 +651,36 @@
 
       if (config.requirePortalAccess && state.portalAccess === false) {
         document.body.dataset.authGuard = "unauthorized";
+        setVisibilityForAuthState(false);
+        dispatchFailureEvent({
+          ok: false,
+          status: state.httpStatus || 403,
+          reason: "unauthorized",
+          ...state,
+        });
 
         if (config.redirectOnFail) {
           redirectToUnauthorized(config);
-          return {
-            ok: false,
-            status: state.response?.status || 403,
-            reason: "unauthorized",
-            ...state,
-          };
         }
 
         return {
           ok: false,
-          status: state.response?.status || 403,
+          status: state.httpStatus || 403,
           reason: "unauthorized",
           ...state,
         };
       }
 
       applyMemberBindings(state.member || {});
+      setVisibilityForAuthState(true);
+
       document.body.dataset.authGuard = "ready";
 
-      const event = new CustomEvent("cardleo:auth-ready", {
-        detail: {
-          member: state.member || null,
-          source: state.source,
-          portalAccess: state.portalAccess,
-          authenticated: state.authenticated,
-        },
-      });
+      if (config.autoBindLogout) {
+        bindLogoutButtons(config);
+      }
 
-      window.dispatchEvent(event);
+      dispatchReadyEvent(state);
 
       return {
         ok: true,
@@ -438,29 +692,67 @@
       document.body.dataset.authGuard = "error";
       logDebug(config.debug, "auth guard error:", error);
 
-      if (config.redirectOnFail) {
-        redirectToLogin(config);
-      }
-
-      return {
+      const failedState = {
         ok: false,
         status: 500,
         reason: "error",
         error,
       };
+
+      dispatchFailureEvent(failedState);
+
+      if (config.redirectOnFail) {
+        redirectToLogin(config);
+      }
+
+      return failedState;
     } finally {
+      isRunning = false;
+
       if (loader) {
         removeLoader();
       }
     }
   }
 
+  function getState() {
+    return currentAuthState;
+  }
+
+  function autoInitFromBody() {
+    const root = document.body || document.documentElement;
+
+    if (!root) return;
+
+    const shouldAutoRun =
+      root.hasAttribute("data-require-auth") ||
+      root.hasAttribute("data-auth-guard") ||
+      root.dataset.cardleoAuthGuard === "auto";
+
+    if (!shouldAutoRun) return;
+
+    run({
+      redirectOnFail: root.dataset.redirectOnFail !== "false",
+      requirePortalAccess: root.dataset.requirePortalAccess !== "false",
+      showLoader: root.dataset.showAuthLoader !== "false",
+      debug: root.dataset.authDebug === "true",
+    });
+  }
+
   const CardLeoAuthGuard = {
     init: run,
     run,
-    logout,
+    logout: logoutMember,
+    bindLogoutButtons,
+    getState,
     defaults: { ...DEFAULTS },
   };
 
   window.CardLeoAuthGuard = CardLeoAuthGuard;
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", autoInitFromBody);
+  } else {
+    autoInitFromBody();
+  }
 })();

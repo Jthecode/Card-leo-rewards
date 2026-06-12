@@ -889,7 +889,7 @@ export default async function handler(req, res) {
     return serverError(
       res,
       error?.message ||
-        "Something went wrong while checking the current session.."
+        "Something went wrong while checking the current session."
     );
   }
 }

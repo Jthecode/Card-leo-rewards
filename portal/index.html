@@ -26,6 +26,9 @@
     />
     <meta property="og:type" content="website" />
 
+    <link rel="canonical" href="https://www.cardleorewards.com/portal/index.html" />
+    <link rel="stylesheet" href="/style.css" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
@@ -640,29 +643,8 @@
         font-size: 0.86rem;
       }
 
-      .skeleton {
-        background: linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.04) 0%,
-          rgba(255, 255, 255, 0.08) 50%,
-          rgba(255, 255, 255, 0.04) 100%
-        );
-        background-size: 200% 100%;
-        animation: shimmer 1.6s linear infinite;
-        border-radius: 14px;
-      }
-
       .hidden {
         display: none !important;
-      }
-
-      @keyframes shimmer {
-        0% {
-          background-position: 200% 0;
-        }
-        100% {
-          background-position: -200% 0;
-        }
       }
 
       @media (max-width: 1120px) {
@@ -707,14 +689,15 @@
       }
     </style>
   </head>
-  <body>
+
+  <body data-require-auth data-cardleo-auth-guard="auto">
     <div class="page-shell">
       <div class="ambient"></div>
       <div class="grid-overlay"></div>
 
       <header class="topbar">
         <div class="container topbar-inner">
-          <a class="brand" href="../index.html" aria-label="Card Leo Rewards Home">
+          <a class="brand" href="/" aria-label="Card Leo Rewards Home">
             <div class="brand-mark">CL</div>
             <div class="brand-copy">
               <small>Premium Member Access</small>
@@ -723,10 +706,10 @@
           </a>
 
           <div class="topbar-actions">
-            <a class="pill" href="../about.html">About</a>
-            <a class="pill" href="../contact.html">Support</a>
-            <a class="pill" href="settings.html">Settings</a>
-            <button class="btn btn-secondary" id="logoutButton" type="button">
+            <a class="pill" href="/about.html">About</a>
+            <a class="pill" href="/portal/support.html">Support</a>
+            <a class="pill" href="/portal/settings.html">Settings</a>
+            <button class="btn btn-secondary" id="logoutButton" type="button" data-logout>
               Log Out
             </button>
           </div>
@@ -740,7 +723,7 @@
               <div>
                 <div class="eyebrow">Member Dashboard</div>
 
-                <div class="status-pill" id="heroStatusBadge">Loading account</div>
+                <div class="status-pill pending" id="heroStatusBadge">Loading account</div>
 
                 <h1 id="heroHeading">Welcome back.</h1>
 
@@ -757,8 +740,8 @@
                 </div>
 
                 <div class="hero-actions">
-                  <a class="btn btn-primary" href="rewards.html">View Rewards</a>
-                  <a class="btn btn-secondary" href="profile.html">Open Profile</a>
+                  <a class="btn btn-primary" href="/portal/rewards.html">View Rewards</a>
+                  <a class="btn btn-secondary" href="/portal/profile.html">Open Profile</a>
                 </div>
               </div>
             </div>
@@ -767,15 +750,19 @@
               <div class="spotlight-label">Member Snapshot</div>
 
               <div class="member-block">
-                <div class="status-pill" id="memberStatusBadge">Loading</div>
-                <div class="member-name" id="memberName">Card Leo Member</div>
-                <div class="member-email" id="memberEmail">Loading account data...</div>
+                <div class="status-pill pending" id="memberStatusBadge">Loading</div>
+                <div class="member-name" id="memberName" data-member-name>
+                  Card Leo Member
+                </div>
+                <div class="member-email" id="memberEmail" data-member-email>
+                  Loading account data...
+                </div>
               </div>
 
               <div class="meta-grid">
                 <div class="meta-item">
                   <span>Member Status</span>
-                  <strong id="metaStatus">Loading</strong>
+                  <strong id="metaStatus" data-member-status>Loading</strong>
                 </div>
                 <div class="meta-item">
                   <span>Portal Access</span>
@@ -807,25 +794,25 @@
                 </div>
 
                 <div class="quick-grid" id="quickActions">
-                  <a class="action-card" href="profile.html">
+                  <a class="action-card" href="/portal/profile.html">
                     <strong>Review Profile</strong>
                     <p>View and manage your member details and account information.</p>
                     <span class="action-link">Open profile →</span>
                   </a>
 
-                  <a class="action-card" href="rewards.html">
+                  <a class="action-card" href="/portal/rewards.html">
                     <strong>Browse Rewards</strong>
                     <p>See featured perks, premium opportunities, and member access.</p>
                     <span class="action-link">View rewards →</span>
                   </a>
 
-                  <a class="action-card" href="benefits.html">
+                  <a class="action-card" href="/portal/benefits.html">
                     <strong>Explore Benefits</strong>
                     <p>Review the full premium value of your Card Leo Rewards membership.</p>
                     <span class="action-link">See benefits →</span>
                   </a>
 
-                  <a class="action-card" href="support.html">
+                  <a class="action-card" href="/portal/support.html">
                     <strong>Contact Support</strong>
                     <p>Reach our team for account help, onboarding, and member questions.</p>
                     <span class="action-link">Get support →</span>
@@ -941,7 +928,7 @@
                 </div>
 
                 <div style="margin-top: 18px;">
-                  <a class="btn btn-secondary" href="support.html" style="width: 100%;">
+                  <a class="btn btn-secondary" href="/portal/support.html" style="width: 100%;">
                     Open Member Support
                   </a>
                 </div>
@@ -955,6 +942,8 @@
         </div>
       </main>
     </div>
+
+    <script src="/assets/js/auth-guard.js"></script>
 
     <script>
       const els = {
@@ -983,6 +972,12 @@
         logoutButton: document.getElementById("logoutButton"),
       };
 
+      let dashboardRendered = false;
+
+      function isObject(value) {
+        return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+      }
+
       function normalizeText(value, fallback = "") {
         const text = String(value ?? "").trim();
         return text || fallback;
@@ -1001,6 +996,7 @@
         if (!value) return "—";
 
         const date = new Date(value);
+
         if (Number.isNaN(date.getTime())) return "—";
 
         return new Intl.DateTimeFormat("en-US", {
@@ -1010,6 +1006,43 @@
         }).format(date);
       }
 
+      function titleCase(value) {
+        return String(value || "")
+          .split(/[\s_-]+/)
+          .filter(Boolean)
+          .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+          .join(" ");
+      }
+
+      function normalizeStatus(value) {
+        return normalizeText(value || "active").toLowerCase();
+      }
+
+      function getFullName(member) {
+        const full =
+          normalizeText(member?.fullName) ||
+          normalizeText(member?.full_name) ||
+          normalizeText(member?.name);
+
+        if (full) return full;
+
+        const firstName = normalizeText(member?.firstName || member?.first_name);
+        const lastName = normalizeText(member?.lastName || member?.last_name);
+        const joined = [firstName, lastName].filter(Boolean).join(" ");
+
+        return joined || "Valued Member";
+      }
+
+      function getCreatedAt(member) {
+        return (
+          member?.createdAt ||
+          member?.created_at ||
+          member?.joinedAt ||
+          member?.joined_at ||
+          null
+        );
+      }
+
       function getLocationText(member) {
         const city = normalizeText(member?.city);
         const state = normalizeText(member?.state);
@@ -1017,7 +1050,34 @@
         if (city && state) return `${city}, ${state}`;
         if (city) return city;
         if (state) return state;
+
         return "Not provided";
+      }
+
+      function getPortalAccess(member) {
+        if (typeof member?.portalAccess === "boolean") return member.portalAccess;
+        if (typeof member?.portal_access === "boolean") return member.portal_access;
+
+        const status = normalizeStatus(
+          member?.status ||
+            member?.memberStatus ||
+            member?.member_status ||
+            "active"
+        );
+
+        return ["active", "approved", "invited"].includes(status);
+      }
+
+      function getStatusLabel(member) {
+        const raw = normalizeStatus(
+          member?.memberStatus ||
+            member?.member_status ||
+            member?.status ||
+            "active"
+        );
+
+        if (raw === "approved" || raw === "invited") return "Active";
+        return titleCase(raw || "Active");
       }
 
       function getStatusClass(statusLabel) {
@@ -1034,7 +1094,8 @@
         if (
           value.includes("declined") ||
           value.includes("suspended") ||
-          value.includes("error")
+          value.includes("error") ||
+          value.includes("denied")
         ) {
           return "error";
         }
@@ -1043,50 +1104,116 @@
       }
 
       function setStatusBadge(element, label) {
+        if (!element) return;
+
         const cleanLabel = normalizeText(label, "Unknown");
+
         element.textContent = cleanLabel;
         element.className = "status-pill";
+
         const extraClass = getStatusClass(cleanLabel);
+
         if (extraClass) {
           element.classList.add(extraClass);
         }
       }
 
+      function unwrapApiPayload(payload) {
+        if (!isObject(payload)) return {};
+        return isObject(payload.data) ? payload.data : payload;
+      }
+
+      async function fetchJson(url, options = {}) {
+        const response = await fetch(url, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+            ...(options.headers || {}),
+          },
+          ...options,
+        });
+
+        const payload = await response.json().catch(() => ({}));
+
+        return {
+          response,
+          payload,
+          data: unwrapApiPayload(payload),
+        };
+      }
+
+      function getMemberFromMePayload(payload) {
+        const data = unwrapApiPayload(payload);
+
+        if (data.authenticated !== true) return null;
+        if (isObject(data.member)) return data.member;
+        if (isObject(data.profile)) return data.profile;
+
+        return null;
+      }
+
+      function getSupportFromPayload(payload) {
+        const data = unwrapApiPayload(payload);
+        const support =
+          data.support ||
+          data.overview?.support ||
+          data.settings?.support ||
+          data.member?.support ||
+          {};
+
+        return isObject(support) ? support : {};
+      }
+
+      function getOverviewFromPayload(payload) {
+        const data = unwrapApiPayload(payload);
+
+        if (isObject(data.overview)) return data.overview;
+
+        return {
+          member: data.member || null,
+          actions: data.actions || [],
+          rewards: data.rewards || data.benefits || [],
+          announcements: data.announcements || data.notices || [],
+          support: data.support || {},
+        };
+      }
+
       function renderActions(actions, member) {
-        const list = Array.isArray(actions) && actions.length
-          ? actions
-          : [
-              {
-                label: "Review Profile",
-                href: "profile.html",
-                description: "View and manage your member details.",
-              },
-              {
-                label: "Browse Rewards",
-                href: "rewards.html",
-                description: "See featured perks and premium opportunities.",
-              },
-              {
-                label: "Explore Benefits",
-                href: "benefits.html",
-                description: "Review your full membership value.",
-              },
-              {
-                label: "Contact Support",
-                href: "support.html",
-                description: "Reach our team for help and questions.",
-              },
-            ];
+        const portalAccess = getPortalAccess(member);
+
+        const list =
+          Array.isArray(actions) && actions.length
+            ? actions
+            : [
+                {
+                  label: "Review Profile",
+                  href: "/portal/profile.html",
+                  description: "View and manage your member details.",
+                },
+                {
+                  label: "Browse Rewards",
+                  href: "/portal/rewards.html",
+                  description: "See featured perks and premium opportunities.",
+                },
+                {
+                  label: "Explore Benefits",
+                  href: "/portal/benefits.html",
+                  description: "Review your full membership value.",
+                },
+                {
+                  label: "Contact Support",
+                  href: "/portal/support.html",
+                  description: "Reach our team for help and questions.",
+                },
+              ];
 
         els.quickActions.innerHTML = list
           .map((action) => {
             const label = normalizeText(action.label, "Open");
             const href = normalizeText(action.href, "#");
             const description =
-              normalizeText(action.description) ||
-              (label.toLowerCase().includes("status")
-                ? "Review your current application or membership position."
-                : "Open this member action.");
+              normalizeText(action.description) || "Open this member action.";
 
             return `
               <a class="action-card" href="${escapeHtml(href)}">
@@ -1098,11 +1225,11 @@
           })
           .join("");
 
-        if (member && !member.portalAccess) {
+        if (!portalAccess) {
           els.quickActions.insertAdjacentHTML(
             "afterbegin",
             `
-              <a class="action-card" href="../thank-you.html">
+              <a class="action-card" href="/thank-you.html">
                 <strong>Application Status</strong>
                 <p>Your account is not fully enabled yet. Review your submission status here.</p>
                 <span class="action-link">Check status →</span>
@@ -1112,35 +1239,42 @@
         }
       }
 
-      function renderRewards(rewards) {
-        const list = Array.isArray(rewards) && rewards.length
-          ? rewards
-          : [
-              {
-                title: "Member Concierge",
-                description: "Priority member support and white-glove assistance.",
-                active: false,
-              },
-              {
-                title: "Exclusive Offers",
-                description: "Premium opportunities and offers for qualifying members.",
-                active: false,
-              },
-              {
-                title: "Application Tracking",
-                description: "Visibility into your membership application and status.",
-                active: true,
-              },
-            ];
+      function renderRewards(rewards, member) {
+        const portalAccess = getPortalAccess(member);
+
+        const list =
+          Array.isArray(rewards) && rewards.length
+            ? rewards
+            : [
+                {
+                  title: "Member Portal Access",
+                  description: "Your Card Leo Rewards dashboard is connected to your account.",
+                  active: portalAccess,
+                },
+                {
+                  title: "Rewards Overview",
+                  description: "Review premium rewards, benefits, and member opportunities.",
+                  active: portalAccess,
+                },
+                {
+                  title: "Account Management",
+                  description: "Update your profile, settings, support requests, and account details.",
+                  active: true,
+                },
+              ];
 
         els.rewardsGrid.innerHTML = list
           .map((reward) => {
-            const title = normalizeText(reward.title, "Member Benefit");
+            const title = normalizeText(reward.title || reward.name, "Member Benefit");
             const description = normalizeText(
-              reward.description,
+              reward.description || reward.body,
               "Premium Card Leo Rewards access."
             );
-            const active = Boolean(reward.active);
+
+            const active =
+              reward.active === true ||
+              reward.unlocked === true ||
+              reward.locked === false;
 
             return `
               <div class="reward-card">
@@ -1158,19 +1292,23 @@
       }
 
       function renderAnnouncements(announcements) {
-        const list = Array.isArray(announcements) && announcements.length
-          ? announcements
-          : [
-              {
-                title: "Welcome to Card Leo Rewards",
-                body: "Your account is now connected to the premium member experience.",
-              },
-            ];
+        const list =
+          Array.isArray(announcements) && announcements.length
+            ? announcements
+            : [
+                {
+                  title: "Welcome to Card Leo Rewards",
+                  body: "Your account is connected to the premium member experience.",
+                },
+              ];
 
         els.announcementsList.innerHTML = list
           .map((item) => {
             const title = normalizeText(item.title, "Portal Update");
-            const body = normalizeText(item.body, "Your member update will appear here.");
+            const body = normalizeText(
+              item.body || item.message || item.description,
+              "Your member update will appear here."
+            );
 
             return `
               <div class="notice-item">
@@ -1182,35 +1320,29 @@
           .join("");
       }
 
-      function renderTimeline(member, overview) {
+      function renderTimeline(member) {
+        const portalAccess = getPortalAccess(member);
+        const statusLabel = getStatusLabel(member);
+        const createdAt = getCreatedAt(member);
+
         const items = [
           {
-            title: "Application Submitted",
-            body: member?.createdAt
-              ? `Your account record was created on ${formatDate(member.createdAt)}.`
-              : "Your account submission has been recorded in the system.",
+            title: "Account Record Found",
+            body: createdAt
+              ? `Your account record was created on ${formatDate(createdAt)}.`
+              : "Your account record is connected to the portal.",
           },
           {
             title: "Current Membership Status",
-            body: `Your current account status is ${normalizeText(
-              member?.statusLabel,
-              "Submitted"
-            )}.`,
+            body: `Your current account status is ${statusLabel}.`,
           },
           {
             title: "Portal Visibility",
-            body: member?.portalAccess
+            body: portalAccess
               ? "Your portal access is enabled and ready to use."
               : "Your portal access is still pending review or approval.",
           },
         ];
-
-        if (member?.portalLoginUrl) {
-          items.push({
-            title: "Member Access Linked",
-            body: "A dedicated portal access record has been linked to your account.",
-          });
-        }
 
         els.activityTimeline.innerHTML = items
           .map(
@@ -1235,17 +1367,21 @@
         els.supportHours.textContent = hours;
       }
 
-      function renderMember(member, overview) {
-        const fullName =
-          normalizeText(member?.fullName) ||
-          [member?.firstName, member?.lastName].filter(Boolean).join(" ").trim() ||
-          "Valued Member";
+      function renderMember(member, overview = {}) {
+        dashboardRendered = true;
 
+        const fullName = getFullName(member);
+        const firstName = normalizeText(
+          member?.firstName ||
+            member?.first_name ||
+            fullName.split(/\s+/)[0],
+          "Member"
+        );
         const email = normalizeText(member?.email, "No email available");
-        const statusLabel = normalizeText(member?.statusLabel, "Submitted");
-        const portalAccess = Boolean(member?.portalAccess);
+        const statusLabel = getStatusLabel(member);
+        const portalAccess = getPortalAccess(member);
 
-        els.heroHeading.textContent = `Welcome back, ${fullName.split(" ")[0] || "Member"}.`;
+        els.heroHeading.textContent = `Welcome back, ${firstName}.`;
         els.heroDescription.textContent = portalAccess
           ? "Your premium dashboard is active. Review your rewards, member benefits, support details, and account information from one central portal."
           : "Your account is in progress. You can still review your information, check your status, and stay connected while your member access is finalized.";
@@ -1258,21 +1394,24 @@
 
         els.metaStatus.textContent = statusLabel;
         els.metaAccess.textContent = portalAccess ? "Enabled" : "Pending";
-        els.metaCreated.textContent = formatDate(member?.createdAt);
+        els.metaCreated.textContent = formatDate(getCreatedAt(member));
         els.metaLocation.textContent = getLocationText(member);
 
         renderActions(overview?.actions, member);
-        renderRewards(overview?.rewards);
-        renderAnnouncements(overview?.announcements);
-        renderTimeline(member, overview);
+        renderRewards(overview?.rewards || overview?.benefits, member);
+        renderAnnouncements(overview?.announcements || overview?.notices);
+        renderTimeline(member);
         renderSupport(overview?.support || {});
       }
 
       function renderFallbackState(title, description, isError = false) {
+        if (dashboardRendered) return;
+
         els.heroHeading.textContent = title;
         els.heroDescription.textContent = description;
 
         const badgeText = isError ? "Access issue" : "Portal status";
+
         setStatusBadge(els.heroStatusBadge, badgeText);
         setStatusBadge(els.memberStatusBadge, badgeText);
 
@@ -1295,10 +1434,7 @@
         els.rewardsGrid.innerHTML = `
           <div class="reward-card">
             <strong>Portal access not fully available</strong>
-            <p>
-              You can still contact support and review your account while member
-              access is being finalized.
-            </p>
+            <p>You can still contact support and review your account while member access is being finalized.</p>
           </div>
         `;
 
@@ -1317,58 +1453,83 @@
         `;
       }
 
-      async function loadPortalOverview() {
+      async function loadPortalOverviewEnhancement(memberFromSession) {
         try {
-          const response = await fetch("../api/portal/overview", {
-            method: "GET",
-            credentials: "same-origin",
-            headers: {
-              Accept: "application/json",
-            },
-          });
-
-          const payload = await response.json().catch(() => ({}));
-
-          if (response.status === 401) {
-            window.location.href = "../login.html";
-            return;
-          }
-
-          if (response.status === 403) {
-            const member = payload?.member || payload?.overview?.member || null;
-            const overview = payload?.overview || null;
-
-            if (member) {
-              renderMember(member, overview);
-              return;
-            }
-
-            renderFallbackState(
-              "Your portal access is still being reviewed.",
-              "Your application was received successfully, but premium member access is not available yet. Please check back soon or contact support."
-            );
-            return;
-          }
+          const { response, payload } = await fetchJson("/api/portal/overview");
 
           if (!response.ok) {
-            throw new Error(payload?.message || "Unable to load member portal.");
+            renderMember(memberFromSession, {
+              support: {},
+              announcements: [
+                {
+                  title: "Dashboard connected",
+                  body: "Your account is active. Some overview details are still being prepared.",
+                },
+              ],
+            });
+            return;
           }
 
-          const overview = payload?.overview || null;
-          const member = payload?.member || overview?.member || null;
+          const data = unwrapApiPayload(payload);
+          const overview = getOverviewFromPayload(payload);
+          const overviewMember =
+            data.member ||
+            overview.member ||
+            memberFromSession;
+
+          renderMember(
+            {
+              ...memberFromSession,
+              ...(isObject(overviewMember) ? overviewMember : {}),
+            },
+            {
+              ...overview,
+              support: getSupportFromPayload(payload),
+            }
+          );
+        } catch (error) {
+          console.warn("Portal overview enhancement skipped:", error);
+
+          renderMember(memberFromSession, {
+            announcements: [
+              {
+                title: "Dashboard connected",
+                body: "Your member session is active. Refresh later for additional overview details.",
+              },
+            ],
+          });
+        }
+      }
+
+      async function loadDashboardFromSession() {
+        try {
+          const { response, payload, data } = await fetchJson("/api/auth/me");
+
+          if (!response.ok || data.authenticated !== true) {
+            window.location.href = `/login.html?next=${encodeURIComponent(
+              window.location.pathname + window.location.search
+            )}`;
+            return;
+          }
+
+          const member = getMemberFromMePayload(payload);
 
           if (!member) {
             renderFallbackState(
               "We could not locate your member record.",
-              "Please log in again or contact support if this issue continues.",
+              "Your session is active, but the member details were not returned. Please log out, log back in, or contact support.",
               true
             );
             return;
           }
 
-          renderMember(member, overview);
+          renderMember(member, {
+            support: getSupportFromPayload(payload),
+          });
+
+          await loadPortalOverviewEnhancement(member);
         } catch (error) {
-          console.error("Portal overview error:", error);
+          console.error("Dashboard session error:", error);
 
           renderFallbackState(
             "We couldn’t load your dashboard right now.",
@@ -1380,13 +1541,14 @@
 
       async function handleLogout() {
         const originalLabel = els.logoutButton.textContent;
+
         els.logoutButton.disabled = true;
         els.logoutButton.textContent = "Logging out...";
 
         try {
-          const response = await fetch("../api/auth/logout", {
+          const response = await fetch("/api/auth/logout", {
             method: "POST",
-            credentials: "same-origin",
+            credentials: "include",
             headers: {
               Accept: "application/json",
             },
@@ -1396,7 +1558,7 @@
             throw new Error("Logout failed.");
           }
 
-          window.location.href = "../login.html";
+          window.location.href = "/login.html";
         } catch (error) {
           console.error("Logout error:", error);
           els.logoutButton.disabled = false;
@@ -1407,7 +1569,29 @@
 
       els.logoutButton.addEventListener("click", handleLogout);
 
-      loadPortalOverview();
+      window.addEventListener("cardleo:auth-ready", async (event) => {
+        const member = event?.detail?.member;
+
+        if (member && !dashboardRendered) {
+          renderMember(member, {
+            support: {},
+          });
+
+          await loadPortalOverviewEnhancement(member);
+        }
+      });
+
+      window.addEventListener("cardleo:auth-failed", () => {
+        if (!dashboardRendered) {
+          renderFallbackState(
+            "Please log in again.",
+            "Your session could not be verified. Redirecting you to login.",
+            true
+          );
+        }
+      });
+
+      loadDashboardFromSession();
     </script>
   </body>
 </html>

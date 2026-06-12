@@ -17,6 +17,11 @@
       content="Card Leo Rewards, rewards, savings, travel perks, shopping discounts, member login, signup, lifestyle perks, access perks"
     />
     <meta name="theme-color" content="#0a0f1c" />
+    <meta name="robots" content="index, follow" />
+
+    <link rel="canonical" href="https://www.cardleorewards.com/" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="/style.css" />
 
     <meta property="og:title" content="Card Leo Rewards" />
     <meta
@@ -24,8 +29,23 @@
       content="Premium savings, lifestyle perks, and a better member experience."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="./assets/og-cardleo.jpg" />
-    <meta property="og:url" content="https://cardleorewards.com" />
+    <meta property="og:site_name" content="Card Leo Rewards" />
+    <meta property="og:url" content="https://www.cardleorewards.com/" />
+    <meta
+      property="og:image"
+      content="https://www.cardleorewards.com/assets/og-cardleo.jpg"
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Card Leo Rewards" />
+    <meta
+      name="twitter:description"
+      content="Premium savings, lifestyle perks, and a better member experience."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.cardleorewards.com/assets/og-cardleo.jpg"
+    />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -33,21 +53,17 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
-
-    <link rel="stylesheet" href="./style.css" />
   </head>
 
   <body>
     <div class="site-shell">
-      <!-- Ambient background -->
       <div class="bg-orb orb-1" aria-hidden="true"></div>
       <div class="bg-orb orb-2" aria-hidden="true"></div>
       <div class="bg-grid" aria-hidden="true"></div>
 
-      <!-- Header -->
       <header class="site-header" id="top">
         <div class="container nav-wrap">
-          <a href="./index.html" class="brand" aria-label="Card Leo Rewards home">
+          <a href="/" class="brand" aria-label="Card Leo Rewards home">
             <div class="brand-mark">CL</div>
             <div class="brand-copy">
               <span class="brand-title">Card Leo Rewards</span>
@@ -68,26 +84,19 @@
           </button>
 
           <nav class="site-nav" id="site-nav">
-            <a href="./about.html">About</a>
+            <a href="/about.html">About</a>
             <a href="#benefits">Benefits</a>
             <a href="#how-it-works">How It Works</a>
             <a href="#experience">Experience</a>
-            <a href="./signup.html">Sign Up</a>
+            <a href="/signup.html">Sign Up</a>
             <a href="#contact">Contact</a>
-            <a
-              href="https://cardleo.my-office.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="nav-login"
-              >Members Login</a
-            >
-            <a href="./get-started.html" class="btn btn-primary nav-cta">Get Started</a>
+            <a href="/login.html" class="nav-login">Members Login</a>
+            <a href="/get-started.html" class="btn btn-primary nav-cta">Get Started</a>
           </nav>
         </div>
       </header>
 
       <main>
-        <!-- Hero -->
         <section class="hero section">
           <div class="container hero-grid">
             <div class="hero-copy reveal">
@@ -105,8 +114,8 @@
               </p>
 
               <div class="hero-actions">
-                <a href="./signup.html" class="btn btn-primary">Join Now</a>
-                <a href="./get-started.html" class="btn btn-secondary">How It Works</a>
+                <a href="/signup.html" class="btn btn-primary">Join Now</a>
+                <a href="/get-started.html" class="btn btn-secondary">How It Works</a>
               </div>
 
               <div class="hero-trust">
@@ -161,7 +170,6 @@
           </div>
         </section>
 
-        <!-- Brand strip -->
         <section class="brand-strip section-sm">
           <div class="container reveal">
             <div class="brand-strip-inner">
@@ -174,7 +182,6 @@
           </div>
         </section>
 
-        <!-- Quick paths -->
         <section class="section" id="quick-paths">
           <div class="container">
             <div class="section-heading reveal">
@@ -195,7 +202,7 @@
                   and bigger value behind Card Leo Rewards.
                 </p>
                 <div style="margin-top: 1rem;">
-                  <a href="./about.html" class="btn btn-secondary">View About</a>
+                  <a href="/about.html" class="btn btn-secondary">View About</a>
                 </div>
               </article>
 
@@ -207,7 +214,7 @@
                   move from signup into active use.
                 </p>
                 <div style="margin-top: 1rem;">
-                  <a href="./get-started.html" class="btn btn-secondary">Get Started</a>
+                  <a href="/get-started.html" class="btn btn-secondary">Get Started</a>
                 </div>
               </article>
 
@@ -219,14 +226,13 @@
                   registration experience.
                 </p>
                 <div style="margin-top: 1rem;">
-                  <a href="./signup.html" class="btn btn-secondary">Sign Up</a>
+                  <a href="/signup.html" class="btn btn-secondary">Sign Up</a>
                 </div>
               </article>
             </div>
           </div>
         </section>
 
-        <!-- About -->
         <section class="section section-dark" id="about">
           <div class="container about-grid">
             <div class="section-copy reveal">
@@ -244,7 +250,7 @@
                 the first click to everyday use.
               </p>
               <div style="margin-top: 1.25rem;">
-                <a href="./about.html" class="btn btn-primary">Explore the Brand Story</a>
+                <a href="/about.html" class="btn btn-primary">Explore the Brand Story</a>
               </div>
             </div>
 
@@ -279,7 +285,6 @@
           </div>
         </section>
 
-        <!-- Benefits -->
         <section class="section" id="benefits">
           <div class="container">
             <div class="section-heading reveal">
@@ -348,7 +353,6 @@
           </div>
         </section>
 
-        <!-- How it works -->
         <section class="section section-dark" id="how-it-works">
           <div class="container">
             <div class="section-heading reveal">
@@ -389,12 +393,11 @@
             </div>
 
             <div style="margin-top: 2rem; text-align: center;" class="reveal">
-              <a href="./get-started.html" class="btn btn-primary">View Full Onboarding Flow</a>
+              <a href="/get-started.html" class="btn btn-primary">View Full Onboarding Flow</a>
             </div>
           </div>
         </section>
 
-        <!-- Experience -->
         <section class="section" id="experience">
           <div class="container experience-grid">
             <div class="experience-copy reveal">
@@ -425,7 +428,6 @@
           </div>
         </section>
 
-        <!-- Member options -->
         <section class="section section-dark" id="member-options">
           <div class="container">
             <div class="section-heading reveal">
@@ -445,7 +447,7 @@
                   Rewards account in a cleaner branded environment.
                 </p>
                 <div style="margin-top: 1rem;">
-                  <a href="./signup.html" class="btn btn-primary">Create Account</a>
+                  <a href="/signup.html" class="btn btn-primary">Create Account</a>
                 </div>
               </article>
 
@@ -457,7 +459,7 @@
                   you know exactly what comes next.
                 </p>
                 <div style="margin-top: 1rem;">
-                  <a href="./get-started.html" class="btn btn-secondary">See Get Started</a>
+                  <a href="/get-started.html" class="btn btn-secondary">See Get Started</a>
                 </div>
               </article>
 
@@ -469,20 +471,13 @@
                   Card Leo Rewards tools and account environment.
                 </p>
                 <div style="margin-top: 1rem;">
-                  <a
-                    href="https://cardleo.my-office.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn btn-secondary"
-                    >Members Login</a
-                  >
+                  <a href="/login.html" class="btn btn-secondary">Members Login</a>
                 </div>
               </article>
             </div>
           </div>
         </section>
 
-        <!-- CTA -->
         <section class="section cta-section" id="join">
           <div class="container reveal">
             <div class="cta-panel">
@@ -494,14 +489,13 @@
               </p>
 
               <div class="cta-actions">
-                <a href="./signup.html" class="btn btn-primary">Sign Up Now</a>
-                <a href="./get-started.html" class="btn btn-secondary">Explore Steps</a>
+                <a href="/signup.html" class="btn btn-primary">Sign Up Now</a>
+                <a href="/get-started.html" class="btn btn-secondary">Explore Steps</a>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- Contact -->
         <section class="section" id="contact">
           <div class="container contact-grid">
             <div class="contact-copy reveal">
@@ -512,12 +506,16 @@
                 interest, or general inquiries.
               </p>
               <p>
-                This front-end contact form works well as a premium placeholder
-                until you connect it to your live email system or CRM.
+                Send your message directly to the Card Leo Rewards team and we’ll
+                follow up as soon as possible.
               </p>
             </div>
 
-            <form class="glass-card contact-form reveal">
+            <form
+              class="glass-card contact-form reveal"
+              action="/api/contact"
+              method="POST"
+            >
               <div class="form-row">
                 <label for="name">Full Name</label>
                 <input
@@ -559,7 +557,6 @@
         </section>
       </main>
 
-      <!-- Footer -->
       <footer class="site-footer">
         <div class="container footer-grid">
           <div class="footer-brand">
@@ -578,24 +575,19 @@
 
           <div class="footer-links">
             <h3>Navigate</h3>
-            <a href="./about.html">About</a>
+            <a href="/about.html">About</a>
             <a href="#benefits">Benefits</a>
             <a href="#how-it-works">How It Works</a>
-            <a href="./signup.html">Sign Up</a>
+            <a href="/signup.html">Sign Up</a>
             <a href="#contact">Contact</a>
           </div>
 
           <div class="footer-links">
             <h3>Member Access</h3>
-            <a href="./get-started.html">Get Started</a>
-            <a href="./signup.html">Sign Up</a>
-            <a
-              href="https://cardleo.my-office.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Members Login</a
-            >
-            <a href="./about.html">About Us</a>
+            <a href="/get-started.html">Get Started</a>
+            <a href="/signup.html">Sign Up</a>
+            <a href="/login.html">Members Login</a>
+            <a href="/about.html">About Us</a>
           </div>
         </div>
 
@@ -606,6 +598,6 @@
       </footer>
     </div>
 
-    <script src="./script.js"></script>
+    <script src="/script.js"></script>
   </body>
 </html>

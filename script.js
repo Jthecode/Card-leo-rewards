@@ -4,9 +4,9 @@
   const state = {
     loading: false,
     summary: null,
-    featureFlags: null,
-    onboarding: null,
-    rewardAccount: null,
+    featureFlags: {},
+    onboarding: {},
+    rewardAccount: {},
     benefits: [],
     groups: [],
     activeCategory: "all",
@@ -50,6 +50,7 @@
 
   function formatMoney(value) {
     const num = Number(value || 0);
+
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
@@ -66,6 +67,42 @@
   function setText(id, value) {
     const el = $(id);
     if (el) el.textContent = value;
+  }
+
+  function getFirstValue(source, keys = [], fallback = null) {
+    if (!source || typeof source !== "object") return fallback;
+
+    for (const key of keys) {
+      if (Object.prototype.hasOwnProperty.call(source, key) && source[key] != null) {
+        return source[key];
+      }
+    }
+
+    return fallback;
+  }
+
+  function toBoolean(value, fallback = false) {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") return value !== 0;
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (["true", "1", "yes", "y", "on"].includes(normalized)) return true;
+      if (["false", "0", "no", "n", "off"].includes(normalized)) return false;
+    }
+    return fallback;
+  }
+
+  function toNumber(value, fallback = 0) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+  }
+
+  function isPlainObject(value) {
+    return (
+      value !== null &&
+      typeof value === "object" &&
+      !Array.isArray(value)
+    );
   }
 
   async function api(url, options = {}) {
@@ -93,15 +130,200 @@
     return body;
   }
 
+  function normalizeBenefit(raw = {}) {
+    const unlocked = toBoolean(
+      getFirstValue(raw, ["unlocked", "isUnlocked"], null),
+      !toBoolean(getFirstValue(raw, ["locked", "isLocked"], false), false)
+    );
+
+    const locked = toBoolean(
+      getFirstValue(raw, ["locked", "isLocked"], null),
+      !unlocked
+    );
+
+    const featured = toBoolean(
+      getFirstValue(raw, ["featured", "isFeatured"], false),
+      false
+    );
+
+    return {
+      id: getFirstValue(raw, ["id"], ""),
+      title: getFirstValue(raw, ["title", "name"], "Benefit"),
+      description: getFirstValue(
+        raw,
+        ["description", "summary", "copy"],
+        "No description available."
+      ),
+      category: String(getFirstValue(raw, ["category", "group"], "other") || "other")
+        .trim()
+        .toLowerCase(),
+      badge: getFirstValue(raw, ["badge", "label"], ""),
+      requiredTier: getFirstValue(
+        raw,
+        ["requiredTier", "required_tier", "tier"],
+        "core"
+      ),
+      unlocked,
+      locked,
+      featured,
+      lockedReason: getFirstValue(
+        raw,
+        ["lockedReason", "locked_reason", "reason"],
+        ""
+      ),
+      meta: isPlainObject(raw.meta)
+        ? raw.meta
+        : isPlainObject(raw.metadata)
+        ? raw.metadata
+        : null,
+    };
+  }
+
+  function buildGroupsFromBenefits(benefits) {
+    const grouped = new Map();
+
+    benefits.forEach((benefit) => {
+      const key = benefit.category || "other";
+
+      if (!grouped.has(key)) {
+        grouped.set(key, []);
+      }
+
+      grouped.get(key).push(benefit);
+    });
+
+    return Array.from(grouped.entries()).map(([category, items]) => ({
+      category,
+      title: titleCase(category),
+      count: items.length,
+      unlockedCount: items.filter((item) => item.unlocked).length,
+      items,
+    }));
+  }
+
+  function normalizeGroup(raw = {}) {
+    const items = Array.isArray(raw.items) ? raw.items.map(normalizeBenefit) : [];
+    const category = String(
+      getFirstValue(raw, ["category", "key"], items[0]?.category || "other") || "other"
+    )
+      .trim()
+      .toLowerCase();
+
+    return {
+      category,
+      title: getFirstValue(raw, ["title"], titleCase(category)),
+      count: toNumber(getFirstValue(raw, ["count"], items.length), items.length),
+      unlockedCount: toNumber(
+        getFirstValue(
+          raw,
+          ["unlockedCount", "unlocked_count"],
+          items.filter((item) => item.unlocked).length
+        ),
+        items.filter((item) => item.unlocked).length
+      ),
+      items,
+    };
+  }
+
+  function normalizeSummary(raw = {}, benefits = []) {
+    const computedTotals = {
+      benefits: benefits.length,
+      unlocked: benefits.filter((item) => item.unlocked).length,
+      locked: benefits.filter((item) => !item.unlocked).length,
+    };
+
+    const totals = isPlainObject(raw.totals) ? raw.totals : {};
+
+    return {
+      memberName: getFirstValue(
+        raw,
+        ["memberName", "member_name", "fullName", "full_name"],
+        document.body.dataset.memberName || "Card Leo Member"
+      ),
+      tier: getFirstValue(raw, ["tier"], "core"),
+      tierLabel: getFirstValue(raw, ["tierLabel", "tier_label"], titleCase(getFirstValue(raw, ["tier"], "core"))),
+      memberStatus: getFirstValue(raw, ["memberStatus", "member_status"], "active"),
+      nextTierLabel: getFirstValue(raw, ["nextTierLabel", "next_tier_label"], "Current Highest Tier"),
+      totals: {
+        benefits: toNumber(getFirstValue(totals, ["benefits"], computedTotals.benefits), computedTotals.benefits),
+        unlocked: toNumber(getFirstValue(totals, ["unlocked"], computedTotals.unlocked), computedTotals.unlocked),
+        locked: toNumber(getFirstValue(totals, ["locked"], computedTotals.locked), computedTotals.locked),
+      },
+    };
+  }
+
+  function normalizeFeatureFlags(raw = {}) {
+    return {
+      rewardsEnabled: toBoolean(
+        getFirstValue(raw, ["rewardsEnabled", "rewards_enabled"], true),
+        true
+      ),
+      referralsEnabled: toBoolean(
+        getFirstValue(raw, ["referralsEnabled", "referrals_enabled"], true),
+        true
+      ),
+      supportEnabled: toBoolean(
+        getFirstValue(raw, ["supportEnabled", "support_enabled"], true),
+        true
+      ),
+      benefitsEnabled: toBoolean(
+        getFirstValue(raw, ["benefitsEnabled", "benefits_enabled"], true),
+        true
+      ),
+    };
+  }
+
+  function normalizeOnboarding(raw = {}) {
+    return {
+      onboardingPercent: toNumber(
+        getFirstValue(raw, ["onboardingPercent", "onboarding_percent"], 0),
+        0
+      ),
+      profileCompleted: toBoolean(
+        getFirstValue(raw, ["profileCompleted", "profile_completed"], false),
+        false
+      ),
+      emailVerified: toBoolean(
+        getFirstValue(raw, ["emailVerified", "email_verified"], false),
+        false
+      ),
+      rewardsActivated: toBoolean(
+        getFirstValue(raw, ["rewardsActivated", "rewards_activated"], false),
+        false
+      ),
+    };
+  }
+
+  function normalizeRewardAccount(raw = {}) {
+    return {
+      totalRewardsEarned: toNumber(
+        getFirstValue(raw, ["totalRewardsEarned", "total_rewards_earned"], 0),
+        0
+      ),
+      totalRewardsPaid: toNumber(
+        getFirstValue(raw, ["totalRewardsPaid", "total_rewards_paid"], 0),
+        0
+      ),
+      companyBuildingReleased: toNumber(
+        getFirstValue(raw, ["companyBuildingReleased", "company_building_released"], 0),
+        0
+      ),
+      companyBuildingPending: toNumber(
+        getFirstValue(raw, ["companyBuildingPending", "company_building_pending"], 0),
+        0
+      ),
+    };
+  }
+
   function getToneClass(benefit) {
-    if (benefit?.featured && benefit?.unlocked) return "benefit-featured";
-    if (benefit?.locked) return "benefit-locked";
+    if (benefit.featured && benefit.unlocked) return "benefit-featured";
+    if (benefit.locked || !benefit.unlocked) return "benefit-locked";
     return "benefit-unlocked";
   }
 
   function getBadgeClass(benefit) {
-    if (benefit?.locked) return "badge-muted";
-    if (benefit?.featured) return "badge-gold";
+    if (benefit.locked || !benefit.unlocked) return "badge-muted";
+    if (benefit.featured) return "badge-gold";
     return "badge-soft";
   }
 
@@ -110,20 +332,15 @@
       return state.groups;
     }
 
-    const grouped = {};
-    (state.benefits || []).forEach((benefit) => {
-      const key = benefit.category || "other";
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(benefit);
-    });
+    return buildGroupsFromBenefits(state.benefits);
+  }
 
-    return Object.entries(grouped).map(([category, items]) => ({
-      category,
-      title: titleCase(category),
-      count: items.length,
-      unlockedCount: items.filter((item) => item.unlocked).length,
-      items,
-    }));
+  function ensureActiveCategoryIsValid() {
+    const validCategories = ["all", ...normalizeGroups().map((group) => group.category)];
+
+    if (!validCategories.includes(state.activeCategory)) {
+      state.activeCategory = "all";
+    }
   }
 
   function getVisibleGroups() {
@@ -140,21 +357,12 @@
     const summary = state.summary || {};
     const totals = summary.totals || {};
 
-    setText(
-      "memberName",
-      summary.memberName || document.body.dataset.memberName || "Card Leo Member"
-    );
+    setText("memberName", summary.memberName || "Card Leo Member");
     setText("memberTier", summary.tierLabel || titleCase(summary.tier || "core"));
-    setText(
-      "memberStatus",
-      titleCase(summary.memberStatus || "active")
-    );
-    setText(
-      "nextTier",
-      summary.nextTierLabel || "Current Highest Tier"
-    );
+    setText("memberStatus", titleCase(summary.memberStatus || "active"));
+    setText("nextTier", summary.nextTierLabel || "Current Highest Tier");
 
-    setText("benefitsTotal", formatCount(totals.benefits || state.benefits.length || 0));
+    setText("benefitsTotal", formatCount(totals.benefits || 0));
     setText("benefitsUnlocked", formatCount(totals.unlocked || 0));
     setText("benefitsLocked", formatCount(totals.locked || 0));
   }
@@ -163,34 +371,10 @@
     const rewardAccount = state.rewardAccount || {};
     const onboarding = state.onboarding || {};
 
-    setText(
-      "metricOnboarding",
-      `${formatCount(onboarding.onboarding_percent || onboarding.onboardingPercent || 0)}%`
-    );
-    setText(
-      "metricEarned",
-      formatMoney(
-        rewardAccount.total_rewards_earned ||
-          rewardAccount.totalRewardsEarned ||
-          0
-      )
-    );
-    setText(
-      "metricReleased",
-      formatMoney(
-        rewardAccount.company_building_released ||
-          rewardAccount.companyBuildingReleased ||
-          0
-      )
-    );
-    setText(
-      "metricPending",
-      formatMoney(
-        rewardAccount.company_building_pending ||
-          rewardAccount.companyBuildingPending ||
-          0
-      )
-    );
+    setText("metricOnboarding", `${formatCount(onboarding.onboardingPercent || 0)}%`);
+    setText("metricEarned", formatMoney(rewardAccount.totalRewardsEarned || 0));
+    setText("metricReleased", formatMoney(rewardAccount.companyBuildingReleased || 0));
+    setText("metricPending", formatMoney(rewardAccount.companyBuildingPending || 0));
   }
 
   function renderFeatureFlags() {
@@ -199,22 +383,10 @@
 
     const flags = state.featureFlags || {};
     const items = [
-      {
-        label: "Rewards",
-        enabled: flags.rewards_enabled !== false,
-      },
-      {
-        label: "Referrals",
-        enabled: flags.referrals_enabled !== false,
-      },
-      {
-        label: "Support",
-        enabled: flags.support_enabled !== false,
-      },
-      {
-        label: "Benefits",
-        enabled: flags.benefits_enabled !== false,
-      },
+      { label: "Rewards", enabled: flags.rewardsEnabled !== false },
+      { label: "Referrals", enabled: flags.referralsEnabled !== false },
+      { label: "Support", enabled: flags.supportEnabled !== false },
+      { label: "Benefits", enabled: flags.benefitsEnabled !== false },
     ];
 
     container.innerHTML = items
@@ -253,6 +425,7 @@
             type="button"
             class="filter-chip ${state.activeCategory === tab.key ? "active" : ""}"
             data-benefit-category="${escapeHtml(tab.key)}"
+            aria-pressed="${state.activeCategory === tab.key ? "true" : "false"}"
           >
             ${escapeHtml(tab.label)} <span>${formatCount(tab.count)}</span>
           </button>
@@ -297,7 +470,9 @@
                     <article class="benefit-card ${getToneClass(benefit)}">
                       <div class="benefit-card-top">
                         <span class="benefit-badge ${getBadgeClass(benefit)}">
-                          ${escapeHtml(benefit.badge || (benefit.unlocked ? "Unlocked" : "Locked"))}
+                          ${escapeHtml(
+                            benefit.badge || (benefit.unlocked ? "Unlocked" : "Locked")
+                          )}
                         </span>
                         <span class="benefit-state ${benefit.unlocked ? "unlocked" : "locked"}">
                           ${benefit.unlocked ? "Unlocked" : "Locked"}
@@ -349,30 +524,27 @@
     const steps = [
       {
         title: "Profile Setup",
-        status: onboarding.profile_completed || onboarding.profileCompleted ? "complete" : "pending",
-        description: "Complete your core profile details to improve eligibility and personalization.",
+        status: onboarding.profileCompleted ? "complete" : "pending",
+        description:
+          "Complete your core profile details to improve eligibility and personalization.",
       },
       {
         title: "Email Verification",
-        status: onboarding.email_verified || onboarding.emailVerified ? "complete" : "pending",
-        description: "Verify your email to secure your account and complete onboarding.",
+        status: onboarding.emailVerified ? "complete" : "pending",
+        description:
+          "Verify your email to secure your account and complete onboarding.",
       },
       {
         title: "Rewards Activation",
-        status: onboarding.rewards_activated || onboarding.rewardsActivated ? "complete" : "pending",
-        description: "Activate the rewards profile so earnings and member incentives can track properly.",
+        status: onboarding.rewardsActivated ? "complete" : "pending",
+        description:
+          "Activate the rewards profile so earnings and member incentives can track properly.",
       },
       {
         title: "Company Building Release",
-        status:
-          Number(
-            rewardAccount.company_building_released ||
-              rewardAccount.companyBuildingReleased ||
-              0
-          ) > 0
-            ? "complete"
-            : "pending",
-        description: "Complete paid membership cycles to release company-building earnings.",
+        status: rewardAccount.companyBuildingReleased > 0 ? "complete" : "pending",
+        description:
+          "Complete paid membership cycles to release company-building earnings.",
       },
     ];
 
@@ -397,58 +569,44 @@
     const rewardAccount = state.rewardAccount || {};
 
     setText("accountTier", summary.tierLabel || titleCase(summary.tier || "core"));
-    setText(
-      "accountOnboarding",
-      `${formatCount(onboarding.onboarding_percent || onboarding.onboardingPercent || 0)}%`
-    );
-    setText(
-      "accountCompanyPending",
-      formatMoney(
-        rewardAccount.company_building_pending ||
-          rewardAccount.companyBuildingPending ||
-          0
-      )
-    );
-    setText(
-      "accountCompanyReleased",
-      formatMoney(
-        rewardAccount.company_building_released ||
-          rewardAccount.companyBuildingReleased ||
-          0
-      )
-    );
-    setText(
-      "accountTotalEarned",
-      formatMoney(
-        rewardAccount.total_rewards_earned ||
-          rewardAccount.totalRewardsEarned ||
-          0
-      )
-    );
-    setText(
-      "accountTotalPaid",
-      formatMoney(
-        rewardAccount.total_rewards_paid ||
-          rewardAccount.totalRewardsPaid ||
-          0
-      )
-    );
+    setText("accountOnboarding", `${formatCount(onboarding.onboardingPercent || 0)}%`);
+    setText("accountCompanyPending", formatMoney(rewardAccount.companyBuildingPending || 0));
+    setText("accountCompanyReleased", formatMoney(rewardAccount.companyBuildingReleased || 0));
+    setText("accountTotalEarned", formatMoney(rewardAccount.totalRewardsEarned || 0));
+    setText("accountTotalPaid", formatMoney(rewardAccount.totalRewardsPaid || 0));
+  }
+
+  function showInlineError(message) {
+    const container = $("benefitsGrid");
+    if (!container) return;
+
+    container.innerHTML = `
+      <div class="detail-empty">
+        ${escapeHtml(message || "Unable to load benefits.")}
+      </div>
+    `;
   }
 
   function bindCategoryEvents() {
     const container = $("benefitCategoryTabs");
-    if (!container) return;
+    if (!container || container.dataset.bound === "true") return;
 
-    container.querySelectorAll("[data-benefit-category]").forEach((button) => {
-      button.addEventListener("click", () => {
-        state.activeCategory = button.getAttribute("data-benefit-category") || "all";
-        renderCategoryTabs();
-        renderBenefits();
-      });
+    container.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-benefit-category]");
+      if (!button) return;
+
+      state.activeCategory =
+        button.getAttribute("data-benefit-category") || "all";
+
+      renderCategoryTabs();
+      renderBenefits();
     });
+
+    container.dataset.bound = "true";
   }
 
   function renderAll() {
+    ensureActiveCategoryIsValid();
     renderHeader();
     renderMetrics();
     renderFeatureFlags();
@@ -456,7 +614,6 @@
     renderBenefits();
     renderTimeline();
     renderAccountPanel();
-    bindCategoryEvents();
     setText("lastRefresh", formatDate(new Date().toISOString()));
   }
 
@@ -466,17 +623,22 @@
     const result = await api("/api/portal/benefits");
     const data = result?.data || {};
 
-    state.summary = data.summary || null;
-    state.featureFlags = data.featureFlags || {};
-    state.onboarding = data.onboarding || {};
-    state.rewardAccount = data.rewardAccount || {};
-    state.benefits = Array.isArray(data.benefits) ? data.benefits : [];
-    state.groups = Array.isArray(data.groups) ? data.groups : [];
+    const benefits = Array.isArray(data.benefits)
+      ? data.benefits.map(normalizeBenefit)
+      : [];
 
-    if (!state.activeCategory) {
-      state.activeCategory = "all";
-    }
+    const groups = Array.isArray(data.groups)
+      ? data.groups.map(normalizeGroup)
+      : buildGroupsFromBenefits(benefits);
 
+    state.benefits = benefits;
+    state.groups = groups;
+    state.summary = normalizeSummary(data.summary || {}, benefits);
+    state.featureFlags = normalizeFeatureFlags(data.featureFlags || {});
+    state.onboarding = normalizeOnboarding(data.onboarding || {});
+    state.rewardAccount = normalizeRewardAccount(data.rewardAccount || {});
+
+    ensureActiveCategoryIsValid();
     renderAll();
   }
 
@@ -492,7 +654,7 @@
 
       await loadBenefits();
     } catch (error) {
-      alert(error?.message || "Unable to refresh benefits.");
+      showInlineError(error?.message || "Unable to refresh benefits.");
     } finally {
       if (button) {
         button.disabled = false;
@@ -514,6 +676,7 @@
   }
 
   function bindEvents() {
+    bindCategoryEvents();
     $("refreshBenefitsBtn")?.addEventListener("click", handleRefresh);
     $("logoutBtn")?.addEventListener("click", handleLogout);
   }
@@ -535,14 +698,7 @@
         return;
       }
 
-      const container = $("benefitsGrid");
-      if (container) {
-        container.innerHTML = `
-          <div class="detail-empty">
-            ${escapeHtml(error?.message || "Unable to load benefits.")}
-          </div>
-        `;
-      }
+      showInlineError(error?.message || "Unable to load benefits.");
     } finally {
       state.loading = false;
     }

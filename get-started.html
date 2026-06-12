@@ -17,6 +17,10 @@
       content="Card Leo Rewards, get started, sign up, Access Perks, rewards, savings, member login, onboarding"
     />
     <meta name="theme-color" content="#0a0f1c" />
+    <meta name="robots" content="index, follow" />
+
+    <link rel="canonical" href="https://www.cardleorewards.com/get-started.html" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <meta property="og:title" content="Get Started | Card Leo Rewards" />
     <meta
@@ -24,8 +28,23 @@
       content="Join Card Leo Rewards with a premium, easy-to-follow onboarding experience."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="./assets/og-cardleo.jpg" />
-    <meta property="og:url" content="https://cardleorewards.com/get-started/" />
+    <meta property="og:site_name" content="Card Leo Rewards" />
+    <meta property="og:url" content="https://www.cardleorewards.com/get-started.html" />
+    <meta
+      property="og:image"
+      content="https://www.cardleorewards.com/assets/og-cardleo.jpg"
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Get Started | Card Leo Rewards" />
+    <meta
+      name="twitter:description"
+      content="Join Card Leo Rewards with a premium, easy-to-follow onboarding experience."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.cardleorewards.com/assets/og-cardleo.jpg"
+    />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -34,7 +53,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="/style.css" />
   </head>
 
   <body>
@@ -45,7 +64,7 @@
 
       <header class="site-header" id="top">
         <div class="container nav-wrap">
-          <a href="./index.html" class="brand" aria-label="Card Leo Rewards home">
+          <a href="/" class="brand" aria-label="Card Leo Rewards home">
             <div class="brand-mark">CL</div>
             <div class="brand-copy">
               <span class="brand-title">Card Leo Rewards</span>
@@ -66,27 +85,20 @@
           </button>
 
           <nav class="site-nav" id="site-nav">
-            <a href="./index.html">Home</a>
-            <a href="./about.html">About</a>
+            <a href="/">Home</a>
+            <a href="/about.html">About</a>
             <a href="#steps">Steps</a>
             <a href="#video-step">Watch</a>
             <a href="#signup-details">Sign Up</a>
             <a href="#accessperks">Access Perks</a>
-            <a href="./contact.html">Contact</a>
-            <a
-              href="https://cardleo.my-office.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="nav-login"
-              >Members Login</a
-            >
-            <a href="./signup.html" class="btn btn-primary nav-cta">Start Now</a>
+            <a href="/contact.html">Contact</a>
+            <a href="/login.html" class="nav-login">Members Login</a>
+            <a href="/signup.html" class="btn btn-primary nav-cta">Start Now</a>
           </nav>
         </div>
       </header>
 
       <main>
-        <!-- Hero -->
         <section class="hero section">
           <div class="container hero-grid">
             <div class="hero-copy reveal">
@@ -103,7 +115,7 @@
 
               <div class="hero-actions">
                 <a href="#steps" class="btn btn-primary">See the 3 Steps</a>
-                <a href="./signup.html" class="btn btn-secondary">Create Account</a>
+                <a href="/signup.html" class="btn btn-secondary">Create Account</a>
               </div>
 
               <div class="hero-trust">
@@ -158,7 +170,6 @@
           </div>
         </section>
 
-        <!-- Brand strip -->
         <section class="brand-strip section-sm">
           <div class="container reveal">
             <div class="brand-strip-inner">
@@ -171,7 +182,6 @@
           </div>
         </section>
 
-        <!-- Quick routes -->
         <section class="section" id="quick-routes">
           <div class="container">
             <div class="section-heading reveal">
@@ -204,7 +214,7 @@
                   instead of sending traffic to a plain external form.
                 </p>
                 <div style="margin-top: 1rem;">
-                  <a href="./signup.html" class="btn btn-secondary">Go to Sign Up</a>
+                  <a href="/signup.html" class="btn btn-secondary">Go to Sign Up</a>
                 </div>
               </article>
 
@@ -216,20 +226,13 @@
                   onboarding details and are ready to continue.
                 </p>
                 <div style="margin-top: 1rem;">
-                  <a
-                    href="https://cardleo.my-office.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn btn-secondary"
-                    >Members Login</a
-                  >
+                  <a href="/login.html" class="btn btn-secondary">Members Login</a>
                 </div>
               </article>
             </div>
           </div>
         </section>
 
-        <!-- Steps -->
         <section class="section section-dark" id="steps">
           <div class="container">
             <div class="section-heading reveal">
@@ -272,7 +275,6 @@
           </div>
         </section>
 
-        <!-- Video / intro -->
         <section class="section" id="video-step">
           <div class="container experience-grid">
             <div class="experience-copy reveal">
@@ -295,7 +297,7 @@
                     controls
                     playsinline
                     preload="metadata"
-                    poster="./assets/cardleo-video-poster.jpg"
+                    poster="/assets/cardleo-video-poster.jpg"
                     style="
                       width: 100%;
                       border-radius: 20px;
@@ -303,7 +305,7 @@
                       background: #03060d;
                     "
                   >
-                    <source src="./assets/moe-clr.mp4" type="video/mp4" />
+                    <source src="/assets/moe-clr.mp4" type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
                 </div>
@@ -312,7 +314,6 @@
           </div>
         </section>
 
-        <!-- Signup details -->
         <section class="section section-dark" id="signup-details">
           <div class="container about-grid">
             <div class="section-copy reveal">
@@ -363,7 +364,6 @@
           </div>
         </section>
 
-        <!-- Signup CTA -->
         <section class="section" id="signup-cta">
           <div class="container">
             <div class="section-heading reveal">
@@ -384,20 +384,13 @@
               </p>
 
               <div class="cta-actions">
-                <a href="./signup.html" class="btn btn-primary">Create Account</a>
-                <a
-                  href="https://cardleo.my-office.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn btn-secondary"
-                  >Open Members Login</a
-                >
+                <a href="/signup.html" class="btn btn-primary">Create Account</a>
+                <a href="/login.html" class="btn btn-secondary">Open Members Login</a>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- Access perks -->
         <section class="section section-dark" id="accessperks">
           <div class="container">
             <div class="section-heading reveal">
@@ -464,7 +457,6 @@
           </div>
         </section>
 
-        <!-- Activation checklist -->
         <section class="section" id="activation-checklist">
           <div class="container contact-grid">
             <div class="contact-copy reveal">
@@ -501,18 +493,11 @@
                 </div>
               </div>
 
-              <a
-                href="https://cardleo.my-office.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn btn-primary btn-full"
-                >Go to Member Login</a
-              >
+              <a href="/login.html" class="btn btn-primary btn-full">Go to Member Login</a>
             </div>
           </div>
         </section>
 
-        <!-- Why this page matters -->
         <section class="section section-dark">
           <div class="container experience-grid">
             <div class="experience-copy reveal">
@@ -541,7 +526,6 @@
           </div>
         </section>
 
-        <!-- Final CTA -->
         <section class="section cta-section">
           <div class="container reveal">
             <div class="cta-panel">
@@ -553,14 +537,8 @@
               </p>
 
               <div class="cta-actions">
-                <a href="./signup.html" class="btn btn-primary">Sign Up Now</a>
-                <a
-                  href="https://cardleo.my-office.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn btn-secondary"
-                  >Members Login</a
-                >
+                <a href="/signup.html" class="btn btn-primary">Sign Up Now</a>
+                <a href="/login.html" class="btn btn-secondary">Members Login</a>
               </div>
             </div>
           </div>
@@ -585,23 +563,18 @@
 
           <div class="footer-links">
             <h3>Navigate</h3>
-            <a href="./index.html">Home</a>
-            <a href="./about.html">About</a>
+            <a href="/">Home</a>
+            <a href="/about.html">About</a>
             <a href="#steps">Steps</a>
             <a href="#accessperks">Access Perks</a>
-            <a href="./contact.html">Contact</a>
+            <a href="/contact.html">Contact</a>
           </div>
 
           <div class="footer-links">
             <h3>Member Access</h3>
-            <a href="./signup.html">Sign Up</a>
-            <a
-              href="https://cardleo.my-office.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Members Login</a
-            >
-            <a href="./contact.html">Support</a>
+            <a href="/signup.html">Sign Up</a>
+            <a href="/login.html">Members Login</a>
+            <a href="/contact.html">Support</a>
           </div>
         </div>
 
@@ -612,6 +585,6 @@
       </footer>
     </div>
 
-    <script src="./script.js"></script>
+    <script src="/script.js"></script>
   </body>
 </html>

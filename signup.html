@@ -75,6 +75,26 @@
         background: rgba(10, 15, 29, 0.84);
       }
 
+      .password-hint {
+        margin: 0.45rem 0 0;
+        color: rgba(245, 247, 255, 0.58);
+        font-size: 0.82rem;
+        line-height: 1.45;
+      }
+
+      .password-toggle-row {
+        margin-top: 0.65rem;
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        color: rgba(245, 247, 255, 0.7);
+        font-size: 0.9rem;
+      }
+
+      .password-toggle-row input {
+        accent-color: var(--gold-1, #f7d98b);
+      }
+
       .signup-consent {
         margin: 1rem 0 1.15rem;
         padding: 1rem;
@@ -94,6 +114,7 @@
 
       .signup-consent input[type="checkbox"] {
         margin-top: 0.2rem;
+        accent-color: var(--gold-1, #f7d98b);
       }
 
       .signup-note {
@@ -178,7 +199,7 @@
             <a href="#membership">Membership</a>
             <a href="#signup-form" aria-current="page">Sign Up</a>
             <a href="/contact.html">Contact</a>
-            <a href="/login.html" class="nav-login">Members Login</a>
+            <a href="/login.html" class="nav-login">Member Login</a>
             <a href="#signup-form" class="btn btn-primary nav-cta">Create Account</a>
           </nav>
         </div>
@@ -201,7 +222,7 @@
 
               <div class="hero-actions">
                 <a href="#signup-form" class="btn btn-primary">Start Sign Up</a>
-                <a href="/login.html" class="btn btn-secondary">Members Login</a>
+                <a href="/login.html" class="btn btn-secondary">Member Login</a>
               </div>
 
               <div class="hero-trust">
@@ -242,7 +263,7 @@
                     </div>
                     <div class="metric">
                       <span class="metric-label">Step 2</span>
-                      <strong>Check email</strong>
+                      <strong>Approval</strong>
                     </div>
                     <div class="metric">
                       <span class="metric-label">Step 3</span>
@@ -343,13 +364,12 @@
               <p class="eyebrow">Create Account</p>
               <h2>Complete your Card Leo Rewards registration</h2>
               <p>
-                This form is now wired for a real backend flow. It sends your
-                registration to the signup endpoint, stores the member data, and
-                then routes the user to the right next step.
+                This form creates your Card Leo Rewards signup profile and
+                collects the password you will use after your account is approved.
               </p>
               <p>
-                Use this page as your branded conversion layer instead of sending
-                traffic directly to a plain external form.
+                Your account may be reviewed before portal access is activated.
+                Once approved, use your email address and password to log in.
               </p>
 
               <div class="feature-stack" style="margin-top: 1.25rem;">
@@ -363,19 +383,18 @@
 
                 <article class="glass-card feature-card reveal">
                   <span class="card-number">02</span>
-                  <h3>Membership interest</h3>
+                  <h3>Create login</h3>
                   <p>
-                    Separate users who only want savings from users interested in
-                    the broader opportunity.
+                    Your email becomes your username and your password is stored
+                    securely as a login hash.
                   </p>
                 </article>
 
                 <article class="glass-card feature-card reveal">
                   <span class="card-number">03</span>
-                  <h3>Trust-first design</h3>
+                  <h3>Approval access</h3>
                   <p>
-                    A high-end signup page helps increase confidence and
-                    conversion quality.
+                    After approval, your account can access the member portal and perks.
                   </p>
                 </article>
               </div>
@@ -448,6 +467,45 @@
                   autocomplete="tel"
                   required
                 />
+              </div>
+
+              <div class="form-row">
+                <label for="password">Create Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  placeholder="Create a password"
+                  minlength="8"
+                  autocomplete="new-password"
+                  required
+                />
+                <p class="password-hint">
+                  Use at least 8 characters. This password will be used with
+                  your email when your account is approved.
+                </p>
+              </div>
+
+              <div class="form-row">
+                <label for="confirmPassword">Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  placeholder="Confirm your password"
+                  minlength="8"
+                  autocomplete="new-password"
+                  required
+                />
+
+                <label class="password-toggle-row" for="showPasswordToggle">
+                  <input
+                    type="checkbox"
+                    id="showPasswordToggle"
+                    name="showPasswordToggle"
+                  />
+                  <span>Show password</span>
+                </label>
               </div>
 
               <div class="form-row">
@@ -543,16 +601,17 @@
                 <span class="step-badge">After Signup</span>
                 <h3>Account confirmation</h3>
                 <p>
-                  Once the form is submitted successfully, the system moves the
-                  member into the correct next step automatically.
+                  Once the form is submitted successfully, the system stores
+                  your signup and sends you to the thank-you page.
                 </p>
               </article>
 
               <article class="step-card reveal">
-                <span class="step-badge">Email Flow</span>
-                <h3>Onboarding sequence</h3>
+                <span class="step-badge">Approval</span>
+                <h3>Admin activation</h3>
                 <p>
-                  Follow registration with instructions, login details, and next-step guidance.
+                  The account starts pending and can be activated by changing
+                  the signup status to active.
                 </p>
               </article>
 
@@ -560,8 +619,8 @@
                 <span class="step-badge">Member Access</span>
                 <h3>Portal + perks activation</h3>
                 <p>
-                  Move members from signup into portal access and the perks
-                  ecosystem cleanly.
+                  Once active, members can log in with their email and password
+                  to access the portal.
                 </p>
               </article>
             </div>
@@ -614,7 +673,7 @@
           <div class="footer-links">
             <h3>Member Access</h3>
             <a href="/signup.html" aria-current="page">Sign Up</a>
-            <a href="/login.html">Members Login</a>
+            <a href="/login.html">Member Login</a>
             <a href="/thank-you.html">Thank You Page</a>
           </div>
         </div>
@@ -632,6 +691,9 @@
         const form = document.getElementById("signupForm");
         const submitButton = document.getElementById("signupSubmitButton");
         const statusNode = document.getElementById("signupStatus");
+        const passwordInput = document.getElementById("password");
+        const confirmPasswordInput = document.getElementById("confirmPassword");
+        const showPasswordToggle = document.getElementById("showPasswordToggle");
 
         if (!form || !submitButton || !statusNode) return;
 
@@ -666,6 +728,8 @@
           const lastName = normalizeText(data.get("lastName"));
           const email = normalizeEmail(data.get("email"));
           const phone = digitsOnly(data.get("phone"));
+          const password = String(data.get("password") || "");
+          const confirmPassword = String(data.get("confirmPassword") || "");
           const interest = normalizeText(data.get("interest"));
           const agree = data.get("agree");
 
@@ -685,6 +749,14 @@
             return "Please enter a valid phone number.";
           }
 
+          if (!password || password.length < 8) {
+            return "Password must be at least 8 characters.";
+          }
+
+          if (password !== confirmPassword) {
+            return "Passwords do not match.";
+          }
+
           if (!agree) {
             return "Please agree to the registration terms before continuing.";
           }
@@ -697,6 +769,8 @@
           const lastName = normalizeText(data.get("lastName"));
           const email = normalizeEmail(data.get("email"));
           const phone = normalizeText(data.get("phone"));
+          const password = String(data.get("password") || "");
+          const confirmPassword = String(data.get("confirmPassword") || "");
           const city = normalizeText(data.get("city"));
           const state = normalizeText(data.get("state"));
           const referralName = normalizeText(data.get("referralName"));
@@ -707,18 +781,28 @@
 
           return {
             firstName,
+            first_name: firstName,
             lastName,
+            last_name: lastName,
             fullName: [firstName, lastName].filter(Boolean).join(" "),
+            full_name: [firstName, lastName].filter(Boolean).join(" "),
             email,
             phone,
+            password,
+            confirmPassword,
+            confirm_password: confirmPassword,
             city,
             state,
             referralName,
+            referral_name: referralName,
             interest,
             goals,
+            agreed: true,
             agree: true,
             source,
-            signup_page: signupPage
+            signupPage,
+            signup_page: signupPage,
+            portal_login_url: "/login.html"
           };
         };
 
@@ -739,6 +823,14 @@
 
           return "/thank-you.html";
         };
+
+        if (showPasswordToggle && passwordInput && confirmPasswordInput) {
+          showPasswordToggle.addEventListener("change", () => {
+            const type = showPasswordToggle.checked ? "text" : "password";
+            passwordInput.type = type;
+            confirmPasswordInput.type = type;
+          });
+        }
 
         form.addEventListener("submit", async (event) => {
           event.preventDefault();
@@ -772,14 +864,21 @@
               ? await response.json().catch(() => ({}))
               : {};
 
-            if (!response.ok || result?.success === false) {
+            if (
+              !response.ok ||
+              result?.success === false ||
+              result?.ok === false
+            ) {
               throw new Error(
-                result?.message || "We couldn't complete your registration right now."
+                result?.message ||
+                  result?.error ||
+                  "We couldn't complete your registration right now."
               );
             }
 
             setStatus(
-              result?.message || "Registration received successfully. Redirecting you now...",
+              result?.message ||
+                "Registration received successfully. Redirecting you now...",
               "success"
             );
 
@@ -790,7 +889,8 @@
             }, 700);
           } catch (error) {
             setStatus(
-              error?.message || "Something went wrong while creating your account.",
+              error?.message ||
+                "Something went wrong while creating your account.",
               "error"
             );
           } finally {

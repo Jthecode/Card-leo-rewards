@@ -11,22 +11,25 @@
 
     <meta
       name="description"
-      content="Card Leo Rewards member portal dashboard. View your membership status, rewards, benefits, profile details, and premium member actions."
+      content="Card Leo Rewards member portal dashboard. View your membership status, rewards, benefits, profile details, referral tower, leaderboard, and premium member actions."
     />
     <meta
       name="keywords"
-      content="Card Leo Rewards, member portal, rewards dashboard, premium membership, account overview"
+      content="Card Leo Rewards, member portal, rewards dashboard, referral tower, leaderboard, premium membership, account overview"
     />
     <meta name="theme-color" content="#0b1020" />
 
     <meta property="og:title" content="Card Leo Rewards | Member Portal" />
     <meta
       property="og:description"
-      content="Access your premium Card Leo Rewards dashboard, profile, benefits, and support."
+      content="Access your premium Card Leo Rewards dashboard, profile, benefits, referral tower, and support."
     />
     <meta property="og:type" content="website" />
 
-    <link rel="canonical" href="https://www.cardleorewards.com/portal/index.html" />
+    <link
+      rel="canonical"
+      href="https://www.cardleorewards.com/portal/index.html"
+    />
     <link rel="stylesheet" href="/style.css" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -77,11 +80,18 @@
 
       body {
         margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-          "Segoe UI", sans-serif;
-        background:
-          radial-gradient(circle at top left, rgba(215, 179, 106, 0.12), transparent 28%),
-          radial-gradient(circle at 85% 20%, rgba(21, 209, 143, 0.08), transparent 22%),
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(
+            circle at top left,
+            rgba(215, 179, 106, 0.12),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 85% 20%,
+            rgba(21, 209, 143, 0.08),
+            transparent 22%
+          ),
           linear-gradient(180deg, #07101d 0%, #060d18 52%, #040913 100%);
         color: var(--text);
         min-height: 100vh;
@@ -146,11 +156,21 @@
         pointer-events: none;
         position: absolute;
         inset: 0;
-        background-image:
-          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-image: linear-gradient(
+            rgba(255, 255, 255, 0.03) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.03) 1px,
+            transparent 1px
+          );
         background-size: 38px 38px;
-        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.36), transparent 86%);
+        mask-image: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.36),
+          transparent 86%
+        );
         opacity: 0.35;
       }
 
@@ -186,8 +206,11 @@
         width: 48px;
         height: 48px;
         border-radius: 16px;
-        background:
-          linear-gradient(135deg, rgba(215, 179, 106, 0.22), rgba(21, 209, 143, 0.08)),
+        background: linear-gradient(
+            135deg,
+            rgba(215, 179, 106, 0.22),
+            rgba(21, 209, 143, 0.08)
+          ),
           rgba(255, 255, 255, 0.04);
         border: 1px solid rgba(255, 255, 255, 0.1);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -316,8 +339,11 @@
 
       .glass-card {
         position: relative;
-        background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.04),
+            rgba(255, 255, 255, 0.02)
+          ),
           var(--panel);
         border: 1px solid var(--line);
         border-radius: var(--radius-xl);
@@ -595,8 +621,11 @@
       .highlight-card {
         padding: 22px;
         border-radius: 24px;
-        background:
-          linear-gradient(135deg, rgba(215, 179, 106, 0.14), rgba(255, 255, 255, 0.02)),
+        background: linear-gradient(
+            135deg,
+            rgba(215, 179, 106, 0.14),
+            rgba(255, 255, 255, 0.02)
+          ),
           rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(215, 179, 106, 0.16);
       }
@@ -643,13 +672,352 @@
         font-size: 0.86rem;
       }
 
+      /* Referral Tower */
+      .referral-tower-section {
+        margin: 0 0 22px;
+      }
+
+      .referral-tower-shell {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .referral-tower-card,
+      .referral-board-card {
+        position: relative;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 30px;
+        background: radial-gradient(
+            circle at top,
+            rgba(215, 179, 106, 0.13),
+            transparent 34%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.045),
+            rgba(255, 255, 255, 0.018)
+          ),
+          rgba(10, 19, 35, 0.84);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+        padding: 28px;
+        overflow: hidden;
+      }
+
+      .referral-tower-card::before,
+      .referral-board-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.055),
+          transparent 34%,
+          rgba(215, 179, 106, 0.045)
+        );
+      }
+
+      .referral-tower-top,
+      .referral-board-top {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .referral-tower-title {
+        margin: 0;
+        font-size: clamp(1.35rem, 3vw, 2rem);
+        line-height: 1;
+        letter-spacing: -0.04em;
+      }
+
+      .referral-tower-copy {
+        margin: 8px 0 0;
+        color: rgba(245, 247, 251, 0.72);
+        line-height: 1.65;
+      }
+
+      .referral-link-row {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        margin: 18px 0;
+      }
+
+      .referral-link-input {
+        width: 100%;
+        min-height: 46px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.04);
+        color: #f5f7fb;
+        padding: 0 16px;
+        outline: none;
+      }
+
+      .tower-visual {
+        position: relative;
+        z-index: 1;
+        max-width: 430px;
+        margin: 0 auto;
+        padding: 18px;
+        border-radius: 26px;
+        background: radial-gradient(
+            circle at top,
+            rgba(241, 208, 141, 0.12),
+            transparent 34%
+          ),
+          rgba(255, 255, 255, 0.025);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .referral-lions {
+        width: min(220px, 58vw);
+        margin: 0 auto 8px;
+        filter: drop-shadow(0 14px 32px rgba(215, 179, 106, 0.34));
+      }
+
+      .tower-lions-fallback {
+        width: min(220px, 58vw);
+        margin: 0 auto 10px;
+        padding: 18px;
+        text-align: center;
+        border-radius: 24px;
+        border: 1px solid rgba(215, 179, 106, 0.28);
+        color: #fff;
+        text-shadow: 0 0 8px rgba(215, 179, 106, 0.95),
+          0 0 18px rgba(215, 179, 106, 0.45);
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        background: rgba(215, 179, 106, 0.08);
+      }
+
+      .tower-spire {
+        width: 62%;
+        height: 34px;
+        margin: 0 auto;
+        clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+        background: linear-gradient(135deg, #f1d08d, #b98625);
+        box-shadow: 0 14px 34px rgba(215, 179, 106, 0.2);
+      }
+
+      .tower-base {
+        height: 22px;
+        width: 88%;
+        margin: 8px auto 0;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #f1d08d, #8b6a2d);
+        box-shadow: 0 0 28px rgba(215, 179, 106, 0.26);
+      }
+
+      .tower-floors {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        margin-top: 8px;
+      }
+
+      .tower-floor {
+        display: grid;
+        grid-template-columns: 42px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        min-height: 42px;
+        padding: 8px 12px;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .tower-floor.earned {
+        background: linear-gradient(
+          135deg,
+          rgba(241, 208, 141, 0.92),
+          rgba(199, 156, 82, 0.92)
+        );
+        border-color: rgba(241, 208, 141, 0.5);
+        color: #1a1307;
+        box-shadow: 0 10px 24px rgba(215, 179, 106, 0.18);
+      }
+
+      .tower-floor.pending {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.2),
+          rgba(255, 255, 255, 0.08)
+        );
+        border-color: rgba(255, 255, 255, 0.14);
+      }
+
+      .tower-floor.closed {
+        opacity: 0.5;
+      }
+
+      .tower-floor.empty {
+        opacity: 0.34;
+      }
+
+      .tower-floor-number {
+        width: 31px;
+        height: 31px;
+        border-radius: 999px;
+        display: inline-grid;
+        place-items: center;
+        font-size: 0.78rem;
+        font-weight: 900;
+        color: #120d05;
+        background: linear-gradient(135deg, #f1d08d, #c79c52);
+      }
+
+      .tower-floor.earned .tower-floor-number {
+        background: rgba(26, 19, 7, 0.15);
+        color: #1a1307;
+      }
+
+      .tower-floor-name {
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .tower-floor-money {
+        font-weight: 900;
+        color: #f1d08d;
+      }
+
+      .tower-floor.earned .tower-floor-money {
+        color: #065f36;
+      }
+
+      .tower-stats-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .tower-stat {
+        padding: 15px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .tower-stat span {
+        display: block;
+        color: rgba(245, 247, 251, 0.58);
+        font-size: 0.72rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+
+      .tower-stat strong {
+        display: block;
+        font-size: 1.2rem;
+        color: #f5f7fb;
+      }
+
+      .leaderboard-list,
+      .recent-referrals-list {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        gap: 12px;
+      }
+
+      .leaderboard-row,
+      .recent-referral-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 14px;
+        align-items: center;
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .recent-referral-row {
+        grid-template-columns: 1fr auto;
+      }
+
+      .leaderboard-rank {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #f1d08d, #c79c52);
+        color: #120d05;
+        font-weight: 900;
+      }
+
+      .leaderboard-member span,
+      .recent-referral-row span {
+        display: block;
+        margin-top: 4px;
+        color: rgba(245, 247, 251, 0.62);
+        font-size: 0.9rem;
+      }
+
+      .leaderboard-money,
+      .recent-referral-money {
+        color: #f1d08d;
+        font-weight: 900;
+      }
+
+      .tower-empty {
+        padding: 16px;
+        border-radius: 18px;
+        border: 1px dashed rgba(255, 255, 255, 0.16);
+        color: rgba(245, 247, 251, 0.68);
+        text-align: center;
+      }
+
+      [data-referral-tower-status] {
+        position: relative;
+        z-index: 1;
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: rgba(245, 247, 251, 0.72);
+      }
+
+      [data-referral-tower-status][data-state="success"] {
+        color: #bfffe5;
+        border-color: rgba(21, 209, 143, 0.24);
+        background: rgba(21, 209, 143, 0.1);
+      }
+
+      [data-referral-tower-status][data-state="error"] {
+        color: #ffd2d8;
+        border-color: rgba(255, 111, 125, 0.24);
+        background: rgba(255, 111, 125, 0.1);
+      }
+
       .hidden {
         display: none !important;
       }
 
       @media (max-width: 1120px) {
         .hero,
-        .dashboard-grid {
+        .dashboard-grid,
+        .referral-tower-shell {
           grid-template-columns: 1fr;
         }
       }
@@ -664,12 +1032,15 @@
 
         .hero-main,
         .hero-side,
-        .section-card {
+        .section-card,
+        .referral-tower-card,
+        .referral-board-card {
           padding: 22px;
         }
 
         .quick-grid,
-        .meta-grid {
+        .meta-grid,
+        .tower-stats-grid {
           grid-template-columns: 1fr;
         }
 
@@ -685,6 +1056,31 @@
 
         .support-row {
           flex-direction: column;
+        }
+
+        .referral-tower-top,
+        .referral-board-top {
+          flex-direction: column;
+        }
+
+        .referral-link-row {
+          grid-template-columns: 1fr;
+        }
+
+        .tower-floor {
+          grid-template-columns: 34px 1fr;
+        }
+
+        .tower-floor-money {
+          grid-column: 2;
+        }
+
+        .leaderboard-row {
+          grid-template-columns: auto 1fr;
+        }
+
+        .leaderboard-money {
+          grid-column: 2;
         }
       }
     </style>
@@ -709,7 +1105,12 @@
             <a class="pill" href="/about.html">About</a>
             <a class="pill" href="/portal/support.html">Support</a>
             <a class="pill" href="/portal/settings.html">Settings</a>
-            <button class="btn btn-secondary" id="logoutButton" type="button" data-logout>
+            <button
+              class="btn btn-secondary"
+              id="logoutButton"
+              type="button"
+              data-logout
+            >
               Log Out
             </button>
           </div>
@@ -723,25 +1124,35 @@
               <div>
                 <div class="eyebrow">Member Dashboard</div>
 
-                <div class="status-pill pending" id="heroStatusBadge">Loading account</div>
+                <div class="status-pill pending" id="heroStatusBadge">
+                  Loading account
+                </div>
 
                 <h1 id="heroHeading">Welcome back.</h1>
 
                 <p class="hero-text" id="heroDescription">
                   We’re preparing your Card Leo Rewards premium member experience.
                   Your dashboard will show your account status, access details,
-                  benefits, and member support tools.
+                  benefits, referral tower, and member support tools.
                 </p>
 
                 <div class="hero-badges" id="heroBadges">
                   <div class="mini-chip">Premium Access</div>
                   <div class="mini-chip">Rewards Overview</div>
                   <div class="mini-chip">Account Management</div>
+                  <div class="mini-chip">Referral Tower</div>
                 </div>
 
                 <div class="hero-actions">
-                  <a class="btn btn-primary" href="/portal/rewards.html">View Rewards</a>
-                  <a class="btn btn-secondary" href="/portal/profile.html">Open Profile</a>
+                  <a class="btn btn-primary" href="/portal/rewards.html">
+                    View Rewards
+                  </a>
+                  <a class="btn btn-secondary" href="/portal/profile.html">
+                    Open Profile
+                  </a>
+                  <a class="btn btn-secondary" href="#referral-tower">
+                    Referral Tower
+                  </a>
                 </div>
               </div>
             </div>
@@ -750,7 +1161,9 @@
               <div class="spotlight-label">Member Snapshot</div>
 
               <div class="member-block">
-                <div class="status-pill pending" id="memberStatusBadge">Loading</div>
+                <div class="status-pill pending" id="memberStatusBadge">
+                  Loading
+                </div>
                 <div class="member-name" id="memberName" data-member-name>
                   Card Leo Member
                 </div>
@@ -778,6 +1191,134 @@
                 </div>
               </div>
             </aside>
+          </section>
+
+          <section class="referral-tower-section" id="referral-tower">
+            <div class="referral-tower-shell">
+              <article class="referral-tower-card">
+                <div class="referral-tower-top">
+                  <div>
+                    <div class="eyebrow">Referral Tower</div>
+                    <h2 class="referral-tower-title">
+                      Build your tower with every approved referral.
+                    </h2>
+                    <p class="referral-tower-copy">
+                      Every approved referral adds $7.00 to your Card Leo Rewards
+                      account. Pending referrals stay silver until they are approved.
+                    </p>
+                  </div>
+
+                  <button
+                    class="btn btn-secondary"
+                    type="button"
+                    data-referral-tower-refresh
+                  >
+                    Refresh
+                  </button>
+                </div>
+
+                <div class="referral-link-row">
+                  <input
+                    class="referral-link-input"
+                    type="text"
+                    data-referral-link
+                    value=""
+                    readonly
+                    aria-label="Your referral link"
+                  />
+                  <button class="btn btn-primary" type="button" data-referral-copy>
+                    Copy Link
+                  </button>
+                </div>
+
+                <div class="tower-visual">
+                  <img
+                    class="referral-lions"
+                    src="/assets/cardleo-lions-white-gold.png"
+                    alt="Card Leo Rewards Lions"
+                    onerror="this.hidden=true; this.nextElementSibling.hidden=false;"
+                  />
+                  <div class="tower-lions-fallback" hidden>CL</div>
+
+                  <div class="tower-spire" aria-hidden="true"></div>
+
+                  <div
+                    class="tower-floors"
+                    data-referral-tower-floors
+                    aria-label="Referral tower floors"
+                  ></div>
+
+                  <div class="tower-base" aria-hidden="true"></div>
+                </div>
+
+                <div class="tower-stats-grid">
+                  <div class="tower-stat">
+                    <span>Total Earned</span>
+                    <strong data-referral-earned>$0.00</strong>
+                  </div>
+
+                  <div class="tower-stat">
+                    <span>Pending Money</span>
+                    <strong data-referral-pending-money>$0.00</strong>
+                  </div>
+
+                  <div class="tower-stat">
+                    <span>Leaderboard Rank</span>
+                    <strong data-referral-rank>Unranked</strong>
+                  </div>
+
+                  <div class="tower-stat">
+                    <span>Total Referrals</span>
+                    <strong data-referral-total>0</strong>
+                  </div>
+
+                  <div class="tower-stat">
+                    <span>Approved</span>
+                    <strong data-referral-approved>0</strong>
+                  </div>
+
+                  <div class="tower-stat">
+                    <span>Pending</span>
+                    <strong data-referral-pending>0</strong>
+                  </div>
+                </div>
+
+                <div data-referral-tower-status hidden></div>
+              </article>
+
+              <aside class="referral-board-card">
+                <div class="referral-board-top">
+                  <div>
+                    <div class="eyebrow">Member Leaderboard</div>
+                    <h2 class="referral-tower-title">Top Referral Earners</h2>
+                    <p class="referral-tower-copy">
+                      Members rank higher as approved referrals turn into earned
+                      rewards.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="leaderboard-list" data-referral-leaderboard>
+                  <div class="tower-empty">Loading leaderboard...</div>
+                </div>
+
+                <div style="height: 20px;"></div>
+
+                <div class="referral-board-top">
+                  <div>
+                    <div class="eyebrow">Recent Referrals</div>
+                    <h2 class="referral-tower-title">Your Referral Activity</h2>
+                    <p class="referral-tower-copy" data-referral-next>
+                      Your next milestone is loading.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="recent-referrals-list" data-referral-recent>
+                  <div class="tower-empty">Loading recent referrals...</div>
+                </div>
+              </aside>
+            </div>
           </section>
 
           <section class="dashboard-grid">
@@ -808,13 +1349,16 @@
 
                   <a class="action-card" href="/portal/benefits.html">
                     <strong>Explore Benefits</strong>
-                    <p>Review the full premium value of your Card Leo Rewards membership.</p>
+                    <p>
+                      Review the full premium value of your Card Leo Rewards
+                      membership.
+                    </p>
                     <span class="action-link">See benefits →</span>
                   </a>
 
                   <a class="action-card" href="/portal/support.html">
                     <strong>Contact Support</strong>
-                    <p>Reach our team for account help, onboarding, and member questions.</p>
+                    <p>Reach our team for account help, onboarding, and questions.</p>
                     <span class="action-link">Get support →</span>
                   </a>
                 </div>
@@ -886,8 +1430,8 @@
                   </h3>
                   <p style="margin: 0; color: var(--muted); line-height: 1.7;">
                     Card Leo Rewards is designed to deliver a polished member
-                    experience with premium onboarding, curated benefits, and direct
-                    support when you need it most.
+                    experience with premium onboarding, curated benefits, referrals,
+                    and direct support when you need it most.
                   </p>
                 </div>
               </div>
@@ -928,7 +1472,11 @@
                 </div>
 
                 <div style="margin-top: 18px;">
-                  <a class="btn btn-secondary" href="/portal/support.html" style="width: 100%;">
+                  <a
+                    class="btn btn-secondary"
+                    href="/portal/support.html"
+                    style="width: 100%;"
+                  >
                     Open Member Support
                   </a>
                 </div>
@@ -1059,10 +1607,7 @@
         if (typeof member?.portal_access === "boolean") return member.portal_access;
 
         const status = normalizeStatus(
-          member?.status ||
-            member?.memberStatus ||
-            member?.member_status ||
-            "active"
+          member?.status || member?.memberStatus || member?.member_status || "active"
         );
 
         return ["active", "approved", "invited"].includes(status);
@@ -1070,10 +1615,7 @@
 
       function getStatusLabel(member) {
         const raw = normalizeStatus(
-          member?.memberStatus ||
-            member?.member_status ||
-            member?.status ||
-            "active"
+          member?.memberStatus || member?.member_status || member?.status || "active"
         );
 
         if (raw === "approved" || raw === "invited") return "Active";
@@ -1248,17 +1790,26 @@
             : [
                 {
                   title: "Member Portal Access",
-                  description: "Your Card Leo Rewards dashboard is connected to your account.",
+                  description:
+                    "Your Card Leo Rewards dashboard is connected to your account.",
                   active: portalAccess,
                 },
                 {
                   title: "Rewards Overview",
-                  description: "Review premium rewards, benefits, and member opportunities.",
+                  description:
+                    "Review premium rewards, benefits, and member opportunities.",
+                  active: portalAccess,
+                },
+                {
+                  title: "Referral Tower",
+                  description:
+                    "Track approved referrals, pending referrals, and leaderboard rank.",
                   active: portalAccess,
                 },
                 {
                   title: "Account Management",
-                  description: "Update your profile, settings, support requests, and account details.",
+                  description:
+                    "Update your profile, settings, support requests, and account details.",
                   active: true,
                 },
               ];
@@ -1372,9 +1923,7 @@
 
         const fullName = getFullName(member);
         const firstName = normalizeText(
-          member?.firstName ||
-            member?.first_name ||
-            fullName.split(/\s+/)[0],
+          member?.firstName || member?.first_name || fullName.split(/\s+/)[0],
           "Member"
         );
         const email = normalizeText(member?.email, "No email available");
@@ -1383,7 +1932,7 @@
 
         els.heroHeading.textContent = `Welcome back, ${firstName}.`;
         els.heroDescription.textContent = portalAccess
-          ? "Your premium dashboard is active. Review your rewards, member benefits, support details, and account information from one central portal."
+          ? "Your premium dashboard is active. Review your rewards, member benefits, referral tower, support details, and account information from one central portal."
           : "Your account is in progress. You can still review your information, check your status, and stay connected while your member access is finalized.";
 
         setStatusBadge(els.heroStatusBadge, statusLabel);
@@ -1463,7 +2012,8 @@
               announcements: [
                 {
                   title: "Dashboard connected",
-                  body: "Your account is active. Some overview details are still being prepared.",
+                  body:
+                    "Your account is active. Some overview details are still being prepared.",
                 },
               ],
             });
@@ -1472,10 +2022,7 @@
 
           const data = unwrapApiPayload(payload);
           const overview = getOverviewFromPayload(payload);
-          const overviewMember =
-            data.member ||
-            overview.member ||
-            memberFromSession;
+          const overviewMember = data.member || overview.member || memberFromSession;
 
           renderMember(
             {
@@ -1494,7 +2041,8 @@
             announcements: [
               {
                 title: "Dashboard connected",
-                body: "Your member session is active. Refresh later for additional overview details.",
+                body:
+                  "Your member session is active. Refresh later for additional overview details.",
               },
             ],
           });
@@ -1592,6 +2140,339 @@
       });
 
       loadDashboardFromSession();
+    </script>
+
+    <script>
+      const referralTowerState = {
+        loading: false,
+        payload: null,
+      };
+
+      function towerIsObject(value) {
+        return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+      }
+
+      function towerNormalizeText(value, fallback = "") {
+        const text = String(value ?? "").trim();
+        return text || fallback;
+      }
+
+      function towerEscapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function towerMoney(value) {
+        const num = Number(value || 0);
+
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(Number.isFinite(num) ? num : 0);
+      }
+
+      function towerUnwrap(payload) {
+        if (!towerIsObject(payload)) return {};
+        return towerIsObject(payload.data) ? payload.data : payload;
+      }
+
+      async function fetchReferralTowerJson(url) {
+        const response = await fetch(url, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+          },
+        });
+
+        let payload = {};
+
+        try {
+          payload = await response.json();
+        } catch {
+          payload = {};
+        }
+
+        if (response.status === 401) {
+          window.location.href =
+            "/login.html?next=" +
+            encodeURIComponent(window.location.pathname + window.location.search);
+          return null;
+        }
+
+        if (response.status === 403) {
+          window.location.href = "/unauthorized.html";
+          return null;
+        }
+
+        if (!response.ok || payload?.success === false) {
+          throw new Error(payload?.message || "Unable to load referral tower.");
+        }
+
+        return towerUnwrap(payload);
+      }
+
+      function towerSetText(selector, value) {
+        document.querySelectorAll(selector).forEach((node) => {
+          node.textContent = towerNormalizeText(value);
+        });
+      }
+
+      function setReferralTowerStatus(message, type = "info") {
+        document.querySelectorAll("[data-referral-tower-status]").forEach((node) => {
+          if (!message) {
+            node.hidden = true;
+            node.textContent = "";
+            node.dataset.state = "";
+            return;
+          }
+
+          node.hidden = false;
+          node.textContent = message;
+          node.dataset.state = type;
+        });
+      }
+
+      function getReferralFloorClass(floor) {
+        if (floor.state === "earned") return "tower-floor earned";
+        if (floor.state === "pending") return "tower-floor pending";
+        if (floor.state === "closed") return "tower-floor closed";
+        return "tower-floor empty";
+      }
+
+      function renderReferralTowerSummary(payload) {
+        const summary = payload?.summary || {};
+
+        towerSetText("[data-referral-member-name]", payload?.member?.name || "Member");
+        towerSetText("[data-referral-total]", summary.totalReferrals || 0);
+        towerSetText("[data-referral-approved]", summary.approvedReferrals || 0);
+        towerSetText("[data-referral-pending]", summary.pendingReferrals || 0);
+        towerSetText("[data-referral-earned]", towerMoney(summary.earnedAmount));
+        towerSetText(
+          "[data-referral-pending-money]",
+          towerMoney(summary.pendingAmount)
+        );
+        towerSetText(
+          "[data-referral-rank]",
+          summary.leaderboardRank ? `#${summary.leaderboardRank}` : "Unranked"
+        );
+        towerSetText(
+          "[data-referral-next]",
+          `${summary.referralsUntilNextMilestone || 0} approved referrals to level ${
+            summary.nextMilestone || 5
+          }`
+        );
+
+        document.querySelectorAll("[data-referral-link]").forEach((node) => {
+          const link = payload?.member?.referralLink || "";
+
+          if ("value" in node) {
+            node.value = link;
+          }
+
+          node.textContent = link;
+        });
+      }
+
+      function renderReferralTowerFloors(payload) {
+        const container = document.querySelector("[data-referral-tower-floors]");
+        if (!container) return;
+
+        const floors = Array.isArray(payload?.tower?.floors)
+          ? [...payload.tower.floors].reverse()
+          : [];
+
+        container.innerHTML = floors
+          .map((floor) => {
+            const amount = Number(floor.amount || 0);
+
+            return `
+              <div class="${getReferralFloorClass(floor)}" title="${towerEscapeHtml(
+              floor.label || ""
+            )}">
+                <span class="tower-floor-number">${towerEscapeHtml(
+                  floor.floor
+                )}</span>
+                <span class="tower-floor-name">${towerEscapeHtml(
+                  floor.label || "Open floor"
+                )}</span>
+                <span class="tower-floor-money">
+                  ${amount > 0 ? towerEscapeHtml(towerMoney(amount)) : "—"}
+                </span>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderReferralLeaderboard(payload) {
+        const container = document.querySelector("[data-referral-leaderboard]");
+        if (!container) return;
+
+        const rows = Array.isArray(payload?.leaderboard) ? payload.leaderboard : [];
+
+        if (!rows.length) {
+          container.innerHTML = `
+            <div class="tower-empty">
+              No leaderboard activity yet. The first approved referrals will appear here.
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = rows
+          .map((row) => {
+            return `
+              <div class="leaderboard-row">
+                <div class="leaderboard-rank">#${towerEscapeHtml(row.rank)}</div>
+                <div class="leaderboard-member">
+                  <strong>${towerEscapeHtml(row.referralName || "Member")}</strong>
+                  <span>${towerEscapeHtml(row.totalReferrals || 0)} referrals • ${towerEscapeHtml(
+              row.approvedReferrals || 0
+            )} approved</span>
+                </div>
+                <div class="leaderboard-money">${towerEscapeHtml(
+                  towerMoney(row.earnedAmount)
+                )}</div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderRecentReferrals(payload) {
+        const container = document.querySelector("[data-referral-recent]");
+        if (!container) return;
+
+        const referrals = Array.isArray(payload?.referrals) ? payload.referrals : [];
+
+        if (!referrals.length) {
+          container.innerHTML = `
+            <div class="tower-empty">
+              Your referral tower is ready. Your first approved referral will start building it.
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = referrals
+          .slice(0, 8)
+          .map((referral) => {
+            return `
+              <div class="recent-referral-row">
+                <div>
+                  <strong>${towerEscapeHtml(referral.name || "New Member")}</strong>
+                  <span>${towerEscapeHtml(referral.statusLabel || "Pending")}</span>
+                </div>
+                <div class="recent-referral-money">
+                  ${
+                    referral.approved
+                      ? towerEscapeHtml(towerMoney(referral.amount))
+                      : "Pending"
+                  }
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderReferralTower(payload) {
+        referralTowerState.payload = payload;
+
+        renderReferralTowerSummary(payload);
+        renderReferralTowerFloors(payload);
+        renderReferralLeaderboard(payload);
+        renderRecentReferrals(payload);
+      }
+
+      async function copyReferralLink() {
+        const link =
+          referralTowerState.payload?.member?.referralLink ||
+          document.querySelector("[data-referral-link]")?.value ||
+          "";
+
+        if (!link) {
+          setReferralTowerStatus("Referral link is not available yet.", "error");
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(link);
+          setReferralTowerStatus("Referral link copied.", "success");
+        } catch {
+          setReferralTowerStatus(
+            "Copy failed. Highlight and copy the referral link manually.",
+            "error"
+          );
+        }
+      }
+
+      async function loadReferralTower() {
+        if (referralTowerState.loading) return;
+
+        referralTowerState.loading = true;
+        setReferralTowerStatus("Loading your referral tower...", "info");
+
+        document
+          .querySelectorAll("[data-referral-tower-refresh]")
+          .forEach((button) => {
+            button.disabled = true;
+          });
+
+        try {
+          const payload = await fetchReferralTowerJson("/api/portal/referral-tower");
+          if (!payload) return;
+
+          renderReferralTower(payload);
+          setReferralTowerStatus("Referral tower updated.", "success");
+        } catch (error) {
+          setReferralTowerStatus(
+            error?.message || "Unable to load referral tower.",
+            "error"
+          );
+        } finally {
+          referralTowerState.loading = false;
+
+          document
+            .querySelectorAll("[data-referral-tower-refresh]")
+            .forEach((button) => {
+              button.disabled = false;
+            });
+        }
+      }
+
+      function bindReferralTowerEvents() {
+        document
+          .querySelectorAll("[data-referral-tower-refresh]")
+          .forEach((button) => {
+            if (button.dataset.boundReferralRefresh === "true") return;
+
+            button.dataset.boundReferralRefresh = "true";
+            button.addEventListener("click", loadReferralTower);
+          });
+
+        document.querySelectorAll("[data-referral-copy]").forEach((button) => {
+          if (button.dataset.boundReferralCopy === "true") return;
+
+          button.dataset.boundReferralCopy = "true";
+          button.addEventListener("click", copyReferralLink);
+        });
+      }
+
+      bindReferralTowerEvents();
+      loadReferralTower();
+
+      window.CardLeoReferralTower = {
+        reload: loadReferralTower,
+        getState: function () {
+          return { ...referralTowerState };
+        },
+      };
     </script>
   </body>
 </html>

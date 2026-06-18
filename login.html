@@ -8,73 +8,69 @@
     />
 
     <title>Member Login | Card Leo Rewards</title>
+
     <meta
       name="description"
-      content="Log in to your Card Leo Rewards member portal to view your profile, rewards, referrals, and account updates."
+      content="Log in to your Card Leo Rewards member portal to view your profile, rewards, referrals, membership status, and account updates."
     />
     <meta
       name="keywords"
-      content="Card Leo Rewards login, member portal, rewards login, member sign in"
+      content="Card Leo Rewards login, member portal, rewards login, member sign in, membership login"
     />
-    <meta name="theme-color" content="#0b1020" />
+    <meta name="theme-color" content="#030303" />
     <meta name="robots" content="noindex, nofollow" />
 
     <link rel="canonical" href="https://www.cardleorewards.com/login.html" />
     <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="/style.css" />
 
     <meta property="og:title" content="Member Login | Card Leo Rewards" />
     <meta
       property="og:description"
-      content="Secure member access for Card Leo Rewards."
+      content="Secure member access for active Card Leo Rewards members."
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Card Leo Rewards" />
     <meta property="og:url" content="https://www.cardleorewards.com/login.html" />
     <meta
       property="og:image"
-      content="https://www.cardleorewards.com/assets/og-cardleo.jpg"
+      content="https://www.cardleorewards.com/assets/cardleo-cover.jpg"
     />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Member Login | Card Leo Rewards" />
     <meta
       name="twitter:description"
-      content="Secure member access for Card Leo Rewards."
+      content="Secure member access for active Card Leo Rewards members."
     />
     <meta
       name="twitter:image"
-      content="https://www.cardleorewards.com/assets/og-cardleo.jpg"
+      content="https://www.cardleorewards.com/assets/cardleo-cover.jpg"
     />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="/style.css" />
-
     <style>
       :root {
-        --bg: #07111f;
-        --bg-2: #0b1730;
-        --panel: rgba(11, 18, 38, 0.78);
-        --panel-strong: rgba(8, 14, 28, 0.92);
-        --line: rgba(255, 255, 255, 0.1);
-        --line-strong: rgba(255, 255, 255, 0.18);
-        --text: #eef4ff;
-        --muted: #a9b7d0;
-        --muted-2: #7f92b3;
-        --gold: #f4c15d;
-        --gold-2: #d99a2b;
-        --success: #7be0ac;
-        --danger: #ff8f8f;
-        --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
-        --radius-xl: 28px;
-        --radius-lg: 20px;
-        --radius-md: 14px;
-        --container: 1180px;
+        --leo-black: #030303;
+        --leo-panel: rgba(12, 12, 12, 0.9);
+        --leo-line: rgba(231, 182, 79, 0.24);
+        --leo-gold: #e7b64f;
+        --leo-gold-2: #f7d98b;
+        --leo-gold-3: #a66f10;
+        --leo-white: #f8f3e7;
+        --leo-muted: rgba(248, 243, 231, 0.72);
+        --leo-muted-2: rgba(248, 243, 231, 0.52);
+        --leo-green: #48f06b;
+        --leo-red: #ff7676;
+        --leo-warning: #ffd166;
+        --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
       }
 
       * {
@@ -87,13 +83,14 @@
 
       body {
         margin: 0;
-        font-family: Inter, "Segoe UI", Arial, sans-serif;
-        color: var(--text);
-        background:
-          radial-gradient(circle at top left, rgba(244, 193, 93, 0.12), transparent 28%),
-          radial-gradient(circle at right center, rgba(255, 255, 255, 0.06), transparent 22%),
-          linear-gradient(180deg, #08111f 0%, #091426 50%, #060c17 100%);
         min-height: 100vh;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        color: var(--leo-white);
+        background:
+          radial-gradient(circle at 82% 8%, rgba(231, 182, 79, 0.14), transparent 28%),
+          radial-gradient(circle at 50% 95%, rgba(231, 182, 79, 0.1), transparent 30%),
+          linear-gradient(180deg, #030303 0%, #080808 48%, #010101 100%);
       }
 
       a {
@@ -106,417 +103,164 @@
         display: block;
       }
 
-      .page-shell {
-        position: relative;
-        min-height: 100vh;
-        overflow: hidden;
+      button,
+      input {
+        font: inherit;
       }
 
-      .page-shell::before {
-        content: "";
-        position: fixed;
-        inset: 0;
+      button {
+        cursor: pointer;
+      }
+
+      .site-shell {
+        min-height: 100vh;
+        overflow: hidden;
         background:
-          radial-gradient(circle at 20% 15%, rgba(244, 193, 93, 0.08), transparent 24%),
-          radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.05), transparent 20%),
-          radial-gradient(circle at 50% 100%, rgba(217, 154, 43, 0.06), transparent 30%);
-        pointer-events: none;
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          radial-gradient(circle at 72% 24%, rgba(231, 182, 79, 0.08), transparent 28%);
+        background-size: 96px 96px, auto;
       }
 
       .container {
-        width: min(var(--container), calc(100% - 32px));
+        width: min(100% - 2rem, 1320px);
         margin: 0 auto;
       }
 
       .site-header {
         position: sticky;
         top: 0;
-        z-index: 40;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.86);
+        border-bottom: 1px solid rgba(231, 182, 79, 0.18);
         backdrop-filter: blur(18px);
-        background: rgba(7, 13, 26, 0.55);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       }
 
-      .site-header__inner {
+      .nav-wrap {
+        min-height: 86px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 18px;
-        min-height: 80px;
+        gap: 1rem;
       }
 
       .brand {
         display: inline-flex;
         align-items: center;
-        gap: 12px;
+        gap: 0.85rem;
       }
 
-      .brand__mark {
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
-        display: grid;
-        place-items: center;
+      .brand-logo {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        object-fit: contain;
+        padding: 0.35rem;
+        border: 1px solid rgba(231, 182, 79, 0.35);
         background:
-          linear-gradient(135deg, rgba(244, 193, 93, 0.24), rgba(217, 154, 43, 0.12)),
-          rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(244, 193, 93, 0.24);
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-        font-weight: 800;
-        color: var(--gold);
+          radial-gradient(circle at top, rgba(247, 217, 139, 0.28), transparent 48%),
+          linear-gradient(145deg, #0b0b0b, #000);
+        box-shadow: 0 0 26px rgba(231, 182, 79, 0.18);
+      }
+
+      .brand-fallback {
+        width: 54px;
+        height: 54px;
+        display: none;
+        place-items: center;
+        border-radius: 16px;
+        border: 1px solid rgba(231, 182, 79, 0.35);
+        background:
+          radial-gradient(circle at top, rgba(247, 217, 139, 0.28), transparent 48%),
+          linear-gradient(145deg, #0b0b0b, #000);
+        color: var(--leo-gold-2);
+        font-weight: 900;
         letter-spacing: 0.08em;
       }
 
-      .brand__text {
-        display: grid;
-        gap: 2px;
+      .brand-copy {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.08;
       }
 
-      .brand__eyebrow {
-        margin: 0;
+      .brand-title {
+        color: var(--leo-white);
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-subtitle {
+        margin-top: 0.2rem;
+        color: var(--leo-gold);
         font-size: 0.72rem;
-        letter-spacing: 0.22em;
+        font-weight: 900;
+        letter-spacing: 0.15em;
         text-transform: uppercase;
-        color: var(--muted-2);
-      }
-
-      .brand__name {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: 0.02em;
       }
 
       .site-nav {
         display: flex;
         align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
+        gap: 1.1rem;
       }
 
       .site-nav a {
-        padding: 10px 14px;
-        border-radius: 999px;
-        color: var(--muted);
-        transition:
-          color 0.25s ease,
-          background 0.25s ease,
-          border-color 0.25s ease;
-        border: 1px solid transparent;
+        color: rgba(248, 243, 231, 0.75);
+        font-weight: 800;
+        font-size: 0.95rem;
+        transition: color 0.22s ease;
       }
 
       .site-nav a:hover,
-      .site-nav a:focus-visible {
-        color: var(--text);
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(255, 255, 255, 0.08);
-        outline: none;
-      }
-
       .site-nav a.is-active {
-        color: #0a1020;
-        background: linear-gradient(135deg, #f4c15d, #d99a2b);
-        border-color: transparent;
-        font-weight: 700;
+        color: var(--leo-gold-2);
       }
 
-      .login-hero {
-        padding: 68px 0 38px;
-      }
-
-      .login-hero__wrap {
-        display: grid;
-        grid-template-columns: 1.05fr 0.95fr;
-        gap: 28px;
-        align-items: stretch;
-      }
-
-      .glass-card {
-        position: relative;
-        background: linear-gradient(180deg, rgba(13, 21, 41, 0.84), rgba(8, 14, 28, 0.92));
-        border: 1px solid var(--line);
-        box-shadow: var(--shadow);
-        border-radius: var(--radius-xl);
-        overflow: hidden;
-      }
-
-      .glass-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          linear-gradient(135deg, rgba(244, 193, 93, 0.07), transparent 30%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 30%);
-        pointer-events: none;
-      }
-
-      .hero-panel {
-        padding: 40px;
-        min-height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: 30px;
-      }
-
-      .eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        width: fit-content;
-        padding: 9px 14px;
+      .nav-cta {
+        min-height: 46px;
+        padding: 0.78rem 1.1rem;
         border-radius: 999px;
-        background: rgba(244, 193, 93, 0.12);
-        color: var(--gold);
-        border: 1px solid rgba(244, 193, 93, 0.18);
-        font-size: 0.8rem;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        font-weight: 700;
+        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 50%, #8b5b0b 100%);
+        color: #080808 !important;
+        box-shadow:
+          0 18px 42px rgba(216, 154, 34, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
       }
 
-      .hero-title {
-        margin: 16px 0 14px;
-        font-size: clamp(2rem, 4vw, 3.45rem);
-        line-height: 1.02;
-        letter-spacing: -0.04em;
-      }
-
-      .hero-copy {
-        margin: 0;
-        max-width: 58ch;
-        font-size: 1.02rem;
-        line-height: 1.75;
-        color: var(--muted);
-      }
-
-      .hero-highlights {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .mini-card {
-        padding: 16px 16px 15px;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.035);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-      }
-
-      .mini-card h3 {
-        margin: 0 0 8px;
-        font-size: 0.96rem;
-      }
-
-      .mini-card p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.94rem;
-        line-height: 1.6;
-      }
-
-      .hero-note {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        padding: 16px 18px;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.07);
-      }
-
-      .hero-note__dot {
-        width: 12px;
-        height: 12px;
-        margin-top: 6px;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #f4c15d, #d99a2b);
-        box-shadow: 0 0 18px rgba(244, 193, 93, 0.45);
-        flex: 0 0 auto;
-      }
-
-      .hero-note p {
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.7;
-      }
-
-      .login-panel {
-        padding: 34px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-
-      .panel-kicker {
-        margin: 0 0 8px;
-        color: var(--gold);
-        font-size: 0.84rem;
-        text-transform: uppercase;
-        letter-spacing: 0.16em;
-        font-weight: 700;
-      }
-
-      .panel-title {
-        margin: 0;
-        font-size: clamp(1.7rem, 3vw, 2.5rem);
-        line-height: 1.06;
-        letter-spacing: -0.03em;
-      }
-
-      .panel-copy {
-        margin: 14px 0 0;
-        color: var(--muted);
-        line-height: 1.75;
-      }
-
-      .login-form {
-        margin-top: 26px;
-        display: grid;
-        gap: 16px;
-      }
-
-      .field {
-        display: grid;
-        gap: 8px;
-      }
-
-      .field label {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--text);
-      }
-
-      .input-wrap {
-        position: relative;
-      }
-
-      .field input {
-        width: 100%;
-        min-height: 56px;
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(255, 255, 255, 0.045);
-        color: var(--text);
-        padding: 0 16px;
-        font-size: 1rem;
-        transition:
-          border-color 0.22s ease,
-          background 0.22s ease,
-          box-shadow 0.22s ease;
-      }
-
-      .field input::placeholder {
-        color: #8b9ab4;
-      }
-
-      .field input:focus {
-        outline: none;
-        border-color: rgba(244, 193, 93, 0.6);
-        background: rgba(255, 255, 255, 0.06);
-        box-shadow: 0 0 0 4px rgba(244, 193, 93, 0.12);
-      }
-
-      .password-toggle {
-        position: absolute;
-        top: 50%;
-        right: 10px;
-        transform: translateY(-50%);
-        min-width: 46px;
-        min-height: 40px;
-        border: 0;
-        border-radius: 12px;
-        background: transparent;
-        color: var(--muted);
-        cursor: pointer;
-        font-weight: 700;
-      }
-
-      .password-toggle:hover,
-      .password-toggle:focus-visible {
-        color: var(--text);
-        background: rgba(255, 255, 255, 0.06);
-        outline: none;
-      }
-
-      .login-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 14px;
-        flex-wrap: wrap;
-      }
-
-      .check {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        color: var(--muted);
-        font-size: 0.94rem;
-      }
-
-      .check input {
-        width: 18px;
-        height: 18px;
-        accent-color: var(--gold-2);
-      }
-
-      .text-link {
-        color: var(--gold);
-        font-weight: 600;
-      }
-
-      .text-link:hover,
-      .text-link:focus-visible {
-        text-decoration: underline;
-        outline: none;
-      }
-
-      .status {
+      .menu-toggle {
         display: none;
-        padding: 14px 15px;
-        border-radius: 16px;
-        border: 1px solid transparent;
-        font-size: 0.95rem;
-        line-height: 1.6;
+        width: 48px;
+        height: 48px;
+        border: 1px solid rgba(231, 182, 79, 0.2);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 0.25rem;
       }
 
-      .status.is-visible {
-        display: block;
-      }
-
-      .status.is-error {
-        background: rgba(255, 143, 143, 0.1);
-        border-color: rgba(255, 143, 143, 0.24);
-        color: #ffd4d4;
-      }
-
-      .status.is-success {
-        background: rgba(123, 224, 172, 0.12);
-        border-color: rgba(123, 224, 172, 0.2);
-        color: #dffbea;
-      }
-
-      .status.is-info {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(255, 255, 255, 0.08);
-        color: var(--muted);
+      .menu-toggle span {
+        width: 20px;
+        height: 2px;
+        border-radius: 999px;
+        background: var(--leo-white);
       }
 
       .btn {
-        appearance: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 56px;
+        padding: 0.95rem 1.35rem;
+        border-radius: 999px;
         border: 0;
-        cursor: pointer;
-        min-height: 58px;
-        border-radius: 18px;
-        padding: 0 22px;
-        font-size: 1rem;
-        font-weight: 800;
-        letter-spacing: 0.01em;
-        transition:
-          transform 0.18s ease,
-          box-shadow 0.18s ease,
-          opacity 0.18s ease;
+        font-weight: 900;
+        transition: 0.22s ease;
+      }
+
+      .btn:hover:not(:disabled) {
+        transform: translateY(-2px);
       }
 
       .btn:disabled {
@@ -525,114 +269,465 @@
       }
 
       .btn-primary {
-        color: #111827;
-        background: linear-gradient(135deg, #f4c15d, #d99a2b);
+        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 50%, #8b5b0b 100%);
+        color: #080808;
         box-shadow:
-          0 14px 34px rgba(217, 154, 43, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.35);
+          0 18px 42px rgba(216, 154, 34, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
       }
 
-      .btn-primary:hover:not(:disabled),
-      .btn-primary:focus-visible:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow:
-          0 18px 40px rgba(217, 154, 43, 0.36),
-          inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      .btn-secondary {
+        border: 1px solid rgba(231, 182, 79, 0.28);
+        background: rgba(255, 255, 255, 0.045);
+        color: var(--leo-white);
+      }
+
+      .login-hero {
+        min-height: calc(100vh - 86px);
+        display: grid;
+        align-items: center;
+        padding: 54px 0 82px;
+      }
+
+      .login-grid {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 2rem;
+        align-items: center;
+      }
+
+      .login-copy {
+        position: relative;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin: 0 0 1rem;
+        color: var(--leo-gold);
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 900;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 34px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--leo-gold), transparent);
+      }
+
+      .login-copy h1 {
+        margin: 0;
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: clamp(2.9rem, 6vw, 5.25rem);
+        line-height: 0.98;
+        letter-spacing: -0.06em;
+      }
+
+      .text-gradient {
+        background: linear-gradient(135deg, #ffffff 0%, #f7d98b 40%, #e7b64f 70%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .login-copy p {
+        max-width: 62ch;
+        color: var(--leo-muted);
+        line-height: 1.75;
+      }
+
+      .login-bullets {
+        display: grid;
+        gap: 0.85rem;
+        margin-top: 1.35rem;
+      }
+
+      .bulletin-card {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.85rem;
+        align-items: start;
+        padding: 1rem;
+        border-radius: 18px;
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 38%),
+          rgba(255, 255, 255, 0.035);
+        box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32);
+      }
+
+      .bulletin-dot {
+        width: 12px;
+        height: 12px;
+        margin-top: 0.45rem;
+        border-radius: 999px;
+        background: var(--leo-gold-2);
+        box-shadow: 0 0 18px rgba(247, 217, 139, 0.45);
+      }
+
+      .bulletin-card span {
+        display: block;
+        color: var(--leo-gold);
+        font-size: 0.74rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .bulletin-card strong {
+        display: block;
+        margin-top: 0.22rem;
+        color: var(--leo-white);
+      }
+
+      .bulletin-card p {
+        margin: 0.25rem 0 0;
+        color: var(--leo-muted);
+        line-height: 1.55;
+      }
+
+      .login-card {
+        border-radius: 32px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.14), transparent 34%),
+          linear-gradient(180deg, rgba(16, 16, 16, 0.94), rgba(4, 4, 4, 0.96));
+        box-shadow: var(--leo-shadow);
+        overflow: hidden;
+      }
+
+      .login-card-head {
+        padding: 1.5rem 1.5rem 1.1rem;
+        border-bottom: 1px solid rgba(231, 182, 79, 0.14);
+      }
+
+      .login-card-head h2 {
+        margin: 0;
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: clamp(1.85rem, 3vw, 2.55rem);
+        line-height: 1.05;
+        letter-spacing: -0.04em;
+      }
+
+      .login-card-head p {
+        margin: 0.65rem 0 0;
+        color: var(--leo-muted);
+        line-height: 1.65;
+      }
+
+      .login-card-body {
+        padding: 1.5rem;
+      }
+
+      .activation-box {
+        margin-bottom: 1.25rem;
+        padding: 1rem;
+        border-radius: 20px;
+        border: 1px solid rgba(244, 193, 93, 0.2);
+        background:
+          radial-gradient(circle at top right, rgba(244, 193, 93, 0.12), transparent 32%),
+          rgba(255, 255, 255, 0.04);
+      }
+
+      .activation-box h3 {
+        margin: 0 0 0.5rem;
+        color: var(--leo-white);
+        font-size: 1rem;
+      }
+
+      .activation-box p {
+        margin: 0;
+        color: var(--leo-muted);
+        line-height: 1.65;
+        font-size: 0.93rem;
+      }
+
+      .activation-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.7rem;
+        margin-top: 0.9rem;
+      }
+
+      .activation-item {
+        padding: 0.8rem;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .activation-item span {
+        display: block;
+        color: var(--leo-muted-2);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+
+      .activation-item strong {
+        display: block;
+        margin-top: 0.25rem;
+        color: var(--leo-gold-2);
+        font-size: 0.94rem;
+      }
+
+      .status {
+        display: none;
+        padding: 0.95rem 1rem;
+        border-radius: 16px;
+        border: 1px solid transparent;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+      }
+
+      .status.is-visible {
+        display: block;
+      }
+
+      .status.is-error {
+        background: rgba(255, 118, 118, 0.1);
+        border-color: rgba(255, 118, 118, 0.24);
+        color: #ffd4d4;
+      }
+
+      .status.is-success {
+        background: rgba(72, 240, 107, 0.12);
+        border-color: rgba(72, 240, 107, 0.2);
+        color: #dffbea;
+      }
+
+      .status.is-info {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: var(--leo-muted);
+      }
+
+      .status.is-warning {
+        background: rgba(255, 209, 102, 0.1);
+        border-color: rgba(255, 209, 102, 0.25);
+        color: #ffe6a3;
+      }
+
+      .login-form {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .field {
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .field label {
+        color: var(--leo-muted);
+        font-size: 0.92rem;
+        font-weight: 900;
+      }
+
+      .input-wrap {
+        position: relative;
+      }
+
+      .field input {
+        width: 100%;
+        min-height: 54px;
+        padding: 0.95rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(231, 182, 79, 0.16);
+        background: rgba(0, 0, 0, 0.56);
+        color: var(--leo-white);
         outline: none;
+        transition:
+          border-color 0.22s ease,
+          box-shadow 0.22s ease,
+          background 0.22s ease;
+      }
+
+      .field input::placeholder {
+        color: rgba(248, 243, 231, 0.36);
+      }
+
+      .field input:focus {
+        border-color: rgba(247, 217, 139, 0.42);
+        box-shadow: 0 0 0 4px rgba(247, 217, 139, 0.08);
+        background: rgba(0, 0, 0, 0.72);
+      }
+
+      .password-toggle {
+        position: absolute;
+        top: 50%;
+        right: 0.5rem;
+        transform: translateY(-50%);
+        min-width: 56px;
+        min-height: 40px;
+        border: 0;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.045);
+        color: var(--leo-muted);
+        cursor: pointer;
+        font-weight: 900;
+      }
+
+      .password-toggle:hover {
+        color: var(--leo-white);
+        background: rgba(255, 255, 255, 0.075);
+      }
+
+      .login-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .check {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        color: var(--leo-muted);
+        font-size: 0.92rem;
+      }
+
+      .check input {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--leo-gold-2);
+      }
+
+      .text-link {
+        color: var(--leo-gold-2);
+        font-weight: 900;
+      }
+
+      .text-link:hover {
+        text-decoration: underline;
       }
 
       .action-links {
-        margin-top: 18px;
+        margin-top: 1rem;
         display: flex;
         flex-wrap: wrap;
-        gap: 12px 16px;
-        color: var(--muted);
-        font-size: 0.95rem;
-      }
-
-      .action-links a {
-        color: var(--muted);
-      }
-
-      .action-links a:hover,
-      .action-links a:focus-visible {
-        color: var(--text);
-        outline: none;
+        gap: 0.6rem 0.85rem;
+        color: var(--leo-muted);
+        font-size: 0.92rem;
       }
 
       .security-list {
-        margin: 22px 0 0;
+        margin: 1rem 0 0;
         padding: 0;
         list-style: none;
         display: grid;
-        gap: 10px;
+        gap: 0.6rem;
       }
 
       .security-list li {
         display: flex;
         align-items: flex-start;
-        gap: 10px;
-        color: var(--muted);
-        line-height: 1.65;
+        gap: 0.6rem;
+        color: var(--leo-muted);
+        line-height: 1.6;
+        font-size: 0.92rem;
       }
 
       .security-list li::before {
         content: "•";
-        color: var(--gold);
+        color: var(--leo-gold-2);
         font-size: 1.2rem;
         line-height: 1;
-        margin-top: 2px;
+        margin-top: 0.1rem;
       }
 
       .site-footer {
-        padding: 22px 0 42px;
+        padding: 2rem 0;
+        border-top: 1px solid rgba(231, 182, 79, 0.12);
+        color: var(--leo-muted);
       }
 
-      .site-footer__inner {
+      .footer-bottom {
         display: flex;
-        justify-content: space-between;
-        gap: 16px;
         align-items: center;
-        color: var(--muted-2);
-        font-size: 0.94rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding-top: 20px;
-        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 1rem;
       }
 
-      @media (max-width: 1080px) {
-        .login-hero__wrap {
-          grid-template-columns: 1fr;
-        }
+      .back-to-top {
+        color: var(--leo-gold-2);
+        font-weight: 900;
+      }
 
-        .hero-highlights {
+      @media (max-width: 1060px) {
+        .login-grid {
           grid-template-columns: 1fr;
         }
       }
 
-      @media (max-width: 760px) {
-        .site-header__inner {
-          min-height: 72px;
-          padding: 12px 0;
-          align-items: flex-start;
-          flex-direction: column;
+      @media (max-width: 980px) {
+        .menu-toggle {
+          display: inline-flex;
         }
 
         .site-nav {
-          width: 100%;
+          position: absolute;
+          top: calc(100% + 0.75rem);
+          left: 1rem;
+          right: 1rem;
+          display: grid;
+          gap: 0.85rem;
+          padding: 1rem;
+          border-radius: 22px;
+          border: 1px solid rgba(231, 182, 79, 0.2);
+          background: rgba(0, 0, 0, 0.96);
+          box-shadow: var(--leo-shadow);
+          opacity: 0;
+          pointer-events: none;
+          transform: translateY(-8px);
+          transition: 0.22s ease;
         }
 
-        .site-nav a {
-          padding: 9px 12px;
+        .site-nav.is-open {
+          opacity: 1;
+          pointer-events: auto;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 720px) {
+        .container {
+          width: min(100% - 1.2rem, 1320px);
+        }
+
+        .brand-subtitle {
+          display: none;
+        }
+
+        .brand-logo,
+        .brand-fallback {
+          width: 46px;
+          height: 46px;
+        }
+
+        .nav-wrap {
+          min-height: 78px;
         }
 
         .login-hero {
-          padding-top: 42px;
+          padding: 32px 0 70px;
         }
 
-        .hero-panel,
-        .login-panel {
-          padding: 24px;
+        .login-card-head,
+        .login-card-body {
+          padding: 1.1rem;
+        }
+
+        .activation-grid {
+          grid-template-columns: 1fr;
         }
 
         .login-row {
@@ -640,96 +735,148 @@
           flex-direction: column;
         }
 
-        .panel-title,
-        .hero-title {
-          line-height: 1.08;
+        .btn {
+          width: 100%;
+        }
+
+        .footer-bottom {
+          flex-direction: column;
+          align-items: flex-start;
         }
       }
     </style>
   </head>
 
   <body>
-    <div class="page-shell">
-      <header class="site-header">
-        <div class="container site-header__inner">
-          <a class="brand" href="/" aria-label="Card Leo Rewards home">
-            <span class="brand__mark" aria-hidden="true">CL</span>
-            <span class="brand__text">
-              <span class="brand__eyebrow">Member Access</span>
-              <span class="brand__name">Card Leo Rewards</span>
-            </span>
+    <div class="site-shell">
+      <header class="site-header" id="top">
+        <div class="container nav-wrap">
+          <a href="/" class="brand" aria-label="Card Leo Rewards home">
+            <img
+              class="brand-logo"
+              src="/assets/cardleo-logo.png"
+              alt="Card Leo Rewards Logo"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='grid';"
+            />
+            <div class="brand-fallback">CL</div>
+
+            <div class="brand-copy">
+              <span class="brand-title">Card Leo Rewards</span>
+              <span class="brand-subtitle">Lead The Game</span>
+            </div>
           </a>
 
-          <nav class="site-nav" aria-label="Primary navigation">
+          <button
+            class="menu-toggle"
+            type="button"
+            aria-label="Open navigation"
+            aria-expanded="false"
+            aria-controls="site-nav"
+            id="menuToggle"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+          <nav class="site-nav" id="site-nav">
             <a href="/">Home</a>
-            <a href="/about.html">About</a>
-            <a href="/get-started.html">Get Started</a>
-            <a href="/signup.html">Sign Up</a>
-            <a href="/contact.html">Contact</a>
-            <a class="is-active" href="/login.html" aria-current="page">Login</a>
+            <a
+              href="/how-it-works.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              How It Works
+            </a>
+            <a href="/signup.html" class="nav-cta">Join Now</a>
+            <a href="/login.html" class="is-active" aria-current="page">
+              Member Login
+            </a>
           </nav>
         </div>
       </header>
 
       <main>
         <section class="login-hero">
-          <div class="container">
-            <div class="login-hero__wrap">
-              <article class="glass-card hero-panel">
-                <div>
-                  <span class="eyebrow">Private Member Portal</span>
-                  <h1 class="hero-title">Welcome back to Card Leo Rewards.</h1>
-                  <p class="hero-copy">
-                    Sign in to access your account dashboard, manage your member
-                    profile, review rewards activity, and stay connected with your
-                    Card Leo Rewards experience.
-                  </p>
-                </div>
+          <div class="container login-grid">
+            <div class="login-copy">
+              <p class="eyebrow">Member Login</p>
 
-                <div class="hero-highlights">
-                  <div class="mini-card">
-                    <h3>Dashboard Access</h3>
+              <h1>
+                Welcome Back To
+                <span class="text-gradient">Card Leo Rewards.</span>
+              </h1>
+
+              <p>
+                Sign in to access your member portal, view your rewards, track
+                referrals, manage billing, and keep your account active.
+              </p>
+
+              <div class="login-bullets">
+                <article class="bulletin-card">
+                  <div class="bulletin-dot"></div>
+                  <div>
+                    <span>Portal Access</span>
+                    <strong>Active Members Only</strong>
                     <p>
-                      View account updates, recent activity, and portal notices in one
-                      secure member area.
+                      Portal access unlocks after your membership payment is confirmed.
                     </p>
                   </div>
+                </article>
 
-                  <div class="mini-card">
-                    <h3>Rewards Visibility</h3>
+                <article class="bulletin-card">
+                  <div class="bulletin-dot"></div>
+                  <div>
+                    <span>Membership</span>
+                    <strong>$25 Activation + $20 Monthly</strong>
                     <p>
-                      Check your rewards progress, member benefits, and future account
-                      perks as the platform expands.
+                      Monthly billing happens on the 10th after your account is activated.
                     </p>
                   </div>
+                </article>
 
-                  <div class="mini-card">
-                    <h3>Referral Growth</h3>
+                <article class="bulletin-card">
+                  <div class="bulletin-dot"></div>
+                  <div>
+                    <span>Rewards</span>
+                    <strong>Track Referrals And Payouts</strong>
                     <p>
-                      Track referrals, invitations, and upcoming partner benefits from
-                      your private dashboard.
+                      View referral rewards, leaderboard activity, and payout status inside.
                     </p>
                   </div>
-                </div>
+                </article>
+              </div>
+            </div>
 
-                <div class="hero-note">
-                  <span class="hero-note__dot" aria-hidden="true"></span>
-                  <p>
-                    This login is intended for approved members and activated portal
-                    users. If you have already applied but have not received access
-                    yet, please use the contact page or wait for your onboarding
-                    confirmation.
-                  </p>
-                </div>
-              </article>
-
-              <section class="glass-card login-panel" aria-labelledby="login-title">
-                <p class="panel-kicker">Secure Sign In</p>
-                <h2 class="panel-title" id="login-title">Member login</h2>
-                <p class="panel-copy">
-                  Enter the email and password connected to your member account. After
-                  signing in, you will be redirected to your portal dashboard.
+            <section class="login-card" aria-labelledby="login-title">
+              <div class="login-card-head">
+                <p class="eyebrow">Secure Sign In</p>
+                <h2 id="login-title">Member Portal Login</h2>
+                <p>
+                  Enter the email and password connected to your Card Leo Rewards account.
                 </p>
+              </div>
+
+              <div class="login-card-body">
+                <div class="activation-box">
+                  <h3>Membership Status Check</h3>
+                  <p>
+                    If your account exists but payment is still pending, you may be
+                    sent to secure checkout before portal access opens.
+                  </p>
+
+                  <div class="activation-grid">
+                    <div class="activation-item">
+                      <span>Activation</span>
+                      <strong>$25 One-Time</strong>
+                    </div>
+
+                    <div class="activation-item">
+                      <span>Monthly</span>
+                      <strong>$20 On The 10th</strong>
+                    </div>
+                  </div>
+                </div>
 
                 <div
                   id="formStatus"
@@ -742,7 +889,7 @@
                   <input type="hidden" id="next" name="next" value="" />
 
                   <div class="field">
-                    <label for="email">Email address</label>
+                    <label for="email">Email Address</label>
                     <div class="input-wrap">
                       <input
                         id="email"
@@ -787,11 +934,11 @@
                         type="checkbox"
                         value="true"
                       />
-                      <span>Keep me signed in on this device</span>
+                      <span>Keep me signed in</span>
                     </label>
 
                     <a class="text-link" href="/forgot-password.html">
-                      Forgot password?
+                      Forgot Password?
                     </a>
                   </div>
 
@@ -800,37 +947,59 @@
                     class="btn btn-primary"
                     type="submit"
                   >
-                    Sign in to portal
+                    Sign In To Portal
                   </button>
                 </form>
 
                 <div class="action-links" aria-label="Additional account actions">
                   <span>Need an account?</span>
-                  <a class="text-link" href="/signup.html">Apply now</a>
+                  <a class="text-link" href="/signup.html">Join Now</a>
                   <span>•</span>
-                  <a class="text-link" href="/contact.html">Contact support</a>
+                  <a class="text-link" href="/how-it-works.html" target="_blank" rel="noopener noreferrer">
+                    How It Works
+                  </a>
                 </div>
 
-                <ul class="security-list" aria-label="Portal security details">
-                  <li>Protected member access with secure session handling.</li>
-                  <li>Use the same email address submitted during onboarding.</li>
-                  <li>Portal access may be limited until your account is approved.</li>
+                <ul class="security-list" aria-label="Portal access details">
+                  <li>Use the same email address submitted during signup.</li>
+                  <li>Portal access requires active paid membership status.</li>
+                  <li>Pending members can be redirected to secure payment.</li>
                 </ul>
-              </section>
-            </div>
+              </div>
+            </section>
           </div>
         </section>
       </main>
 
       <footer class="site-footer">
-        <div class="container site-footer__inner">
-          <span>© <span id="year"></span> Card Leo Rewards. All rights reserved.</span>
-          <span>Premium member onboarding, rewards access, and secure portal entry.</span>
+        <div class="container footer-bottom">
+          <p>© <span id="year"></span> Card Leo Rewards. All rights reserved.</p>
+          <a href="#top" class="back-to-top">Back To Top ↑</a>
         </div>
       </footer>
     </div>
 
     <script>
+      (() => {
+        const year = document.getElementById("year");
+        if (year) year.textContent = String(new Date().getFullYear());
+
+        const menuToggle = document.getElementById("menuToggle");
+        const nav = document.getElementById("site-nav");
+
+        menuToggle?.addEventListener("click", () => {
+          const isOpen = nav.classList.toggle("is-open");
+          menuToggle.setAttribute("aria-expanded", String(isOpen));
+        });
+
+        nav?.querySelectorAll("a").forEach((link) => {
+          link.addEventListener("click", () => {
+            nav.classList.remove("is-open");
+            menuToggle?.setAttribute("aria-expanded", "false");
+          });
+        });
+      })();
+
       (() => {
         const form = document.getElementById("loginForm");
         const statusBox = document.getElementById("formStatus");
@@ -838,17 +1007,23 @@
         const passwordInput = document.getElementById("password");
         const togglePassword = document.getElementById("togglePassword");
         const nextField = document.getElementById("next");
-        const year = document.getElementById("year");
 
-        if (year) {
-          year.textContent = String(new Date().getFullYear());
-        }
+        const LOGIN_ENDPOINT = "/api/auth/login";
+        const ME_ENDPOINT = "/api/auth/me";
+        const CHECKOUT_ENDPOINT = "/api/billing/create-checkout-session";
+        const SIGNUP_URL = "/signup.html";
+        const PORTAL_URL = "/portal/index.html";
 
         const params = new URLSearchParams(window.location.search);
         const nextParam = params.get("next");
-        const safeDefaultRedirect = "/portal/index.html";
+        const paymentParam = params.get("payment");
+        const statusParam = params.get("status");
+
+        const safeDefaultRedirect = PORTAL_URL;
         const redirectTarget =
-          nextParam && nextParam.startsWith("/") ? nextParam : safeDefaultRedirect;
+          nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+            ? nextParam
+            : safeDefaultRedirect;
 
         if (nextField) {
           nextField.value = redirectTarget;
@@ -864,6 +1039,8 @@
             statusBox.classList.add("is-error");
           } else if (type === "success") {
             statusBox.classList.add("is-success");
+          } else if (type === "warning") {
+            statusBox.classList.add("is-warning");
           } else {
             statusBox.classList.add("is-info");
           }
@@ -880,8 +1057,8 @@
 
           submitButton.disabled = isLoading;
           submitButton.textContent = isLoading
-            ? "Signing in..."
-            : "Sign in to portal";
+            ? "Checking Membership..."
+            : "Sign In To Portal";
         }
 
         function normalizeEmail(value) {
@@ -890,6 +1067,45 @@
 
         function isValidEmail(value) {
           return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        }
+
+        function getNestedValue(payload, path) {
+          const parts = path.split(".");
+          let current = payload;
+
+          for (const part of parts) {
+            current = current?.[part];
+          }
+
+          return current;
+        }
+
+        function readString(payload, keys) {
+          for (const key of keys) {
+            const value = getNestedValue(payload, key);
+
+            if (typeof value === "string" && value.trim()) {
+              return value.trim();
+            }
+          }
+
+          return "";
+        }
+
+        function readBoolean(payload, keys) {
+          for (const key of keys) {
+            const value = getNestedValue(payload, key);
+
+            if (typeof value === "boolean") return value;
+
+            if (typeof value === "string") {
+              const normalized = value.trim().toLowerCase();
+              if (normalized === "true") return true;
+              if (normalized === "false") return false;
+            }
+          }
+
+          return false;
         }
 
         function resolveRedirectFromPayload(payload) {
@@ -901,7 +1117,11 @@
           ];
 
           for (const value of candidates) {
-            if (typeof value === "string" && value.startsWith("/")) {
+            if (
+              typeof value === "string" &&
+              value.startsWith("/") &&
+              !value.startsWith("//")
+            ) {
               return value;
             }
           }
@@ -912,15 +1132,212 @@
         function hasActiveSession(payload) {
           return Boolean(
             payload?.authenticated ||
-            payload?.data?.authenticated ||
-            payload?.data?.user ||
-            payload?.user
+              payload?.data?.authenticated ||
+              payload?.data?.user ||
+              payload?.user
           );
+        }
+
+        function getMembershipStatus(payload) {
+          return readString(payload, [
+            "membership_status",
+            "membershipStatus",
+            "data.membership_status",
+            "data.membershipStatus",
+            "data.user.membership_status",
+            "data.user.membershipStatus",
+            "user.membership_status",
+            "user.membershipStatus",
+            "member.membership_status",
+            "member.membershipStatus",
+          ]).toLowerCase();
+        }
+
+        function getPaymentStatus(payload) {
+          return readString(payload, [
+            "payment_status",
+            "paymentStatus",
+            "data.payment_status",
+            "data.paymentStatus",
+            "data.user.payment_status",
+            "data.user.paymentStatus",
+            "user.payment_status",
+            "user.paymentStatus",
+            "member.payment_status",
+            "member.paymentStatus",
+          ]).toLowerCase();
+        }
+
+        function getApprovalStatus(payload) {
+          return readString(payload, [
+            "approval_status",
+            "approvalStatus",
+            "status",
+            "data.approval_status",
+            "data.approvalStatus",
+            "data.status",
+            "data.user.approval_status",
+            "data.user.approvalStatus",
+            "data.user.status",
+            "user.approval_status",
+            "user.approvalStatus",
+            "user.status",
+            "member.approval_status",
+            "member.approvalStatus",
+            "member.status",
+          ]).toLowerCase();
+        }
+
+        function getSignupId(payload) {
+          return readString(payload, [
+            "signup_id",
+            "signupId",
+            "id",
+            "data.signup_id",
+            "data.signupId",
+            "data.id",
+            "data.user.signup_id",
+            "data.user.signupId",
+            "data.user.id",
+            "user.signup_id",
+            "user.signupId",
+            "user.id",
+            "member.signup_id",
+            "member.signupId",
+            "member.id",
+          ]);
+        }
+
+        function getCheckoutUrl(payload) {
+          return readString(payload, [
+            "checkout_url",
+            "checkoutUrl",
+            "payment_url",
+            "paymentUrl",
+            "url",
+            "redirectTo",
+            "redirect",
+            "data.checkout_url",
+            "data.checkoutUrl",
+            "data.payment_url",
+            "data.paymentUrl",
+            "data.url",
+            "data.redirectTo",
+            "data.redirect",
+          ]);
+        }
+
+        function isPaidActiveMember(payload) {
+          const membershipStatus = getMembershipStatus(payload);
+          const paymentStatus = getPaymentStatus(payload);
+          const approvalStatus = getApprovalStatus(payload);
+
+          const activeMembership =
+            membershipStatus === "active" ||
+            membershipStatus === "activated" ||
+            membershipStatus === "paid";
+
+          const paidPayment =
+            paymentStatus === "paid" ||
+            paymentStatus === "active" ||
+            paymentStatus === "current" ||
+            paymentStatus === "succeeded";
+
+          const approved =
+            approvalStatus === "active" ||
+            approvalStatus === "approved" ||
+            approvalStatus === "auto_approved" ||
+            approvalStatus === "paid";
+
+          return activeMembership || paidPayment || approved;
+        }
+
+        function isPaymentPendingMember(payload) {
+          const membershipStatus = getMembershipStatus(payload);
+          const paymentStatus = getPaymentStatus(payload);
+          const approvalStatus = getApprovalStatus(payload);
+
+          return [membershipStatus, paymentStatus, approvalStatus].some((value) =>
+            [
+              "payment_pending",
+              "pending_payment",
+              "unpaid",
+              "incomplete",
+              "past_due",
+              "pending",
+              "inactive",
+              "requires_payment",
+            ].includes(value)
+          );
+        }
+
+        function shouldRequirePayment(payload) {
+          return Boolean(
+            readBoolean(payload, [
+              "requires_payment",
+              "requiresPayment",
+              "payment_required",
+              "paymentRequired",
+              "data.requires_payment",
+              "data.requiresPayment",
+              "data.payment_required",
+              "data.paymentRequired",
+            ]) || isPaymentPendingMember(payload)
+          );
+        }
+
+        async function startCheckoutFromLogin(email, loginPayload) {
+          const signupId = getSignupId(loginPayload);
+
+          const checkoutPayload = {
+            signup_id: signupId,
+            signupId,
+            email,
+            activation_fee_amount: 25,
+            monthly_fee_amount: 20,
+            billing_day: 10,
+            success_url:
+              window.location.origin +
+              "/thank-you.html?payment=success&membership=activated",
+            cancel_url:
+              window.location.origin +
+              "/login.html?payment=cancelled",
+          };
+
+          const response = await fetch(CHECKOUT_ENDPOINT, {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(checkoutPayload),
+          });
+
+          const data = await response.json().catch(() => ({}));
+
+          if (!response.ok || data?.success === false || data?.ok === false) {
+            throw new Error(
+              data?.message ||
+                data?.error ||
+                "Your account was found, but secure payment could not be started."
+            );
+          }
+
+          const checkoutUrl = getCheckoutUrl(data);
+
+          if (!checkoutUrl) {
+            throw new Error(
+              "Your account was found, but the payment checkout link was missing."
+            );
+          }
+
+          window.location.href = checkoutUrl;
         }
 
         async function checkExistingSession() {
           try {
-            const response = await fetch("/api/auth/me", {
+            const response = await fetch(ME_ENDPOINT, {
               method: "GET",
               credentials: "include",
               headers: {
@@ -932,24 +1349,49 @@
 
             const data = await response.json().catch(() => ({}));
 
-            if (hasActiveSession(data)) {
+            if (!hasActiveSession(data)) return;
+
+            if (isPaidActiveMember(data)) {
               window.location.href = resolveRedirectFromPayload(data);
+              return;
+            }
+
+            if (shouldRequirePayment(data)) {
+              setStatus(
+                "Your account is signed in, but membership payment is still required before portal access.",
+                "warning"
+              );
             }
           } catch {
             // Ignore session precheck failures.
           }
         }
 
+        if (paymentParam === "cancelled" || paymentParam === "canceled") {
+          setStatus(
+            "Payment was cancelled. You can sign in and continue activation when ready.",
+            "warning"
+          );
+        } else if (statusParam === "payment_required") {
+          setStatus(
+            "Membership payment is required before portal access.",
+            "warning"
+          );
+        }
+
         checkExistingSession();
 
         togglePassword?.addEventListener("click", () => {
           const isPassword = passwordInput.type === "password";
+
           passwordInput.type = isPassword ? "text" : "password";
           togglePassword.textContent = isPassword ? "Hide" : "Show";
+
           togglePassword.setAttribute(
             "aria-label",
             isPassword ? "Hide password" : "Show password"
           );
+
           togglePassword.setAttribute(
             "aria-pressed",
             isPassword ? "true" : "false"
@@ -979,7 +1421,7 @@
           setLoading(true);
 
           try {
-            const response = await fetch("/api/auth/login", {
+            const response = await fetch(LOGIN_ENDPOINT, {
               method: "POST",
               credentials: "include",
               headers: {
@@ -996,12 +1438,65 @@
 
             const data = await response.json().catch(() => ({}));
 
-            if (!response.ok || data?.success === false) {
+            if (!response.ok || data?.success === false || data?.ok === false) {
+              const requiresPayment =
+                response.status === 402 || shouldRequirePayment(data);
+
+              if (requiresPayment) {
+                const existingCheckoutUrl = getCheckoutUrl(data);
+
+                setStatus(
+                  "Your account exists, but payment is required before portal access. Redirecting to secure checkout...",
+                  "warning"
+                );
+
+                if (existingCheckoutUrl) {
+                  window.setTimeout(() => {
+                    window.location.href = existingCheckoutUrl;
+                  }, 650);
+                  return;
+                }
+
+                await startCheckoutFromLogin(email, data);
+                return;
+              }
+
               throw new Error(
                 data?.message ||
-                data?.error ||
-                "We could not sign you in with those credentials."
+                  data?.error ||
+                  "We could not sign you in with those credentials."
               );
+            }
+
+            if (shouldRequirePayment(data) && !isPaidActiveMember(data)) {
+              const existingCheckoutUrl = getCheckoutUrl(data);
+
+              setStatus(
+                "Login accepted, but membership payment is required before portal access. Redirecting to secure checkout...",
+                "warning"
+              );
+
+              if (existingCheckoutUrl) {
+                window.setTimeout(() => {
+                  window.location.href = existingCheckoutUrl;
+                }, 650);
+                return;
+              }
+
+              await startCheckoutFromLogin(email, data);
+              return;
+            }
+
+            if (!isPaidActiveMember(data)) {
+              setStatus(
+                "Login accepted, but your membership is not active yet. Please complete your activation payment or contact support.",
+                "warning"
+              );
+
+              window.setTimeout(() => {
+                window.location.href = SIGNUP_URL + "?status=payment_required";
+              }, 1000);
+              return;
             }
 
             const finalRedirect = resolveRedirectFromPayload(data);

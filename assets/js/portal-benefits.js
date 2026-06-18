@@ -1,11 +1,20 @@
 // assets/js/portal-benefits.js
+
 (() => {
   const CONFIG = {
     meEndpoint: "/api/auth/me",
     benefitsEndpoint: "/api/portal/benefits",
+    billingPortalEndpoint: "/api/billing/portal",
     logoutEndpoint: "/api/auth/logout",
     loginPage: "/login.html",
     unauthorizedPage: "/unauthorized.html",
+
+    activationFee: 25,
+    monthlyFee: 20,
+    billingDay: 10,
+    referralRewardAmount: 7,
+    payoutWindow: "1st–3rd monthly",
+
     authGuardOptions: {
       meEndpoint: "/api/auth/me",
       logoutEndpoint: "/api/auth/logout",
@@ -19,7 +28,33 @@
     },
   };
 
-  const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
+  const ACTIVE_STATUSES = new Set([
+    "active",
+    "approved",
+    "auto_approved",
+    "paid",
+    "current",
+    "succeeded",
+  ]);
+
+  const PENDING_STATUSES = new Set([
+    "pending",
+    "payment_pending",
+    "pending_payment",
+    "checkout_created",
+    "unpaid",
+    "processing",
+  ]);
+
+  const BAD_STATUSES = new Set([
+    "denied",
+    "declined",
+    "cancelled",
+    "canceled",
+    "failed",
+    "suspended",
+    "past_due",
+  ]);
 
   const state = {
     loading: false,
@@ -105,7 +140,8 @@
 
   function titleCase(value) {
     return String(value || "")
-      .split(/[\s_-]+/)
+      .replace(/[_-]+/g, " ")
+      .split(/\s+/)
       .filter(Boolean)
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(" ");
@@ -157,11 +193,11 @@
 
   async function fetchJson(url, options = {}) {
     const response = await fetch(url, {
-      method: "GET",
+      method: options.method || "GET",
       credentials: "include",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
         ...(options.headers || {}),
       },
       ...options,
@@ -253,21 +289,116 @@
 
   function getMemberStatus(member = {}, profile = {}) {
     return normalizeText(
-      member.memberStatus ||
+      member.membership_status ||
+        member.membershipStatus ||
+        member.memberStatus ||
         member.member_status ||
         member.status ||
+        profile.membership_status ||
+        profile.membershipStatus ||
         profile.memberStatus ||
         profile.member_status ||
         profile.status ||
-        "active"
+        "payment_pending"
     ).toLowerCase();
+  }
+
+  function getPaymentStatus(member = {}, profile = {}) {
+    return normalizeText(
+      member.payment_status ||
+        member.paymentStatus ||
+        profile.payment_status ||
+        profile.paymentStatus ||
+        ""
+    ).toLowerCase();
+  }
+
+  function getApprovalStatus(member = {}, profile = {}) {
+    return normalizeText(
+      member.approval_status ||
+        member.approvalStatus ||
+        profile.approval_status ||
+        profile.approvalStatus ||
+        ""
+    ).toLowerCase();
+  }
+
+  function getTier(member = {}, profile = {}) {
+    return normalizeText(
+      member.tier_name ||
+        member.tierName ||
+        member.membership_tier ||
+        member.membershipTier ||
+        member.tier ||
+        member.accessLevel ||
+        member.access_level ||
+        profile.tier_name ||
+        profile.tierName ||
+        profile.membership_tier ||
+        profile.membershipTier ||
+        profile.tier ||
+        "VIP Member"
+    );
+  }
+
+  function isPaidActive(member = {}, profile = {}) {
+    const memberStatus = getMemberStatus(member, profile);
+    const paymentStatus = getPaymentStatus(member, profile);
+    const approvalStatus = getApprovalStatus(member, profile);
+
+    return (
+      ACTIVE_STATUSES.has(memberStatus) ||
+      ACTIVE_STATUSES.has(paymentStatus) ||
+      ACTIVE_STATUSES.has(approvalStatus)
+    );
+  }
+
+  function isPendingPayment(member = {}, profile = {}) {
+    const memberStatus = getMemberStatus(member, profile);
+    const paymentStatus = getPaymentStatus(member, profile);
+    const approvalStatus = getApprovalStatus(member, profile);
+
+    return (
+      PENDING_STATUSES.has(memberStatus) ||
+      PENDING_STATUSES.has(paymentStatus) ||
+      PENDING_STATUSES.has(approvalStatus)
+    );
+  }
+
+  function isBadStatus(member = {}, profile = {}) {
+    const memberStatus = getMemberStatus(member, profile);
+    const paymentStatus = getPaymentStatus(member, profile);
+    const approvalStatus = getApprovalStatus(member, profile);
+
+    return (
+      BAD_STATUSES.has(memberStatus) ||
+      BAD_STATUSES.has(paymentStatus) ||
+      BAD_STATUSES.has(approvalStatus)
+    );
+  }
+
+  function getStatusLabel(member = {}, profile = {}) {
+    if (isPaidActive(member, profile)) return "Active";
+    if (isBadStatus(member, profile)) return titleCase(getMemberStatus(member, profile));
+    if (isPendingPayment(member, profile)) return "Payment Required";
+    return titleCase(getMemberStatus(member, profile));
   }
 
   function getPortalAccess(member = {}, profile = {}) {
     if (typeof member.portalAccess === "boolean") return member.portalAccess;
     if (typeof member.portal_access === "boolean") return member.portal_access;
 
-    return ACTIVE_STATUSES.has(getMemberStatus(member, profile));
+    return isPaidActive(member, profile);
+  }
+
+  function getNextBillingDate(member = {}) {
+    return (
+      member.next_billing_date ||
+      member.nextBillingDate ||
+      member.current_period_end ||
+      member.currentPeriodEnd ||
+      ""
+    );
   }
 
   function normalizeMember(member = {}, profile = {}) {
@@ -275,13 +406,12 @@
     const safeProfile = isObject(profile) ? profile : {};
     const fullName = getFullName(safeMember, safeProfile);
     const status = getMemberStatus(safeMember, safeProfile);
-    const tier = normalizeText(
-      safeMember.tier ||
-        safeMember.accessLevel ||
-        safeMember.access_level ||
-        safeProfile.tier ||
-        "core"
-    ).toLowerCase();
+    const paymentStatus = getPaymentStatus(safeMember, safeProfile);
+    const approvalStatus =
+      getApprovalStatus(safeMember, safeProfile) ||
+      (isPaidActive(safeMember, safeProfile) ? "auto_approved" : "payment_pending");
+
+    const tier = getTier(safeMember, safeProfile);
 
     return {
       ...safeMember,
@@ -323,11 +453,25 @@
       status,
       memberStatus: status,
       member_status: status,
+      membershipStatus: status,
+      membership_status: status,
+      paymentStatus,
+      payment_status: paymentStatus,
+      approvalStatus,
+      approval_status: approvalStatus,
       tier,
       tierLabel: titleCase(tier),
       nextTier: safeMember.nextTier || safeMember.next_tier || "",
       nextTierLabel: safeMember.nextTierLabel || safeMember.next_tier_label || "",
-      portalAccess: getPortalAccess({ ...safeMember, status }, safeProfile),
+      portalAccess: getPortalAccess(
+        {
+          ...safeMember,
+          status,
+          payment_status: paymentStatus,
+          approval_status: approvalStatus,
+        },
+        safeProfile
+      ),
       accessLevel: safeMember.accessLevel || safeMember.access_level || tier || "member",
       joinedAt:
         safeMember.joinedAt ||
@@ -335,22 +479,58 @@
         safeMember.createdAt ||
         safeMember.created_at ||
         null,
+      stripeCustomerId:
+        safeMember.stripeCustomerId || safeMember.stripe_customer_id || "",
+      stripe_customer_id:
+        safeMember.stripeCustomerId || safeMember.stripe_customer_id || "",
+      stripeSubscriptionId:
+        safeMember.stripeSubscriptionId || safeMember.stripe_subscription_id || "",
+      stripe_subscription_id:
+        safeMember.stripeSubscriptionId || safeMember.stripe_subscription_id || "",
+      nextBillingDate: getNextBillingDate(safeMember),
+      next_billing_date: getNextBillingDate(safeMember),
+      activationFeeAmount:
+        Number(safeMember.activationFeeAmount || safeMember.activation_fee_amount) ||
+        CONFIG.activationFee,
+      monthlyFeeAmount:
+        Number(safeMember.monthlyFeeAmount || safeMember.monthly_fee_amount) ||
+        CONFIG.monthlyFee,
+      billingDay:
+        Number(safeMember.billingDay || safeMember.billing_day) ||
+        CONFIG.billingDay,
     };
   }
 
   function buildFallbackBenefits(member = {}) {
     const portalAccess = getPortalAccess(member);
-    const status = getMemberStatus(member);
-    const tier = normalizeText(member.tier || "core").toLowerCase();
+    const paid = isPaidActive(member);
+    const tier = normalizeText(member.tier || "VIP Member").toLowerCase();
 
     return [
+      {
+        code: "membership_activation",
+        title: "Membership Activation",
+        description: paid
+          ? `Your membership is active. Your ${money(CONFIG.monthlyFee)}/month membership renews on the ${CONFIG.billingDay}th.`
+          : `Activate with ${money(CONFIG.activationFee)} today, then ${money(CONFIG.monthlyFee)}/month on the ${CONFIG.billingDay}th.`,
+        category: "account",
+        requiredTier: "member",
+        badge: paid ? "Active" : "Payment Required",
+        featured: true,
+        sortOrder: 1,
+        unlocked: paid,
+        locked: !paid,
+        lockedReason: paid
+          ? null
+          : "Complete payment to unlock full member benefits.",
+      },
       {
         code: "member_portal",
         title: "Member Portal Access",
         description:
           "Access your Card Leo Rewards dashboard, account details, benefits, support tools, and premium member experience.",
         category: "core",
-        requiredTier: "core",
+        requiredTier: "member",
         badge: portalAccess ? "Active" : "Pending",
         featured: true,
         sortOrder: 10,
@@ -358,7 +538,37 @@
         locked: !portalAccess,
         lockedReason: portalAccess
           ? null
-          : "Your member portal access is pending activation or approval.",
+          : "Your member portal access unlocks after payment is confirmed.",
+      },
+      {
+        code: "referral_rewards",
+        title: "Referral Rewards",
+        description: `Earn ${money(CONFIG.referralRewardAmount)} for every approved referral.`,
+        category: "rewards",
+        requiredTier: "member",
+        badge: paid ? "Unlocked" : "Payment Required",
+        featured: true,
+        sortOrder: 20,
+        unlocked: paid,
+        locked: !paid,
+        lockedReason: paid
+          ? null
+          : "Referral reward access activates after membership payment.",
+      },
+      {
+        code: "monthly_payouts",
+        title: "Monthly Payout Window",
+        description: `Eligible rewards are prepared for payout ${CONFIG.payoutWindow}.`,
+        category: "payouts",
+        requiredTier: "member",
+        badge: "Monthly",
+        featured: true,
+        sortOrder: 30,
+        unlocked: paid,
+        locked: !paid,
+        lockedReason: paid
+          ? null
+          : "Payout eligibility requires active paid membership.",
       },
       {
         code: "profile_management",
@@ -366,29 +576,13 @@
         description:
           "Review and update your member contact details, location, referral information, and account profile.",
         category: "account",
-        requiredTier: "core",
+        requiredTier: "member",
         badge: "Included",
         featured: true,
-        sortOrder: 20,
+        sortOrder: 40,
         unlocked: true,
         locked: false,
         lockedReason: null,
-      },
-      {
-        code: "rewards_overview",
-        title: "Rewards Overview",
-        description:
-          "View your available reward activity, company-building status, and member reward tracking as your account grows.",
-        category: "rewards",
-        requiredTier: "core",
-        badge: portalAccess ? "Ready" : "Pending",
-        featured: true,
-        sortOrder: 30,
-        unlocked: portalAccess,
-        locked: !portalAccess,
-        lockedReason: portalAccess
-          ? null
-          : "Rewards access activates when your account becomes active.",
       },
       {
         code: "member_support",
@@ -396,10 +590,10 @@
         description:
           "Submit support requests and get help with profile questions, benefits, rewards, and member access.",
         category: "support",
-        requiredTier: "core",
+        requiredTier: "member",
         badge: "Included",
         featured: true,
-        sortOrder: 40,
+        sortOrder: 50,
         unlocked: true,
         locked: false,
         lockedReason: null,
@@ -410,32 +604,13 @@
         description:
           "Enhanced promotions, premium member perks, and select Card Leo Rewards opportunities will appear here as they become available.",
         category: "offers",
-        requiredTier: "silver",
+        requiredTier: "premium",
         badge: "Coming Soon",
         featured: false,
-        sortOrder: 50,
-        unlocked: ["silver", "gold", "platinum", "vip"].includes(tier),
-        locked: !["silver", "gold", "platinum", "vip"].includes(tier),
-        lockedReason: "Available starting at Silver tier.",
-      },
-      {
-        code: "account_status",
-        title: "Account Status",
-        description:
-          status === "active"
-            ? "Your account is active and connected to the member experience."
-            : "Your account status is being reviewed. More benefits unlock as your account becomes active.",
-        category: "account",
-        requiredTier: "core",
-        badge: titleCase(status || "Active"),
-        featured: true,
-        sortOrder: 5,
-        unlocked: status === "active" || status === "approved" || status === "invited",
-        locked: !(status === "active" || status === "approved" || status === "invited"),
-        lockedReason:
-          status === "active" || status === "approved" || status === "invited"
-            ? null
-            : "Account activation is required for the full member experience.",
+        sortOrder: 60,
+        unlocked: ["silver", "gold", "platinum", "vip", "premium"].includes(tier),
+        locked: !["silver", "gold", "platinum", "vip", "premium"].includes(tier),
+        lockedReason: "Available on higher existing tiers.",
       },
     ];
   }
@@ -448,11 +623,13 @@
       profileId: member.id || member.signupId || null,
       memberName: member.fullName || member.name || "Card Leo Member",
       email: member.email || "",
-      tier: member.tier || "core",
-      tierLabel: titleCase(member.tier || "core"),
+      tier: member.tier || "VIP Member",
+      tierLabel: titleCase(member.tier || "VIP Member"),
       nextTier: "",
       nextTierLabel: "Top Tier",
-      memberStatus: member.memberStatus || member.status || "active",
+      memberStatus: getStatusLabel(member),
+      paymentStatus: member.payment_status || "payment_pending",
+      approvalStatus: member.approval_status || "payment_pending",
       totals: {
         benefits: benefits.length,
         unlocked,
@@ -472,6 +649,7 @@
       {
         ...fallbackMember,
         ...(isObject(data.member) ? data.member : {}),
+        ...(isObject(data.user) ? data.user : {}),
         ...(isObject(data.summary)
           ? {
               fullName: data.summary.memberName,
@@ -481,6 +659,8 @@
               nextTier: data.summary.nextTier,
               nextTierLabel: data.summary.nextTierLabel,
               status: data.summary.memberStatus,
+              payment_status: data.summary.paymentStatus,
+              approval_status: data.summary.approvalStatus,
             }
           : {}),
       },
@@ -521,6 +701,7 @@
             profile_completed: Boolean(member.email && member.fullName),
             email_verified: Boolean(member.emailVerified || member.email_verified),
             rewards_activated: member.portalAccess,
+            payment_completed: isPaidActive(member),
           };
 
     const rewardAccount = isObject(data.rewardAccount)
@@ -542,6 +723,7 @@
               rewards_enabled: true,
               referrals_enabled: true,
               support_enabled: true,
+              billing_enabled: true,
             };
 
     return {
@@ -565,15 +747,37 @@
     setText("[data-member-full-name]", state.member.fullName);
     setText("[data-member-first-name]", state.member.firstName);
     setText("[data-member-email]", state.member.email);
-    setText("[data-member-status]", titleCase(state.member.memberStatus || state.member.status));
-    setText("[data-member-tier]", titleCase(state.member.tier || "core"));
+    setText("[data-member-status]", getStatusLabel(state.member));
+    setText("[data-member-tier]", titleCase(state.member.tier || "VIP Member"));
     setText("[data-member-access-level]", titleCase(state.member.accessLevel || state.member.tier || "member"));
+
+    setText("[data-payment-status]", titleCase(state.member.payment_status || "payment_pending"));
+    setText("[data-approval-status]", titleCase(state.member.approval_status || "payment_pending"));
+    setText("[data-portal-access]", isPaidActive(state.member) ? "Enabled" : "Payment Required");
+
+    setText("[data-activation-fee]", money(state.member.activationFeeAmount || CONFIG.activationFee));
+    setText("[data-monthly-fee]", `${money(state.member.monthlyFeeAmount || CONFIG.monthlyFee)}/month`);
+    setText("[data-billing-day]", `${state.member.billingDay || CONFIG.billingDay}th monthly`);
+    setText("[data-next-billing-date]", formatDate(state.member.nextBillingDate, `${CONFIG.billingDay}th monthly`));
+    setText("[data-payout-window]", CONFIG.payoutWindow);
+    setText("[data-referral-reward-amount]", money(CONFIG.referralRewardAmount));
 
     document.body.dataset.memberName = state.member.fullName || "";
     document.body.dataset.memberEmail = state.member.email || "";
     document.body.dataset.memberStatus = state.member.memberStatus || "";
+    document.body.dataset.memberPaymentStatus = state.member.payment_status || "";
+    document.body.dataset.memberApprovalStatus = state.member.approval_status || "";
     document.body.dataset.memberTier = state.member.tier || "";
     document.body.dataset.memberId = state.member.id || state.member.signupId || "";
+    document.body.dataset.portalAccess = isPaidActive(state.member) ? "enabled" : "payment_required";
+
+    $all("[data-paid-only]").forEach((node) => {
+      node.hidden = !isPaidActive(state.member);
+    });
+
+    $all("[data-payment-required-only]").forEach((node) => {
+      node.hidden = isPaidActive(state.member);
+    });
   }
 
   function applySupport(support = {}) {
@@ -638,12 +842,12 @@
 
     setText(selectors.memberName, summary.memberName || member.fullName || "Member");
     setText(selectors.memberEmail, summary.email || member.email || "—");
-    setText(selectors.memberTier, summary.tierLabel || member.tierLabel || titleCase(member.tier || "core"));
-    setText(selectors.memberStatus, titleCase(summary.memberStatus || member.memberStatus || "active"));
+    setText(selectors.memberTier, summary.tierLabel || member.tierLabel || titleCase(member.tier || "VIP Member"));
+    setText(selectors.memberStatus, summary.memberStatus || getStatusLabel(member));
     setText(selectors.nextTier, summary.nextTierLabel || member.nextTierLabel || "Top Tier");
 
-    setText(selectors.pointsAvailable, pointsAvailable ? money(pointsAvailable) : "0");
-    setText(selectors.pointsPending, pointsPending ? money(pointsPending) : "0");
+    setText(selectors.pointsAvailable, pointsAvailable ? money(pointsAvailable) : "$0.00");
+    setText(selectors.pointsPending, pointsPending ? money(pointsPending) : "$0.00");
 
     setText(selectors.onboardingPercent, formatPercent(onboarding.onboarding_percent || onboarding.onboardingPercent));
     setText(selectors.statsBenefits, formatNumber(totalBenefits));
@@ -713,7 +917,7 @@
         "Premium Card Leo Rewards member benefit."
       ),
       category: normalizeString(benefit.category || "other") || "other",
-      requiredTier: normalizeText(benefit.requiredTier || benefit.required_tier || benefit.tier || "core"),
+      requiredTier: normalizeText(benefit.requiredTier || benefit.required_tier || benefit.tier || "member"),
       badge: normalizeText(benefit.badge || benefit.label || ""),
       featured: benefit.featured === true,
       sortOrder: Number(benefit.sortOrder || benefit.sort_order || index + 1),
@@ -930,6 +1134,15 @@
     renderFilterSummary(groups);
   }
 
+  function applyStaticBillingText() {
+    setText("[data-static-activation-fee]", money(CONFIG.activationFee));
+    setText("[data-static-monthly-fee]", `${money(CONFIG.monthlyFee)}/month`);
+    setText("[data-static-billing-day]", `${CONFIG.billingDay}th monthly`);
+    setText("[data-static-approval-method]", "Automatic after payment");
+    setText("[data-static-payout-window]", CONFIG.payoutWindow);
+    setText("[data-static-referral-reward]", money(CONFIG.referralRewardAmount));
+  }
+
   function renderPayload(payload, fallback = {}) {
     const parsed = inferBenefitsPayload(payload, fallback);
 
@@ -944,6 +1157,7 @@
     state.benefits = parsed.benefits;
     state.groups = parsed.groups;
 
+    applyStaticBillingText();
     applyMemberBindings(parsed.member);
     applySupport(parsed.support);
     populateFilterOptions();
@@ -960,6 +1174,11 @@
       method: "GET",
     });
 
+    if (result.response.status === 401) {
+      redirectToLogin();
+      return null;
+    }
+
     if (!result.response.ok) {
       throw new Error(result.message || "Unable to verify your session.");
     }
@@ -969,12 +1188,16 @@
       return null;
     }
 
-    if (!isObject(result.data.member) && !isObject(result.data.profile)) {
+    if (
+      !isObject(result.data.member) &&
+      !isObject(result.data.profile) &&
+      !isObject(result.data.user)
+    ) {
       throw new Error("Your session is active, but your member details were not returned.");
     }
 
     const member = normalizeMember(
-      result.data.member || result.data.profile || {},
+      result.data.member || result.data.profile || result.data.user || {},
       result.data.profile || {}
     );
 
@@ -992,6 +1215,7 @@
           profile_completed: Boolean(member.email && member.fullName),
           email_verified: Boolean(member.emailVerified || member.email_verified),
           rewards_activated: member.portalAccess,
+          payment_completed: isPaidActive(member),
         },
         rewardAccount: {},
         featureFlags: {
@@ -999,6 +1223,7 @@
           rewards_enabled: true,
           referrals_enabled: true,
           support_enabled: true,
+          billing_enabled: true,
         },
         benefits,
         groups: [],
@@ -1055,6 +1280,52 @@
     } finally {
       setLoading(false);
     }
+  }
+
+  async function openBillingPortal() {
+    try {
+      const result = await fetchJson(CONFIG.billingPortalEndpoint, {
+        method: "POST",
+        body: JSON.stringify({
+          return_url: window.location.href,
+        }),
+      });
+
+      if (result.response.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      const url =
+        normalizeText(result.data?.url) ||
+        normalizeText(result.data?.billing_portal_url) ||
+        normalizeText(result.data?.billingPortalUrl) ||
+        normalizeText(result.data?.redirectTo) ||
+        normalizeText(result.payload?.url);
+
+      if (!url) {
+        window.location.href = "/portal/billing.html";
+        return;
+      }
+
+      window.location.href = url;
+    } catch (error) {
+      console.warn("[portal-benefits] billing portal unavailable:", error);
+      window.location.href = "/portal/billing.html";
+    }
+  }
+
+  function bindBillingButtons() {
+    $all("[data-billing-portal], [data-open-billing], #billingPortalButton, #manageBillingButton").forEach((button) => {
+      if (button.dataset.benefitsBillingBound === "true") return;
+
+      button.dataset.benefitsBillingBound = "true";
+
+      button.addEventListener("click", async (event) => {
+        event.preventDefault();
+        await openBillingPortal();
+      });
+    });
   }
 
   function bindControls() {
@@ -1133,7 +1404,7 @@
       return;
     }
 
-    $all("[data-logout], [data-member-logout]").forEach((button) => {
+    $all("[data-logout], [data-member-logout], #logoutButton").forEach((button) => {
       if (button.dataset.benefitsLogoutBound === "true") return;
 
       button.dataset.benefitsLogoutBound = "true";
@@ -1299,7 +1570,9 @@
     state.initialized = true;
 
     injectStyles();
+    applyStaticBillingText();
     bindControls();
+    bindBillingButtons();
     bindLogoutButtons();
 
     try {
@@ -1335,6 +1608,7 @@
             profile_completed: Boolean(member.email && member.fullName),
             email_verified: Boolean(member.emailVerified || member.email_verified),
             rewards_activated: member.portalAccess,
+            payment_completed: isPaidActive(member),
           },
           rewardAccount: {},
           featureFlags: {
@@ -1342,12 +1616,17 @@
             rewards_enabled: true,
             referrals_enabled: true,
             support_enabled: true,
+            billing_enabled: true,
           },
           benefits,
           groups: [],
         },
       });
     }
+  });
+
+  window.addEventListener("cardleo:auth-failed", () => {
+    redirectToLogin();
   });
 
   if (document.readyState === "loading") {
@@ -1360,8 +1639,15 @@
     init,
     reload: loadBenefits,
     render: renderPayload,
+    openBillingPortal,
     getState: function () {
       return { ...state };
+    },
+    helpers: {
+      isPaidActive,
+      isPendingPayment,
+      isBadStatus,
+      money,
     },
   };
 })();

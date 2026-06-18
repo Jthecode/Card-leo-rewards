@@ -1,11 +1,20 @@
 // assets/js/portal-rewards.js
+
 (function () {
   const CONFIG = {
     meEndpoint: "/api/auth/me",
     rewardsEndpoint: "/api/portal/rewards",
+    billingPortalEndpoint: "/api/billing/portal",
     logoutEndpoint: "/api/auth/logout",
     loginPage: "/login.html",
     unauthorizedPage: "/unauthorized.html",
+
+    activationFee: 25,
+    monthlyFee: 20,
+    billingDay: 10,
+    referralRewardAmount: 7,
+    payoutWindow: "1st–3rd monthly",
+
     authGuardOptions: {
       meEndpoint: "/api/auth/me",
       logoutEndpoint: "/api/auth/logout",
@@ -19,7 +28,33 @@
     },
   };
 
-  const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
+  const ACTIVE_STATUSES = new Set([
+    "active",
+    "approved",
+    "auto_approved",
+    "paid",
+    "current",
+    "succeeded",
+  ]);
+
+  const PENDING_STATUSES = new Set([
+    "pending",
+    "payment_pending",
+    "pending_payment",
+    "checkout_created",
+    "unpaid",
+    "processing",
+  ]);
+
+  const BAD_STATUSES = new Set([
+    "denied",
+    "declined",
+    "cancelled",
+    "canceled",
+    "failed",
+    "suspended",
+    "past_due",
+  ]);
 
   const state = {
     member: null,
@@ -66,7 +101,8 @@
 
   function titleCase(value) {
     return String(value || "")
-      .split(/[\s_-]+/)
+      .replace(/[_-]+/g, " ")
+      .split(/\s+/)
       .filter(Boolean)
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(" ");
@@ -97,12 +133,12 @@
     return `${new Intl.NumberFormat("en-US").format(num)} pts`;
   }
 
-  function formatDate(value) {
-    if (!value) return "—";
+  function formatDate(value, fallback = "—") {
+    if (!value) return fallback;
 
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) return "—";
+    if (Number.isNaN(date.getTime())) return String(value);
 
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
@@ -130,9 +166,10 @@
   async function fetchJson(url, options = {}) {
     const response = await fetch(url, {
       credentials: "include",
+      method: options.method || "GET",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
         ...(options.headers || {}),
       },
       ...options,
@@ -187,7 +224,8 @@
       document.querySelector("[data-rewards-page-status]") ||
       document.querySelector("#rewards-page-status") ||
       document.querySelector("[data-rewards-status]") ||
-      document.querySelector("#rewards-status")
+      document.querySelector("#rewards-status") ||
+      document.querySelector("#statusBanner")
     );
   }
 
@@ -216,6 +254,10 @@
       el.style.background = "rgba(239, 68, 68, 0.10)";
       el.style.color = "#ffe2e2";
       el.style.borderColor = "rgba(239, 68, 68, 0.28)";
+    } else if (type === "warning") {
+      el.style.background = "rgba(255, 209, 102, 0.10)";
+      el.style.color = "#ffeaa6";
+      el.style.borderColor = "rgba(255, 209, 102, 0.28)";
     } else {
       el.style.background = "rgba(216, 176, 94, 0.10)";
       el.style.color = "#f4ead3";
@@ -267,36 +309,136 @@
 
   function getMemberStatus(member = {}, profile = {}) {
     return normalizeText(
-      member.memberStatus ||
+      member.membership_status ||
+        member.membershipStatus ||
+        member.memberStatus ||
         member.member_status ||
         member.status ||
+        profile.membership_status ||
+        profile.membershipStatus ||
         profile.memberStatus ||
         profile.member_status ||
         profile.status ||
-        "active"
+        "payment_pending"
     ).toLowerCase();
+  }
+
+  function getPaymentStatus(member = {}, profile = {}) {
+    return normalizeText(
+      member.payment_status ||
+        member.paymentStatus ||
+        profile.payment_status ||
+        profile.paymentStatus ||
+        ""
+    ).toLowerCase();
+  }
+
+  function getApprovalStatus(member = {}, profile = {}) {
+    return normalizeText(
+      member.approval_status ||
+        member.approvalStatus ||
+        profile.approval_status ||
+        profile.approvalStatus ||
+        ""
+    ).toLowerCase();
+  }
+
+  function getTier(member = {}, profile = {}) {
+    return normalizeText(
+      member.tier_name ||
+        member.tierName ||
+        member.membership_tier ||
+        member.membershipTier ||
+        member.tier ||
+        member.accessLevel ||
+        member.access_level ||
+        profile.tier_name ||
+        profile.tierName ||
+        profile.membership_tier ||
+        profile.membershipTier ||
+        profile.tier ||
+        "VIP Member"
+    );
+  }
+
+  function getStatusLabel(status) {
+    const value = normalizeText(status).toLowerCase();
+
+    if (value === "auto_approved") return "Auto Approved";
+    if (value === "payment_pending") return "Payment Pending";
+    if (value === "pending_payment") return "Payment Pending";
+    if (value === "checkout_created") return "Checkout Created";
+    if (value === "past_due") return "Past Due";
+
+    return titleCase(value || "Payment Pending");
+  }
+
+  function isPaidActive(member = {}, profile = {}) {
+    const memberStatus = getMemberStatus(member, profile);
+    const paymentStatus = getPaymentStatus(member, profile);
+    const approvalStatus = getApprovalStatus(member, profile);
+
+    return (
+      ACTIVE_STATUSES.has(memberStatus) ||
+      ACTIVE_STATUSES.has(paymentStatus) ||
+      ACTIVE_STATUSES.has(approvalStatus)
+    );
+  }
+
+  function isPendingPayment(member = {}, profile = {}) {
+    const memberStatus = getMemberStatus(member, profile);
+    const paymentStatus = getPaymentStatus(member, profile);
+    const approvalStatus = getApprovalStatus(member, profile);
+
+    return (
+      PENDING_STATUSES.has(memberStatus) ||
+      PENDING_STATUSES.has(paymentStatus) ||
+      PENDING_STATUSES.has(approvalStatus)
+    );
+  }
+
+  function isBadStatus(member = {}, profile = {}) {
+    const memberStatus = getMemberStatus(member, profile);
+    const paymentStatus = getPaymentStatus(member, profile);
+    const approvalStatus = getApprovalStatus(member, profile);
+
+    return (
+      BAD_STATUSES.has(memberStatus) ||
+      BAD_STATUSES.has(paymentStatus) ||
+      BAD_STATUSES.has(approvalStatus)
+    );
   }
 
   function getPortalAccess(member = {}, profile = {}) {
     if (typeof member.portalAccess === "boolean") return member.portalAccess;
     if (typeof member.portal_access === "boolean") return member.portal_access;
 
-    return ACTIVE_STATUSES.has(getMemberStatus(member, profile));
+    return isPaidActive(member, profile);
+  }
+
+  function getNextBillingDate(member = {}) {
+    return (
+      member.next_billing_date ||
+      member.nextBillingDate ||
+      member.current_period_end ||
+      member.currentPeriodEnd ||
+      ""
+    );
   }
 
   function normalizeMember(member = {}, profile = {}) {
     const safeMember = isObject(member) ? member : {};
     const safeProfile = isObject(profile) ? profile : {};
+
     const fullName = getFullName(safeMember, safeProfile);
     const firstName = getFirstName(safeMember, safeProfile);
     const status = getMemberStatus(safeMember, safeProfile);
-    const tier = normalizeText(
-      safeMember.tier ||
-        safeMember.accessLevel ||
-        safeMember.access_level ||
-        safeProfile.tier ||
-        "core"
-    ).toLowerCase();
+    const paymentStatus = getPaymentStatus(safeMember, safeProfile);
+    const approvalStatus =
+      getApprovalStatus(safeMember, safeProfile) ||
+      (isPaidActive(safeMember, safeProfile) ? "auto_approved" : "payment_pending");
+
+    const tier = getTier(safeMember, safeProfile);
 
     return {
       ...safeMember,
@@ -333,12 +475,20 @@
       status,
       memberStatus: status,
       member_status: status,
+      membershipStatus: status,
+      membership_status: status,
+      paymentStatus,
+      payment_status: paymentStatus,
+      approvalStatus,
+      approval_status: approvalStatus,
       tier,
       tierLabel: titleCase(tier),
       portalAccess: getPortalAccess(
         {
           ...safeMember,
           status,
+          payment_status: paymentStatus,
+          approval_status: approvalStatus,
         },
         safeProfile
       ),
@@ -351,6 +501,25 @@
         null,
       createdAt: safeMember.createdAt || safeMember.created_at || null,
       updatedAt: safeMember.updatedAt || safeMember.updated_at || null,
+      stripeCustomerId:
+        safeMember.stripeCustomerId || safeMember.stripe_customer_id || "",
+      stripe_customer_id:
+        safeMember.stripeCustomerId || safeMember.stripe_customer_id || "",
+      stripeSubscriptionId:
+        safeMember.stripeSubscriptionId || safeMember.stripe_subscription_id || "",
+      stripe_subscription_id:
+        safeMember.stripeSubscriptionId || safeMember.stripe_subscription_id || "",
+      nextBillingDate: getNextBillingDate(safeMember),
+      next_billing_date: getNextBillingDate(safeMember),
+      activationFeeAmount:
+        Number(safeMember.activationFeeAmount || safeMember.activation_fee_amount) ||
+        CONFIG.activationFee,
+      monthlyFeeAmount:
+        Number(safeMember.monthlyFeeAmount || safeMember.monthly_fee_amount) ||
+        CONFIG.monthlyFee,
+      billingDay:
+        Number(safeMember.billingDay || safeMember.billing_day) ||
+        CONFIG.billingDay,
     };
   }
 
@@ -358,21 +527,54 @@
     const value = normalizeText(status).toLowerCase();
 
     if (
-      ["active", "available", "earned", "approved", "unlocked", "posted", "paid", "released", "success"].includes(value)
+      [
+        "active",
+        "available",
+        "earned",
+        "approved",
+        "unlocked",
+        "posted",
+        "paid",
+        "released",
+        "success",
+        "auto_approved",
+      ].includes(value)
     ) {
       return "success";
     }
 
     if (
-      ["pending", "processing", "in review", "scheduled", "reward_pending", "open"].includes(value)
+      [
+        "pending",
+        "processing",
+        "in review",
+        "scheduled",
+        "reward_pending",
+        "open",
+        "payment_pending",
+        "pending_payment",
+        "checkout_created",
+      ].includes(value)
     ) {
       return "warning";
     }
 
     if (
-      ["expired", "inactive", "redeemed", "used", "ended", "voided", "cancelled"].includes(value)
+      [
+        "expired",
+        "inactive",
+        "redeemed",
+        "used",
+        "ended",
+        "voided",
+        "cancelled",
+        "canceled",
+        "denied",
+        "failed",
+        "suspended",
+      ].includes(value)
     ) {
-      return "muted";
+      return "danger";
     }
 
     return "primary";
@@ -389,17 +591,17 @@
 
     if (tone === "warning") {
       return {
-        background: "rgba(216,176,94,0.12)",
-        color: "#f4ead3",
-        border: "1px solid rgba(216,176,94,0.24)",
+        background: "rgba(255,209,102,0.12)",
+        color: "#ffeaa6",
+        border: "1px solid rgba(255,209,102,0.24)",
       };
     }
 
-    if (tone === "muted") {
+    if (tone === "danger") {
       return {
-        background: "rgba(148,163,184,0.10)",
-        color: "#d8dee8",
-        border: "1px solid rgba(148,163,184,0.18)",
+        background: "rgba(239,68,68,0.12)",
+        color: "#ffd2d8",
+        border: "1px solid rgba(239,68,68,0.24)",
       };
     }
 
@@ -421,6 +623,7 @@
       {
         ...fallbackMember,
         ...(isObject(data.member) ? data.member : {}),
+        ...(isObject(data.user) ? data.user : {}),
       },
       {
         ...fallbackProfile,
@@ -440,6 +643,7 @@
 
     const summary =
       (isObject(data.summary) && data.summary) ||
+      (isObject(data.stats) && data.stats) ||
       {};
 
     const rewardAccount =
@@ -454,6 +658,7 @@
         : [];
 
     const payouts = Array.isArray(data.payouts) ? data.payouts : [];
+
     const payments = Array.isArray(data.membershipPayments)
       ? data.membershipPayments
       : Array.isArray(data.payments)
@@ -461,6 +666,7 @@
         : [];
 
     const cycles = Array.isArray(data.cycles) ? data.cycles : [];
+
     const notices = Array.isArray(data.notices)
       ? data.notices
       : Array.isArray(data.announcements)
@@ -487,24 +693,67 @@
 
     const fullName = state.member.fullName;
     const firstName = state.member.firstName || "Member";
-    const statusLabel = titleCase(state.member.memberStatus || state.member.status || "active");
+    const status = state.member.memberStatus || state.member.status || "payment_pending";
+    const paymentStatus = state.member.payment_status || "";
+    const approvalStatus = state.member.approval_status || "";
     const accessLevel = state.member.accessLevel || state.member.tier || "member";
+
+    const paid = isPaidActive(state.member);
+    const pending = isPendingPayment(state.member);
+    const bad = isBadStatus(state.member);
+
+    const visibleStatus = paid
+      ? "Active"
+      : bad
+        ? getStatusLabel(status || paymentStatus)
+        : pending
+          ? "Payment Required"
+          : getStatusLabel(status);
 
     setText("[data-member-name]", fullName);
     setText("[data-member-full-name]", fullName);
     setText("[data-member-first-name]", firstName);
     setText("[data-member-email]", state.member.email || "");
-    setText("[data-member-status]", statusLabel);
-    setText("[data-member-tier]", titleCase(state.member.tier || "core"));
+    setText("[data-member-status]", visibleStatus);
+    setText("[data-member-tier]", titleCase(state.member.tier || "VIP Member"));
     setText("[data-member-access-level]", titleCase(accessLevel));
     setText("[data-member-accesslevel]", titleCase(accessLevel));
     setText("[data-member-joined-at]", formatDate(state.member.joinedAt));
 
+    setText("[data-payment-status]", getStatusLabel(paymentStatus || (paid ? "paid" : "payment_pending")));
+    setText("[data-approval-status]", getStatusLabel(approvalStatus || (paid ? "auto_approved" : "payment_pending")));
+    setText("[data-portal-access]", paid ? "Enabled" : "Payment Required");
+
+    setText("[data-activation-fee]", money(state.member.activationFeeAmount || CONFIG.activationFee));
+    setText("[data-monthly-fee]", `${money(state.member.monthlyFeeAmount || CONFIG.monthlyFee)}/month`);
+    setText("[data-billing-day]", `${state.member.billingDay || CONFIG.billingDay}th monthly`);
+    setText("[data-next-billing-date]", formatDate(state.member.nextBillingDate, `${CONFIG.billingDay}th monthly`));
+    setText("[data-payout-window]", CONFIG.payoutWindow);
+    setText("[data-referral-reward-amount]", money(CONFIG.referralRewardAmount));
+
     document.body.dataset.memberName = fullName;
     document.body.dataset.memberEmail = state.member.email || "";
-    document.body.dataset.memberStatus = state.member.memberStatus || "";
+    document.body.dataset.memberStatus = status;
+    document.body.dataset.memberPaymentStatus = paymentStatus;
+    document.body.dataset.memberApprovalStatus = approvalStatus;
     document.body.dataset.memberAccessLevel = accessLevel;
     document.body.dataset.memberId = state.member.id || state.member.signupId || "";
+    document.body.dataset.portalAccess = paid ? "enabled" : "payment_required";
+
+    document.querySelectorAll("[data-paid-only]").forEach((node) => {
+      node.hidden = !paid;
+    });
+
+    document.querySelectorAll("[data-payment-required-only]").forEach((node) => {
+      node.hidden = paid;
+    });
+
+    document.querySelectorAll("[data-member-status-pill]").forEach((node) => {
+      node.textContent = visibleStatus;
+      node.dataset.status = paid ? "active" : bad ? "error" : "pending";
+      node.classList.toggle("pending", !paid && !bad);
+      node.classList.toggle("error", bad);
+    });
   }
 
   function applySupport(support = {}) {
@@ -524,44 +773,158 @@
     });
   }
 
-  function buildComputedSummary(summary = {}, rewards = [], rewardAccount = null) {
+  function buildDefaultRewards(member = {}) {
+    const paid = isPaidActive(member);
+
+    return [
+      {
+        id: "approved-referral-reward",
+        title: "Approved Referral Reward",
+        description: `Earn ${money(CONFIG.referralRewardAmount)} for each approved member you refer.`,
+        category: "Referral Reward",
+        status: paid ? "active" : "payment_pending",
+        amount: CONFIG.referralRewardAmount,
+        code: "REFERRAL-7",
+      },
+      {
+        id: "monthly-leaderboard",
+        title: "Monthly Leaderboard Rewards",
+        description:
+          "Compete on the referral leaderboard and rise each month with approved referrals.",
+        category: "Leaderboard",
+        status: paid ? "active" : "payment_pending",
+        amount: 0,
+        code: "LEADERBOARD",
+      },
+      {
+        id: "member-benefits",
+        title: "Member Benefits Access",
+        description:
+          "Unlock dining, travel, shopping, entertainment, and lifestyle benefit access with active membership.",
+        category: "Benefits",
+        status: paid ? "active" : "locked",
+        amount: 0,
+        code: "BENEFITS",
+      },
+      {
+        id: "monthly-payout-window",
+        title: "Monthly Payout Window",
+        description:
+          "Eligible monthly reward payouts are prepared between the 1st and 3rd of each month.",
+        category: "Payouts",
+        status: "processing",
+        amount: 0,
+        code: "PAYOUT-1-3",
+      },
+    ];
+  }
+
+  function buildComputedSummary(summary = {}, rewards = [], rewardAccount = null, member = {}) {
     const account = isObject(rewardAccount) ? rewardAccount : {};
+    const safeRewards = rewards.length ? rewards : buildDefaultRewards(member);
 
-    const totalRewardsEarned =
-      Number(summary.totalRewardsEarned ?? account.totalRewardsEarned ?? account.total_rewards_earned ?? 0);
+    const approvedReferrals = Number(
+      summary.approvedReferrals ||
+        summary.approved_referrals ||
+        account.approvedReferrals ||
+        account.approved_referrals ||
+        0
+    );
 
-    const totalRewardsPaid =
-      Number(summary.totalRewardsPaid ?? account.totalRewardsPaid ?? account.total_rewards_paid ?? 0);
+    const pendingReferrals = Number(
+      summary.pendingReferrals ||
+        summary.pending_referrals ||
+        account.pendingReferrals ||
+        account.pending_referrals ||
+        0
+    );
 
-    const companyBuildingPending =
-      Number(summary.companyBuildingPending ?? account.companyBuildingPending ?? account.company_building_pending ?? 0);
+    const totalRewardsEarned = Number(
+      summary.totalRewardsEarned ??
+        summary.total_rewards_earned ??
+        account.totalRewardsEarned ??
+        account.total_rewards_earned ??
+        summary.earnedAmount ??
+        summary.earned_amount ??
+        approvedReferrals * CONFIG.referralRewardAmount ??
+        0
+    );
 
-    const companyBuildingReleased =
-      Number(summary.companyBuildingReleased ?? account.companyBuildingReleased ?? account.company_building_released ?? 0);
+    const totalRewardsPaid = Number(
+      summary.totalRewardsPaid ??
+        summary.total_rewards_paid ??
+        account.totalRewardsPaid ??
+        account.total_rewards_paid ??
+        0
+    );
 
-    const directReferralEarned =
-      Number(summary.totalDirectReferralEarned ?? account.totalDirectReferralEarned ?? account.total_direct_referral_earned ?? 0);
+    const companyBuildingPending = Number(
+      summary.companyBuildingPending ??
+        account.companyBuildingPending ??
+        account.company_building_pending ??
+        0
+    );
 
-    const overrideEarned =
-      Number(summary.totalOverrideEarned ?? account.totalOverrideEarned ?? account.total_override_earned ?? 0);
+    const companyBuildingReleased = Number(
+      summary.companyBuildingReleased ??
+        account.companyBuildingReleased ??
+        account.company_building_released ??
+        0
+    );
 
-    const activeRewards = rewards.filter((reward) =>
-      ["active", "available", "earned", "unlocked", "posted", "released", "paid"].includes(
-        normalizeText(reward.status || reward.transactionStatus || reward.transaction_status).toLowerCase()
+    const directReferralEarned = Number(
+      summary.totalDirectReferralEarned ??
+        account.totalDirectReferralEarned ??
+        account.total_direct_referral_earned ??
+        approvedReferrals * CONFIG.referralRewardAmount ??
+        0
+    );
+
+    const overrideEarned = Number(
+      summary.totalOverrideEarned ??
+        account.totalOverrideEarned ??
+        account.total_override_earned ??
+        0
+    );
+
+    const activeRewards = safeRewards.filter((reward) =>
+      [
+        "active",
+        "available",
+        "earned",
+        "unlocked",
+        "posted",
+        "released",
+        "paid",
+        "approved",
+      ].includes(
+        normalizeText(
+          reward.status || reward.transactionStatus || reward.transaction_status
+        ).toLowerCase()
       )
     ).length;
 
-    const pendingRewards = rewards.filter((reward) =>
-      ["pending", "processing", "scheduled", "reward_pending"].includes(
-        normalizeText(reward.status || reward.transactionStatus || reward.transaction_status).toLowerCase()
+    const pendingRewards = safeRewards.filter((reward) =>
+      [
+        "pending",
+        "processing",
+        "scheduled",
+        "reward_pending",
+        "payment_pending",
+      ].includes(
+        normalizeText(
+          reward.status || reward.transactionStatus || reward.transaction_status
+        ).toLowerCase()
       )
     ).length;
 
     return {
-      totalRewards: Number(summary.totalRewards ?? rewards.length),
-      activeRewards: Number(summary.activeRewards ?? activeRewards),
-      pendingRewards: Number(summary.pendingRewards ?? pendingRewards),
+      totalRewards: Number(summary.totalRewards ?? summary.total_rewards ?? safeRewards.length),
+      activeRewards: Number(summary.activeRewards ?? summary.active_rewards ?? activeRewards),
+      pendingRewards: Number(summary.pendingRewards ?? summary.pending_rewards ?? pendingRewards),
 
+      approvedReferrals: Number.isFinite(approvedReferrals) ? approvedReferrals : 0,
+      pendingReferrals: Number.isFinite(pendingReferrals) ? pendingReferrals : 0,
       totalRewardsEarned: Number.isFinite(totalRewardsEarned) ? totalRewardsEarned : 0,
       totalRewardsPaid: Number.isFinite(totalRewardsPaid) ? totalRewardsPaid : 0,
       companyBuildingPending: Number.isFinite(companyBuildingPending) ? companyBuildingPending : 0,
@@ -569,17 +932,25 @@
       directReferralEarned: Number.isFinite(directReferralEarned) ? directReferralEarned : 0,
       overrideEarned: Number.isFinite(overrideEarned) ? overrideEarned : 0,
 
-      accessLevel: normalizeText(summary.accessLevel || state.member?.accessLevel || "member"),
-      statusLabel: normalizeText(summary.statusLabel || state.member?.memberStatus || "Active Member"),
+      accessLevel: normalizeText(summary.accessLevel || summary.access_level || state.member?.accessLevel || "member"),
+      statusLabel: normalizeText(summary.statusLabel || summary.status_label || state.member?.memberStatus || "Payment Pending"),
     };
   }
 
   function applySummary(summary = {}, rewards = [], rewardAccount = null) {
-    state.summary = buildComputedSummary(summary, rewards, rewardAccount);
+    state.summary = buildComputedSummary(
+      summary,
+      rewards,
+      rewardAccount,
+      state.member || {}
+    );
 
     setText("[data-total-rewards]", formatNumber(state.summary.totalRewards));
     setText("[data-active-rewards]", formatNumber(state.summary.activeRewards));
     setText("[data-pending-rewards]", formatNumber(state.summary.pendingRewards));
+
+    setText("[data-approved-referrals]", formatNumber(state.summary.approvedReferrals));
+    setText("[data-pending-referrals]", formatNumber(state.summary.pendingReferrals));
 
     setText("[data-rewards-access-level]", titleCase(state.summary.accessLevel));
     setText("[data-rewards-status-label]", titleCase(state.summary.statusLabel));
@@ -591,6 +962,8 @@
     setText("[data-company-building-released]", money(state.summary.companyBuildingReleased));
     setText("[data-direct-referral-earned]", money(state.summary.directReferralEarned));
     setText("[data-override-earned]", money(state.summary.overrideEarned));
+
+    setText("[data-current-balance]", money(Math.max(0, state.summary.totalRewardsEarned - state.summary.totalRewardsPaid)));
   }
 
   function normalizeReward(reward = {}, index = 0) {
@@ -655,7 +1028,7 @@
           Rewards are ready
         </strong>
         <span>
-          Your next Card Leo Rewards activity will appear here once rewards, referrals, or company-building earnings are issued.
+          Your next Card Leo Rewards activity will appear here once rewards, referrals, or payouts are issued.
         </span>
       </div>
     `;
@@ -726,7 +1099,7 @@
             color:${badge.color};
             border:${badge.border};
           ">
-            ${escapeHtml(titleCase(reward.status))}
+            ${escapeHtml(getStatusLabel(reward.status))}
           </span>
         </div>
 
@@ -826,12 +1199,13 @@
 
   function renderRewards(rewards = []) {
     const containers = document.querySelectorAll(
-      "[data-rewards-grid], #rewards-grid, #portal-rewards-grid"
+      "[data-rewards-grid], #rewards-grid, #portal-rewards-grid, #rewardsList"
     );
 
     if (!containers.length) return;
 
-    const normalized = rewards.map(normalizeReward);
+    const sourceRewards = rewards.length ? rewards : buildDefaultRewards(state.member || {});
+    const normalized = sourceRewards.map(normalizeReward);
 
     containers.forEach((container) => {
       container.innerHTML = normalized.length
@@ -851,22 +1225,40 @@
     };
   }
 
+  function defaultNotices(member = {}) {
+    const paid = isPaidActive(member);
+
+    return [
+      {
+        id: "membership-status",
+        title: paid ? "Membership active" : "Payment required",
+        body: paid
+          ? "Your paid membership is active, so your rewards, benefits, referrals, and portal access can remain unlocked."
+          : "Complete your activation payment to unlock full rewards, referrals, benefits, and portal access.",
+      },
+      {
+        id: "referral-rewards",
+        title: "Referral rewards",
+        body: `Every approved referral can add ${money(CONFIG.referralRewardAmount)} to your rewards account.`,
+      },
+      {
+        id: "payout-window",
+        title: "Monthly payout window",
+        body: `Monthly reward payouts are prepared ${CONFIG.payoutWindow}.`,
+      },
+    ];
+  }
+
   function renderNotices(notices = []) {
     const containers = document.querySelectorAll(
-      "[data-rewards-notices], [data-notices-list], #rewards-notices"
+      "[data-rewards-notices], [data-notices-list], #rewards-notices, #noticesList"
     );
 
     if (!containers.length) return;
 
     const list = notices.length
       ? notices.map(normalizeNotice)
-      : [
-          {
-            id: "welcome",
-            title: "Rewards dashboard connected",
-            body: "Your member rewards dashboard is active and ready to display new activity.",
-          },
-        ];
+      : defaultNotices(state.member || {});
 
     containers.forEach((container) => {
       container.innerHTML = list
@@ -938,6 +1330,15 @@
     });
   }
 
+  function applyStaticBillingText() {
+    setText("[data-static-activation-fee]", money(CONFIG.activationFee));
+    setText("[data-static-monthly-fee]", `${money(CONFIG.monthlyFee)}/month`);
+    setText("[data-static-billing-day]", `${CONFIG.billingDay}th monthly`);
+    setText("[data-static-approval-method]", "Automatic after payment");
+    setText("[data-static-payout-window]", CONFIG.payoutWindow);
+    setText("[data-static-referral-reward]", money(CONFIG.referralRewardAmount));
+  }
+
   function renderPayload(payload, fallback = {}) {
     const parsed = inferRewardsPayload(payload, fallback);
 
@@ -951,6 +1352,7 @@
     state.cycles = parsed.cycles;
     state.notices = parsed.notices;
 
+    applyStaticBillingText();
     applyMember(parsed.member);
     applySupport(parsed.support);
     applySummary(parsed.summary, parsed.rewards, parsed.rewardAccount);
@@ -969,6 +1371,11 @@
       method: "GET",
     });
 
+    if (result.response.status === 401) {
+      redirectToLogin();
+      return null;
+    }
+
     if (!result.response.ok) {
       throw new Error(result.message || "Unable to verify your session.");
     }
@@ -978,14 +1385,18 @@
       return null;
     }
 
-    if (!isObject(result.data.member) && !isObject(result.data.profile)) {
+    if (
+      !isObject(result.data.member) &&
+      !isObject(result.data.profile) &&
+      !isObject(result.data.user)
+    ) {
       throw new Error("Your session is active, but your member details were not returned.");
     }
 
     return renderPayload({
       success: true,
       data: {
-        member: result.data.member || result.data.profile || {},
+        member: result.data.member || result.data.profile || result.data.user || {},
         profile: result.data.profile || null,
         support: result.data.support || null,
         summary: {
@@ -999,15 +1410,10 @@
           statusLabel:
             result.data.member?.memberStatus ||
             result.data.member?.status ||
-            "Active Member",
+            "Payment Pending",
         },
         rewards: [],
-        notices: [
-          {
-            title: "Rewards dashboard connected",
-            body: "Your member session is active. Reward activity will appear as your account earns or receives rewards.",
-          },
-        ],
+        notices: defaultNotices(result.data.member || result.data.profile || {}),
       },
     });
   }
@@ -1055,6 +1461,17 @@
 
       await loadRewardsEnhancement(sessionPayload);
 
+      const paid = isPaidActive(state.member || {});
+      const bad = isBadStatus(state.member || {});
+
+      if (paid) {
+        setStatus(pageStatus, "success", "Your rewards dashboard is active.");
+      } else if (bad) {
+        setStatus(pageStatus, "error", "Your membership status needs attention before rewards can be fully unlocked.");
+      } else {
+        setStatus(pageStatus, "warning", "Complete membership payment to unlock full reward access.");
+      }
+
       return true;
     } catch (error) {
       renderRewards([]);
@@ -1071,13 +1488,67 @@
     }
   }
 
+  async function openBillingPortal() {
+    const pageStatus = getStatusNode();
+
+    try {
+      setStatus(pageStatus, "info", "Opening secure billing portal...");
+
+      const result = await fetchJson(CONFIG.billingPortalEndpoint, {
+        method: "POST",
+        body: JSON.stringify({
+          return_url: window.location.href,
+        }),
+      });
+
+      if (result.response.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      const url =
+        normalizeText(result.data?.url) ||
+        normalizeText(result.data?.billing_portal_url) ||
+        normalizeText(result.data?.billingPortalUrl) ||
+        normalizeText(result.data?.redirectTo) ||
+        normalizeText(result.payload?.url);
+
+      if (!url) {
+        window.location.href = "/portal/billing.html";
+        return;
+      }
+
+      window.location.href = url;
+    } catch (error) {
+      console.warn("[portal-rewards] billing portal unavailable:", error);
+      window.location.href = "/portal/billing.html";
+    }
+  }
+
+  function bindBillingButtons() {
+    document
+      .querySelectorAll(
+        "[data-billing-portal], [data-open-billing], #billingPortalButton, #manageBillingButton"
+      )
+      .forEach((button) => {
+        if (button.dataset.rewardsBillingBound === "true") return;
+
+        button.dataset.rewardsBillingBound = "true";
+
+        button.addEventListener("click", async (event) => {
+          event.preventDefault();
+          await openBillingPortal();
+        });
+      });
+  }
+
   function bindLogoutButtons() {
     if (window.CardLeoAuthGuard?.bindLogoutButtons) {
       window.CardLeoAuthGuard.bindLogoutButtons(CONFIG.authGuardOptions);
       return;
     }
 
-    document.querySelectorAll("[data-logout], [data-member-logout]").forEach((button) => {
+    document.querySelectorAll("[data-logout], [data-member-logout], #logoutButton").forEach((button) => {
       if (button.dataset.rewardsLogoutBound === "true") return;
 
       button.dataset.rewardsLogoutBound = "true";
@@ -1137,8 +1608,10 @@
     const pageStatus = getStatusNode();
 
     try {
+      applyStaticBillingText();
       bindLogoutButtons();
       bindRefreshButtons();
+      bindBillingButtons();
 
       if (window.CardLeoAuthGuard?.init) {
         await window.CardLeoAuthGuard.init(CONFIG.authGuardOptions);
@@ -1172,17 +1645,16 @@
             activeRewards: 0,
             pendingRewards: 0,
             accessLevel: detail.member.accessLevel || detail.member.tier || "member",
-            statusLabel: detail.member.status || "Active Member",
+            statusLabel: detail.member.status || "Payment Pending",
           },
-          notices: [
-            {
-              title: "Rewards dashboard connected",
-              body: "Your member session is verified.",
-            },
-          ],
+          notices: defaultNotices(detail.member),
         },
       });
     }
+  });
+
+  window.addEventListener("cardleo:auth-failed", () => {
+    redirectToLogin();
   });
 
   if (document.readyState === "loading") {
@@ -1195,8 +1667,16 @@
     init,
     reload: loadRewards,
     render: renderPayload,
+    openBillingPortal,
     getState: function () {
       return { ...state };
+    },
+    helpers: {
+      isPaidActive,
+      isPendingPayment,
+      isBadStatus,
+      getStatusLabel,
+      money,
     },
   };
 })();

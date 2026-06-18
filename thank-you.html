@@ -10,13 +10,18 @@
     <title>Thank You | Card Leo Rewards</title>
     <meta
       name="description"
-      content="Thank you for joining Card Leo Rewards. Your registration has been received and your next steps are ready."
+      content="Thank you for joining Card Leo Rewards. Your registration and membership activation steps are ready."
     />
     <meta
       name="keywords"
-      content="Card Leo Rewards, thank you, registration complete, next steps, member onboarding"
+      content="Card Leo Rewards, thank you, registration complete, payment complete, member onboarding, member activation"
     />
-    <meta name="theme-color" content="#0a0f1c" />
+    <meta name="theme-color" content="#030303" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link rel="canonical" href="https://www.cardleorewards.com/thank-you.html" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="/style.css" />
 
     <meta property="og:title" content="Thank You | Card Leo Rewards" />
     <meta
@@ -24,17 +29,361 @@
       content="Your Card Leo Rewards registration has been received. Continue with your next steps."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="./assets/og-cardleo.jpg" />
-    <meta property="og:url" content="https://cardleorewards.com/thank-you/" />
+    <meta property="og:site_name" content="Card Leo Rewards" />
+    <meta
+      property="og:image"
+      content="https://www.cardleorewards.com/assets/og-cardleo.jpg"
+    />
+    <meta
+      property="og:url"
+      content="https://www.cardleorewards.com/thank-you.html"
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Thank You | Card Leo Rewards" />
+    <meta
+      name="twitter:description"
+      content="Your Card Leo Rewards registration has been received. Continue with your next steps."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.cardleorewards.com/assets/og-cardleo.jpg"
+    />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="./style.css" />
+    <style>
+      :root {
+        --leo-black: #030303;
+        --leo-panel: rgba(10, 10, 10, 0.9);
+        --leo-gold: #e7b64f;
+        --leo-gold-2: #f7d98b;
+        --leo-green: #48f06b;
+        --leo-white: #f8f3e7;
+        --leo-muted: rgba(248, 243, 231, 0.68);
+        --leo-line: rgba(231, 182, 79, 0.24);
+        --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
+      }
+
+      body {
+        background:
+          radial-gradient(circle at 82% 8%, rgba(231, 182, 79, 0.14), transparent 28%),
+          radial-gradient(circle at 50% 95%, rgba(231, 182, 79, 0.1), transparent 30%),
+          linear-gradient(180deg, #030303 0%, #080808 48%, #010101 100%);
+      }
+
+      .site-shell {
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          radial-gradient(circle at 72% 24%, rgba(231, 182, 79, 0.08), transparent 28%);
+        background-size: 96px 96px, auto;
+      }
+
+      .site-header {
+        background: rgba(0, 0, 0, 0.78);
+        border-bottom: 1px solid rgba(231, 182, 79, 0.18);
+        backdrop-filter: blur(18px);
+      }
+
+      .brand-mark {
+        background:
+          radial-gradient(circle at top, rgba(247, 217, 139, 0.28), transparent 48%),
+          linear-gradient(145deg, #0b0b0b, #000);
+        border: 1px solid rgba(231, 182, 79, 0.35);
+        color: var(--leo-gold-2);
+        box-shadow: 0 0 26px rgba(231, 182, 79, 0.18);
+      }
+
+      .brand-title,
+      .brand-subtitle {
+        color: var(--leo-white);
+      }
+
+      .brand-subtitle {
+        color: var(--leo-gold);
+      }
+
+      .site-nav a {
+        color: rgba(248, 243, 231, 0.72);
+      }
+
+      .site-nav a:hover {
+        color: var(--leo-white);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 50%, #8b5b0b 100%);
+        color: #080808;
+        box-shadow:
+          0 18px 42px rgba(216, 154, 34, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+
+      .btn-secondary {
+        border: 1px solid rgba(231, 182, 79, 0.28);
+        background: rgba(255, 255, 255, 0.045);
+        color: var(--leo-white);
+      }
+
+      .luxury-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        width: fit-content;
+        padding: 0.72rem 1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(231, 182, 79, 0.38);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.18), transparent 40%),
+          rgba(255, 255, 255, 0.04);
+        color: var(--leo-gold-2);
+        font-size: 0.76rem;
+        font-weight: 900;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      }
+
+      .luxury-badge::before {
+        content: "";
+        width: 0.58rem;
+        height: 0.58rem;
+        border-radius: 999px;
+        background: currentColor;
+        box-shadow: 0 0 18px currentColor;
+      }
+
+      .hero h1 {
+        color: var(--leo-white);
+        text-shadow: 0 18px 55px rgba(0, 0, 0, 0.6);
+      }
+
+      .hero-text,
+      .section-heading p,
+      .section-copy p,
+      .cta-panel p {
+        color: var(--leo-muted);
+      }
+
+      .hero-trust .trust-item {
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 38%),
+          rgba(255, 255, 255, 0.035);
+      }
+
+      .trust-kicker {
+        color: var(--leo-gold);
+      }
+
+      .confirmation-alert {
+        margin: 1.35rem 0 0;
+        padding: 1.05rem 1.1rem;
+        border-radius: 18px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.12), transparent 34%),
+          rgba(255, 255, 255, 0.045);
+        color: rgba(248, 243, 231, 0.8);
+        line-height: 1.65;
+      }
+
+      .confirmation-alert strong {
+        color: var(--leo-gold-2);
+      }
+
+      .confirmation-alert.is-success {
+        border-color: rgba(72, 240, 107, 0.28);
+        background:
+          radial-gradient(circle at top right, rgba(72, 240, 107, 0.13), transparent 34%),
+          rgba(255, 255, 255, 0.045);
+      }
+
+      .confirmation-alert.is-warning {
+        border-color: rgba(255, 209, 102, 0.28);
+        background:
+          radial-gradient(circle at top right, rgba(255, 209, 102, 0.12), transparent 34%),
+          rgba(255, 255, 255, 0.045);
+      }
+
+      .black-card-confirmation {
+        position: relative;
+        min-height: 320px;
+        border-radius: 30px;
+        overflow: hidden;
+        padding: 1.35rem;
+        border: 1px solid rgba(231, 182, 79, 0.28);
+        background:
+          radial-gradient(circle at 82% 14%, rgba(247, 217, 139, 0.22), transparent 32%),
+          linear-gradient(145deg, #050505, #101010 46%, #000);
+        box-shadow:
+          0 28px 70px rgba(0, 0, 0, 0.5),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.045);
+      }
+
+      .black-card-confirmation::before {
+        content: "";
+        position: absolute;
+        inset: -30%;
+        background:
+          linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.08) 42%, transparent 58%);
+        transform: rotate(8deg);
+        pointer-events: none;
+      }
+
+      .black-card-top,
+      .black-card-bottom {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .black-card-logo {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.35);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--leo-gold-2);
+        font-weight: 900;
+        letter-spacing: 0.08em;
+      }
+
+      .black-card-chip {
+        width: 54px;
+        height: 38px;
+        border-radius: 12px;
+        background:
+          linear-gradient(135deg, #f7d98b, #a66f10),
+          #d89a22;
+        box-shadow: 0 12px 28px rgba(216, 154, 34, 0.28);
+      }
+
+      .black-card-middle {
+        position: relative;
+        z-index: 1;
+        margin-top: 3.2rem;
+      }
+
+      .black-card-middle h2 {
+        margin: 0;
+        color: var(--leo-white);
+        font-size: clamp(1.7rem, 3vw, 2.4rem);
+        letter-spacing: -0.04em;
+      }
+
+      .black-card-middle p {
+        margin: 0.5rem 0 0;
+        color: var(--leo-muted);
+      }
+
+      .black-card-bottom {
+        margin-top: 2.5rem;
+        color: var(--leo-gold);
+        font-size: 0.82rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .membership-summary {
+        display: grid;
+        gap: 0.8rem;
+        margin-top: 1.25rem;
+      }
+
+      .membership-summary-card {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 18px;
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .membership-summary-card span {
+        color: var(--leo-muted);
+        font-size: 0.92rem;
+        line-height: 1.45;
+      }
+
+      .membership-summary-card strong {
+        color: var(--leo-white);
+        text-align: right;
+      }
+
+      .membership-summary-card .gold {
+        color: var(--leo-gold-2);
+      }
+
+      .status-pill-large {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-top: 1rem;
+        padding: 0.72rem 0.95rem;
+        border-radius: 999px;
+        border: 1px solid rgba(231, 182, 79, 0.22);
+        background: rgba(231, 182, 79, 0.1);
+        color: var(--leo-gold-2);
+        font-size: 0.86rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .status-pill-large::before {
+        content: "";
+        width: 0.58rem;
+        height: 0.58rem;
+        border-radius: 999px;
+        background: currentColor;
+        box-shadow: 0 0 18px currentColor;
+      }
+
+      .steps-grid .step-card,
+      .benefits-grid .benefit-card,
+      .feature-card,
+      .quote-card,
+      .cta-panel {
+        border-color: rgba(231, 182, 79, 0.18);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.09), transparent 34%),
+          rgba(255, 255, 255, 0.035);
+      }
+
+      .section-heading h2,
+      .section-copy h2,
+      .cta-panel h2 {
+        color: var(--leo-white);
+      }
+
+      .brand-strip-inner {
+        border-color: rgba(231, 182, 79, 0.18);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      @media (max-width: 560px) {
+        .membership-summary-card,
+        .black-card-bottom {
+          flex-direction: column;
+        }
+
+        .membership-summary-card strong {
+          text-align: left;
+        }
+      }
+    </style>
   </head>
 
   <body>
@@ -43,10 +392,9 @@
       <div class="bg-orb orb-2" aria-hidden="true"></div>
       <div class="bg-grid" aria-hidden="true"></div>
 
-      <!-- Header -->
       <header class="site-header" id="top">
         <div class="container nav-wrap">
-          <a href="./index.html" class="brand" aria-label="Card Leo Rewards home">
+          <a href="/" class="brand" aria-label="Card Leo Rewards home">
             <div class="brand-mark">CL</div>
             <div class="brand-copy">
               <span class="brand-title">Card Leo Rewards</span>
@@ -67,247 +415,257 @@
           </button>
 
           <nav class="site-nav" id="site-nav">
-            <a href="./index.html">Home</a>
+            <a href="/">Home</a>
             <a href="#next-steps">Next Steps</a>
             <a href="#portal">Portal Access</a>
-            <a href="./about.html">About</a>
-            <a href="./signup.html">Sign Up</a>
-            <a href="./contact.html">Contact</a>
-            <a
-              href="https://cardleo.my-office.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="nav-login"
-              >Members Login</a
-            >
-            <a href="./get-started.html" class="btn btn-primary nav-cta">Get Started</a>
+            <a href="/about.html">About</a>
+            <a href="/signup.html">Sign Up</a>
+            <a href="/contact.html">Contact</a>
+            <a href="/login.html" class="nav-login">Member Login</a>
+            <a href="/login.html" class="btn btn-primary nav-cta">Open Portal</a>
           </nav>
         </div>
       </header>
 
       <main>
-        <!-- Hero -->
         <section class="hero section">
           <div class="container hero-grid">
             <div class="hero-copy reveal">
-              <p class="eyebrow">Registration Complete</p>
-              <h1>
-                Thank you for joining
+              <div class="luxury-badge" id="pageEyebrow">Registration Complete</div>
+
+              <h1 id="pageTitle">
+                Welcome to
                 <span class="text-gradient">Card Leo Rewards.</span>
               </h1>
-              <p class="hero-text">
-                Your information has been received. You’re now ready to move into
-                the next part of the member journey and complete your onboarding
-                the premium way.
+
+              <p class="hero-text" id="pageIntro">
+                Your registration was received. Complete activation or log in if
+                your payment was already confirmed.
               </p>
 
+              <div
+                id="confirmationAlert"
+                class="confirmation-alert"
+                role="status"
+                aria-live="polite"
+              >
+                <strong>Status:</strong>
+                Your registration was received. If you have not completed payment yet,
+                activate your membership to unlock portal access.
+              </div>
+
               <div class="hero-actions">
-                <a href="#next-steps" class="btn btn-primary">See Next Steps</a>
-                <a
-                  href="https://cardleo.my-office.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn btn-secondary"
-                  >Members Login</a
-                >
+                <a href="#next-steps" class="btn btn-primary" id="primaryHeroAction">
+                  See Next Steps
+                </a>
+                <a href="/login.html" class="btn btn-secondary" id="secondaryHeroAction">
+                  Member Login
+                </a>
               </div>
 
               <div class="hero-trust">
                 <div class="trust-item">
-                  <span class="trust-kicker">Status</span>
-                  <strong>Registration received</strong>
+                  <span class="trust-kicker">Activation</span>
+                  <strong>$25 one-time fee</strong>
                 </div>
                 <div class="trust-item">
-                  <span class="trust-kicker">Next Move</span>
-                  <strong>Check your email and portal steps</strong>
+                  <span class="trust-kicker">Membership</span>
+                  <strong>$20/mo on the 10th</strong>
                 </div>
                 <div class="trust-item">
-                  <span class="trust-kicker">Goal</span>
-                  <strong>Activate your member experience</strong>
+                  <span class="trust-kicker">Approval</span>
+                  <strong>Automatic after payment</strong>
                 </div>
               </div>
             </div>
 
             <div class="hero-visual reveal">
-              <div class="glass-card spotlight-card">
-                <div class="spotlight-top">
-                  <span class="pill">Welcome</span>
-                  <span class="status-dot">Confirmed</span>
+              <div class="black-card-confirmation">
+                <div class="black-card-top">
+                  <div class="black-card-logo">CL</div>
+                  <div class="black-card-chip"></div>
                 </div>
 
-                <div class="spotlight-body">
-                  <h2>Your next steps are ready</h2>
-                  <p>
-                    Review your onboarding steps, look out for your registration
-                    emails, and continue into the Card Leo Rewards member flow.
+                <div class="black-card-middle">
+                  <h2 id="spotlightTitle">Your next step is ready</h2>
+                  <p id="spotlightCopy">
+                    Activate your account, confirm payment, or log in to your member portal.
                   </p>
-
-                  <div class="spotlight-metrics">
-                    <div class="metric">
-                      <span class="metric-label">Step 1</span>
-                      <strong>Check email</strong>
-                    </div>
-                    <div class="metric">
-                      <span class="metric-label">Step 2</span>
-                      <strong>Open portal</strong>
-                    </div>
-                    <div class="metric">
-                      <span class="metric-label">Step 3</span>
-                      <strong>Use perks</strong>
-                    </div>
-                  </div>
+                  <span class="status-pill-large" id="membershipStatusPill">
+                    Membership Setup
+                  </span>
                 </div>
 
-                <div class="spotlight-glow" aria-hidden="true"></div>
+                <div class="black-card-bottom">
+                  <span id="spotlightPill">Black Card Access</span>
+                  <span id="spotlightStatus">Pending Confirmation</span>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- Brand strip -->
         <section class="brand-strip section-sm">
           <div class="container reveal">
             <div class="brand-strip-inner">
-              <span>Registration complete</span>
-              <span>Premium onboarding</span>
-              <span>Portal access</span>
-              <span>Email instructions</span>
-              <span>Member activation</span>
+              <span>Registration received</span>
+              <span>$25 activation</span>
+              <span>$20 monthly membership</span>
+              <span>Automatic approval after payment</span>
+              <span>Internal member portal</span>
             </div>
           </div>
         </section>
 
-        <!-- Next steps -->
         <section class="section" id="next-steps">
           <div class="container">
             <div class="section-heading reveal">
               <p class="eyebrow">Next Steps</p>
-              <h2>What to do right after signup</h2>
+              <h2>What happens next</h2>
               <p>
-                Keep the experience smooth by following these steps in order.
+                Follow the correct next step based on your payment status.
               </p>
             </div>
 
             <div class="steps-grid">
               <article class="step-card reveal">
                 <span class="step-badge">Step 1</span>
-                <h3>Check your email</h3>
+                <h3>Confirm payment</h3>
                 <p>
-                  Look for your welcome and onboarding emails. This is where your
-                  next instructions and member details should arrive.
+                  If checkout was successful, your account can be approved
+                  automatically after payment confirmation.
                 </p>
               </article>
 
               <article class="step-card reveal">
                 <span class="step-badge">Step 2</span>
-                <h3>Review your setup instructions</h3>
+                <h3>Log in</h3>
                 <p>
-                  Follow the onboarding process so you can move from registration
-                  into active member access without confusion.
+                  Use the same email and password you created during signup.
                 </p>
               </article>
 
               <article class="step-card reveal">
                 <span class="step-badge">Step 3</span>
-                <h3>Activate your savings experience</h3>
+                <h3>Access rewards</h3>
                 <p>
-                  Log into your tools, complete setup, and move into the Card Leo
-                  Rewards experience with confidence.
+                  Active members can view their profile, rewards, referrals,
+                  benefits, and account status.
                 </p>
               </article>
             </div>
           </div>
         </section>
 
-        <!-- Portal -->
         <section class="section section-dark" id="portal">
           <div class="container about-grid">
             <div class="section-copy reveal">
               <p class="eyebrow">Member Portal</p>
-              <h2>Already have your details? Go straight into your account.</h2>
+              <h2>Ready to access your account?</h2>
               <p>
-                If you’ve received your onboarding instructions and login details,
-                you can move directly into the member portal and continue your setup.
+                If your payment was successful, your membership can be activated
+                automatically after the backend confirms the payment.
               </p>
               <p>
-                This section gives users a clean bridge from registration into
-                real account access instead of leaving them at a dead end.
+                If portal access does not open right away, wait a moment and try
+                logging in again. Payment confirmation may take a short time to process.
               </p>
+
+              <div class="membership-summary">
+                <div class="membership-summary-card">
+                  <span>One-time activation fee</span>
+                  <strong class="gold">$25</strong>
+                </div>
+
+                <div class="membership-summary-card">
+                  <span>Monthly membership</span>
+                  <strong class="gold">$20/month</strong>
+                </div>
+
+                <div class="membership-summary-card">
+                  <span>Recurring billing date</span>
+                  <strong>10th of every month</strong>
+                </div>
+
+                <div class="membership-summary-card">
+                  <span>Approval method</span>
+                  <strong>Automatic after payment</strong>
+                </div>
+
+                <div class="membership-summary-card">
+                  <span>Reward payout window</span>
+                  <strong>1st–3rd monthly</strong>
+                </div>
+              </div>
+
               <div style="margin-top: 1.25rem;">
-                <a
-                  href="https://cardleo.my-office.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn btn-primary"
-                  >Open Members Login</a
-                >
+                <a href="/login.html" class="btn btn-primary">Open Member Login</a>
               </div>
             </div>
 
             <div class="feature-stack reveal">
               <article class="glass-card feature-card">
                 <span class="card-number">01</span>
-                <h3>Check your inbox</h3>
+                <h3>Payment confirmed</h3>
                 <p>
-                  Review all onboarding emails carefully before logging in so you
-                  have the right information.
+                  The billing webhook confirms successful activation and updates
+                  the member record.
                 </p>
               </article>
 
               <article class="glass-card feature-card">
                 <span class="card-number">02</span>
-                <h3>Access your portal</h3>
+                <h3>Account auto-approved</h3>
                 <p>
-                  Use your member login details to enter your account and review
-                  your setup options.
+                  Manual approval is no longer required once membership payment
+                  is completed successfully.
                 </p>
               </article>
 
               <article class="glass-card feature-card">
                 <span class="card-number">03</span>
-                <h3>Complete activation</h3>
+                <h3>Portal unlocked</h3>
                 <p>
-                  Finalize the remaining onboarding steps so you can begin using
-                  the perks experience fully.
+                  Active members can log in and access the internal Card Leo Rewards portal.
                 </p>
               </article>
             </div>
           </div>
         </section>
 
-        <!-- Helpful actions -->
         <section class="section" id="helpful-actions">
           <div class="container">
             <div class="section-heading reveal">
               <p class="eyebrow">Helpful Actions</p>
               <h2>Choose what you need next</h2>
               <p>
-                Give users the right next click based on where they are in the process.
+                Use the right next click based on where you are in the membership process.
               </p>
             </div>
 
             <div class="benefits-grid">
               <article class="glass-card benefit-card reveal">
                 <div class="icon-wrap">✦</div>
-                <h3>Review the onboarding flow</h3>
+                <h3>Log in to the portal</h3>
                 <p>
-                  Visit the Get Started page if you want to see the member path
-                  laid out step by step.
+                  Active paid members can use the login page to enter the member dashboard.
                 </p>
                 <div style="margin-top: 1rem;">
-                  <a href="./get-started.html" class="btn btn-secondary">View Get Started</a>
+                  <a href="/login.html" class="btn btn-secondary">Member Login</a>
                 </div>
               </article>
 
               <article class="glass-card benefit-card reveal">
                 <div class="icon-wrap">✧</div>
-                <h3>Learn more about the brand</h3>
+                <h3>Complete activation</h3>
                 <p>
-                  Visit the About page to understand the bigger Card Leo Rewards
-                  story, positioning, and value.
+                  If you did not finish checkout, return to signup and complete
+                  the paid activation process.
                 </p>
                 <div style="margin-top: 1rem;">
-                  <a href="./about.html" class="btn btn-secondary">Explore About</a>
+                  <a href="/signup.html?status=payment_required" class="btn btn-secondary">
+                    Complete Activation
+                  </a>
                 </div>
               </article>
 
@@ -316,29 +674,28 @@
                 <h3>Need support?</h3>
                 <p>
                   Use the Contact page if you need help with registration,
-                  onboarding, or portal questions.
+                  payment, onboarding, or portal access.
                 </p>
                 <div style="margin-top: 1rem;">
-                  <a href="./contact.html" class="btn btn-secondary">Contact Support</a>
+                  <a href="/contact.html" class="btn btn-secondary">Contact Support</a>
                 </div>
               </article>
             </div>
           </div>
         </section>
 
-        <!-- Confirmation panel -->
         <section class="section section-dark">
           <div class="container experience-grid">
             <div class="experience-copy reveal">
               <p class="eyebrow">Confirmation</p>
               <h2>You’re in the right place.</h2>
               <p>
-                A premium thank-you page should reassure the user, reduce confusion,
-                and give them a clear next action immediately after signup.
+                This page confirms your registration, explains your payment status,
+                and guides you into the correct next step.
               </p>
               <p>
-                This page is designed to do exactly that: confirm the registration,
-                guide the next steps, and move the member journey forward cleanly.
+                It supports both paths: successful payment activation and
+                payment-pending registration.
               </p>
             </div>
 
@@ -347,7 +704,7 @@
                 <p class="quote-mark">“</p>
                 <p class="quote-copy">
                   Great onboarding doesn’t end at signup. It continues with
-                  clarity, confidence, and the right next step.
+                  clarity, payment confirmation, and the right next step.
                 </p>
                 <span class="quote-author">Card Leo Rewards Experience</span>
               </div>
@@ -355,33 +712,29 @@
           </div>
         </section>
 
-        <!-- CTA -->
         <section class="section cta-section">
           <div class="container reveal">
             <div class="cta-panel">
-              <p class="eyebrow">Ready for your next click?</p>
-              <h2>Move into the member experience.</h2>
-              <p>
-                Continue your onboarding, review the full process, or go directly
-                into your portal if you already have your details.
+              <p class="eyebrow" id="ctaEyebrow">Ready for your next click?</p>
+              <h2 id="ctaTitle">Move into the member experience.</h2>
+              <p id="ctaCopy">
+                Continue your onboarding, log in to your member account, or contact
+                support if you need help.
               </p>
 
               <div class="cta-actions">
-                <a
-                  href="https://cardleo.my-office.app"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn btn-primary"
-                  >Members Login</a
-                >
-                <a href="./get-started.html" class="btn btn-secondary">Review Steps</a>
+                <a href="/login.html" class="btn btn-primary" id="ctaPrimary">
+                  Member Login
+                </a>
+                <a href="/get-started.html" class="btn btn-secondary" id="ctaSecondary">
+                  Review Steps
+                </a>
               </div>
             </div>
           </div>
         </section>
       </main>
 
-      <!-- Footer -->
       <footer class="site-footer">
         <div class="container footer-grid">
           <div class="footer-brand">
@@ -393,28 +746,23 @@
               </div>
             </div>
             <p>
-              Elevated rewards, smoother onboarding, and a cleaner path into
+              Luxury rewards, smoother onboarding, and a cleaner path into
               member value and portal access.
             </p>
           </div>
 
           <div class="footer-links">
             <h3>Navigate</h3>
-            <a href="./index.html">Home</a>
-            <a href="./about.html">About</a>
-            <a href="./get-started.html">Get Started</a>
-            <a href="./signup.html">Sign Up</a>
-            <a href="./contact.html">Contact</a>
+            <a href="/">Home</a>
+            <a href="/about.html">About</a>
+            <a href="/get-started.html">Get Started</a>
+            <a href="/signup.html">Sign Up</a>
+            <a href="/contact.html">Contact</a>
           </div>
 
           <div class="footer-links">
             <h3>Member Access</h3>
-            <a
-              href="https://cardleo.my-office.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              >Members Login</a
-            >
+            <a href="/login.html">Member Login</a>
             <a href="#next-steps">Next Steps</a>
             <a href="#portal">Portal Access</a>
           </div>
@@ -427,6 +775,192 @@
       </footer>
     </div>
 
-    <script src="./script.js"></script>
+    <script src="/script.js"></script>
+    <script>
+      (() => {
+        const params = new URLSearchParams(window.location.search);
+
+        const payment = String(params.get("payment") || "").toLowerCase();
+        const membership = String(params.get("membership") || "").toLowerCase();
+        const status = String(params.get("status") || "").toLowerCase();
+
+        const pageEyebrow = document.getElementById("pageEyebrow");
+        const pageTitle = document.getElementById("pageTitle");
+        const pageIntro = document.getElementById("pageIntro");
+        const alertBox = document.getElementById("confirmationAlert");
+        const primaryHeroAction = document.getElementById("primaryHeroAction");
+        const secondaryHeroAction = document.getElementById("secondaryHeroAction");
+        const spotlightPill = document.getElementById("spotlightPill");
+        const spotlightStatus = document.getElementById("spotlightStatus");
+        const spotlightTitle = document.getElementById("spotlightTitle");
+        const spotlightCopy = document.getElementById("spotlightCopy");
+        const membershipStatusPill = document.getElementById("membershipStatusPill");
+        const ctaEyebrow = document.getElementById("ctaEyebrow");
+        const ctaTitle = document.getElementById("ctaTitle");
+        const ctaCopy = document.getElementById("ctaCopy");
+        const ctaPrimary = document.getElementById("ctaPrimary");
+        const ctaSecondary = document.getElementById("ctaSecondary");
+
+        const setText = (node, value) => {
+          if (node) node.textContent = value;
+        };
+
+        const setHtml = (node, value) => {
+          if (node) node.innerHTML = value;
+        };
+
+        const setLink = (node, href, text) => {
+          if (!node) return;
+          node.href = href;
+          node.textContent = text;
+        };
+
+        const setAlert = (type, message) => {
+          if (!alertBox) return;
+
+          alertBox.classList.remove("is-success", "is-warning");
+
+          if (type === "success") {
+            alertBox.classList.add("is-success");
+          }
+
+          if (type === "warning") {
+            alertBox.classList.add("is-warning");
+          }
+
+          alertBox.innerHTML = message;
+        };
+
+        const showPaymentSuccess = () => {
+          setText(pageEyebrow, "Payment Successful");
+          setHtml(
+            pageTitle,
+            'Your Card Leo Rewards membership is <span class="text-gradient">activated.</span>'
+          );
+          setText(
+            pageIntro,
+            "Your payment was successful. Your account can now be automatically approved once the payment confirmation is processed."
+          );
+
+          setAlert(
+            "success",
+            "<strong>Status:</strong> payment successful. Your membership activation is being confirmed, and active members can log in to the portal."
+          );
+
+          setLink(primaryHeroAction, "/login.html", "Open Member Login");
+          setLink(secondaryHeroAction, "/portal/index.html", "Go to Portal");
+
+          setText(spotlightPill, "Black Card Access");
+          setText(spotlightStatus, "Paid");
+          setText(spotlightTitle, "Your membership payment was received");
+          setText(
+            spotlightCopy,
+            "Your $25 activation payment has been received. Your $20 monthly membership is set for recurring billing on the 10th."
+          );
+          setText(membershipStatusPill, "Payment Successful");
+
+          setText(ctaEyebrow, "Membership Activated");
+          setText(ctaTitle, "Continue into your member portal.");
+          setText(
+            ctaCopy,
+            "Use your email and password to access the Card Leo Rewards member portal."
+          );
+          setLink(ctaPrimary, "/login.html", "Member Login");
+          setLink(ctaSecondary, "/portal/index.html", "Open Portal");
+        };
+
+        const showPaymentCancelled = () => {
+          setText(pageEyebrow, "Payment Not Completed");
+          setHtml(
+            pageTitle,
+            'Your registration was saved, but payment is <span class="text-gradient">still required.</span>'
+          );
+          setText(
+            pageIntro,
+            "Your account information may have been received, but membership access requires completing the activation payment."
+          );
+
+          setAlert(
+            "warning",
+            "<strong>Status:</strong> payment was cancelled or not completed. Complete activation to unlock member access."
+          );
+
+          setLink(primaryHeroAction, "/signup.html?payment=cancelled", "Complete Activation");
+          setLink(secondaryHeroAction, "/login.html?payment=cancelled", "Try Login");
+
+          setText(spotlightPill, "Black Card Access");
+          setText(spotlightStatus, "Action Needed");
+          setText(spotlightTitle, "Membership payment is still required");
+          setText(
+            spotlightCopy,
+            "To activate your account, complete the $25 activation payment and the $20 monthly membership setup."
+          );
+          setText(membershipStatusPill, "Payment Pending");
+
+          setText(ctaEyebrow, "Finish Activation");
+          setText(ctaTitle, "Complete your membership payment.");
+          setText(
+            ctaCopy,
+            "Return to signup or login to continue secure checkout and activate your membership."
+          );
+          setLink(ctaPrimary, "/signup.html?payment=cancelled", "Complete Activation");
+          setLink(ctaSecondary, "/contact.html", "Contact Support");
+        };
+
+        const showPaymentPending = () => {
+          setText(pageEyebrow, "Registration Received");
+          setHtml(
+            pageTitle,
+            'Your signup was received. Next, <span class="text-gradient">activate your membership.</span>'
+          );
+          setText(
+            pageIntro,
+            "Your registration profile has been created. Complete payment to activate your account and unlock member portal access."
+          );
+
+          setAlert(
+            "warning",
+            "<strong>Status:</strong> registration received. Membership remains payment pending until checkout is completed."
+          );
+
+          setLink(primaryHeroAction, "/signup.html?status=payment_required", "Complete Payment");
+          setLink(secondaryHeroAction, "/login.html?status=payment_required", "Member Login");
+
+          setText(spotlightPill, "Black Card Access");
+          setText(spotlightStatus, "Payment Required");
+          setText(spotlightTitle, "Complete payment to unlock access");
+          setText(
+            spotlightCopy,
+            "The activation setup is $25 one time, followed by $20/month recurring billing on the 10th."
+          );
+          setText(membershipStatusPill, "Activation Required");
+
+          setText(ctaEyebrow, "Payment Required");
+          setText(ctaTitle, "Activate your Card Leo Rewards membership.");
+          setText(
+            ctaCopy,
+            "Complete the secure payment step so your account can be automatically approved."
+          );
+          setLink(ctaPrimary, "/signup.html?status=payment_required", "Complete Payment");
+          setLink(ctaSecondary, "/contact.html", "Contact Support");
+        };
+
+        if (
+          payment === "success" ||
+          membership === "activated" ||
+          status === "active"
+        ) {
+          showPaymentSuccess();
+        } else if (payment === "cancelled" || payment === "canceled") {
+          showPaymentCancelled();
+        } else if (
+          status === "payment_required" ||
+          status === "payment_pending" ||
+          membership === "payment_pending"
+        ) {
+          showPaymentPending();
+        }
+      })();
+    </script>
   </body>
 </html>

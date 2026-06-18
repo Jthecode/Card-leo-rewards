@@ -1,0 +1,1563 @@
+<!-- admin/reports.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <title>Admin Reports | Card Leo Rewards</title>
+
+    <meta
+      name="description"
+      content="Card Leo Rewards admin reports dashboard for daily signups, paid members, denied members, referral rewards, payouts, billing, and monthly reporting."
+    />
+    <meta
+      name="keywords"
+      content="Card Leo Rewards admin reports, daily reports, monthly reports, signups, paid members, denied members, referral rewards, payouts"
+    />
+    <meta name="theme-color" content="#030303" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link
+      rel="canonical"
+      href="https://www.cardleorewards.com/admin/reports.html"
+    />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --leo-black: #030303;
+        --leo-panel: rgba(9, 9, 9, 0.92);
+        --leo-gold: #e7b64f;
+        --leo-gold-2: #f7d98b;
+        --leo-white: #f8f3e7;
+        --leo-muted: rgba(248, 243, 231, 0.68);
+        --leo-muted-2: rgba(248, 243, 231, 0.5);
+        --leo-green: #48f06b;
+        --leo-red: #ff7676;
+        --leo-yellow: #ffd166;
+        --leo-line: rgba(231, 182, 79, 0.22);
+        --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
+        --sidebar-width: 290px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--leo-white);
+        background:
+          radial-gradient(circle at 84% 9%, rgba(231, 182, 79, 0.13), transparent 26%),
+          radial-gradient(circle at 55% 100%, rgba(231, 182, 79, 0.08), transparent 28%),
+          linear-gradient(180deg, #030303 0%, #080808 46%, #010101 100%);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .admin-shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: var(--sidebar-width) 1fr;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          radial-gradient(circle at 72% 24%, rgba(231, 182, 79, 0.07), transparent 28%);
+        background-size: 96px 96px, auto;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
+        padding: 30px 22px;
+        border-right: 1px solid rgba(231, 182, 79, 0.18);
+        background:
+          radial-gradient(circle at top, rgba(231, 182, 79, 0.12), transparent 30%),
+          rgba(0, 0, 0, 0.72);
+        backdrop-filter: blur(20px);
+      }
+
+      .brand-lockup {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .lion-logo {
+        width: 128px;
+        height: 78px;
+        margin: 0 auto 8px;
+        display: grid;
+        place-items: center;
+        color: var(--leo-gold-2);
+        font-size: 2.8rem;
+        filter: drop-shadow(0 0 20px rgba(231, 182, 79, 0.3));
+      }
+
+      .brand-lockup h1 {
+        margin: 0;
+        font-family: "Playfair Display", serif;
+        font-size: 1.82rem;
+        line-height: 0.95;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .brand-lockup span {
+        display: block;
+        margin-top: 0.28rem;
+        color: var(--leo-gold);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+
+      .side-nav {
+        display: grid;
+        gap: 8px;
+      }
+
+      .side-link,
+      .logout-btn {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        min-height: 52px;
+        width: 100%;
+        padding: 0 16px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: rgba(248, 243, 231, 0.82);
+        font-size: 0.98rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.22s ease;
+      }
+
+      .side-link:hover,
+      .logout-btn:hover,
+      .side-link.is-active {
+        color: #070707;
+        background: linear-gradient(135deg, #f7d98b, #b87912);
+        box-shadow: 0 16px 42px rgba(184, 121, 18, 0.24);
+      }
+
+      .side-icon {
+        width: 24px;
+        text-align: center;
+        font-size: 1.08rem;
+      }
+
+      .admin-card {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.16), transparent 36%),
+          rgba(255, 255, 255, 0.035);
+      }
+
+      .admin-card h2 {
+        margin: 0 0 10px;
+        color: var(--leo-gold-2);
+        font-size: 1.35rem;
+        line-height: 1.05;
+        text-transform: uppercase;
+      }
+
+      .admin-card p {
+        margin: 0;
+        color: var(--leo-muted);
+        line-height: 1.55;
+      }
+
+      .mobile-topbar {
+        display: none;
+      }
+
+      .main {
+        min-width: 0;
+        padding: 28px;
+      }
+
+      .panel {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
+        background:
+          radial-gradient(circle at 90% 10%, rgba(231, 182, 79, 0.14), transparent 34%),
+          linear-gradient(180deg, rgba(19, 19, 19, 0.92), rgba(4, 4, 4, 0.94));
+        box-shadow: var(--leo-shadow);
+      }
+
+      .panel-inner {
+        position: relative;
+        z-index: 1;
+        padding: 24px;
+      }
+
+      .top-grid {
+        display: grid;
+        grid-template-columns: 1fr minmax(280px, 420px);
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        color: var(--leo-gold);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.72rem;
+        font-weight: 900;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 30px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--leo-gold), transparent);
+      }
+
+      .hero-title {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        line-height: 1;
+        letter-spacing: -0.05em;
+      }
+
+      .hero-title span {
+        color: var(--leo-gold);
+      }
+
+      .hero-text {
+        max-width: 760px;
+        margin: 14px 0 0;
+        color: var(--leo-muted);
+        line-height: 1.75;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 26px;
+      }
+
+      .btn,
+      .status-pill,
+      .admin-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        transition: 0.25s ease;
+        white-space: nowrap;
+      }
+
+      .btn {
+        min-height: 48px;
+        padding: 0 18px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 52%, #8b5b0b 100%);
+        color: #080808;
+        box-shadow:
+          0 18px 42px rgba(216, 154, 34, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.045);
+        border-color: rgba(231, 182, 79, 0.22);
+        color: var(--leo-white);
+      }
+
+      .btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .admin-badge,
+      .status-pill {
+        min-height: 34px;
+        padding: 0 12px;
+        font-size: 0.82rem;
+        font-weight: 800;
+      }
+
+      .admin-badge {
+        border-color: rgba(231, 182, 79, 0.36);
+        background: rgba(231, 182, 79, 0.12);
+        color: var(--leo-gold-2);
+      }
+
+      .status-pill {
+        background: rgba(72, 240, 107, 0.12);
+        border-color: rgba(72, 240, 107, 0.22);
+        color: #bfffe5;
+      }
+
+      .status-pill.pending {
+        background: rgba(255, 209, 102, 0.12);
+        border-color: rgba(255, 209, 102, 0.24);
+        color: #ffeaa6;
+      }
+
+      .status-pill.error {
+        background: rgba(255, 118, 118, 0.12);
+        border-color: rgba(255, 118, 118, 0.24);
+        color: #ffd2d8;
+      }
+
+      .black-card-preview {
+        min-height: 255px;
+        border-radius: 24px;
+        overflow: hidden;
+        padding: 22px;
+        background:
+          radial-gradient(circle at 82% 14%, rgba(247, 217, 139, 0.24), transparent 32%),
+          linear-gradient(145deg, #050505, #101010 46%, #000);
+        border: 1px solid rgba(231, 182, 79, 0.28);
+        box-shadow:
+          0 28px 70px rgba(0, 0, 0, 0.5),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.045);
+      }
+
+      .black-card-top,
+      .black-card-bottom {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .black-card-logo {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.35);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--leo-gold-2);
+        font-weight: 900;
+        letter-spacing: 0.08em;
+      }
+
+      .black-card-chip {
+        width: 54px;
+        height: 38px;
+        border-radius: 12px;
+        background:
+          linear-gradient(135deg, #f7d98b, #a66f10),
+          #d89a22;
+        box-shadow: 0 12px 28px rgba(216, 154, 34, 0.28);
+      }
+
+      .black-card-middle {
+        margin-top: 2.4rem;
+      }
+
+      .black-card-middle h2 {
+        margin: 0;
+        color: var(--leo-white);
+        font-size: clamp(1.5rem, 3vw, 2.1rem);
+        letter-spacing: -0.04em;
+      }
+
+      .black-card-middle p {
+        margin: 0.4rem 0 0;
+        color: var(--leo-muted);
+      }
+
+      .black-card-bottom {
+        margin-top: 2rem;
+        color: var(--leo-gold);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+
+      .stat-card .panel-inner {
+        display: grid;
+        gap: 8px;
+        text-align: center;
+        min-height: 150px;
+        place-items: center;
+      }
+
+      .stat-label {
+        color: var(--leo-muted-2);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-weight: 900;
+      }
+
+      .stat-number {
+        color: var(--leo-gold);
+        font-size: clamp(1.6rem, 4vw, 2.35rem);
+        line-height: 1;
+        font-weight: 900;
+      }
+
+      .stat-note {
+        color: var(--leo-muted);
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .section-title-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .section-title-row h2,
+      .section-title-row h3 {
+        margin: 0;
+        color: var(--leo-white);
+        font-size: 1.45rem;
+        letter-spacing: -0.03em;
+      }
+
+      .section-title-row p {
+        margin: 8px 0 0;
+        color: var(--leo-muted);
+        line-height: 1.65;
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: 1fr 180px 180px auto;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .filters input,
+      .filters select {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 14px;
+        border: 1px solid rgba(231, 182, 79, 0.16);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--leo-white);
+        padding: 0 14px;
+        outline: none;
+      }
+
+      .filters input::placeholder {
+        color: rgba(248, 243, 231, 0.45);
+      }
+
+      .report-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .summary-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(231, 182, 79, 0.14);
+      }
+
+      .summary-row span {
+        color: var(--leo-muted);
+      }
+
+      .summary-row strong {
+        color: var(--leo-gold-2);
+        text-align: right;
+      }
+
+      .table-wrap {
+        overflow: auto;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      table {
+        width: 100%;
+        min-width: 980px;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        vertical-align: middle;
+      }
+
+      th {
+        color: rgba(248, 243, 231, 0.6);
+        font-size: 0.76rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      td {
+        color: var(--leo-white);
+        font-size: 0.92rem;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .muted {
+        color: var(--leo-muted);
+      }
+
+      .money {
+        color: var(--leo-green);
+        font-weight: 900;
+      }
+
+      .status-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 28px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 800;
+      }
+
+      .status-tag.paid,
+      .status-tag.active,
+      .status-tag.approved {
+        color: #d9ffe2;
+        background: rgba(72, 240, 107, 0.14);
+        border: 1px solid rgba(72, 240, 107, 0.25);
+      }
+
+      .status-tag.pending {
+        color: #ffeaa6;
+        background: rgba(255, 209, 102, 0.12);
+        border: 1px solid rgba(255, 209, 102, 0.24);
+      }
+
+      .status-tag.cancelled,
+      .status-tag.denied,
+      .status-tag.failed {
+        color: #ffd2d8;
+        background: rgba(255, 118, 118, 0.12);
+        border: 1px solid rgba(255, 118, 118, 0.24);
+      }
+
+      .status-banner {
+        display: none;
+        margin-bottom: 18px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--leo-muted);
+      }
+
+      .status-banner.show {
+        display: block;
+      }
+
+      .status-banner.success {
+        color: #bfffe5;
+        border-color: rgba(72, 240, 107, 0.24);
+        background: rgba(72, 240, 107, 0.1);
+      }
+
+      .status-banner.error {
+        color: #ffd2d8;
+        border-color: rgba(255, 118, 118, 0.24);
+        background: rgba(255, 118, 118, 0.1);
+      }
+
+      .status-banner.warning {
+        color: #ffeaa6;
+        border-color: rgba(255, 209, 102, 0.24);
+        background: rgba(255, 209, 102, 0.1);
+      }
+
+      .empty-box {
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px dashed rgba(255, 255, 255, 0.16);
+        color: var(--leo-muted);
+        text-align: center;
+      }
+
+      .footer-note {
+        margin-top: 22px;
+        text-align: center;
+        color: var(--leo-muted-2);
+        font-size: 0.86rem;
+      }
+
+      @media (max-width: 1180px) {
+        .admin-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .mobile-topbar {
+          display: flex;
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 14px 18px;
+          border-bottom: 1px solid rgba(231, 182, 79, 0.18);
+          background: rgba(0, 0, 0, 0.82);
+          backdrop-filter: blur(18px);
+        }
+
+        .mobile-topbar strong {
+          color: var(--leo-gold-2);
+        }
+
+        .top-grid,
+        .report-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stat-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .filters {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .main {
+          padding: 18px;
+        }
+
+        .stat-grid,
+        .filters {
+          grid-template-columns: 1fr;
+        }
+
+        .section-title-row,
+        .summary-row,
+        .black-card-bottom {
+          flex-direction: column;
+        }
+
+        .summary-row strong {
+          text-align: left;
+        }
+
+        .hero-actions,
+        .btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+
+  <body data-require-auth data-cardleo-admin-guard="auto">
+    <div class="mobile-topbar">
+      <strong>Card Leo Admin</strong>
+      <a href="/admin/reports.html" class="admin-badge">Reports</a>
+    </div>
+
+    <div class="admin-shell">
+      <aside class="sidebar">
+        <div class="brand-lockup">
+          <div class="lion-logo" aria-hidden="true">♛</div>
+          <h1>Card Leo</h1>
+          <span>Admin</span>
+        </div>
+
+        <nav class="side-nav" aria-label="Admin navigation">
+          <a class="side-link" href="/admin/members.html">
+            <span class="side-icon">▣</span>
+            <span>Members</span>
+          </a>
+
+          <a class="side-link" href="/admin/rewards.html">
+            <span class="side-icon">🎁</span>
+            <span>Rewards</span>
+          </a>
+
+          <a class="side-link" href="/admin/payouts.html">
+            <span class="side-icon">▱</span>
+            <span>Payouts</span>
+          </a>
+
+          <a class="side-link is-active" href="/admin/reports.html">
+            <span class="side-icon">◷</span>
+            <span>Reports</span>
+          </a>
+
+          <a class="side-link" href="/portal/index.html">
+            <span class="side-icon">♚</span>
+            <span>Portal View</span>
+          </a>
+
+          <button class="logout-btn" type="button" id="logoutButton">
+            <span class="side-icon">↪</span>
+            <span>Logout</span>
+          </button>
+        </nav>
+
+        <div class="admin-card">
+          <h2>Reporting</h2>
+          <p>Daily and monthly reports for signups, payments, rewards, and payouts.</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div id="statusBanner" class="status-banner"></div>
+
+        <section class="top-grid">
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="eyebrow">Admin Reports</div>
+
+              <h1 class="hero-title">
+                Daily and monthly <span>reporting.</span>
+              </h1>
+
+              <p class="hero-text">
+                Track daily signups, paid members, cancelled or denied members,
+                referral rewards, monthly payouts, billing status, and member growth.
+              </p>
+
+              <div class="hero-actions">
+                <button class="btn btn-primary" id="refreshButton" type="button">
+                  Refresh Reports
+                </button>
+
+                <button class="btn btn-secondary" id="exportButton" type="button">
+                  Export CSV
+                </button>
+
+                <a class="btn btn-secondary" href="/admin/payouts.html">
+                  Payouts
+                </a>
+              </div>
+            </div>
+          </article>
+
+          <aside class="black-card-preview">
+            <div class="black-card-top">
+              <div class="black-card-logo">CL</div>
+              <div class="black-card-chip"></div>
+            </div>
+
+            <div class="black-card-middle">
+              <h2>Reports</h2>
+              <p id="cardSubtitle">Daily and monthly view</p>
+            </div>
+
+            <div class="black-card-bottom">
+              <span id="cardRange">Current Month</span>
+              <span id="cardStatus">Ready</span>
+            </div>
+          </aside>
+        </section>
+
+        <section class="panel">
+          <div class="panel-inner">
+            <div class="filters">
+              <input id="searchInput" type="search" placeholder="Search report rows..." />
+
+              <select id="reportType">
+                <option value="monthly">Monthly Report</option>
+                <option value="daily">Daily Report</option>
+                <option value="signups">Signup Report</option>
+                <option value="billing">Billing Report</option>
+                <option value="rewards">Rewards Report</option>
+                <option value="payouts">Payout Report</option>
+              </select>
+
+              <select id="statusFilter">
+                <option value="">All statuses</option>
+                <option value="active">Active</option>
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="denied">Denied</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+
+              <button class="btn btn-secondary" id="applyFiltersButton" type="button">
+                Apply
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="stat-grid" style="margin-top: 20px;">
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Daily Signups</div>
+              <div class="stat-number" id="dailySignups">0</div>
+              <div class="stat-note">New members today.</div>
+            </div>
+          </article>
+
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Paid Members</div>
+              <div class="stat-number" id="paidMembers">0</div>
+              <div class="stat-note">Payment confirmed members.</div>
+            </div>
+          </article>
+
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Denied / Cancelled</div>
+              <div class="stat-number" id="deniedMembers">0</div>
+              <div class="stat-note">Denied, cancelled, or failed members.</div>
+            </div>
+          </article>
+
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Monthly Rewards</div>
+              <div class="stat-number" id="monthlyRewards">$0</div>
+              <div class="stat-note">Estimated reward payouts.</div>
+            </div>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <section class="report-grid">
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h2>Monthly Summary</h2>
+                    <p>
+                      High-level numbers for memberships, billing, referral rewards,
+                      and payout preparation.
+                    </p>
+                  </div>
+                  <span class="status-pill pending" id="reportStatusBadge">Loading</span>
+                </div>
+
+                <div class="summary-grid">
+                  <div class="summary-row">
+                    <span>Total Signups</span>
+                    <strong id="totalSignups">0</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Active Paid Members</span>
+                    <strong id="activePaidMembers">0</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Payment Pending</span>
+                    <strong id="paymentPending">0</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Approved Referrals</span>
+                    <strong id="approvedReferrals">0</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Pending Referrals</span>
+                    <strong id="pendingReferrals">0</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Total Reward Estimate</span>
+                    <strong id="totalRewardEstimate">$0</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Payout Window</span>
+                    <strong>1st–3rd monthly</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Billing Model</span>
+                    <strong>$25 activation + $20 monthly</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h2>Report Rules</h2>
+                    <p>
+                      Current business rules used inside reporting.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="summary-grid">
+                  <div class="summary-row">
+                    <span>Signup Approval</span>
+                    <strong>Automatic after payment</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Referral Reward</span>
+                    <strong>$7 approved referral</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Recurring Billing</span>
+                    <strong>10th of every month</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Monthly Payout Preparation</span>
+                    <strong>1st–3rd monthly</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Member Tiers</span>
+                    <strong>Keep existing tiers</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Color Report Logic</span>
+                    <strong>Paid = green, denied/cancelled = red</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="section-title-row">
+                <div>
+                  <h2>Report Rows</h2>
+                  <p>
+                    Daily and monthly report data for members, rewards, billing,
+                    and payout activity.
+                  </p>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table aria-label="Admin report rows">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Member</th>
+                      <th>Email</th>
+                      <th>Status</th>
+                      <th>Payment</th>
+                      <th>Approved Referrals</th>
+                      <th>Reward Estimate</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="reportsTableBody">
+                    <tr>
+                      <td colspan="7">
+                        <div class="empty-box">Loading report rows...</div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <div class="footer-note">
+          Card Leo Rewards Admin · Reports Dashboard
+        </div>
+      </main>
+    </div>
+
+    <script src="/assets/js/auth-guard.js"></script>
+    <script>
+      (() => {
+        const API = {
+          reports: "/api/admin/reports",
+          logout: "/api/auth/logout",
+        };
+
+        const els = {
+          statusBanner: document.getElementById("statusBanner"),
+          logoutButton: document.getElementById("logoutButton"),
+          refreshButton: document.getElementById("refreshButton"),
+          exportButton: document.getElementById("exportButton"),
+          applyFiltersButton: document.getElementById("applyFiltersButton"),
+
+          searchInput: document.getElementById("searchInput"),
+          reportType: document.getElementById("reportType"),
+          statusFilter: document.getElementById("statusFilter"),
+
+          reportStatusBadge: document.getElementById("reportStatusBadge"),
+
+          dailySignups: document.getElementById("dailySignups"),
+          paidMembers: document.getElementById("paidMembers"),
+          deniedMembers: document.getElementById("deniedMembers"),
+          monthlyRewards: document.getElementById("monthlyRewards"),
+
+          totalSignups: document.getElementById("totalSignups"),
+          activePaidMembers: document.getElementById("activePaidMembers"),
+          paymentPending: document.getElementById("paymentPending"),
+          approvedReferrals: document.getElementById("approvedReferrals"),
+          pendingReferrals: document.getElementById("pendingReferrals"),
+          totalRewardEstimate: document.getElementById("totalRewardEstimate"),
+
+          reportsTableBody: document.getElementById("reportsTableBody"),
+          cardSubtitle: document.getElementById("cardSubtitle"),
+          cardStatus: document.getElementById("cardStatus"),
+          cardRange: document.getElementById("cardRange"),
+        };
+
+        let rows = [];
+        let summary = {};
+
+        const money = (value) => {
+          const number = Number(value || 0);
+
+          return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(Number.isFinite(number) ? number : 0);
+        };
+
+        const escapeHtml = (value) =>
+          String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+
+        const normalizeText = (value, fallback = "") => {
+          const text = String(value ?? "").trim();
+          return text || fallback;
+        };
+
+        const titleCase = (value) =>
+          String(value || "")
+            .replace(/[_-]+/g, " ")
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(" ");
+
+        const isObject = (value) =>
+          Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+        const unwrap = (payload) => {
+          if (!isObject(payload)) return {};
+          return isObject(payload.data) ? payload.data : payload;
+        };
+
+        const currentMonth = () => {
+          const date = new Date();
+          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+        };
+
+        const formatDate = (value) => {
+          if (!value) return "—";
+
+          const date = new Date(value);
+          if (Number.isNaN(date.getTime())) return String(value);
+
+          return new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          }).format(date);
+        };
+
+        async function fetchJson(url, options = {}) {
+          const response = await fetch(url, {
+            method: options.method || "GET",
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              ...(options.body ? { "Content-Type": "application/json" } : {}),
+              ...(options.headers || {}),
+            },
+            ...options,
+          });
+
+          const payload = await response.json().catch(() => ({}));
+
+          if (response.status === 401) {
+            window.location.href =
+              "/login.html?next=" +
+              encodeURIComponent(window.location.pathname + window.location.search);
+            return null;
+          }
+
+          if (!response.ok || payload?.success === false || payload?.ok === false) {
+            const error = new Error(
+              payload?.message || payload?.error || "Request failed."
+            );
+            error.status = response.status;
+            error.payload = payload;
+            throw error;
+          }
+
+          return unwrap(payload);
+        }
+
+        function showBanner(message, type = "") {
+          if (!message) {
+            els.statusBanner.className = "status-banner";
+            els.statusBanner.textContent = "";
+            return;
+          }
+
+          els.statusBanner.textContent = message;
+          els.statusBanner.className = `status-banner show ${type}`.trim();
+        }
+
+        function setLoading(button, loading, loadingText) {
+          if (!button) return;
+
+          if (!button.dataset.originalText) {
+            button.dataset.originalText = button.textContent;
+          }
+
+          button.disabled = loading;
+          button.textContent = loading ? loadingText : button.dataset.originalText;
+        }
+
+        function defaultRows() {
+          return [
+            {
+              date: new Date().toISOString(),
+              member: "Sample Paid Member",
+              email: "paid@example.com",
+              status: "active",
+              payment: "paid",
+              approvedReferrals: 5,
+              rewardEstimate: 35,
+            },
+            {
+              date: new Date().toISOString(),
+              member: "Sample Pending Member",
+              email: "pending@example.com",
+              status: "pending",
+              payment: "pending",
+              approvedReferrals: 0,
+              rewardEstimate: 0,
+            },
+            {
+              date: new Date().toISOString(),
+              member: "Sample Cancelled Member",
+              email: "cancelled@example.com",
+              status: "cancelled",
+              payment: "cancelled",
+              approvedReferrals: 0,
+              rewardEstimate: 0,
+            },
+          ];
+        }
+
+        function normalizeRow(row, index) {
+          const approved = Number(
+            row.approvedReferrals || row.approved_referrals || row.approved || 0
+          );
+
+          return {
+            date:
+              row.date ||
+              row.created_at ||
+              row.createdAt ||
+              row.joined_at ||
+              new Date().toISOString(),
+            member:
+              normalizeText(row.member) ||
+              normalizeText(row.memberName) ||
+              normalizeText(row.member_name) ||
+              normalizeText(row.name) ||
+              normalizeText(row.full_name) ||
+              `Member #${index + 1}`,
+            email:
+              normalizeText(row.email) ||
+              normalizeText(row.member_email) ||
+              "No email",
+            status:
+              normalizeText(row.status || row.member_status, "pending").toLowerCase(),
+            payment:
+              normalizeText(row.payment || row.payment_status, "pending").toLowerCase(),
+            approvedReferrals: approved,
+            rewardEstimate: Number(
+              row.rewardEstimate ||
+                row.reward_estimate ||
+                row.estimated_rewards ||
+                row.estimatedRewards ||
+                approved * 7 ||
+                0
+            ),
+          };
+        }
+
+        function normalizePayload(payload = {}) {
+          const root = unwrap(payload);
+
+          const apiRows = Array.isArray(root.rows)
+            ? root.rows
+            : Array.isArray(root.reports)
+              ? root.reports
+              : Array.isArray(root.items)
+                ? root.items
+                : [];
+
+          const normalizedRows = apiRows.length
+            ? apiRows.map(normalizeRow)
+            : defaultRows();
+
+          const apiSummary = root.summary || {};
+
+          const paidMembers = normalizedRows.filter((row) =>
+            ["paid", "active", "current", "succeeded"].includes(row.payment)
+          ).length;
+
+          const deniedMembers = normalizedRows.filter((row) =>
+            ["denied", "cancelled", "canceled", "failed"].includes(row.status) ||
+            ["denied", "cancelled", "canceled", "failed"].includes(row.payment)
+          ).length;
+
+          const paymentPending = normalizedRows.filter((row) =>
+            ["pending", "payment_pending", "unpaid"].includes(row.payment)
+          ).length;
+
+          const approvedReferrals = normalizedRows.reduce(
+            (sum, row) => sum + Number(row.approvedReferrals || 0),
+            0
+          );
+
+          const rewardEstimate = normalizedRows.reduce(
+            (sum, row) => sum + Number(row.rewardEstimate || 0),
+            0
+          );
+
+          return {
+            rows: normalizedRows,
+            summary: {
+              dailySignups:
+                Number(apiSummary.dailySignups || apiSummary.daily_signups) ||
+                normalizedRows.length,
+              paidMembers:
+                Number(apiSummary.paidMembers || apiSummary.paid_members) ||
+                paidMembers,
+              deniedMembers:
+                Number(apiSummary.deniedMembers || apiSummary.denied_members) ||
+                deniedMembers,
+              monthlyRewards:
+                Number(apiSummary.monthlyRewards || apiSummary.monthly_rewards) ||
+                rewardEstimate,
+              totalSignups:
+                Number(apiSummary.totalSignups || apiSummary.total_signups) ||
+                normalizedRows.length,
+              activePaidMembers:
+                Number(apiSummary.activePaidMembers || apiSummary.active_paid_members) ||
+                paidMembers,
+              paymentPending:
+                Number(apiSummary.paymentPending || apiSummary.payment_pending) ||
+                paymentPending,
+              approvedReferrals:
+                Number(apiSummary.approvedReferrals || apiSummary.approved_referrals) ||
+                approvedReferrals,
+              pendingReferrals:
+                Number(apiSummary.pendingReferrals || apiSummary.pending_referrals) ||
+                0,
+              totalRewardEstimate:
+                Number(apiSummary.totalRewardEstimate || apiSummary.total_reward_estimate) ||
+                rewardEstimate,
+            },
+          };
+        }
+
+        function renderSummary() {
+          els.dailySignups.textContent = String(summary.dailySignups || 0);
+          els.paidMembers.textContent = String(summary.paidMembers || 0);
+          els.deniedMembers.textContent = String(summary.deniedMembers || 0);
+          els.monthlyRewards.textContent = money(summary.monthlyRewards || 0);
+
+          els.totalSignups.textContent = String(summary.totalSignups || 0);
+          els.activePaidMembers.textContent = String(summary.activePaidMembers || 0);
+          els.paymentPending.textContent = String(summary.paymentPending || 0);
+          els.approvedReferrals.textContent = String(summary.approvedReferrals || 0);
+          els.pendingReferrals.textContent = String(summary.pendingReferrals || 0);
+          els.totalRewardEstimate.textContent = money(summary.totalRewardEstimate || 0);
+
+          els.cardSubtitle.textContent = `${summary.totalSignups || 0} signups`;
+          els.cardStatus.textContent = `${summary.paidMembers || 0} Paid`;
+          els.cardRange.textContent = currentMonth();
+        }
+
+        function getFilteredRows() {
+          const search = normalizeText(els.searchInput.value).toLowerCase();
+          const status = normalizeText(els.statusFilter.value).toLowerCase();
+
+          return rows.filter((row) => {
+            const matchesSearch =
+              !search ||
+              row.member.toLowerCase().includes(search) ||
+              row.email.toLowerCase().includes(search) ||
+              row.status.toLowerCase().includes(search) ||
+              row.payment.toLowerCase().includes(search);
+
+            const matchesStatus =
+              !status || row.status === status || row.payment === status;
+
+            return matchesSearch && matchesStatus;
+          });
+        }
+
+        function renderTable() {
+          const filteredRows = getFilteredRows();
+
+          if (!filteredRows.length) {
+            els.reportsTableBody.innerHTML = `
+              <tr>
+                <td colspan="7">
+                  <div class="empty-box">No report rows found.</div>
+                </td>
+              </tr>
+            `;
+            return;
+          }
+
+          els.reportsTableBody.innerHTML = filteredRows
+            .map(
+              (row) => `
+                <tr>
+                  <td>${escapeHtml(formatDate(row.date))}</td>
+                  <td>${escapeHtml(row.member)}</td>
+                  <td class="muted">${escapeHtml(row.email)}</td>
+                  <td>
+                    <span class="status-tag ${escapeHtml(row.status)}">
+                      ${escapeHtml(titleCase(row.status))}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="status-tag ${escapeHtml(row.payment)}">
+                      ${escapeHtml(titleCase(row.payment))}
+                    </span>
+                  </td>
+                  <td>${escapeHtml(row.approvedReferrals)}</td>
+                  <td class="money">${escapeHtml(money(row.rewardEstimate))}</td>
+                </tr>
+              `
+            )
+            .join("");
+        }
+
+        async function loadReports() {
+          setLoading(els.refreshButton, true, "Refreshing...");
+          els.reportStatusBadge.textContent = "Loading";
+          els.reportStatusBadge.className = "status-pill pending";
+
+          try {
+            const params = new URLSearchParams();
+            params.set("type", els.reportType.value || "monthly");
+
+            const status = normalizeText(els.statusFilter.value);
+            if (status) params.set("status", status);
+
+            const data = await fetchJson(`${API.reports}?${params.toString()}`);
+            if (!data) return;
+
+            const model = normalizePayload(data);
+
+            rows = model.rows;
+            summary = model.summary;
+
+            renderSummary();
+            renderTable();
+
+            els.reportStatusBadge.textContent = "Loaded";
+            els.reportStatusBadge.className = "status-pill";
+            showBanner("Reports loaded.", "success");
+          } catch (error) {
+            console.error("[admin/reports] load error:", error);
+
+            const model = normalizePayload({});
+            rows = model.rows;
+            summary = model.summary;
+
+            renderSummary();
+            renderTable();
+
+            els.reportStatusBadge.textContent = "Fallback";
+            els.reportStatusBadge.className = "status-pill pending";
+
+            showBanner(
+              error?.message || "Unable to load reports. Showing fallback report data.",
+              "warning"
+            );
+          } finally {
+            setLoading(els.refreshButton, false, "Refresh Reports");
+          }
+        }
+
+        function exportCsv() {
+          const filteredRows = getFilteredRows();
+
+          const headers = [
+            "Date",
+            "Member",
+            "Email",
+            "Status",
+            "Payment",
+            "Approved Referrals",
+            "Reward Estimate",
+          ];
+
+          const csvRows = [
+            headers,
+            ...filteredRows.map((row) => [
+              formatDate(row.date),
+              row.member,
+              row.email,
+              row.status,
+              row.payment,
+              row.approvedReferrals,
+              row.rewardEstimate,
+            ]),
+          ];
+
+          const csv = csvRows
+            .map((row) =>
+              row
+                .map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`)
+                .join(",")
+            )
+            .join("\n");
+
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+
+          link.href = url;
+          link.download = `card-leo-reports-${currentMonth()}.csv`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
+
+          showBanner("CSV export created.", "success");
+        }
+
+        async function handleLogout() {
+          if (!els.logoutButton) return;
+
+          const originalText = els.logoutButton.textContent;
+          els.logoutButton.disabled = true;
+          els.logoutButton.textContent = "Logging out...";
+
+          try {
+            await fetch(API.logout, {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                Accept: "application/json",
+              },
+            });
+
+            window.location.href = "/login.html";
+          } catch (error) {
+            console.error("[admin/reports] logout error:", error);
+            els.logoutButton.disabled = false;
+            els.logoutButton.textContent = originalText;
+            alert("We couldn't log you out right now. Please try again.");
+          }
+        }
+
+        els.refreshButton?.addEventListener("click", loadReports);
+        els.exportButton?.addEventListener("click", exportCsv);
+        els.applyFiltersButton?.addEventListener("click", () => {
+          renderTable();
+          showBanner("Filters applied.", "success");
+        });
+
+        els.searchInput?.addEventListener("input", renderTable);
+        els.statusFilter?.addEventListener("change", renderTable);
+        els.reportType?.addEventListener("change", loadReports);
+        els.logoutButton?.addEventListener("click", handleLogout);
+
+        loadReports();
+      })();
+    </script>
+  </body>
+</html>

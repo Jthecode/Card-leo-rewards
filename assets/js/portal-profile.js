@@ -1,12 +1,19 @@
 // assets/js/portal-profile.js
+
 (function () {
   const CONFIG = {
     meEndpoint: "/api/auth/me",
     profileEndpoint: "/api/portal/profile",
     updateProfileEndpoint: "/api/portal/update-profile",
+    billingPortalEndpoint: "/api/billing/portal",
     logoutEndpoint: "/api/auth/logout",
     loginPage: "/login.html",
     unauthorizedPage: "/unauthorized.html",
+
+    activationFee: 25,
+    monthlyFee: 20,
+    billingDay: 10,
+
     authGuardOptions: {
       meEndpoint: "/api/auth/me",
       logoutEndpoint: "/api/auth/logout",
@@ -20,7 +27,32 @@
     },
   };
 
-  const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
+  const ACTIVE_STATUSES = new Set([
+    "active",
+    "approved",
+    "auto_approved",
+    "paid",
+    "current",
+    "succeeded",
+  ]);
+
+  const PENDING_STATUSES = new Set([
+    "pending",
+    "payment_pending",
+    "pending_payment",
+    "unpaid",
+    "checkout_created",
+  ]);
+
+  const BAD_STATUSES = new Set([
+    "denied",
+    "declined",
+    "cancelled",
+    "canceled",
+    "failed",
+    "suspended",
+    "past_due",
+  ]);
 
   const state = {
     member: null,
@@ -57,18 +89,28 @@
 
   function titleCase(value) {
     return String(value || "")
-      .split(/[\s_-]+/)
+      .replace(/[_-]+/g, " ")
+      .split(/\s+/)
       .filter(Boolean)
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(" ");
   }
 
-  function formatDate(value) {
-    if (!value) return "—";
+  function formatMoney(value) {
+    const number = Number(value || 0);
+
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(Number.isFinite(number) ? number : 0);
+  }
+
+  function formatDate(value, fallback = "—") {
+    if (!value) return fallback;
 
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) return "—";
+    if (Number.isNaN(date.getTime())) return String(value);
 
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
@@ -85,9 +127,10 @@
   async function fetchJson(url, options = {}) {
     const response = await fetch(url, {
       credentials: "include",
+      method: options.method || "GET",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
         ...(options.headers || {}),
       },
       ...options,
@@ -141,11 +184,20 @@
     });
   }
 
+  function setHref(selector, href) {
+    if (!selector || !href) return;
+
+    document.querySelectorAll(selector).forEach((node) => {
+      node.href = href;
+    });
+  }
+
   function getStatusNode(form = null) {
     return (
       form?.querySelector("[data-profile-status]") ||
       document.querySelector("[data-profile-status]") ||
       document.querySelector("[data-profile-page-status]") ||
+      document.querySelector("#profileMessage") ||
       document.querySelector("#profile-status") ||
       document.querySelector("#profile-page-status")
     );
@@ -176,6 +228,10 @@
       el.style.background = "rgba(239, 68, 68, 0.10)";
       el.style.color = "#ffe2e2";
       el.style.borderColor = "rgba(239, 68, 68, 0.28)";
+    } else if (type === "warning") {
+      el.style.background = "rgba(255, 209, 102, 0.10)";
+      el.style.color = "#ffeaa6";
+      el.style.borderColor = "rgba(255, 209, 102, 0.28)";
     } else {
       el.style.background = "rgba(216, 176, 94, 0.10)";
       el.style.color = "#f4ead3";
@@ -272,21 +328,110 @@
 
   function getMemberStatus(member = {}, profile = {}) {
     return normalizeText(
-      member.memberStatus ||
+      member.membership_status ||
+        member.membershipStatus ||
+        member.memberStatus ||
         member.member_status ||
         member.status ||
+        profile.membership_status ||
+        profile.membershipStatus ||
         profile.memberStatus ||
         profile.member_status ||
         profile.status ||
-        "active"
+        "payment_pending"
     ).toLowerCase();
   }
 
-  function getPortalAccess(member = {}) {
+  function getPaymentStatus(member = {}, profile = {}) {
+    return normalizeText(
+      member.payment_status ||
+        member.paymentStatus ||
+        profile.payment_status ||
+        profile.paymentStatus ||
+        ""
+    ).toLowerCase();
+  }
+
+  function getApprovalStatus(member = {}, profile = {}) {
+    return normalizeText(
+      member.approval_status ||
+        member.approvalStatus ||
+        profile.approval_status ||
+        profile.approvalStatus ||
+        ""
+    ).toLowerCase();
+  }
+
+  function getTier(member = {}, profile = {}) {
+    return normalizeText(
+      member.tier_name ||
+        member.tierName ||
+        member.membership_tier ||
+        member.membershipTier ||
+        member.tier ||
+        member.accessLevel ||
+        member.access_level ||
+        profile.tier_name ||
+        profile.tierName ||
+        profile.membership_tier ||
+        profile.membershipTier ||
+        profile.tier ||
+        "VIP Member"
+    );
+  }
+
+  function getStatusLabel(status) {
+    const value = normalizeText(status).toLowerCase();
+
+    if (value === "auto_approved") return "Auto Approved";
+    if (value === "payment_pending") return "Payment Pending";
+    if (value === "pending_payment") return "Payment Pending";
+    if (value === "past_due") return "Past Due";
+
+    return titleCase(value || "Pending Payment");
+  }
+
+  function isPaidActive(member = {}, profile = {}) {
+    const memberStatus = getMemberStatus(member, profile);
+    const paymentStatus = getPaymentStatus(member, profile);
+    const approvalStatus = getApprovalStatus(member, profile);
+
+    return (
+      ACTIVE_STATUSES.has(memberStatus) ||
+      ACTIVE_STATUSES.has(paymentStatus) ||
+      ACTIVE_STATUSES.has(approvalStatus)
+    );
+  }
+
+  function isPendingPayment(member = {}, profile = {}) {
+    const memberStatus = getMemberStatus(member, profile);
+    const paymentStatus = getPaymentStatus(member, profile);
+    const approvalStatus = getApprovalStatus(member, profile);
+
+    return (
+      PENDING_STATUSES.has(memberStatus) ||
+      PENDING_STATUSES.has(paymentStatus) ||
+      PENDING_STATUSES.has(approvalStatus)
+    );
+  }
+
+  function isBadStatus(member = {}, profile = {}) {
+    const memberStatus = getMemberStatus(member, profile);
+    const paymentStatus = getPaymentStatus(member, profile);
+    const approvalStatus = getApprovalStatus(member, profile);
+
+    return (
+      BAD_STATUSES.has(memberStatus) ||
+      BAD_STATUSES.has(paymentStatus) ||
+      BAD_STATUSES.has(approvalStatus)
+    );
+  }
+
+  function getPortalAccess(member = {}, profile = {}) {
     if (typeof member.portalAccess === "boolean") return member.portalAccess;
     if (typeof member.portal_access === "boolean") return member.portal_access;
 
-    return ACTIVE_STATUSES.has(getMemberStatus(member));
+    return isPaidActive(member, profile);
   }
 
   function getJoinedAt(member = {}) {
@@ -310,6 +455,16 @@
     return "Not provided";
   }
 
+  function getNextBillingDate(member = {}) {
+    return (
+      member.next_billing_date ||
+      member.nextBillingDate ||
+      member.current_period_end ||
+      member.currentPeriodEnd ||
+      ""
+    );
+  }
+
   function normalizeMember(member = {}, profile = {}) {
     const safeMember = isObject(member) ? member : {};
     const safeProfile = isObject(profile) ? profile : {};
@@ -318,13 +473,12 @@
     const lastName = getLastName(safeMember, safeProfile);
     const fullName = getFullName(safeMember, safeProfile);
     const status = getMemberStatus(safeMember, safeProfile);
-    const tier = normalizeText(
-      safeMember.tier ||
-        safeMember.accessLevel ||
-        safeMember.access_level ||
-        safeProfile.tier ||
-        "core"
-    ).toLowerCase();
+    const paymentStatus = getPaymentStatus(safeMember, safeProfile);
+    const approvalStatus =
+      getApprovalStatus(safeMember, safeProfile) ||
+      (isPaidActive(safeMember, safeProfile) ? "auto_approved" : "payment_pending");
+
+    const tier = getTier(safeMember, safeProfile);
 
     return {
       ...safeMember,
@@ -371,16 +525,46 @@
       status,
       memberStatus: status,
       member_status: status,
+      membershipStatus: status,
+      membership_status: status,
+      paymentStatus,
+      payment_status: paymentStatus,
+      approvalStatus,
+      approval_status: approvalStatus,
       tier,
       tierLabel: titleCase(tier),
-      portalAccess: getPortalAccess({
-        ...safeMember,
-        status,
-      }),
+      portalAccess: getPortalAccess(
+        {
+          ...safeMember,
+          status,
+          payment_status: paymentStatus,
+          approval_status: approvalStatus,
+        },
+        safeProfile
+      ),
       accessLevel: safeMember.accessLevel || safeMember.access_level || tier || "member",
       joinedAt: getJoinedAt(safeMember),
       createdAt: safeMember.createdAt || safeMember.created_at || null,
       updatedAt: safeMember.updatedAt || safeMember.updated_at || null,
+      stripeCustomerId:
+        safeMember.stripeCustomerId || safeMember.stripe_customer_id || "",
+      stripe_customer_id:
+        safeMember.stripeCustomerId || safeMember.stripe_customer_id || "",
+      stripeSubscriptionId:
+        safeMember.stripeSubscriptionId || safeMember.stripe_subscription_id || "",
+      stripe_subscription_id:
+        safeMember.stripeSubscriptionId || safeMember.stripe_subscription_id || "",
+      nextBillingDate: getNextBillingDate(safeMember),
+      next_billing_date: getNextBillingDate(safeMember),
+      activationFeeAmount:
+        Number(safeMember.activationFeeAmount || safeMember.activation_fee_amount) ||
+        CONFIG.activationFee,
+      monthlyFeeAmount:
+        Number(safeMember.monthlyFeeAmount || safeMember.monthly_fee_amount) ||
+        CONFIG.monthlyFee,
+      billingDay:
+        Number(safeMember.billingDay || safeMember.billing_day) ||
+        CONFIG.billingDay,
     };
   }
 
@@ -401,8 +585,11 @@
       referral_name: member.referralName || member.referral_name || "",
       interest: member.interest || "",
       goals: member.goals || "",
-      status: member.status || "",
-      tier: member.tier || "core",
+      status: member.status || member.membership_status || "",
+      membership_status: member.membership_status || member.status || "",
+      payment_status: member.payment_status || "",
+      approval_status: member.approval_status || "",
+      tier: member.tier || "VIP Member",
     };
   }
 
@@ -416,6 +603,7 @@
     const rawMember =
       (isObject(data.member) && data.member) ||
       (isObject(data.profile) && data.profile) ||
+      (isObject(data.user) && data.user) ||
       fallbackMember ||
       {};
 
@@ -462,27 +650,69 @@
 
     const fullName = state.member.fullName;
     const firstName = state.member.firstName || "Member";
-    const status = state.member.memberStatus || state.member.status || "active";
-    const statusLabel = titleCase(status);
+    const status = state.member.membership_status || state.member.status || "payment_pending";
+    const paymentStatus = state.member.payment_status || "";
+    const approvalStatus = state.member.approval_status || "";
     const accessLevel = state.member.accessLevel || state.member.tier || "member";
+    const paid = isPaidActive(state.member);
+    const pending = isPendingPayment(state.member);
+    const bad = isBadStatus(state.member);
+
+    const visibleStatus = paid
+      ? "Active"
+      : bad
+        ? getStatusLabel(status || paymentStatus)
+        : pending
+          ? "Payment Required"
+          : getStatusLabel(status);
 
     setText("[data-member-name]", fullName);
     setText("[data-member-full-name]", fullName);
     setText("[data-member-first-name]", firstName);
     setText("[data-member-last-name]", state.member.lastName || "");
     setText("[data-member-email]", state.member.email || "");
-    setText("[data-member-status]", statusLabel);
-    setText("[data-member-tier]", titleCase(state.member.tier || "core"));
+    setText("[data-member-status]", visibleStatus);
+    setText("[data-member-tier]", titleCase(state.member.tier || "VIP Member"));
     setText("[data-member-access-level]", titleCase(accessLevel));
     setText("[data-member-accesslevel]", titleCase(accessLevel));
     setText("[data-member-id]", state.member.id || state.member.signupId || "");
     setText("[data-member-joined-at]", formatDate(state.member.joinedAt));
 
+    setText("[data-payment-status]", getStatusLabel(paymentStatus || (paid ? "paid" : "payment_pending")));
+    setText("[data-approval-status]", getStatusLabel(approvalStatus || (paid ? "auto_approved" : "payment_pending")));
+    setText("[data-portal-access]", paid ? "Enabled" : "Payment Required");
+
+    setText("[data-activation-fee]", formatMoney(state.member.activationFeeAmount || CONFIG.activationFee));
+    setText("[data-monthly-fee]", `${formatMoney(state.member.monthlyFeeAmount || CONFIG.monthlyFee)}/month`);
+    setText("[data-billing-day]", `${state.member.billingDay || CONFIG.billingDay}th monthly`);
+    setText("[data-next-billing-date]", formatDate(state.member.nextBillingDate, `${CONFIG.billingDay}th monthly`));
+
+    setText("[data-stripe-customer-id]", state.member.stripe_customer_id || "—");
+    setText("[data-stripe-subscription-id]", state.member.stripe_subscription_id || "—");
+
     document.body.dataset.memberName = fullName;
     document.body.dataset.memberEmail = state.member.email || "";
     document.body.dataset.memberStatus = status;
+    document.body.dataset.memberPaymentStatus = paymentStatus;
+    document.body.dataset.memberApprovalStatus = approvalStatus;
     document.body.dataset.memberAccessLevel = accessLevel;
     document.body.dataset.memberId = state.member.id || state.member.signupId || "";
+    document.body.dataset.portalAccess = paid ? "enabled" : "payment_required";
+
+    document.querySelectorAll("[data-paid-only]").forEach((node) => {
+      node.hidden = !paid;
+    });
+
+    document.querySelectorAll("[data-payment-required-only]").forEach((node) => {
+      node.hidden = paid;
+    });
+
+    document.querySelectorAll("[data-member-status-pill]").forEach((node) => {
+      node.textContent = visibleStatus;
+      node.dataset.status = paid ? "active" : bad ? "error" : "pending";
+      node.classList.toggle("pending", !paid && !bad);
+      node.classList.toggle("error", bad);
+    });
   }
 
   function applySupport(support = {}) {
@@ -596,6 +826,7 @@
   function getProfileForm() {
     return (
       document.querySelector("[data-profile-form]") ||
+      document.querySelector("#profileForm") ||
       document.querySelector("#portal-profile-form") ||
       document.querySelector("#profile-form") ||
       null
@@ -638,13 +869,17 @@
 
     return {
       firstName,
+      first_name: firstName,
       lastName,
+      last_name: lastName,
       fullName: finalFullName,
-      email: readField(form, "email"),
+      full_name: finalFullName,
+      email: normalizeEmail(readField(form, "email")),
       phone: readField(form, "phone"),
       city: readField(form, "city"),
       state: readField(form, "state"),
       referralName: readField(form, "referralName", "referral_name"),
+      referral_name: readField(form, "referralName", "referral_name"),
       interest: readField(form, "interest"),
       goals: readField(form, "goals"),
     };
@@ -753,6 +988,11 @@
       method: "GET",
     });
 
+    if (result.response.status === 401) {
+      redirectToLogin();
+      return null;
+    }
+
     if (!result.response.ok) {
       throw new Error(getErrorMessage(result, "Unable to verify your session."));
     }
@@ -762,7 +1002,11 @@
       return null;
     }
 
-    if (!isObject(result.data.member) && !isObject(result.data.profile)) {
+    if (
+      !isObject(result.data.member) &&
+      !isObject(result.data.profile) &&
+      !isObject(result.data.user)
+    ) {
       throw new Error("Your session is active, but your member profile was not returned.");
     }
 
@@ -873,9 +1117,7 @@
       }
 
       if (!result.response.ok) {
-        throw new Error(
-          getErrorMessage(result, "Unable to update your profile.")
-        );
+        throw new Error(getErrorMessage(result, "Unable to update your profile."));
       }
 
       const parsed = renderPayload(result.payload, {
@@ -912,9 +1154,7 @@
       state.isSaving = false;
       setFormDisabled(form, false);
 
-      const emailField =
-        findField(form, "email") ||
-        form.querySelector('[type="email"]');
+      const emailField = findField(form, "email") || form.querySelector('[type="email"]');
 
       if (emailField) {
         emailField.readOnly = true;
@@ -927,6 +1167,50 @@
     }
   }
 
+  async function openBillingPortal() {
+    const statusNode = getStatusNode();
+
+    try {
+      setStatus(statusNode, "info", "Opening secure billing portal...");
+
+      const result = await fetchJson(CONFIG.billingPortalEndpoint, {
+        method: "POST",
+        body: JSON.stringify({
+          return_url: window.location.href,
+        }),
+      });
+
+      if (result.response.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      const url =
+        normalizeText(result.data?.url) ||
+        normalizeText(result.data?.billing_portal_url) ||
+        normalizeText(result.data?.billingPortalUrl) ||
+        normalizeText(result.data?.redirectTo) ||
+        normalizeText(result.payload?.url);
+
+      if (!url) {
+        setStatus(
+          statusNode,
+          "warning",
+          "Billing portal is not available yet. Please contact support."
+        );
+        return;
+      }
+
+      window.location.href = url;
+    } catch (error) {
+      setStatus(
+        statusNode,
+        "error",
+        error?.message || "Unable to open billing portal right now."
+      );
+    }
+  }
+
   function bindProfileForm() {
     const form = getProfileForm();
 
@@ -934,9 +1218,7 @@
 
     form.dataset.profileBound = "true";
 
-    const emailField =
-      findField(form, "email") ||
-      form.querySelector('[type="email"]');
+    const emailField = findField(form, "email") || form.querySelector('[type="email"]');
 
     if (emailField) {
       emailField.readOnly = true;
@@ -954,13 +1236,30 @@
     });
   }
 
+  function bindBillingButtons() {
+    document
+      .querySelectorAll(
+        "[data-billing-portal], [data-open-billing], #billingPortalButton, #manageBillingButton"
+      )
+      .forEach((button) => {
+        if (button.dataset.billingBound === "true") return;
+
+        button.dataset.billingBound = "true";
+
+        button.addEventListener("click", async (event) => {
+          event.preventDefault();
+          await openBillingPortal();
+        });
+      });
+  }
+
   function bindLogoutButtons() {
     if (window.CardLeoAuthGuard?.bindLogoutButtons) {
       window.CardLeoAuthGuard.bindLogoutButtons(CONFIG.authGuardOptions);
       return;
     }
 
-    document.querySelectorAll("[data-logout], [data-member-logout]").forEach((button) => {
+    document.querySelectorAll("[data-logout], [data-member-logout], #logoutButton").forEach((button) => {
       if (button.dataset.profileLogoutBound === "true") return;
 
       button.dataset.profileLogoutBound = "true";
@@ -985,11 +1284,21 @@
     });
   }
 
+  function applyStaticBillingText() {
+    setText("[data-static-activation-fee]", formatMoney(CONFIG.activationFee));
+    setText("[data-static-monthly-fee]", `${formatMoney(CONFIG.monthlyFee)}/month`);
+    setText("[data-static-billing-day]", `${CONFIG.billingDay}th monthly`);
+    setText("[data-static-approval-method]", "Automatic after payment");
+    setText("[data-static-payout-window]", "1st–3rd monthly");
+  }
+
   async function init() {
     const pageStatus = getStatusNode();
 
     try {
+      applyStaticBillingText();
       bindProfileForm();
+      bindBillingButtons();
       bindLogoutButtons();
 
       if (window.CardLeoAuthGuard?.init) {
@@ -1026,6 +1335,10 @@
     }
   });
 
+  window.addEventListener("cardleo:auth-failed", () => {
+    redirectToLogin();
+  });
+
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
@@ -1036,12 +1349,20 @@
     init,
     reload: loadProfile,
     saveProfile,
+    openBillingPortal,
     resetForm: function () {
       const form = getProfileForm();
       if (form) restoreInitialFormValues(form);
     },
     getState: function () {
       return { ...state };
+    },
+    helpers: {
+      isPaidActive,
+      isPendingPayment,
+      isBadStatus,
+      getStatusLabel,
+      formatMoney,
     },
   };
 })();

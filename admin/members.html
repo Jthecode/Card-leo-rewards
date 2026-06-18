@@ -1,3 +1,4 @@
+<!-- admin/members.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -6,37 +7,50 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
+
     <title>Admin Members | Card Leo Rewards</title>
+
     <meta
       name="description"
-      content="Manage Card Leo Rewards members, onboarding, tiers, and rewards visibility."
+      content="Card Leo Rewards admin members dashboard for managing signups, paid members, pending members, referrals, billing status, tiers, and member accounts."
     />
-    <meta name="theme-color" content="#0b1020" />
+    <meta
+      name="keywords"
+      content="Card Leo Rewards admin, members, signups, paid members, member management, referral members, billing status"
+    />
+    <meta name="theme-color" content="#030303" />
     <meta name="robots" content="noindex, nofollow" />
+
+    <link
+      rel="canonical"
+      href="https://www.cardleorewards.com/admin/members.html"
+    />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
 
     <style>
       :root {
-        --bg: #070b14;
-        --bg-soft: #0d1424;
-        --panel: rgba(17, 24, 39, 0.78);
-        --panel-strong: rgba(11, 17, 32, 0.92);
-        --panel-border: rgba(255, 255, 255, 0.08);
-        --text: #eef4ff;
-        --muted: #99a7c2;
-        --muted-2: #72819f;
-        --line: rgba(255, 255, 255, 0.08);
-        --gold: #f5c15d;
-        --gold-2: #ffd98a;
-        --green: #3dd598;
-        --red: #ff6b81;
-        --blue: #65a8ff;
-        --amber: #ffbb55;
-        --shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
-        --radius-xl: 28px;
-        --radius-lg: 22px;
-        --radius-md: 16px;
-        --radius-sm: 12px;
-        --max-width: 1420px;
+        --leo-black: #030303;
+        --leo-panel: rgba(9, 9, 9, 0.92);
+        --leo-gold: #e7b64f;
+        --leo-gold-2: #f7d98b;
+        --leo-white: #f8f3e7;
+        --leo-muted: rgba(248, 243, 231, 0.68);
+        --leo-muted-2: rgba(248, 243, 231, 0.5);
+        --leo-green: #48f06b;
+        --leo-red: #ff7676;
+        --leo-yellow: #ffd166;
+        --leo-line: rgba(231, 182, 79, 0.22);
+        --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
+        --sidebar-width: 290px;
       }
 
       * {
@@ -45,14 +59,14 @@
 
       body {
         margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-          "Segoe UI", sans-serif;
-        background:
-          radial-gradient(circle at top left, rgba(245, 193, 93, 0.12), transparent 28%),
-          radial-gradient(circle at top right, rgba(101, 168, 255, 0.12), transparent 24%),
-          linear-gradient(180deg, #09101e 0%, #050912 100%);
-        color: var(--text);
         min-height: 100vh;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--leo-white);
+        background:
+          radial-gradient(circle at 84% 9%, rgba(231, 182, 79, 0.13), transparent 26%),
+          radial-gradient(circle at 55% 100%, rgba(231, 182, 79, 0.08), transparent 28%),
+          linear-gradient(180deg, #030303 0%, #080808 46%, #010101 100%);
       }
 
       a {
@@ -66,1157 +80,1374 @@
         font: inherit;
       }
 
-      .shell {
-        width: min(var(--max-width), calc(100% - 32px));
-        margin: 0 auto;
+      .admin-shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: var(--sidebar-width) 1fr;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          radial-gradient(circle at 72% 24%, rgba(231, 182, 79, 0.07), transparent 28%);
+        background-size: 96px 96px, auto;
       }
 
-      .topbar {
+      .sidebar {
         position: sticky;
         top: 0;
-        z-index: 30;
-        backdrop-filter: blur(16px);
-        background: rgba(7, 11, 20, 0.72);
-        border-bottom: 1px solid var(--line);
+        height: 100vh;
+        overflow: auto;
+        padding: 30px 22px;
+        border-right: 1px solid rgba(231, 182, 79, 0.18);
+        background:
+          radial-gradient(circle at top, rgba(231, 182, 79, 0.12), transparent 30%),
+          rgba(0, 0, 0, 0.72);
+        backdrop-filter: blur(20px);
       }
 
-      .topbar-inner {
-        width: min(var(--max-width), calc(100% - 32px));
-        margin: 0 auto;
-        min-height: 76px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
+      .brand-lockup {
+        text-align: center;
+        margin-bottom: 30px;
       }
 
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-      }
-
-      .brand-mark {
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
+      .lion-logo {
+        width: 128px;
+        height: 78px;
+        margin: 0 auto 8px;
         display: grid;
         place-items: center;
-        background:
-          linear-gradient(135deg, rgba(245, 193, 93, 0.22), rgba(255, 217, 138, 0.08)),
-          rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(245, 193, 93, 0.28);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-        font-weight: 800;
-        color: var(--gold-2);
+        color: var(--leo-gold-2);
+        font-size: 2.8rem;
+        filter: drop-shadow(0 0 20px rgba(231, 182, 79, 0.3));
       }
 
-      .brand-copy h1 {
+      .brand-lockup h1 {
         margin: 0;
-        font-size: 1rem;
+        font-family: "Playfair Display", serif;
+        font-size: 1.82rem;
+        line-height: 0.95;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
 
-      .brand-copy p {
-        margin: 3px 0 0;
-        color: var(--muted);
-        font-size: 0.9rem;
+      .brand-lockup span {
+        display: block;
+        margin-top: 0.28rem;
+        color: var(--leo-gold);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
       }
 
-      .top-actions {
+      .side-nav {
+        display: grid;
+        gap: 8px;
+      }
+
+      .side-link,
+      .logout-btn {
         display: flex;
         align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .top-link,
-      .btn {
-        border: 1px solid var(--panel-border);
-        background: rgba(255, 255, 255, 0.03);
-        color: var(--text);
-        padding: 11px 14px;
-        border-radius: 999px;
-        cursor: pointer;
-        transition: 0.2s ease;
-      }
-
-      .top-link:hover,
-      .btn:hover {
-        transform: translateY(-1px);
-        border-color: rgba(245, 193, 93, 0.3);
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .btn-primary {
-        background: linear-gradient(135deg, #f5c15d, #ffd98a);
-        color: #1a1204;
+        gap: 13px;
+        min-height: 52px;
+        width: 100%;
+        padding: 0 16px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: rgba(248, 243, 231, 0.82);
+        font-size: 0.98rem;
         font-weight: 700;
-        border-color: transparent;
+        cursor: pointer;
+        transition: 0.22s ease;
       }
 
-      .hero {
-        padding: 28px 0 18px;
+      .side-link:hover,
+      .logout-btn:hover,
+      .side-link.is-active {
+        color: #070707;
+        background: linear-gradient(135deg, #f7d98b, #b87912);
+        box-shadow: 0 16px 42px rgba(184, 121, 18, 0.24);
       }
 
-      .hero-card,
-      .panel,
-      .stats-card,
-      .table-wrap,
-      .detail-card {
-        background: var(--panel);
-        border: 1px solid var(--panel-border);
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow);
+      .side-icon {
+        width: 24px;
+        text-align: center;
+        font-size: 1.08rem;
       }
 
-      .hero-card {
+      .admin-card {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.16), transparent 36%),
+          rgba(255, 255, 255, 0.035);
+      }
+
+      .admin-card h2 {
+        margin: 0 0 10px;
+        color: var(--leo-gold-2);
+        font-size: 1.35rem;
+        line-height: 1.05;
+        text-transform: uppercase;
+      }
+
+      .admin-card p {
+        margin: 0;
+        color: var(--leo-muted);
+        line-height: 1.55;
+      }
+
+      .mobile-topbar {
+        display: none;
+      }
+
+      .main {
+        min-width: 0;
         padding: 28px;
+      }
+
+      .panel {
         position: relative;
         overflow: hidden;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
         background:
-          radial-gradient(circle at top left, rgba(245, 193, 93, 0.18), transparent 26%),
-          radial-gradient(circle at right center, rgba(101, 168, 255, 0.12), transparent 24%),
-          linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(9, 14, 27, 0.95));
+          radial-gradient(circle at 90% 10%, rgba(231, 182, 79, 0.14), transparent 34%),
+          linear-gradient(180deg, rgba(19, 19, 19, 0.92), rgba(4, 4, 4, 0.94));
+        box-shadow: var(--leo-shadow);
+      }
+
+      .panel-inner {
+        position: relative;
+        z-index: 1;
+        padding: 24px;
+      }
+
+      .top-grid {
+        display: grid;
+        grid-template-columns: 1fr minmax(280px, 420px);
+        gap: 20px;
+        margin-bottom: 20px;
       }
 
       .eyebrow {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        border: 1px solid rgba(245, 193, 93, 0.2);
-        background: rgba(245, 193, 93, 0.08);
-        color: var(--gold-2);
-        font-size: 0.85rem;
-        font-weight: 700;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-      }
-
-      .hero-grid {
-        margin-top: 18px;
-        display: grid;
-        grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.85fr);
-        gap: 24px;
-      }
-
-      .hero-copy h2 {
-        margin: 0 0 12px;
-        font-size: clamp(2rem, 4vw, 3rem);
-        line-height: 1.04;
-        letter-spacing: -0.04em;
-      }
-
-      .hero-copy p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 1rem;
-        line-height: 1.75;
-        max-width: 780px;
-      }
-
-      .hero-meta {
-        display: grid;
-        gap: 14px;
-      }
-
-      .meta-card {
-        border: 1px solid var(--panel-border);
-        border-radius: var(--radius-lg);
-        background: rgba(255, 255, 255, 0.03);
-        padding: 18px;
-      }
-
-      .meta-label {
-        margin: 0 0 8px;
-        color: var(--muted);
-        font-size: 0.84rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-      }
-
-      .meta-value {
-        margin: 0;
-        font-size: 1.12rem;
-        font-weight: 700;
-      }
-
-      .section {
-        padding: 10px 0 0;
-      }
-
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .stats-card {
-        padding: 18px;
-        min-height: 140px;
-      }
-
-      .stats-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
         gap: 10px;
-        margin-bottom: 10px;
+        margin-bottom: 16px;
+        color: var(--leo-gold);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.72rem;
+        font-weight: 900;
       }
 
-      .pill {
+      .eyebrow::before {
+        content: "";
+        width: 30px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--leo-gold), transparent);
+      }
+
+      .hero-title {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        line-height: 1;
+        letter-spacing: -0.05em;
+      }
+
+      .hero-title span {
+        color: var(--leo-gold);
+      }
+
+      .hero-text {
+        max-width: 760px;
+        margin: 14px 0 0;
+        color: var(--leo-muted);
+        line-height: 1.75;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 26px;
+      }
+
+      .btn,
+      .status-pill,
+      .admin-badge {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        gap: 10px;
         border-radius: 999px;
-        font-size: 0.74rem;
-        font-weight: 700;
-        padding: 7px 10px;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
+        border: 1px solid transparent;
+        transition: 0.25s ease;
+        white-space: nowrap;
       }
 
-      .pill.gold {
-        background: rgba(245, 193, 93, 0.12);
-        color: var(--gold-2);
-      }
-
-      .pill.blue {
-        background: rgba(101, 168, 255, 0.12);
-        color: #b8d5ff;
-      }
-
-      .pill.green {
-        background: rgba(61, 213, 152, 0.12);
-        color: #9af1cb;
-      }
-
-      .pill.red {
-        background: rgba(255, 107, 129, 0.12);
-        color: #ffc1cb;
-      }
-
-      .pill.amber {
-        background: rgba(255, 187, 85, 0.12);
-        color: #ffd39b;
-      }
-
-      .stats-label {
-        color: var(--muted);
-        font-size: 0.92rem;
-      }
-
-      .stats-value {
-        font-size: clamp(1.8rem, 3vw, 2.3rem);
+      .btn {
+        min-height: 48px;
+        padding: 0 18px;
         font-weight: 800;
-        line-height: 1;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 52%, #8b5b0b 100%);
+        color: #080808;
+        box-shadow:
+          0 18px 42px rgba(216, 154, 34, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.045);
+        border-color: rgba(231, 182, 79, 0.22);
+        color: var(--leo-white);
+      }
+
+      .btn-danger {
+        background: rgba(255, 118, 118, 0.12);
+        border-color: rgba(255, 118, 118, 0.24);
+        color: #ffd2d8;
+      }
+
+      .btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .admin-badge,
+      .status-pill {
+        min-height: 34px;
+        padding: 0 12px;
+        font-size: 0.82rem;
+        font-weight: 800;
+      }
+
+      .admin-badge {
+        border-color: rgba(231, 182, 79, 0.36);
+        background: rgba(231, 182, 79, 0.12);
+        color: var(--leo-gold-2);
+      }
+
+      .status-pill {
+        background: rgba(72, 240, 107, 0.12);
+        border-color: rgba(72, 240, 107, 0.22);
+        color: #bfffe5;
+      }
+
+      .status-pill.pending {
+        background: rgba(255, 209, 102, 0.12);
+        border-color: rgba(255, 209, 102, 0.24);
+        color: #ffeaa6;
+      }
+
+      .status-pill.error {
+        background: rgba(255, 118, 118, 0.12);
+        border-color: rgba(255, 118, 118, 0.24);
+        color: #ffd2d8;
+      }
+
+      .black-card-preview {
+        min-height: 255px;
+        border-radius: 24px;
+        overflow: hidden;
+        padding: 22px;
+        background:
+          radial-gradient(circle at 82% 14%, rgba(247, 217, 139, 0.24), transparent 32%),
+          linear-gradient(145deg, #050505, #101010 46%, #000);
+        border: 1px solid rgba(231, 182, 79, 0.28);
+        box-shadow:
+          0 28px 70px rgba(0, 0, 0, 0.5),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.045);
+      }
+
+      .black-card-top,
+      .black-card-bottom {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .black-card-logo {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.35);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--leo-gold-2);
+        font-weight: 900;
+        letter-spacing: 0.08em;
+      }
+
+      .black-card-chip {
+        width: 54px;
+        height: 38px;
+        border-radius: 12px;
+        background:
+          linear-gradient(135deg, #f7d98b, #a66f10),
+          #d89a22;
+        box-shadow: 0 12px 28px rgba(216, 154, 34, 0.28);
+      }
+
+      .black-card-middle {
+        margin-top: 2.4rem;
+      }
+
+      .black-card-middle h2 {
+        margin: 0;
+        color: var(--leo-white);
+        font-size: clamp(1.5rem, 3vw, 2.1rem);
         letter-spacing: -0.04em;
       }
 
-      .stats-sub {
-        margin-top: 10px;
-        color: var(--muted);
-        font-size: 0.86rem;
+      .black-card-middle p {
+        margin: 0.4rem 0 0;
+        color: var(--leo-muted);
       }
 
-      .toolbar {
-        margin-top: 16px;
-        padding: 18px;
-      }
-
-      .toolbar-grid {
-        display: grid;
-        grid-template-columns: 1.35fr repeat(4, minmax(0, 1fr)) auto;
-        gap: 12px;
-        align-items: end;
-      }
-
-      .field {
-        display: grid;
-        gap: 8px;
-      }
-
-      .field label {
-        color: var(--muted);
-        font-size: 0.83rem;
-        letter-spacing: 0.04em;
+      .black-card-bottom {
+        margin-top: 2rem;
+        color: var(--leo-gold);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
       }
 
-      .input,
-      .select {
-        width: 100%;
-        border: 1px solid var(--panel-border);
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--text);
-        border-radius: 14px;
-        padding: 12px 14px;
-        outline: none;
-      }
-
-      .input:focus,
-      .select:focus {
-        border-color: rgba(245, 193, 93, 0.35);
-        box-shadow: 0 0 0 3px rgba(245, 193, 93, 0.08);
-      }
-
-      .table-layout {
-        margin-top: 16px;
+      .stat-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1.32fr) minmax(380px, 0.78fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 16px;
       }
 
-      .table-wrap {
-        overflow: hidden;
+      .stat-card .panel-inner {
+        display: grid;
+        gap: 8px;
+        text-align: center;
+        min-height: 150px;
+        place-items: center;
       }
 
-      .table-head {
-        padding: 18px 20px 10px;
+      .stat-label {
+        color: var(--leo-muted-2);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-weight: 900;
+      }
+
+      .stat-number {
+        color: var(--leo-gold);
+        font-size: clamp(1.6rem, 4vw, 2.35rem);
+        line-height: 1;
+        font-weight: 900;
+      }
+
+      .stat-note {
+        color: var(--leo-muted);
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .section-title-row {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 12px;
+        margin-bottom: 18px;
       }
 
-      .table-head h3,
-      .detail-head h3 {
+      .section-title-row h2,
+      .section-title-row h3 {
         margin: 0;
-        font-size: 1.05rem;
+        color: var(--leo-white);
+        font-size: 1.45rem;
+        letter-spacing: -0.03em;
       }
 
-      .table-head p,
-      .detail-head p {
-        margin: 6px 0 0;
-        color: var(--muted);
-        font-size: 0.92rem;
+      .section-title-row p {
+        margin: 8px 0 0;
+        color: var(--leo-muted);
+        line-height: 1.65;
       }
 
-      .table-scroll {
+      .filters {
+        display: grid;
+        grid-template-columns: 1fr 180px 180px auto;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .filters input,
+      .filters select {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 14px;
+        border: 1px solid rgba(231, 182, 79, 0.16);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--leo-white);
+        padding: 0 14px;
+        outline: none;
+      }
+
+      .filters input::placeholder {
+        color: rgba(248, 243, 231, 0.45);
+      }
+
+      .table-wrap {
         overflow: auto;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       table {
         width: 100%;
+        min-width: 1100px;
         border-collapse: collapse;
-        min-width: 1120px;
       }
 
       th,
       td {
+        padding: 14px 16px;
         text-align: left;
-        padding: 14px 20px;
-        border-top: 1px solid var(--line);
-        vertical-align: top;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        vertical-align: middle;
       }
 
       th {
-        color: var(--muted);
-        font-size: 0.8rem;
-        letter-spacing: 0.05em;
+        color: rgba(248, 243, 231, 0.6);
+        font-size: 0.76rem;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
-        font-weight: 700;
+        background: rgba(255, 255, 255, 0.04);
       }
 
       td {
-        font-size: 0.95rem;
+        color: var(--leo-white);
+        font-size: 0.92rem;
       }
 
-      tbody tr {
-        cursor: pointer;
-        transition: background 0.18s ease;
+      tr:last-child td {
+        border-bottom: 0;
       }
 
-      tbody tr:hover {
-        background: rgba(255, 255, 255, 0.03);
+      .member-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
 
-      tbody tr.active {
-        background: rgba(245, 193, 93, 0.08);
-      }
-
-      .name-cell {
+      .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
         display: grid;
-        gap: 6px;
+        place-items: center;
+        flex: 0 0 auto;
+        background: rgba(231, 182, 79, 0.16);
+        border: 1px solid rgba(231, 182, 79, 0.22);
+        color: var(--leo-gold-2);
+        font-weight: 900;
       }
 
-      .name-title {
-        font-weight: 700;
+      .muted {
+        color: var(--leo-muted);
       }
 
-      .meta-line {
-        color: var(--muted);
-        font-size: 0.86rem;
-        line-height: 1.55;
+      .money {
+        color: var(--leo-green);
+        font-weight: 900;
       }
 
       .status-tag {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        min-height: 28px;
+        padding: 0 12px;
         border-radius: 999px;
-        padding: 7px 10px;
-        font-size: 0.76rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        white-space: nowrap;
+        font-size: 0.8rem;
+        font-weight: 800;
       }
 
-      .status-pending {
-        background: rgba(255, 187, 85, 0.12);
-        color: #ffd39b;
+      .status-tag.active,
+      .status-tag.approved,
+      .status-tag.paid,
+      .status-tag.auto_approved {
+        color: #d9ffe2;
+        background: rgba(72, 240, 107, 0.14);
+        border: 1px solid rgba(72, 240, 107, 0.25);
       }
 
-      .status-active {
-        background: rgba(61, 213, 152, 0.12);
-        color: #9af1cb;
+      .status-tag.pending,
+      .status-tag.payment_pending,
+      .status-tag.unpaid {
+        color: #ffeaa6;
+        background: rgba(255, 209, 102, 0.12);
+        border: 1px solid rgba(255, 209, 102, 0.24);
       }
 
-      .status-paused,
-      .status-suspended {
-        background: rgba(255, 107, 129, 0.12);
-        color: #ffc1cb;
+      .status-tag.denied,
+      .status-tag.cancelled,
+      .status-tag.canceled,
+      .status-tag.failed,
+      .status-tag.suspended {
+        color: #ffd2d8;
+        background: rgba(255, 118, 118, 0.12);
+        border: 1px solid rgba(255, 118, 118, 0.24);
       }
 
-      .status-closed {
-        background: rgba(255, 255, 255, 0.08);
-        color: #d9e1f2;
+      .row-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
       }
 
-      .tier-tag {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+      .mini-btn {
+        min-height: 34px;
+        padding: 0 10px;
         border-radius: 999px;
-        padding: 7px 10px;
-        font-size: 0.76rem;
-        font-weight: 700;
-        letter-spacing: 0.03em;
-        background: rgba(101, 168, 255, 0.12);
-        color: #b8d5ff;
-        text-transform: uppercase;
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--leo-white);
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 800;
       }
 
-      .tier-vip {
-        background: rgba(245, 193, 93, 0.14);
-        color: var(--gold-2);
+      .mini-btn.approve {
+        color: #06120a;
+        border-color: transparent;
+        background: linear-gradient(135deg, #a6ffd0, #48f06b);
       }
 
-      .tier-gold {
-        background: rgba(245, 193, 93, 0.12);
-        color: #ffd39b;
+      .mini-btn.danger {
+        color: #ffd2d8;
+        border-color: rgba(255, 118, 118, 0.24);
+        background: rgba(255, 118, 118, 0.1);
       }
 
-      .tier-platinum {
-        background: rgba(185, 193, 214, 0.18);
-        color: #eef4ff;
-      }
-
-      .detail-card {
-        overflow: hidden;
-      }
-
-      .detail-head {
-        padding: 18px 20px 12px;
-        border-bottom: 1px solid var(--line);
-      }
-
-      .detail-body {
-        padding: 20px;
+      .summary-grid {
         display: grid;
-        gap: 16px;
+        gap: 12px;
       }
 
-      .detail-empty {
-        color: var(--muted);
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(231, 182, 79, 0.14);
+      }
+
+      .summary-row span {
+        color: var(--leo-muted);
+      }
+
+      .summary-row strong {
+        color: var(--leo-gold-2);
+        text-align: right;
+      }
+
+      .admin-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .status-banner {
+        display: none;
+        margin-bottom: 18px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--leo-muted);
+      }
+
+      .status-banner.show {
+        display: block;
+      }
+
+      .status-banner.success {
+        color: #bfffe5;
+        border-color: rgba(72, 240, 107, 0.24);
+        background: rgba(72, 240, 107, 0.1);
+      }
+
+      .status-banner.error {
+        color: #ffd2d8;
+        border-color: rgba(255, 118, 118, 0.24);
+        background: rgba(255, 118, 118, 0.1);
+      }
+
+      .status-banner.warning {
+        color: #ffeaa6;
+        border-color: rgba(255, 209, 102, 0.24);
+        background: rgba(255, 209, 102, 0.1);
+      }
+
+      .empty-box {
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px dashed rgba(255, 255, 255, 0.16);
+        color: var(--leo-muted);
         text-align: center;
-        padding: 28px 12px;
-        border: 1px dashed var(--line);
-        border-radius: var(--radius-md);
       }
 
-      .detail-block {
-        border: 1px solid var(--line);
-        border-radius: var(--radius-md);
-        background: rgba(255, 255, 255, 0.025);
-        padding: 16px;
-      }
-
-      .detail-block h4 {
-        margin: 0 0 12px;
-        font-size: 0.98rem;
-      }
-
-      .kv {
-        display: grid;
-        grid-template-columns: 150px 1fr;
-        gap: 10px 12px;
-      }
-
-      .kv .k {
-        color: var(--muted);
+      .footer-note {
+        margin-top: 22px;
+        text-align: center;
+        color: var(--leo-muted-2);
         font-size: 0.86rem;
       }
 
-      .kv .v {
-        font-size: 0.92rem;
-        word-break: break-word;
-      }
-
-      .flag-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .flag {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 8px 10px;
-        border-radius: 999px;
-        font-size: 0.76rem;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.03);
-      }
-
-      .footer-row {
-        margin-top: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 0 4px 36px;
-      }
-
-      .pagination {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .muted {
-        color: var(--muted);
-      }
-
-      .loading {
-        position: relative;
-        overflow: hidden;
-      }
-
-      .loading::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        transform: translateX(-100%);
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.05),
-          transparent
-        );
-        animation: shimmer 1.2s infinite;
-      }
-
-      @keyframes shimmer {
-        100% {
-          transform: translateX(100%);
-        }
-      }
-
-      @media (max-width: 1260px) {
-        .stats-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
-        .toolbar-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
-        .table-layout,
-        .hero-grid {
+      @media (max-width: 1180px) {
+        .admin-shell {
           grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .mobile-topbar {
+          display: flex;
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 14px 18px;
+          border-bottom: 1px solid rgba(231, 182, 79, 0.18);
+          background: rgba(0, 0, 0, 0.82);
+          backdrop-filter: blur(18px);
+        }
+
+        .mobile-topbar strong {
+          color: var(--leo-gold-2);
+        }
+
+        .top-grid,
+        .admin-info-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .stat-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .filters {
+          grid-template-columns: 1fr 1fr;
         }
       }
 
       @media (max-width: 760px) {
-        .topbar-inner {
-          padding: 12px 0;
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .stats-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .toolbar-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .hero-card,
-        .panel,
-        .stats-card,
-        .detail-card {
+        .main {
           padding: 18px;
         }
 
-        .kv {
+        .stat-grid,
+        .filters {
           grid-template-columns: 1fr;
         }
-      }
 
-      @media (max-width: 560px) {
-        .stats-grid {
-          grid-template-columns: 1fr;
+        .section-title-row,
+        .summary-row,
+        .black-card-bottom {
+          flex-direction: column;
+        }
+
+        .summary-row strong {
+          text-align: left;
+        }
+
+        .hero-actions,
+        .btn {
+          width: 100%;
         }
       }
     </style>
   </head>
-  <body>
-    <header class="topbar">
-      <div class="topbar-inner">
-        <div class="brand">
-          <div class="brand-mark">CL</div>
-          <div class="brand-copy">
-            <h1>Admin Members</h1>
-            <p>Monitor member lifecycle, onboarding, tiers, and rewards posture</p>
-          </div>
+
+  <body data-require-auth data-cardleo-admin-guard="auto">
+    <div class="mobile-topbar">
+      <strong>Card Leo Admin</strong>
+      <a href="/admin/members.html" class="admin-badge">Members</a>
+    </div>
+
+    <div class="admin-shell">
+      <aside class="sidebar">
+        <div class="brand-lockup">
+          <div class="lion-logo" aria-hidden="true">♛</div>
+          <h1>Card Leo</h1>
+          <span>Admin</span>
         </div>
 
-        <div class="top-actions">
-          <a class="top-link" href="/admin/index.html">Dashboard</a>
-          <a class="top-link" href="/admin/signups.html">Signups</a>
-          <a class="top-link" href="/admin/support.html">Support</a>
-          <button class="btn" id="refreshBtn" type="button">Refresh</button>
-          <button class="btn btn-primary" id="logoutBtn" type="button">Log Out</button>
+        <nav class="side-nav" aria-label="Admin navigation">
+          <a class="side-link is-active" href="/admin/members.html">
+            <span class="side-icon">▣</span>
+            <span>Members</span>
+          </a>
+
+          <a class="side-link" href="/admin/rewards.html">
+            <span class="side-icon">🎁</span>
+            <span>Rewards</span>
+          </a>
+
+          <a class="side-link" href="/admin/payouts.html">
+            <span class="side-icon">▱</span>
+            <span>Payouts</span>
+          </a>
+
+          <a class="side-link" href="/admin/reports.html">
+            <span class="side-icon">◷</span>
+            <span>Reports</span>
+          </a>
+
+          <a class="side-link" href="/portal/index.html">
+            <span class="side-icon">♚</span>
+            <span>Portal View</span>
+          </a>
+
+          <button class="logout-btn" type="button" id="logoutButton">
+            <span class="side-icon">↪</span>
+            <span>Logout</span>
+          </button>
+        </nav>
+
+        <div class="admin-card">
+          <h2>Member Control</h2>
+          <p>Review signups, billing status, referrals, tiers, and member access.</p>
         </div>
-      </div>
-    </header>
+      </aside>
 
-    <main class="shell">
-      <section class="hero">
-        <div class="hero-card">
-          <div class="eyebrow">Member Operations</div>
+      <main class="main">
+        <div id="statusBanner" class="status-banner"></div>
 
-          <div class="hero-grid">
-            <div class="hero-copy">
-              <h2>See every member, every tier, and every onboarding stage.</h2>
-              <p>
-                Track active members, VIP visibility, portal readiness, reward posture,
-                and admin-operator overlap from one clean control layer.
+        <section class="top-grid">
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="eyebrow">Admin Members</div>
+
+              <h1 class="hero-title">
+                Manage your <span>members.</span>
+              </h1>
+
+              <p class="hero-text">
+                View signups, paid members, pending accounts, denied or cancelled
+                records, referral counts, billing status, and existing member tiers.
               </p>
-            </div>
 
-            <div class="hero-meta">
-              <div class="meta-card">
-                <p class="meta-label">Signed in as</p>
-                <p class="meta-value" id="adminName">Loading...</p>
-              </div>
+              <div class="hero-actions">
+                <button class="btn btn-primary" id="refreshButton" type="button">
+                  Refresh Members
+                </button>
 
-              <div class="meta-card">
-                <p class="meta-label">Access level</p>
-                <p class="meta-value" id="adminAccess">Checking...</p>
-              </div>
+                <button class="btn btn-secondary" id="exportButton" type="button">
+                  Export CSV
+                </button>
 
-              <div class="meta-card">
-                <p class="meta-label">Last refresh</p>
-                <p class="meta-value" id="lastRefresh">—</p>
+                <a class="btn btn-secondary" href="/admin/reports.html">
+                  Reports
+                </a>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="stats-grid">
-          <article class="stats-card loading" id="cardTotal">
-            <div class="stats-top">
-              <span class="pill gold">Members</span>
-            </div>
-            <div class="stats-label">Total records</div>
-            <div class="stats-value" id="valueTotal">—</div>
-            <div class="stats-sub">All member profiles</div>
           </article>
 
-          <article class="stats-card loading" id="cardActive">
-            <div class="stats-top">
-              <span class="pill green">Active</span>
-            </div>
-            <div class="stats-label">Live members</div>
-            <div class="stats-value" id="valueActive">—</div>
-            <div class="stats-sub">Currently active accounts</div>
-          </article>
-
-          <article class="stats-card loading" id="cardPending">
-            <div class="stats-top">
-              <span class="pill amber">Pending</span>
-            </div>
-            <div class="stats-label">Still onboarding</div>
-            <div class="stats-value" id="valuePending">—</div>
-            <div class="stats-sub">Not fully activated yet</div>
-          </article>
-
-          <article class="stats-card loading" id="cardVip">
-            <div class="stats-top">
-              <span class="pill gold">VIP</span>
-            </div>
-            <div class="stats-label">Top-tier members</div>
-            <div class="stats-value" id="valueVip">—</div>
-            <div class="stats-sub">VIP tier accounts</div>
-          </article>
-
-          <article class="stats-card loading" id="cardAdmins">
-            <div class="stats-top">
-              <span class="pill blue">Admins</span>
-            </div>
-            <div class="stats-label">Admin operators</div>
-            <div class="stats-value" id="valueAdmins">—</div>
-            <div class="stats-sub">Profiles with admin role</div>
-          </article>
-
-          <article class="stats-card loading" id="cardSupport">
-            <div class="stats-top">
-              <span class="pill red">Support</span>
-            </div>
-            <div class="stats-label">Support operators</div>
-            <div class="stats-value" id="valueSupport">—</div>
-            <div class="stats-sub">Profiles with support role</div>
-          </article>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="panel toolbar">
-          <div class="toolbar-grid">
-            <div class="field">
-              <label for="searchInput">Search</label>
-              <input
-                class="input"
-                id="searchInput"
-                type="search"
-                placeholder="Search by name, email, phone, referral code..."
-              />
+          <aside class="black-card-preview">
+            <div class="black-card-top">
+              <div class="black-card-logo">CL</div>
+              <div class="black-card-chip"></div>
             </div>
 
-            <div class="field">
-              <label for="statusFilter">Status</label>
-              <select class="select" id="statusFilter"></select>
+            <div class="black-card-middle">
+              <h2>Members Admin</h2>
+              <p id="cardSubtitle">Signup and access control</p>
             </div>
 
-            <div class="field">
-              <label for="tierFilter">Tier</label>
-              <select class="select" id="tierFilter"></select>
-            </div>
-
-            <div class="field">
-              <label for="roleFilter">Role</label>
-              <select class="select" id="roleFilter"></select>
-            </div>
-
-            <div class="field">
-              <label for="sortFilter">Sort</label>
-              <select class="select" id="sortFilter"></select>
-            </div>
-
-            <div class="field">
-              <label for="limitFilter">Rows</label>
-              <select class="select" id="limitFilter">
-                <option value="10">10</option>
-                <option value="20" selected>20</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="toolbar-grid" style="margin-top: 12px; grid-template-columns: 1fr auto auto;">
-            <div class="field">
-              <label for="pageIndicator">Page</label>
-              <input class="input" id="pageIndicator" type="text" value="1" readonly />
-            </div>
-
-            <div class="field">
-              <label>&nbsp;</label>
-              <button class="btn" id="clearFiltersBtn" type="button">Clear Filters</button>
-            </div>
-
-            <div class="field">
-              <label>&nbsp;</label>
-              <button class="btn btn-primary" id="applyFiltersBtn" type="button">
-                Apply Filters
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="table-layout">
-          <div class="table-wrap">
-            <div class="table-head">
-              <div>
-                <h3>Member Directory</h3>
-                <p id="tableMeta">Loading members...</p>
-              </div>
-            </div>
-
-            <div class="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Member</th>
-                    <th>Status</th>
-                    <th>Tier</th>
-                    <th>Role</th>
-                    <th>Onboarding</th>
-                    <th>Rewards</th>
-                    <th>Support</th>
-                    <th>Updated</th>
-                  </tr>
-                </thead>
-                <tbody id="membersTableBody">
-                  <tr>
-                    <td colspan="8" class="muted">Loading member records...</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <aside class="detail-card">
-            <div class="detail-head">
-              <div>
-                <h3>Member Detail</h3>
-                <p>Inspect profile state, onboarding, rewards, and operational flags.</p>
-              </div>
-            </div>
-
-            <div class="detail-body" id="detailBody">
-              <div class="detail-empty">
-                Select a member from the table to view full detail.
-              </div>
+            <div class="black-card-bottom">
+              <span>Automatic Approval</span>
+              <span id="cardStatus">Ready</span>
             </div>
           </aside>
+        </section>
+
+        <section class="stat-grid">
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Total Members</div>
+              <div class="stat-number" id="totalMembers">0</div>
+              <div class="stat-note">All signup records.</div>
+            </div>
+          </article>
+
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Paid Members</div>
+              <div class="stat-number" id="paidMembers">0</div>
+              <div class="stat-note">Payment confirmed members.</div>
+            </div>
+          </article>
+
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Payment Pending</div>
+              <div class="stat-number" id="pendingMembers">0</div>
+              <div class="stat-note">Need activation payment.</div>
+            </div>
+          </article>
+
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Denied / Cancelled</div>
+              <div class="stat-number" id="deniedMembers">0</div>
+              <div class="stat-note">Denied, cancelled, failed, or suspended.</div>
+            </div>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="section-title-row">
+                <div>
+                  <h2>Member Directory</h2>
+                  <p>
+                    Paid members should show green. Cancelled, denied, failed, or
+                    suspended members should show red. Pending payment remains yellow.
+                  </p>
+                </div>
+
+                <span class="status-pill pending" id="membersStatusBadge">
+                  Loading
+                </span>
+              </div>
+
+              <div class="filters">
+                <input
+                  id="searchInput"
+                  type="search"
+                  placeholder="Search name, email, phone, referral..."
+                />
+
+                <select id="statusFilter">
+                  <option value="">All statuses</option>
+                  <option value="active">Active</option>
+                  <option value="paid">Paid</option>
+                  <option value="payment_pending">Payment Pending</option>
+                  <option value="pending">Pending</option>
+                  <option value="denied">Denied</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="failed">Failed</option>
+                </select>
+
+                <select id="tierFilter">
+                  <option value="">All tiers</option>
+                  <option value="vip">VIP Member</option>
+                  <option value="premium">Premium</option>
+                  <option value="standard">Standard</option>
+                  <option value="basic">Basic</option>
+                </select>
+
+                <button class="btn btn-secondary" id="applyFiltersButton" type="button">
+                  Apply
+                </button>
+              </div>
+
+              <div class="table-wrap">
+                <table aria-label="Card Leo Rewards members">
+                  <thead>
+                    <tr>
+                      <th>Member</th>
+                      <th>Email</th>
+                      <th>Phone</th>
+                      <th>Status</th>
+                      <th>Payment</th>
+                      <th>Tier</th>
+                      <th>Referrals</th>
+                      <th>Earned</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="membersTableBody">
+                    <tr>
+                      <td colspan="9">
+                        <div class="empty-box">Loading members...</div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </article>
+
+          <section class="admin-info-grid">
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h3>Membership Rules</h3>
+                    <p>
+                      Current Card Leo Rewards member access settings.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="summary-grid">
+                  <div class="summary-row">
+                    <span>Activation Fee</span>
+                    <strong>$25 one time</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Recurring Membership</span>
+                    <strong>$20/month on the 10th</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Approval</span>
+                    <strong>Automatic after payment</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Referral Reward</span>
+                    <strong>$7 approved referral</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Payout Window</span>
+                    <strong>1st–3rd monthly</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Tier Naming</span>
+                    <strong>Keep existing tiers</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h3>Admin Notes</h3>
+                    <p>
+                      These records should match the portal, billing, rewards, and
+                      reports pages.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="summary-grid">
+                  <div class="summary-row">
+                    <span>Paid Color</span>
+                    <strong>Green</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Pending Color</span>
+                    <strong>Yellow</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Denied/Cancelled Color</span>
+                    <strong>Red</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Manual Approval</span>
+                    <strong>Removed</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Member Login</span>
+                    <strong>/login.html</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Portal</span>
+                    <strong>/portal/index.html</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+        </section>
+
+        <div class="footer-note">
+          Card Leo Rewards Admin · Member Management
         </div>
+      </main>
+    </div>
 
-        <div class="footer-row">
-          <div class="muted" id="paginationMeta">—</div>
-
-          <div class="pagination">
-            <button class="btn" id="prevPageBtn" type="button">Previous</button>
-            <button class="btn" id="nextPageBtn" type="button">Next</button>
-          </div>
-        </div>
-      </section>
-    </main>
-
+    <script src="/assets/js/auth-guard.js"></script>
     <script>
-      (function () {
-        const state = {
-          admin: null,
-          filters: {
-            status: "all",
-            tier: "all",
-            role: "all",
-            sort: "newest",
-            search: "",
-            limit: 20,
-            page: 1,
-          },
-          options: {
-            statuses: [],
-            tiers: [],
-            roles: [],
-            sorts: [],
-          },
-          pagination: null,
-          summary: null,
-          members: [],
-          selectedMemberId: null,
+      (() => {
+        const API = {
+          members: "/api/admin/members",
+          updateMember: "/api/admin/members/update",
+          logout: "/api/auth/logout",
         };
 
-        const SORT_LABELS = {
-          newest: "Newest",
-          oldest: "Oldest",
-          name: "Name",
-          status: "Status",
-          tier: "Tier",
+        const els = {
+          statusBanner: document.getElementById("statusBanner"),
+          logoutButton: document.getElementById("logoutButton"),
+          refreshButton: document.getElementById("refreshButton"),
+          exportButton: document.getElementById("exportButton"),
+          applyFiltersButton: document.getElementById("applyFiltersButton"),
+
+          searchInput: document.getElementById("searchInput"),
+          statusFilter: document.getElementById("statusFilter"),
+          tierFilter: document.getElementById("tierFilter"),
+
+          membersStatusBadge: document.getElementById("membersStatusBadge"),
+
+          totalMembers: document.getElementById("totalMembers"),
+          paidMembers: document.getElementById("paidMembers"),
+          pendingMembers: document.getElementById("pendingMembers"),
+          deniedMembers: document.getElementById("deniedMembers"),
+
+          membersTableBody: document.getElementById("membersTableBody"),
+          cardSubtitle: document.getElementById("cardSubtitle"),
+          cardStatus: document.getElementById("cardStatus"),
         };
 
-        function $(id) {
-          return document.getElementById(id);
-        }
+        let members = [];
 
-        function escapeHtml(value) {
-          return String(value ?? "")
+        const money = (value) => {
+          const number = Number(value || 0);
+
+          return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(Number.isFinite(number) ? number : 0);
+        };
+
+        const escapeHtml = (value) =>
+          String(value ?? "")
             .replaceAll("&", "&amp;")
             .replaceAll("<", "&lt;")
             .replaceAll(">", "&gt;")
             .replaceAll('"', "&quot;")
             .replaceAll("'", "&#39;");
-        }
 
-        function titleCase(value) {
-          return String(value || "")
-            .split(/[\s_-]+/)
+        const normalizeText = (value, fallback = "") => {
+          const text = String(value ?? "").trim();
+          return text || fallback;
+        };
+
+        const titleCase = (value) =>
+          String(value || "")
+            .replace(/[_-]+/g, " ")
+            .split(/\s+/)
             .filter(Boolean)
             .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
             .join(" ");
-        }
 
-        function formatDate(value) {
-          if (!value) return "—";
-          const date = new Date(value);
-          if (Number.isNaN(date.getTime())) return "—";
+        const isObject = (value) =>
+          Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
-          return new Intl.DateTimeFormat("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-          }).format(date);
-        }
+        const unwrap = (payload) => {
+          if (!isObject(payload)) return {};
+          return isObject(payload.data) ? payload.data : payload;
+        };
 
-        function formatCount(value) {
-          const num = Number(value || 0);
-          return Number.isFinite(num) ? num.toLocaleString() : "0";
-        }
-
-        function formatPoints(value) {
-          return `${formatCount(value)} pts`;
-        }
-
-        function setText(id, value) {
-          const el = $(id);
-          if (el) el.textContent = value;
-        }
-
-        async function api(url, options = {}) {
+        async function fetchJson(url, options = {}) {
           const response = await fetch(url, {
+            method: options.method || "GET",
             credentials: "include",
             headers: {
               Accept: "application/json",
+              ...(options.body ? { "Content-Type": "application/json" } : {}),
               ...(options.headers || {}),
             },
             ...options,
           });
 
-          const contentType = response.headers.get("content-type") || "";
-          const body = contentType.includes("application/json")
-            ? await response.json()
-            : { success: false, message: "Unexpected server response." };
+          const payload = await response.json().catch(() => ({}));
 
-          if (!response.ok || body?.success === false) {
-            const error = new Error(body?.message || "Request failed.");
+          if (response.status === 401) {
+            window.location.href =
+              "/login.html?next=" +
+              encodeURIComponent(window.location.pathname + window.location.search);
+            return null;
+          }
+
+          if (!response.ok || payload?.success === false || payload?.ok === false) {
+            const error = new Error(
+              payload?.message || payload?.error || "Request failed."
+            );
             error.status = response.status;
-            error.payload = body;
+            error.payload = payload;
             throw error;
           }
 
-          return body;
+          return unwrap(payload);
         }
 
-        function buildQuery() {
-          const params = new URLSearchParams();
-          params.set("status", state.filters.status);
-          params.set("tier", state.filters.tier);
-          params.set("role", state.filters.role);
-          params.set("sort", state.filters.sort);
-          params.set("search", state.filters.search);
-          params.set("limit", String(state.filters.limit));
-          params.set("page", String(state.filters.page));
-          return params.toString();
+        function showBanner(message, type = "") {
+          if (!message) {
+            els.statusBanner.className = "status-banner";
+            els.statusBanner.textContent = "";
+            return;
+          }
+
+          els.statusBanner.textContent = message;
+          els.statusBanner.className = `status-banner show ${type}`.trim();
         }
 
-        function getStatusClass(status) {
-          const normalized = String(status || "").toLowerCase();
-          if (normalized === "active") return "status-active";
-          if (normalized === "pending") return "status-pending";
-          if (normalized === "closed") return "status-closed";
-          if (normalized === "paused" || normalized === "suspended") return "status-paused";
-          return "status-pending";
+        function setLoading(button, loading, loadingText) {
+          if (!button) return;
+
+          if (!button.dataset.originalText) {
+            button.dataset.originalText = button.textContent;
+          }
+
+          button.disabled = loading;
+          button.textContent = loading ? loadingText : button.dataset.originalText;
         }
 
-        function getTierClass(tier) {
-          const normalized = String(tier || "").toLowerCase();
-          if (normalized === "vip") return "tier-vip";
-          if (normalized === "gold") return "tier-gold";
-          if (normalized === "platinum") return "tier-platinum";
-          return "";
+        function getFullName(member, index = 0) {
+          const full =
+            normalizeText(member.fullName) ||
+            normalizeText(member.full_name) ||
+            normalizeText(member.name);
+
+          if (full) return full;
+
+          const first = normalizeText(member.firstName || member.first_name);
+          const last = normalizeText(member.lastName || member.last_name);
+
+          return [first, last].filter(Boolean).join(" ") || `Member #${index + 1}`;
         }
 
-        function renderHeader() {
-          if (!state.admin) return;
+        function getMemberStatus(member) {
+          return normalizeText(
+            member.membership_status ||
+              member.membershipStatus ||
+              member.status ||
+              "payment_pending"
+          ).toLowerCase();
+        }
 
-          setText("adminName", state.admin.fullName || state.admin.email || "Admin");
-          setText(
-            "adminAccess",
-            state.admin.isSuperAdmin ? "Super Admin" : "Members Admin"
+        function getPaymentStatus(member) {
+          return normalizeText(
+            member.payment_status ||
+              member.paymentStatus ||
+              "payment_pending"
+          ).toLowerCase();
+        }
+
+        function getTier(member) {
+          return normalizeText(
+            member.tier_name ||
+              member.tierName ||
+              member.membership_tier ||
+              member.membershipTier ||
+              member.tier ||
+              "VIP Member"
           );
-          setText("lastRefresh", formatDate(new Date().toISOString()));
         }
 
-        function renderFilters() {
-          const statusFilter = $("statusFilter");
-          const tierFilter = $("tierFilter");
-          const roleFilter = $("roleFilter");
-          const sortFilter = $("sortFilter");
+        function isPaidMember(member) {
+          const status = getMemberStatus(member);
+          const payment = getPaymentStatus(member);
 
-          if (statusFilter && !statusFilter.dataset.ready) {
-            statusFilter.innerHTML = (state.options.statuses || [])
-              .map(
-                (value) =>
-                  `<option value="${escapeHtml(value)}">${escapeHtml(
-                    value === "all" ? "All Statuses" : titleCase(value)
-                  )}</option>`
-              )
-              .join("");
-            statusFilter.dataset.ready = "true";
-          }
-
-          if (tierFilter && !tierFilter.dataset.ready) {
-            tierFilter.innerHTML = (state.options.tiers || [])
-              .map(
-                (value) =>
-                  `<option value="${escapeHtml(value)}">${escapeHtml(
-                    value === "all" ? "All Tiers" : titleCase(value)
-                  )}</option>`
-              )
-              .join("");
-            tierFilter.dataset.ready = "true";
-          }
-
-          if (roleFilter && !roleFilter.dataset.ready) {
-            roleFilter.innerHTML = (state.options.roles || [])
-              .map(
-                (value) =>
-                  `<option value="${escapeHtml(value)}">${escapeHtml(
-                    value === "all" ? "All Roles" : titleCase(value)
-                  )}</option>`
-              )
-              .join("");
-            roleFilter.dataset.ready = "true";
-          }
-
-          if (sortFilter && !sortFilter.dataset.ready) {
-            sortFilter.innerHTML = (state.options.sorts || [])
-              .map(
-                (value) =>
-                  `<option value="${escapeHtml(value)}">${escapeHtml(
-                    SORT_LABELS[value] || titleCase(value)
-                  )}</option>`
-              )
-              .join("");
-            sortFilter.dataset.ready = "true";
-          }
-
-          if (statusFilter) statusFilter.value = state.filters.status;
-          if (tierFilter) tierFilter.value = state.filters.tier;
-          if (roleFilter) roleFilter.value = state.filters.role;
-          if (sortFilter) sortFilter.value = state.filters.sort;
-          if ($("limitFilter")) $("limitFilter").value = String(state.filters.limit);
-          if ($("searchInput")) $("searchInput").value = state.filters.search;
-          if ($("pageIndicator")) $("pageIndicator").value = String(state.filters.page);
+          return (
+            ["active", "approved", "auto_approved", "paid"].includes(status) ||
+            ["paid", "active", "current", "succeeded"].includes(payment)
+          );
         }
 
-        function renderSummary() {
-          const summary = state.summary || {};
-          const vipCount = (state.members || []).filter(
-            (member) => String(member.tier || "").toLowerCase() === "vip"
-          ).length;
+        function isPendingMember(member) {
+          const status = getMemberStatus(member);
+          const payment = getPaymentStatus(member);
 
-          setText("valueTotal", formatCount(summary.total || 0));
-          setText("valueActive", formatCount(summary.activeMembers || 0));
-          setText("valuePending", formatCount(summary.statusCounts?.pending || 0));
-          setText("valueVip", formatCount(vipCount));
-          setText("valueAdmins", formatCount(summary.adminOperators || 0));
-          setText("valueSupport", formatCount(summary.supportOperators || 0));
+          return (
+            ["pending", "payment_pending", "pending_payment", "unpaid"].includes(status) ||
+            ["pending", "payment_pending", "pending_payment", "unpaid"].includes(payment)
+          );
+        }
 
-          [
-            "cardTotal",
-            "cardActive",
-            "cardPending",
-            "cardVip",
-            "cardAdmins",
-            "cardSupport",
-          ].forEach((id) => {
-            const el = $(id);
-            if (el) el.classList.remove("loading");
+        function isDeniedMember(member) {
+          const status = getMemberStatus(member);
+          const payment = getPaymentStatus(member);
+
+          return (
+            ["denied", "cancelled", "canceled", "failed", "suspended"].includes(status) ||
+            ["denied", "cancelled", "canceled", "failed", "past_due"].includes(payment)
+          );
+        }
+
+        function normalizeMember(row, index) {
+          const approvedReferrals = Number(
+            row.approvedReferrals || row.approved_referrals || row.approved || 0
+          );
+
+          return {
+            id:
+              normalizeText(row.id) ||
+              normalizeText(row.signup_id) ||
+              normalizeText(row.member_id) ||
+              `member-${index + 1}`,
+            name: getFullName(row, index),
+            email: normalizeText(row.email, "No email"),
+            phone: normalizeText(row.phone, "—"),
+            status: getMemberStatus(row),
+            payment: getPaymentStatus(row),
+            tier: getTier(row),
+            referralName:
+              normalizeText(row.referralName) ||
+              normalizeText(row.referral_name) ||
+              "—",
+            approvedReferrals,
+            totalReferrals: Number(
+              row.totalReferrals || row.total_referrals || approvedReferrals || 0
+            ),
+            earned: Number(
+              row.earned ||
+                row.totalEarned ||
+                row.total_earned ||
+                row.earned_amount ||
+                approvedReferrals * 7 ||
+                0
+            ),
+            raw: row,
+          };
+        }
+
+        function normalizePayload(payload = {}) {
+          const root = unwrap(payload);
+
+          const rows = Array.isArray(root.members)
+            ? root.members
+            : Array.isArray(root.signups)
+              ? root.signups
+              : Array.isArray(root.rows)
+                ? root.rows
+                : Array.isArray(root.items)
+                  ? root.items
+                  : [];
+
+          return rows.map(normalizeMember);
+        }
+
+        function renderStats() {
+          const total = members.length;
+          const paid = members.filter(isPaidMember).length;
+          const pending = members.filter(isPendingMember).length;
+          const denied = members.filter(isDeniedMember).length;
+
+          els.totalMembers.textContent = String(total);
+          els.paidMembers.textContent = String(paid);
+          els.pendingMembers.textContent = String(pending);
+          els.deniedMembers.textContent = String(denied);
+
+          els.cardSubtitle.textContent = `${total} member records`;
+          els.cardStatus.textContent = `${paid} Paid`;
+        }
+
+        function getFilteredMembers() {
+          const search = normalizeText(els.searchInput.value).toLowerCase();
+          const status = normalizeText(els.statusFilter.value).toLowerCase();
+          const tier = normalizeText(els.tierFilter.value).toLowerCase();
+
+          return members.filter((member) => {
+            const matchesSearch =
+              !search ||
+              member.name.toLowerCase().includes(search) ||
+              member.email.toLowerCase().includes(search) ||
+              member.phone.toLowerCase().includes(search) ||
+              member.referralName.toLowerCase().includes(search);
+
+            const matchesStatus =
+              !status ||
+              member.status === status ||
+              member.payment === status ||
+              (status === "paid" && isPaidMember(member));
+
+            const matchesTier =
+              !tier || member.tier.toLowerCase().includes(tier);
+
+            return matchesSearch && matchesStatus && matchesTier;
           });
         }
 
         function renderTable() {
-          const body = $("membersTableBody");
-          if (!body) return;
+          const rows = getFilteredMembers();
 
-          if (!state.members.length) {
-            body.innerHTML = `
+          if (!rows.length) {
+            els.membersTableBody.innerHTML = `
               <tr>
-                <td colspan="8" class="muted">No members matched your filters.</td>
+                <td colspan="9">
+                  <div class="empty-box">No members found.</div>
+                </td>
               </tr>
             `;
             return;
           }
 
-          body.innerHTML = state.members
-            .map((item) => {
-              const isActive = item.id === state.selectedMemberId;
-              const onboardingPercent = Number(item.metrics?.onboardingPercent || 0);
-              const pointsAvailable = Number(item.metrics?.pointsAvailable || 0);
-              const openSupport = Number(item.metrics?.openSupportTickets || 0);
-
+          els.membersTableBody.innerHTML = rows
+            .map((member) => {
               return `
-                <tr data-member-id="${escapeHtml(item.id)}" class="${isActive ? "active" : ""}">
+                <tr>
                   <td>
-                    <div class="name-cell">
-                      <div class="name-title">${escapeHtml(item.fullName || item.email || "Member")}</div>
-                      <div class="meta-line">${escapeHtml(item.email || "No email")}</div>
-                      <div class="meta-line">${escapeHtml(item.phone || "No phone")}</div>
+                    <div class="member-cell">
+                      <span class="avatar">${escapeHtml(member.name.charAt(0))}</span>
+                      <span>
+                        <strong>${escapeHtml(member.name)}</strong>
+                        <div class="muted">Ref: ${escapeHtml(member.referralName)}</div>
+                      </span>
                     </div>
                   </td>
+                  <td class="muted">${escapeHtml(member.email)}</td>
+                  <td class="muted">${escapeHtml(member.phone)}</td>
                   <td>
-                    <span class="status-tag ${getStatusClass(item.memberStatus)}">
-                      ${escapeHtml(item.memberStatusLabel || titleCase(item.memberStatus))}
+                    <span class="status-tag ${escapeHtml(member.status)}">
+                      ${escapeHtml(titleCase(member.status))}
                     </span>
                   </td>
                   <td>
-                    <span class="tier-tag ${getTierClass(item.tier)}">
-                      ${escapeHtml(item.tierLabel || titleCase(item.tier))}
+                    <span class="status-tag ${escapeHtml(member.payment)}">
+                      ${escapeHtml(titleCase(member.payment))}
                     </span>
                   </td>
+                  <td>${escapeHtml(member.tier)}</td>
+                  <td>${escapeHtml(member.approvedReferrals)} approved / ${escapeHtml(member.totalReferrals)} total</td>
+                  <td class="money">${escapeHtml(money(member.earned))}</td>
                   <td>
-                    <div class="name-cell">
-                      <div class="name-title">${escapeHtml(item.roleLabel || titleCase(item.role))}</div>
-                      <div class="meta-line">${item.flags?.isAdminOperator ? "Operator access" : "Standard access"}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="name-cell">
-                      <div class="name-title">${formatCount(onboardingPercent)}%</div>
-                      <div class="meta-line">${item.onboarding?.onboardingStatus ? escapeHtml(titleCase(item.onboarding.onboardingStatus)) : "No onboarding data"}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="name-cell">
-                      <div class="name-title">${escapeHtml(formatPoints(pointsAvailable))}</div>
-                      <div class="meta-line">${escapeHtml(formatPoints(item.metrics?.pointsPending || 0))} pending</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="name-cell">
-                      <div class="name-title">${formatCount(openSupport)}</div>
-                      <div class="meta-line">${openSupport ? "Open tickets" : "No open tickets"}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="name-cell">
-                      <div class="name-title">${escapeHtml(formatDate(item.updatedAt))}</div>
-                      <div class="meta-line">${escapeHtml(formatDate(item.lastLoginAt))}</div>
+                    <div class="row-actions">
+                      <button class="mini-btn approve" type="button" data-mark-paid="${escapeHtml(member.id)}">
+                        Mark Paid
+                      </button>
+                      <button class="mini-btn" type="button" data-view="${escapeHtml(member.id)}">
+                        View
+                      </button>
+                      <button class="mini-btn danger" type="button" data-suspend="${escapeHtml(member.id)}">
+                        Suspend
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -1225,327 +1456,208 @@
             .join("");
         }
 
-        function getSelectedMember() {
-          return state.members.find((item) => item.id === state.selectedMemberId) || null;
+        async function loadMembers() {
+          setLoading(els.refreshButton, true, "Refreshing...");
+          els.membersStatusBadge.textContent = "Loading";
+          els.membersStatusBadge.className = "status-pill pending";
+
+          try {
+            const data = await fetchJson(API.members);
+            members = normalizePayload(data);
+
+            renderStats();
+            renderTable();
+
+            els.membersStatusBadge.textContent = "Loaded";
+            els.membersStatusBadge.className = "status-pill";
+
+            showBanner("Members loaded.", "success");
+          } catch (error) {
+            console.error("[admin/members] load error:", error);
+
+            members = [];
+            renderStats();
+            renderTable();
+
+            els.membersStatusBadge.textContent = "Error";
+            els.membersStatusBadge.className = "status-pill error";
+
+            showBanner(error?.message || "Unable to load members.", "error");
+          } finally {
+            setLoading(els.refreshButton, false, "Refresh Members");
+          }
         }
 
-        function renderDetail() {
-          const container = $("detailBody");
-          if (!container) return;
+        async function updateMemberStatus(memberId, payload) {
+          try {
+            await fetchJson(API.updateMember, {
+              method: "POST",
+              body: JSON.stringify({
+                id: memberId,
+                ...payload,
+              }),
+            });
 
-          const item = getSelectedMember();
+            members = members.map((member) => {
+              if (member.id !== memberId) return member;
 
-          if (!item) {
-            container.innerHTML = `
-              <div class="detail-empty">
-                Select a member from the table to view full detail.
-              </div>
-            `;
+              return {
+                ...member,
+                status: payload.membership_status || payload.status || member.status,
+                payment: payload.payment_status || member.payment,
+              };
+            });
+
+            renderStats();
+            renderTable();
+
+            showBanner("Member updated.", "success");
+          } catch (error) {
+            console.error("[admin/members] update error:", error);
+            showBanner(error?.message || "Unable to update member.", "error");
+          }
+        }
+
+        function viewMember(memberId) {
+          const member = members.find((item) => item.id === memberId);
+
+          if (!member) {
+            showBanner("Member not found.", "error");
             return;
           }
 
-          container.innerHTML = `
-            <div class="detail-block">
-              <h4>Profile Overview</h4>
-              <div class="kv">
-                <div class="k">Name</div>
-                <div class="v">${escapeHtml(item.fullName || "—")}</div>
-
-                <div class="k">Email</div>
-                <div class="v">${escapeHtml(item.email || "—")}</div>
-
-                <div class="k">Phone</div>
-                <div class="v">${escapeHtml(item.phone || "—")}</div>
-
-                <div class="k">Status</div>
-                <div class="v">
-                  <span class="status-tag ${getStatusClass(item.memberStatus)}">
-                    ${escapeHtml(item.memberStatusLabel || titleCase(item.memberStatus))}
-                  </span>
-                </div>
-
-                <div class="k">Tier</div>
-                <div class="v">
-                  <span class="tier-tag ${getTierClass(item.tier)}">
-                    ${escapeHtml(item.tierLabel || titleCase(item.tier))}
-                  </span>
-                </div>
-
-                <div class="k">Role</div>
-                <div class="v">${escapeHtml(item.roleLabel || titleCase(item.role))}</div>
-
-                <div class="k">Referral Code</div>
-                <div class="v">${escapeHtml(item.referralCode || "—")}</div>
-
-                <div class="k">Portal Login</div>
-                <div class="v">${item.portalLoginUrl ? `<a href="${escapeHtml(item.portalLoginUrl)}" target="_blank" rel="noreferrer">${escapeHtml(item.portalLoginUrl)}</a>` : "—"}</div>
-              </div>
-            </div>
-
-            <div class="detail-block">
-              <h4>Onboarding</h4>
-              <div class="kv">
-                <div class="k">Progress</div>
-                <div class="v">${formatCount(item.metrics?.onboardingPercent || 0)}%</div>
-
-                <div class="k">Status</div>
-                <div class="v">${escapeHtml(titleCase(item.onboarding?.onboardingStatus || "not_started"))}</div>
-
-                <div class="k">Terms Accepted</div>
-                <div class="v">${item.onboarding?.acceptedTerms ? "Yes" : "No"}</div>
-
-                <div class="k">Privacy Accepted</div>
-                <div class="v">${item.onboarding?.acceptedPrivacy ? "Yes" : "No"}</div>
-
-                <div class="k">Profile Completed</div>
-                <div class="v">${item.onboarding?.profileCompleted ? "Yes" : "No"}</div>
-
-                <div class="k">Email Verified</div>
-                <div class="v">${item.flags?.hasVerifiedEmail ? "Yes" : "No"}</div>
-
-                <div class="k">Rewards Activated</div>
-                <div class="v">${item.onboarding?.rewardsActivated ? "Yes" : "No"}</div>
-
-                <div class="k">First Login Completed</div>
-                <div class="v">${item.onboarding?.firstLoginCompleted ? "Yes" : "No"}</div>
-              </div>
-            </div>
-
-            <div class="detail-block">
-              <h4>Rewards Snapshot</h4>
-              <div class="kv">
-                <div class="k">Account Status</div>
-                <div class="v">${escapeHtml(titleCase(item.rewardAccount?.accountStatus || "active"))}</div>
-
-                <div class="k">Available</div>
-                <div class="v">${escapeHtml(formatPoints(item.rewardAccount?.pointsAvailable || 0))}</div>
-
-                <div class="k">Pending</div>
-                <div class="v">${escapeHtml(formatPoints(item.rewardAccount?.pointsPending || 0))}</div>
-
-                <div class="k">Lifetime Earned</div>
-                <div class="v">${escapeHtml(formatPoints(item.rewardAccount?.pointsLifetimeEarned || 0))}</div>
-
-                <div class="k">Lifetime Redeemed</div>
-                <div class="v">${escapeHtml(formatPoints(item.rewardAccount?.pointsLifetimeRedeemed || 0))}</div>
-
-                <div class="k">Lifetime Expired</div>
-                <div class="v">${escapeHtml(formatPoints(item.rewardAccount?.pointsLifetimeExpired || 0))}</div>
-
-                <div class="k">Last Earned</div>
-                <div class="v">${escapeHtml(formatDate(item.rewardAccount?.lastEarnedAt))}</div>
-
-                <div class="k">Last Redeemed</div>
-                <div class="v">${escapeHtml(formatDate(item.rewardAccount?.lastRedeemedAt))}</div>
-              </div>
-            </div>
-
-            <div class="detail-block">
-              <h4>Operational Flags</h4>
-              <div class="flag-row">
-                <span class="flag">${item.flags?.hasVerifiedEmail ? "Verified Email" : "Email Not Verified"}</span>
-                <span class="flag">${item.flags?.hasVerifiedPhone ? "Verified Phone" : "Phone Not Verified"}</span>
-                <span class="flag">${item.flags?.hasCompletedOnboarding ? "Onboarding Complete" : "Onboarding Incomplete"}</span>
-                <span class="flag">${item.flags?.hasCompletedProfile ? "Profile Complete" : "Profile Incomplete"}</span>
-                <span class="flag">${item.flags?.hasRewardsActivated ? "Rewards Active" : "Rewards Pending"}</span>
-                <span class="flag">${item.flags?.hasPortalLoginUrl ? "Portal Ready" : "Portal Link Missing"}</span>
-                <span class="flag">${item.flags?.isAdminOperator ? "Operator Profile" : "Member Profile"}</span>
-                <span class="flag">${item.flags?.hasOpenSupportTickets ? "Open Support Ticket" : "No Open Support Tickets"}</span>
-              </div>
-            </div>
-
-            <div class="detail-block">
-              <h4>Linked Records</h4>
-              <div class="kv">
-                <div class="k">Signup Source</div>
-                <div class="v">${escapeHtml(item.signup?.sourceLabel || "—")}</div>
-
-                <div class="k">Signup Status</div>
-                <div class="v">${escapeHtml(item.signup?.statusLabel || "—")}</div>
-
-                <div class="k">Signup Page</div>
-                <div class="v">${escapeHtml(item.signup?.signupPage || "—")}</div>
-
-                <div class="k">Open Support Tickets</div>
-                <div class="v">${formatCount(item.metrics?.openSupportTickets || 0)}</div>
-
-                <div class="k">Internal Note Count</div>
-                <div class="v">${formatCount(item.metrics?.noteCount || 0)}</div>
-
-                <div class="k">Last Login</div>
-                <div class="v">${escapeHtml(formatDate(item.lastLoginAt))}</div>
-
-                <div class="k">Created</div>
-                <div class="v">${escapeHtml(formatDate(item.createdAt))}</div>
-
-                <div class="k">Updated</div>
-                <div class="v">${escapeHtml(formatDate(item.updatedAt))}</div>
-              </div>
-            </div>
-          `;
-        }
-
-        function renderMeta() {
-          const pagination = state.pagination || {};
-          setText(
-            "tableMeta",
-            `${formatCount(pagination.total || 0)} members • page ${formatCount(
-              pagination.page || 1
-            )} of ${formatCount(pagination.totalPages || 1)}`
+          window.alert(
+            [
+              `Member: ${member.name}`,
+              `Email: ${member.email}`,
+              `Phone: ${member.phone}`,
+              `Status: ${titleCase(member.status)}`,
+              `Payment: ${titleCase(member.payment)}`,
+              `Tier: ${member.tier}`,
+              `Approved Referrals: ${member.approvedReferrals}`,
+              `Earned: ${money(member.earned)}`,
+            ].join("\n")
           );
-
-          setText(
-            "paginationMeta",
-            pagination.total
-              ? `Showing ${formatCount(pagination.from)}–${formatCount(
-                  pagination.to
-                )} of ${formatCount(pagination.total)} members`
-              : "No members to show"
-          );
-
-          if ($("pageIndicator")) {
-            $("pageIndicator").value = String(pagination.page || state.filters.page || 1);
-          }
-
-          if ($("prevPageBtn")) $("prevPageBtn").disabled = !pagination.hasPreviousPage;
-          if ($("nextPageBtn")) $("nextPageBtn").disabled = !pagination.hasNextPage;
         }
 
-        function renderAll() {
-          renderHeader();
-          renderFilters();
-          renderSummary();
-          renderTable();
-          renderDetail();
-          renderMeta();
-        }
+        function exportCsv() {
+          const rows = getFilteredMembers();
 
-        async function loadMembers() {
-          try {
-            const me = await api("/api/auth/me");
-            state.admin = me?.data?.user || null;
-          } catch (error) {
-            if (error?.status === 401) {
-              const next = encodeURIComponent("/admin/members.html");
-              window.location.href = `/login.html?next=${next}`;
-              return;
-            }
-            throw error;
-          }
+          const headers = [
+            "Name",
+            "Email",
+            "Phone",
+            "Status",
+            "Payment",
+            "Tier",
+            "Referral Name",
+            "Approved Referrals",
+            "Total Referrals",
+            "Earned",
+          ];
 
-          const result = await api(`/api/admin/members?${buildQuery()}`);
+          const csvRows = [
+            headers,
+            ...rows.map((member) => [
+              member.name,
+              member.email,
+              member.phone,
+              member.status,
+              member.payment,
+              member.tier,
+              member.referralName,
+              member.approvedReferrals,
+              member.totalReferrals,
+              member.earned,
+            ]),
+          ];
 
-          state.options.statuses = result?.data?.filters?.statuses || [];
-          state.options.tiers = result?.data?.filters?.tiers || [];
-          state.options.roles = result?.data?.filters?.roles || [];
-          state.options.sorts = result?.data?.filters?.sorts || [];
-          state.summary = result?.data?.summary || null;
-          state.pagination = result?.data?.pagination || null;
-          state.members = result?.data?.members || [];
-          state.admin = result?.data?.admin || state.admin;
+          const csv = csvRows
+            .map((row) =>
+              row
+                .map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`)
+                .join(",")
+            )
+            .join("\n");
 
-          if (!state.selectedMemberId && state.members.length) {
-            state.selectedMemberId = state.members[0].id;
-          }
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
 
-          if (
-            state.selectedMemberId &&
-            !state.members.some((item) => item.id === state.selectedMemberId)
-          ) {
-            state.selectedMemberId = state.members.length ? state.members[0].id : null;
-          }
+          link.href = url;
+          link.download = "card-leo-members.csv";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
 
-          renderAll();
+          showBanner("CSV export created.", "success");
         }
 
         async function handleLogout() {
+          if (!els.logoutButton) return;
+
+          const originalText = els.logoutButton.textContent;
+          els.logoutButton.disabled = true;
+          els.logoutButton.textContent = "Logging out...";
+
           try {
-            await api("/api/auth/logout", { method: "POST" });
-          } catch (_) {
-          } finally {
+            await fetch(API.logout, {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                Accept: "application/json",
+              },
+            });
+
             window.location.href = "/login.html";
-          }
-        }
-
-        function clearFilters() {
-          state.filters = {
-            status: "all",
-            tier: "all",
-            role: "all",
-            sort: "newest",
-            search: "",
-            limit: 20,
-            page: 1,
-          };
-          renderFilters();
-          loadMembers();
-        }
-
-        function bindEvents() {
-          $("refreshBtn")?.addEventListener("click", loadMembers);
-          $("logoutBtn")?.addEventListener("click", handleLogout);
-
-          $("applyFiltersBtn")?.addEventListener("click", () => {
-            state.filters.search = $("searchInput")?.value.trim() || "";
-            state.filters.status = $("statusFilter")?.value || "all";
-            state.filters.tier = $("tierFilter")?.value || "all";
-            state.filters.role = $("roleFilter")?.value || "all";
-            state.filters.sort = $("sortFilter")?.value || "newest";
-            state.filters.limit = Number($("limitFilter")?.value || 20);
-            state.filters.page = 1;
-            loadMembers();
-          });
-
-          $("clearFiltersBtn")?.addEventListener("click", clearFilters);
-
-          $("prevPageBtn")?.addEventListener("click", () => {
-            if (!state.pagination?.hasPreviousPage) return;
-            state.filters.page = Math.max(1, Number(state.filters.page || 1) - 1);
-            loadMembers();
-          });
-
-          $("nextPageBtn")?.addEventListener("click", () => {
-            if (!state.pagination?.hasNextPage) return;
-            state.filters.page = Number(state.filters.page || 1) + 1;
-            loadMembers();
-          });
-
-          $("membersTableBody")?.addEventListener("click", (event) => {
-            const row = event.target.closest("tr[data-member-id]");
-            if (!row) return;
-
-            state.selectedMemberId = row.getAttribute("data-member-id");
-            renderTable();
-            renderDetail();
-          });
-        }
-
-        async function init() {
-          bindEvents();
-
-          try {
-            await loadMembers();
           } catch (error) {
-            if (error?.status === 403) {
-              window.location.href = "/unauthorized.html";
-              return;
-            }
-
-            $("membersTableBody").innerHTML = `
-              <tr>
-                <td colspan="8" class="muted">${escapeHtml(
-                  error?.message || "Unable to load members."
-                )}</td>
-              </tr>
-            `;
+            console.error("[admin/members] logout error:", error);
+            els.logoutButton.disabled = false;
+            els.logoutButton.textContent = originalText;
+            alert("We couldn't log you out right now. Please try again.");
           }
         }
 
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", init, { once: true });
-        } else {
-          init();
-        }
+        els.refreshButton?.addEventListener("click", loadMembers);
+        els.exportButton?.addEventListener("click", exportCsv);
+        els.applyFiltersButton?.addEventListener("click", renderTable);
+        els.searchInput?.addEventListener("input", renderTable);
+        els.statusFilter?.addEventListener("change", renderTable);
+        els.tierFilter?.addEventListener("change", renderTable);
+        els.logoutButton?.addEventListener("click", handleLogout);
+
+        els.membersTableBody?.addEventListener("click", (event) => {
+          const markPaidButton = event.target.closest("[data-mark-paid]");
+          const viewButton = event.target.closest("[data-view]");
+          const suspendButton = event.target.closest("[data-suspend]");
+
+          if (markPaidButton) {
+            updateMemberStatus(markPaidButton.getAttribute("data-mark-paid"), {
+              membership_status: "active",
+              payment_status: "paid",
+              approval_status: "auto_approved",
+            });
+            return;
+          }
+
+          if (viewButton) {
+            viewMember(viewButton.getAttribute("data-view"));
+            return;
+          }
+
+          if (suspendButton) {
+            const confirmed = window.confirm("Suspend this member?");
+            if (!confirmed) return;
+
+            updateMemberStatus(suspendButton.getAttribute("data-suspend"), {
+              membership_status: "suspended",
+              payment_status: "suspended",
+            });
+          }
+        });
+
+        loadMembers();
       })();
     </script>
   </body>

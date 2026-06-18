@@ -7,39 +7,58 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title>Card Leo Rewards | Member Rewards</title>
+
+    <title>Rewards | Card Leo Rewards</title>
+
     <meta
       name="description"
-      content="Explore your Card Leo Rewards member benefits, active rewards, premium access details, and account status."
+      content="View your Card Leo Rewards member rewards, referral rewards, benefit access, payout status, tier level, and membership rewards dashboard."
     />
-    <meta name="theme-color" content="#0b1020" />
-    <link rel="stylesheet" href="../style.css" />
+    <meta
+      name="keywords"
+      content="Card Leo Rewards, member rewards, referral rewards, rewards dashboard, monthly rewards, payout status, premium membership"
+    />
+    <meta name="theme-color" content="#030303" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link
+      rel="canonical"
+      href="https://www.cardleorewards.com/portal/rewards.html"
+    />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/assets/css/portal.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
 
     <style>
       :root {
-        --portal-bg: #07111f;
-        --portal-bg-2: #0b1426;
-        --panel: rgba(10, 18, 34, 0.78);
-        --panel-strong: rgba(9, 16, 29, 0.92);
-        --panel-soft: rgba(255, 255, 255, 0.04);
-        --line: rgba(255, 255, 255, 0.08);
-        --line-strong: rgba(255, 255, 255, 0.14);
-        --text: #f8fbff;
-        --muted: #a8b4c7;
-        --muted-2: #7d8aa3;
-        --gold: #d4a94f;
-        --gold-2: #f5d486;
-        --green: #2fd08f;
-        --green-2: #96f0c7;
-        --danger: #ff6d7a;
-        --warning: #ffcf5a;
-        --shadow-xl: 0 30px 80px rgba(0, 0, 0, 0.45);
-        --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.28);
-        --radius-xl: 28px;
-        --radius-lg: 20px;
+        --leo-black: #030303;
+        --leo-black-2: #080808;
+        --leo-black-3: #111111;
+        --leo-panel: rgba(9, 9, 9, 0.92);
+        --leo-panel-2: rgba(18, 18, 18, 0.9);
+        --leo-line: rgba(231, 182, 79, 0.22);
+        --leo-line-soft: rgba(255, 255, 255, 0.08);
+        --leo-gold: #e7b64f;
+        --leo-gold-2: #f7d98b;
+        --leo-gold-3: #a66f10;
+        --leo-white: #f8f3e7;
+        --leo-muted: rgba(248, 243, 231, 0.68);
+        --leo-muted-2: rgba(248, 243, 231, 0.5);
+        --leo-green: #48f06b;
+        --leo-red: #ff7676;
+        --leo-yellow: #ffd166;
+        --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
+        --radius-xl: 30px;
+        --radius-lg: 22px;
         --radius-md: 16px;
-        --radius-sm: 12px;
-        --max-width: 1280px;
+        --sidebar-width: 290px;
       }
 
       * {
@@ -53,13 +72,13 @@
       body {
         margin: 0;
         min-height: 100vh;
-        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--leo-white);
         background:
-          radial-gradient(circle at top left, rgba(47, 208, 143, 0.13), transparent 28%),
-          radial-gradient(circle at top right, rgba(212, 169, 79, 0.15), transparent 24%),
-          linear-gradient(180deg, #040913 0%, #07111f 48%, #081221 100%);
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-          "Segoe UI", sans-serif;
+          radial-gradient(circle at 84% 9%, rgba(231, 182, 79, 0.13), transparent 26%),
+          radial-gradient(circle at 55% 100%, rgba(231, 182, 79, 0.08), transparent 28%),
+          linear-gradient(180deg, #030303 0%, #080808 46%, #010101 100%);
       }
 
       a {
@@ -75,479 +94,482 @@
       }
 
       .portal-shell {
-        position: relative;
-        overflow: hidden;
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: var(--sidebar-width) 1fr;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          radial-gradient(circle at 72% 24%, rgba(231, 182, 79, 0.07), transparent 28%);
+        background-size: 96px 96px, auto;
       }
 
-      .portal-shell::before,
-      .portal-shell::after {
-        content: "";
-        position: fixed;
-        inset: auto;
-        pointer-events: none;
-        z-index: 0;
-        filter: blur(40px);
-        opacity: 0.55;
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
+        padding: 30px 22px;
+        border-right: 1px solid rgba(231, 182, 79, 0.18);
+        background:
+          radial-gradient(circle at top, rgba(231, 182, 79, 0.12), transparent 30%),
+          rgba(0, 0, 0, 0.72);
+        backdrop-filter: blur(20px);
       }
 
-      .portal-shell::before {
-        top: -100px;
-        right: -80px;
-        width: 320px;
-        height: 320px;
-        background: radial-gradient(circle, rgba(212, 169, 79, 0.26), transparent 70%);
+      .brand-lockup {
+        text-align: center;
+        margin-bottom: 30px;
       }
 
-      .portal-shell::after {
-        bottom: -120px;
-        left: -60px;
-        width: 360px;
-        height: 360px;
-        background: radial-gradient(circle, rgba(47, 208, 143, 0.18), transparent 70%);
-      }
-
-      .portal-container {
-        position: relative;
-        z-index: 1;
-        width: min(var(--max-width), calc(100% - 32px));
-        margin: 0 auto;
-        padding: 28px 0 64px;
-      }
-
-      .portal-topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 14px 18px;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        background: rgba(8, 14, 26, 0.72);
-        backdrop-filter: blur(18px);
-        box-shadow: var(--shadow-soft);
-      }
-
-      .portal-brand {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        min-width: 0;
-      }
-
-      .portal-brand-mark {
-        width: 46px;
-        height: 46px;
-        border-radius: 16px;
+      .lion-logo {
+        width: 128px;
+        height: 78px;
+        margin: 0 auto 8px;
         display: grid;
         place-items: center;
-        color: #041014;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        background:
-          linear-gradient(135deg, var(--gold-2), var(--gold)),
-          linear-gradient(135deg, #fff, #ddd);
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.45),
-          0 10px 30px rgba(212, 169, 79, 0.2);
+        color: var(--leo-gold-2);
+        font-size: 2.8rem;
+        filter: drop-shadow(0 0 20px rgba(231, 182, 79, 0.3));
       }
 
-      .portal-brand-copy {
-        min-width: 0;
-      }
-
-      .portal-eyebrow {
-        margin: 0 0 2px;
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.18em;
-        color: var(--gold-2);
-      }
-
-      .portal-brand-title {
+      .brand-lockup h1 {
         margin: 0;
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: 0.01em;
+        font-family: "Playfair Display", serif;
+        font-size: 1.82rem;
+        line-height: 0.95;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
 
-      .portal-brand-subtitle {
-        margin: 2px 0 0;
-        font-size: 0.82rem;
-        color: var(--muted);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      .brand-lockup span {
+        display: block;
+        margin-top: 0.28rem;
+        color: var(--leo-gold);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
       }
 
-      .portal-topbar-actions {
+      .side-nav {
+        display: grid;
+        gap: 8px;
+      }
+
+      .side-link,
+      .logout-btn {
         display: flex;
         align-items: center;
-        gap: 10px;
-      }
-
-      .button {
-        appearance: none;
+        gap: 13px;
+        min-height: 52px;
+        width: 100%;
+        padding: 0 16px;
+        border-radius: 12px;
         border: 1px solid transparent;
-        border-radius: 999px;
-        padding: 12px 18px;
+        background: transparent;
+        color: rgba(248, 243, 231, 0.82);
+        font-size: 0.98rem;
+        font-weight: 700;
         cursor: pointer;
-        transition:
-          transform 0.18s ease,
-          border-color 0.18s ease,
-          background 0.18s ease,
-          box-shadow 0.18s ease,
-          opacity 0.18s ease;
+        transition: 0.22s ease;
       }
 
-      .button:hover {
-        transform: translateY(-1px);
+      .side-link:hover,
+      .logout-btn:hover,
+      .side-link.is-active {
+        color: #070707;
+        background: linear-gradient(135deg, #f7d98b, #b87912);
+        box-shadow: 0 16px 42px rgba(184, 121, 18, 0.24);
       }
 
-      .button:disabled {
-        cursor: not-allowed;
-        opacity: 0.65;
-        transform: none;
+      .side-icon {
+        width: 24px;
+        text-align: center;
+        font-size: 1.08rem;
       }
 
-      .button-primary {
-        color: #081018;
-        font-weight: 700;
-        background: linear-gradient(135deg, var(--gold-2), var(--gold));
-        box-shadow: 0 12px 28px rgba(212, 169, 79, 0.22);
+      .earn-card {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.16), transparent 36%),
+          rgba(255, 255, 255, 0.035);
       }
 
-      .button-ghost {
-        color: var(--text);
-        border-color: var(--line);
-        background: rgba(255, 255, 255, 0.03);
+      .earn-card h2 {
+        margin: 0 0 10px;
+        color: var(--leo-gold-2);
+        font-size: 1.35rem;
+        line-height: 1.05;
+        text-transform: uppercase;
       }
 
-      .portal-nav {
+      .earn-card p {
+        margin: 0 0 18px;
+        color: var(--leo-muted);
+        line-height: 1.55;
+      }
+
+      .mini-black-card {
+        height: 96px;
+        border-radius: 16px;
+        background:
+          radial-gradient(circle at 82% 14%, rgba(247, 217, 139, 0.24), transparent 32%),
+          linear-gradient(145deg, #050505, #101010 46%, #000);
+        border: 1px solid rgba(231, 182, 79, 0.28);
         display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin: 18px 0 0;
+        align-items: center;
+        justify-content: center;
+        color: var(--leo-gold-2);
+        font-family: "Playfair Display", serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
       }
 
-      .portal-nav a {
-        padding: 11px 16px;
-        border-radius: 999px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.03);
-        color: var(--muted);
-        transition:
-          border-color 0.18s ease,
-          color 0.18s ease,
-          background 0.18s ease,
-          transform 0.18s ease;
+      .mobile-topbar {
+        display: none;
       }
 
-      .portal-nav a:hover {
-        color: var(--text);
-        border-color: var(--line-strong);
-        transform: translateY(-1px);
-      }
-
-      .portal-nav a.active {
-        color: #081018;
-        font-weight: 700;
-        border-color: transparent;
-        background: linear-gradient(135deg, var(--green-2), var(--green));
-        box-shadow: 0 12px 30px rgba(47, 208, 143, 0.18);
-      }
-
-      .hero {
-        display: grid;
-        grid-template-columns: 1.2fr 0.8fr;
-        gap: 22px;
-        margin-top: 24px;
+      .main {
+        min-width: 0;
+        padding: 28px;
       }
 
       .panel {
         position: relative;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-xl);
-        background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
-          var(--panel);
-        backdrop-filter: blur(20px);
-        box-shadow: var(--shadow-xl);
-      }
-
-      .hero-card {
-        padding: 28px;
         overflow: hidden;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
+        background:
+          radial-gradient(circle at 90% 10%, rgba(231, 182, 79, 0.14), transparent 34%),
+          linear-gradient(180deg, rgba(19, 19, 19, 0.92), rgba(4, 4, 4, 0.94));
+        box-shadow: var(--leo-shadow);
       }
 
-      .hero-card::before {
-        content: "";
-        position: absolute;
-        inset: auto auto -120px -90px;
-        width: 260px;
-        height: 260px;
-        background: radial-gradient(circle, rgba(212, 169, 79, 0.18), transparent 70%);
-        pointer-events: none;
+      .panel-inner {
+        position: relative;
+        z-index: 1;
+        padding: 24px;
       }
 
-      .hero-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 18px;
+      .top-grid {
+        display: grid;
+        grid-template-columns: 1fr minmax(280px, 420px);
+        gap: 20px;
+        margin-bottom: 20px;
       }
 
-      .badge {
+      .eyebrow {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 9px 14px;
-        border-radius: 999px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--muted);
-        font-size: 0.84rem;
+        gap: 10px;
+        margin-bottom: 16px;
+        color: var(--leo-gold);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.72rem;
+        font-weight: 900;
       }
 
-      .badge.is-gold {
-        color: #221400;
-        font-weight: 700;
-        border-color: transparent;
-        background: linear-gradient(135deg, var(--gold-2), var(--gold));
-      }
-
-      .badge.is-green {
-        color: #07150e;
-        font-weight: 700;
-        border-color: transparent;
-        background: linear-gradient(135deg, var(--green-2), var(--green));
+      .eyebrow::before {
+        content: "";
+        width: 30px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--leo-gold), transparent);
       }
 
       .hero-title {
         margin: 0;
-        max-width: 14ch;
-        font-size: clamp(2rem, 5vw, 3.8rem);
-        line-height: 0.98;
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        line-height: 1;
+        letter-spacing: -0.05em;
+      }
+
+      .hero-title span {
+        color: var(--leo-gold);
+      }
+
+      .hero-text {
+        max-width: 760px;
+        margin: 14px 0 0;
+        color: var(--leo-muted);
+        line-height: 1.75;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 26px;
+      }
+
+      .btn,
+      .status-pill,
+      .member-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        transition: 0.25s ease;
+        white-space: nowrap;
+      }
+
+      .btn {
+        min-height: 48px;
+        padding: 0 18px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 52%, #8b5b0b 100%);
+        color: #080808;
+        box-shadow:
+          0 18px 42px rgba(216, 154, 34, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow:
+          0 22px 48px rgba(216, 154, 34, 0.34),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.045);
+        border-color: rgba(231, 182, 79, 0.22);
+        color: var(--leo-white);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .status-pill {
+        min-height: 34px;
+        padding: 0 12px;
+        background: rgba(72, 240, 107, 0.12);
+        border-color: rgba(72, 240, 107, 0.22);
+        color: #bfffe5;
+        font-size: 0.82rem;
+        font-weight: 800;
+      }
+
+      .status-pill.pending {
+        background: rgba(255, 209, 102, 0.12);
+        border-color: rgba(255, 209, 102, 0.24);
+        color: #ffeaa6;
+      }
+
+      .status-pill.error {
+        background: rgba(255, 118, 118, 0.12);
+        border-color: rgba(255, 118, 118, 0.24);
+        color: #ffd2d8;
+      }
+
+      .member-badge {
+        min-height: 36px;
+        padding: 0 14px;
+        border-color: rgba(231, 182, 79, 0.36);
+        background: rgba(231, 182, 79, 0.12);
+        color: var(--leo-gold-2);
+        font-size: 0.84rem;
+        font-weight: 900;
+      }
+
+      .black-card-preview {
+        min-height: 255px;
+        border-radius: 24px;
+        overflow: hidden;
+        padding: 22px;
+        background:
+          radial-gradient(circle at 82% 14%, rgba(247, 217, 139, 0.24), transparent 32%),
+          linear-gradient(145deg, #050505, #101010 46%, #000);
+        border: 1px solid rgba(231, 182, 79, 0.28);
+        box-shadow:
+          0 28px 70px rgba(0, 0, 0, 0.5),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.045);
+      }
+
+      .black-card-top,
+      .black-card-bottom {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .black-card-logo {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.35);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--leo-gold-2);
+        font-weight: 900;
+        letter-spacing: 0.08em;
+      }
+
+      .black-card-chip {
+        width: 54px;
+        height: 38px;
+        border-radius: 12px;
+        background:
+          linear-gradient(135deg, #f7d98b, #a66f10),
+          #d89a22;
+        box-shadow: 0 12px 28px rgba(216, 154, 34, 0.28);
+      }
+
+      .black-card-middle {
+        margin-top: 2.4rem;
+      }
+
+      .black-card-middle h2 {
+        margin: 0;
+        color: var(--leo-white);
+        font-size: clamp(1.5rem, 3vw, 2.1rem);
         letter-spacing: -0.04em;
       }
 
-      .hero-copy {
-        max-width: 62ch;
-        margin: 16px 0 0;
-        color: var(--muted);
-        font-size: 1.02rem;
-        line-height: 1.7;
+      .black-card-middle p {
+        margin: 0.4rem 0 0;
+        color: var(--leo-muted);
       }
 
-      .hero-meta {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-        margin-top: 22px;
-      }
-
-      .hero-stat {
-        padding: 16px;
-        border-radius: var(--radius-md);
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.035);
-      }
-
-      .hero-stat-label {
-        color: var(--muted-2);
+      .black-card-bottom {
+        margin-top: 2rem;
+        color: var(--leo-gold);
         font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        letter-spacing: 0.14em;
       }
 
-      .hero-stat-value {
-        margin-top: 8px;
-        font-size: 1.4rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
       }
 
-      .member-card {
-        padding: 24px;
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-      }
-
-      .member-top {
-        display: flex;
-        align-items: center;
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
         gap: 16px;
       }
 
-      .member-avatar {
-        width: 72px;
-        height: 72px;
-        border-radius: 22px;
+      .stat-card .panel-inner {
         display: grid;
+        gap: 8px;
+        text-align: center;
+        min-height: 150px;
         place-items: center;
-        font-size: 1.2rem;
-        font-weight: 800;
-        color: #081018;
-        background: linear-gradient(135deg, var(--gold-2), var(--gold));
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.45),
-          0 10px 26px rgba(212, 169, 79, 0.2);
       }
 
-      .member-name {
-        margin: 0;
-        font-size: 1.28rem;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-      }
-
-      .member-email {
-        margin: 6px 0 0;
-        color: var(--muted);
-        word-break: break-word;
-      }
-
-      .member-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .member-item {
-        padding: 14px;
-        border-radius: var(--radius-md);
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.03);
-      }
-
-      .member-item-label {
-        color: var(--muted-2);
+      .stat-label {
+        color: var(--leo-muted-2);
         font-size: 0.78rem;
         text-transform: uppercase;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.12em;
+        font-weight: 900;
       }
 
-      .member-item-value {
-        margin-top: 8px;
-        font-weight: 700;
+      .stat-number {
+        color: var(--leo-gold);
+        font-size: clamp(1.8rem, 4vw, 2.6rem);
+        line-height: 1;
+        font-weight: 900;
       }
 
-      .section {
-        margin-top: 24px;
+      .stat-note {
+        color: var(--leo-muted);
+        font-size: 0.9rem;
+        line-height: 1.45;
       }
 
-      .section-head {
+      .section-title-row {
         display: flex;
-        align-items: end;
+        align-items: flex-start;
         justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 16px;
+        gap: 12px;
+        margin-bottom: 18px;
       }
 
-      .section-title {
+      .section-title-row h2,
+      .section-title-row h3 {
         margin: 0;
-        font-size: clamp(1.2rem, 3vw, 1.6rem);
+        color: var(--leo-white);
+        font-size: 1.45rem;
         letter-spacing: -0.03em;
       }
 
-      .section-copy {
-        margin: 6px 0 0;
-        color: var(--muted);
-        line-height: 1.6;
-      }
-
-      .section-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 16px;
-      }
-
-      .summary-card {
-        padding: 20px;
-        border-radius: var(--radius-lg);
-        border: 1px solid var(--line);
-        background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02)),
-          var(--panel);
-        box-shadow: var(--shadow-soft);
-      }
-
-      .summary-label {
-        color: var(--muted-2);
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-      }
-
-      .summary-value {
-        margin-top: 10px;
-        font-size: clamp(1.5rem, 4vw, 2rem);
-        font-weight: 800;
-        letter-spacing: -0.03em;
-      }
-
-      .summary-note {
-        margin-top: 8px;
-        color: var(--muted);
-        line-height: 1.55;
+      .section-title-row p {
+        margin: 8px 0 0;
+        color: var(--leo-muted);
+        line-height: 1.65;
       }
 
       .rewards-layout {
         display: grid;
-        grid-template-columns: 1.5fr 0.95fr;
-        gap: 18px;
+        grid-template-columns: 1.25fr 0.75fr;
+        gap: 20px;
       }
 
-      .rewards-list-card,
-      .notice-card {
-        padding: 22px;
-      }
-
-      .rewards-list {
+      .reward-list,
+      .notice-list {
         display: grid;
         gap: 14px;
       }
 
-      .reward-item {
-        padding: 18px;
+      .reward-card,
+      .notice-card,
+      .summary-row {
         border-radius: 18px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.03);
-        transition:
-          transform 0.18s ease,
-          border-color 0.18s ease,
-          background 0.18s ease;
+        border: 1px solid rgba(231, 182, 79, 0.14);
+        background: rgba(255, 255, 255, 0.035);
       }
 
-      .reward-item:hover {
+      .reward-card {
+        padding: 18px;
+        transition: 0.2s ease;
+      }
+
+      .reward-card:hover {
         transform: translateY(-2px);
-        border-color: var(--line-strong);
-        background: rgba(255, 255, 255, 0.045);
+        border-color: rgba(231, 182, 79, 0.3);
+        background: rgba(255, 255, 255, 0.05);
       }
 
       .reward-top {
         display: flex;
-        align-items: start;
+        align-items: flex-start;
         justify-content: space-between;
-        gap: 16px;
+        gap: 14px;
       }
 
       .reward-title {
         margin: 0;
-        font-size: 1.08rem;
-        font-weight: 800;
+        color: var(--leo-white);
+        font-size: 1.06rem;
+        font-weight: 900;
         letter-spacing: -0.02em;
       }
 
       .reward-description {
         margin: 10px 0 0;
-        color: var(--muted);
+        color: var(--leo-muted);
         line-height: 1.65;
       }
 
@@ -562,901 +584,1145 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 8px 12px;
+        min-height: 32px;
+        padding: 0 12px;
         border-radius: 999px;
-        border: 1px solid var(--line);
+        border: 1px solid rgba(231, 182, 79, 0.14);
         background: rgba(255, 255, 255, 0.045);
-        color: var(--muted);
+        color: var(--leo-muted);
         font-size: 0.8rem;
-      }
-
-      .pill.is-value {
-        color: #0a140f;
         font-weight: 800;
-        border-color: transparent;
-        background: linear-gradient(135deg, var(--green-2), var(--green));
       }
 
-      .pill.is-status-active {
-        color: #08130d;
-        font-weight: 800;
+      .pill.gold {
+        color: #080808;
         border-color: transparent;
-        background: linear-gradient(135deg, #bbf5db, #5ee0aa);
+        background: linear-gradient(135deg, #f7d98b, #b87912);
       }
 
-      .pill.is-status-pending {
-        color: #201402;
-        font-weight: 800;
+      .pill.green {
+        color: #06120a;
         border-color: transparent;
-        background: linear-gradient(135deg, #ffe6a3, #ffca56);
+        background: linear-gradient(135deg, #a6ffd0, #48f06b);
       }
 
-      .pill.is-status-locked {
+      .pill.yellow {
+        color: #160f03;
+        border-color: transparent;
+        background: linear-gradient(135deg, #ffeaa6, #ffd166);
+      }
+
+      .pill.red {
         color: #fff0f2;
-        font-weight: 800;
         border-color: transparent;
-        background: linear-gradient(135deg, #ef667d, #d84c61);
+        background: linear-gradient(135deg, #ff8a98, #c72f45);
       }
 
-      .notice-stack {
+      .summary-grid {
         display: grid;
-        gap: 14px;
+        gap: 12px;
       }
 
-      .notice-item {
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 14px;
+      }
+
+      .summary-row span {
+        color: var(--leo-muted);
+      }
+
+      .summary-row strong {
+        color: var(--leo-gold-2);
+        text-align: right;
+      }
+
+      .notice-card {
         padding: 16px;
-        border-radius: 16px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.03);
       }
 
-      .notice-title {
+      .notice-card h3 {
+        margin: 0 0 8px;
+        color: var(--leo-white);
+        font-size: 1rem;
+      }
+
+      .notice-card p {
         margin: 0;
-        font-size: 0.98rem;
-        font-weight: 800;
-      }
-
-      .notice-copy {
-        margin: 8px 0 0;
-        color: var(--muted);
+        color: var(--leo-muted);
         line-height: 1.6;
       }
 
-      .empty-state,
-      .status-state {
-        padding: 26px;
-        border-radius: var(--radius-lg);
-        border: 1px dashed var(--line-strong);
-        background: rgba(255, 255, 255, 0.02);
+      .status-box,
+      .empty-box {
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px dashed rgba(255, 255, 255, 0.16);
+        color: var(--leo-muted);
         text-align: center;
-        color: var(--muted);
+        background: rgba(255, 255, 255, 0.025);
+        line-height: 1.6;
       }
 
       .status-banner {
         display: none;
-        margin-top: 18px;
+        margin-bottom: 18px;
         padding: 14px 16px;
         border-radius: 16px;
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.03);
-        color: var(--muted);
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--leo-muted);
       }
 
       .status-banner.show {
         display: block;
       }
 
-      .status-banner.error {
-        color: #ffd9de;
-        border-color: rgba(255, 109, 122, 0.3);
-        background: rgba(255, 109, 122, 0.08);
-      }
-
       .status-banner.success {
-        color: #dffced;
-        border-color: rgba(47, 208, 143, 0.24);
-        background: rgba(47, 208, 143, 0.09);
+        color: #bfffe5;
+        border-color: rgba(72, 240, 107, 0.24);
+        background: rgba(72, 240, 107, 0.1);
       }
 
-      .loading {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        color: var(--muted);
+      .status-banner.error {
+        color: #ffd2d8;
+        border-color: rgba(255, 118, 118, 0.24);
+        background: rgba(255, 118, 118, 0.1);
       }
 
-      .loading-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        background: linear-gradient(135deg, var(--gold-2), var(--gold));
-        animation: pulse 1s infinite ease-in-out;
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 0.35;
-          transform: scale(0.85);
-        }
-        50% {
-          opacity: 1;
-          transform: scale(1);
-        }
+      .status-banner.warning {
+        color: #ffeaa6;
+        border-color: rgba(255, 209, 102, 0.24);
+        background: rgba(255, 209, 102, 0.1);
       }
 
       .footer-note {
-        margin-top: 24px;
-        color: var(--muted-2);
-        font-size: 0.85rem;
+        margin-top: 22px;
         text-align: center;
+        color: var(--leo-muted-2);
+        font-size: 0.86rem;
       }
 
-      @media (max-width: 1080px) {
-        .hero,
+      @media (max-width: 1180px) {
+        .portal-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .mobile-topbar {
+          display: flex;
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 14px 18px;
+          border-bottom: 1px solid rgba(231, 182, 79, 0.18);
+          background: rgba(0, 0, 0, 0.82);
+          backdrop-filter: blur(18px);
+        }
+
+        .mobile-topbar strong {
+          color: var(--leo-gold-2);
+        }
+
+        .top-grid,
         .rewards-layout {
           grid-template-columns: 1fr;
         }
 
-        .summary-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .stat-grid {
+          grid-template-columns: repeat(2, 1fr);
         }
       }
 
-      @media (max-width: 720px) {
-        .portal-container {
-          width: min(calc(100% - 20px), var(--max-width));
-          padding-top: 18px;
+      @media (max-width: 760px) {
+        .main {
+          padding: 18px;
         }
 
-        .portal-topbar {
-          border-radius: 24px;
-          padding: 14px;
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .portal-topbar-actions {
-          width: 100%;
-        }
-
-        .portal-topbar-actions .button {
-          flex: 1;
-        }
-
-        .hero-card,
-        .member-card,
-        .rewards-list-card,
-        .notice-card {
-          padding: 20px;
-        }
-
-        .hero-meta,
-        .member-grid,
-        .summary-grid {
+        .stat-grid {
           grid-template-columns: 1fr;
         }
 
-        .reward-top {
+        .section-title-row,
+        .reward-top,
+        .summary-row,
+        .black-card-bottom {
           flex-direction: column;
+        }
+
+        .summary-row strong {
+          text-align: left;
+        }
+
+        .hero-actions,
+        .btn {
+          width: 100%;
         }
       }
     </style>
   </head>
 
-  <body>
+  <body data-require-auth data-cardleo-auth-guard="auto">
+    <div class="mobile-topbar">
+      <strong>Card Leo Rewards</strong>
+      <a href="/portal/index.html" class="member-badge">Dashboard</a>
+    </div>
+
     <div class="portal-shell">
-      <main class="portal-container">
-        <header class="portal-topbar">
-          <div class="portal-brand">
-            <div class="portal-brand-mark">CL</div>
-            <div class="portal-brand-copy">
-              <p class="portal-eyebrow">Member Portal</p>
-              <h1 class="portal-brand-title">Card Leo Rewards</h1>
-              <p class="portal-brand-subtitle">
-                Premium access, elevated benefits, exclusive member value.
-              </p>
-            </div>
-          </div>
+      <aside class="sidebar">
+        <div class="brand-lockup">
+          <div class="lion-logo" aria-hidden="true">♛</div>
+          <h1>Card Leo</h1>
+          <span>Rewards</span>
+        </div>
 
-          <div class="portal-topbar-actions">
-            <a class="button button-ghost" href="./profile.html">Profile</a>
-            <button class="button button-primary" id="logoutButton" type="button">
-              Logout
-            </button>
-          </div>
-        </header>
+        <nav class="side-nav" aria-label="Member portal navigation">
+          <a class="side-link" href="/portal/index.html">
+            <span class="side-icon">▣</span>
+            <span>Dashboard</span>
+          </a>
 
-        <nav class="portal-nav" aria-label="Portal navigation">
-          <a href="./index.html">Dashboard</a>
-          <a href="./profile.html">Profile</a>
-          <a class="active" href="./rewards.html" aria-current="page">Rewards</a>
-          <a href="./benefits.html">Benefits</a>
-          <a href="./support.html">Support</a>
-          <a href="./settings.html">Settings</a>
+          <a class="side-link" href="/portal/leaderboard.html">
+            <span class="side-icon">♜</span>
+            <span>Referral Tower</span>
+          </a>
+
+          <a class="side-link" href="/portal/profile.html">
+            <span class="side-icon">♙</span>
+            <span>My Account</span>
+          </a>
+
+          <a class="side-link is-active" href="/portal/rewards.html">
+            <span class="side-icon">🎁</span>
+            <span>Rewards</span>
+          </a>
+
+          <a class="side-link" href="/portal/benefits.html">
+            <span class="side-icon">♔</span>
+            <span>Benefits</span>
+          </a>
+
+          <a class="side-link" href="/portal/billing.html">
+            <span class="side-icon">▱</span>
+            <span>Billing</span>
+          </a>
+
+          <a class="side-link" href="/portal/support.html">
+            <span class="side-icon">☏</span>
+            <span>Support</span>
+          </a>
+
+          <a class="side-link" href="/portal/settings.html">
+            <span class="side-icon">⚙</span>
+            <span>Settings</span>
+          </a>
+
+          <button class="logout-btn" type="button" id="logoutButton" data-logout>
+            <span class="side-icon">↪</span>
+            <span>Logout</span>
+          </button>
         </nav>
 
-        <div class="status-banner" id="statusBanner"></div>
+        <div class="earn-card">
+          <h2>Earn More Rewards</h2>
+          <p>Track referral earnings, tier benefits, and monthly payout status.</p>
+          <div class="mini-black-card">Rewards</div>
+        </div>
+      </aside>
 
-        <section class="hero">
-          <article class="panel hero-card">
-            <div class="hero-badges">
-              <span class="badge is-gold" id="heroAccessBadge">Premium Access</span>
-              <span class="badge is-green" id="heroStatusBadge">Rewards Active</span>
-              <span class="badge" id="heroCountBadge">Loading rewards...</span>
-            </div>
+      <main class="main">
+        <div id="statusBanner" class="status-banner"></div>
 
-            <h2 class="hero-title">Your rewards, elevated.</h2>
-            <p class="hero-copy" id="heroCopy">
-              Access your member-only rewards, premium offers, exclusive status benefits,
-              and curated account advantages designed for Card Leo Rewards members.
-            </p>
+        <section class="top-grid">
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="eyebrow">Member Rewards</div>
 
-            <div class="hero-meta">
-              <div class="hero-stat">
-                <div class="hero-stat-label">Total Rewards</div>
-                <div class="hero-stat-value" id="heroTotalRewards">—</div>
-              </div>
+              <h1 class="hero-title">
+                Your <span>rewards dashboard.</span>
+              </h1>
 
-              <div class="hero-stat">
-                <div class="hero-stat-label">Active Rewards</div>
-                <div class="hero-stat-value" id="heroActiveRewards">—</div>
-              </div>
-
-              <div class="hero-stat">
-                <div class="hero-stat-label">Pending Rewards</div>
-                <div class="hero-stat-value" id="heroPendingRewards">—</div>
-              </div>
-            </div>
-          </article>
-
-          <aside class="panel member-card">
-            <div class="member-top">
-              <div class="member-avatar" id="memberAvatar">CL</div>
-              <div>
-                <h2 class="member-name" id="memberName">Member</h2>
-                <p class="member-email" id="memberEmail">Loading your account...</p>
-              </div>
-            </div>
-
-            <div class="member-grid">
-              <div class="member-item">
-                <div class="member-item-label">Access Level</div>
-                <div class="member-item-value" id="memberAccessLevel">—</div>
-              </div>
-
-              <div class="member-item">
-                <div class="member-item-label">Status</div>
-                <div class="member-item-value" id="memberStatus">—</div>
-              </div>
-
-              <div class="member-item">
-                <div class="member-item-label">Member ID</div>
-                <div class="member-item-value" id="memberId">—</div>
-              </div>
-
-              <div class="member-item">
-                <div class="member-item-label">Reward Snapshot</div>
-                <div class="member-item-value" id="memberRewardSnapshot">—</div>
-              </div>
-            </div>
-          </aside>
-        </section>
-
-        <section class="section">
-          <div class="section-head">
-            <div>
-              <h2 class="section-title">Rewards Snapshot</h2>
-              <p class="section-copy">
-                A clear view of your current reward inventory, active access, and pending
-                opportunities.
+              <p class="hero-text" id="heroCopy">
+                View your active rewards, referral earnings, payout status,
+                benefit access, and monthly reward opportunities.
               </p>
-            </div>
 
-            <div class="section-actions">
-              <a class="button button-ghost" href="./benefits.html">View Benefits</a>
-              <a class="button button-ghost" href="./support.html">Need Help?</a>
-            </div>
-          </div>
-
-          <div class="summary-grid">
-            <article class="summary-card">
-              <div class="summary-label">Total Rewards</div>
-              <div class="summary-value" id="summaryTotalRewards">—</div>
-              <div class="summary-note">Your total visible rewards across this account.</div>
-            </article>
-
-            <article class="summary-card">
-              <div class="summary-label">Active Rewards</div>
-              <div class="summary-value" id="summaryActiveRewards">—</div>
-              <div class="summary-note">
-                Rewards currently available for use or redemption.
-              </div>
-            </article>
-
-            <article class="summary-card">
-              <div class="summary-label">Pending Rewards</div>
-              <div class="summary-value" id="summaryPendingRewards">—</div>
-              <div class="summary-note">
-                Rewards still being processed, unlocked, or verified.
-              </div>
-            </article>
-
-            <article class="summary-card">
-              <div class="summary-label">Status Level</div>
-              <div class="summary-value" id="summaryStatusLabel">—</div>
-              <div class="summary-note">
-                Your current member standing and portal reward posture.
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section class="section rewards-layout">
-          <article class="panel rewards-list-card">
-            <div class="section-head" style="margin-bottom: 18px">
-              <div>
-                <h2 class="section-title">Reward Inventory</h2>
-                <p class="section-copy">
-                  These are the rewards and offers currently associated with your member
-                  account.
-                </p>
-              </div>
-            </div>
-
-            <div id="rewardsList" class="rewards-list">
-              <div class="status-state">
-                <span class="loading">
-                  <span class="loading-dot"></span>
-                  Loading your rewards...
-                </span>
+              <div class="hero-actions">
+                <a class="btn btn-primary" href="/portal/leaderboard.html">
+                  View Referral Tower
+                </a>
+                <a class="btn btn-secondary" href="/portal/benefits.html">
+                  View Benefits
+                </a>
+                <a class="btn btn-secondary" href="/portal/billing.html">
+                  Billing
+                </a>
               </div>
             </div>
           </article>
 
-          <aside class="panel notice-card">
-            <div class="section-head" style="margin-bottom: 18px">
-              <div>
-                <h2 class="section-title">Member Notices</h2>
-                <p class="section-copy">
-                  Important reward notes, access updates, and member-facing guidance.
-                </p>
-              </div>
+          <aside class="black-card-preview">
+            <div class="black-card-top">
+              <div class="black-card-logo">CL</div>
+              <div class="black-card-chip"></div>
             </div>
 
-            <div id="noticesList" class="notice-stack">
-              <div class="notice-item">
-                <h3 class="notice-title">Preparing your portal...</h3>
-                <p class="notice-copy">
-                  We’re loading your reward notices and account-specific details now.
-                </p>
-              </div>
+            <div class="black-card-middle">
+              <h2 id="cardMemberName">Card Leo Member</h2>
+              <p id="cardMemberTier">VIP Member</p>
+            </div>
+
+            <div class="black-card-bottom">
+              <span id="cardMemberStatus">Rewards Loading</span>
+              <span id="cardRewardSnapshot">Monthly Rewards</span>
             </div>
           </aside>
         </section>
 
-        <p class="footer-note">
-          Card Leo Rewards member portal experience — premium access, elite rewards, and
-          elevated member support.
-        </p>
+        <section class="content-grid">
+          <section class="stat-grid">
+            <article class="panel stat-card">
+              <div class="panel-inner">
+                <div class="stat-label">Total Rewards</div>
+                <div class="stat-number" id="totalRewards">—</div>
+                <div class="stat-note">All visible rewards on your account.</div>
+              </div>
+            </article>
+
+            <article class="panel stat-card">
+              <div class="panel-inner">
+                <div class="stat-label">Active Rewards</div>
+                <div class="stat-number" id="activeRewards">—</div>
+                <div class="stat-note">Rewards available now.</div>
+              </div>
+            </article>
+
+            <article class="panel stat-card">
+              <div class="panel-inner">
+                <div class="stat-label">Pending Rewards</div>
+                <div class="stat-number" id="pendingRewards">—</div>
+                <div class="stat-note">Rewards being processed.</div>
+              </div>
+            </article>
+
+            <article class="panel stat-card">
+              <div class="panel-inner">
+                <div class="stat-label">Estimated Earnings</div>
+                <div class="stat-number" id="estimatedEarnings">$0</div>
+                <div class="stat-note">Referral and reward estimate.</div>
+              </div>
+            </article>
+          </section>
+
+          <section class="rewards-layout">
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h2>Reward Inventory</h2>
+                    <p>
+                      Rewards, benefits, referral payouts, and opportunities tied
+                      to your Card Leo Rewards membership.
+                    </p>
+                  </div>
+
+                  <span class="status-pill pending" id="rewardStatusBadge">
+                    Loading
+                  </span>
+                </div>
+
+                <div id="rewardsList" class="reward-list">
+                  <div class="status-box">
+                    Loading your Card Leo Rewards inventory...
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h3>Rewards Summary</h3>
+                    <p>
+                      Your member standing, billing, and payout details.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="summary-grid">
+                  <div class="summary-row">
+                    <span>Member Name</span>
+                    <strong id="memberName">Card Leo Member</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Email</span>
+                    <strong id="memberEmail">Loading...</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Tier</span>
+                    <strong id="memberTier">VIP Member</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Membership Status</span>
+                    <strong id="membershipStatus">Checking</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Payment Status</span>
+                    <strong id="paymentStatus">Checking</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Activation Fee</span>
+                    <strong>$25 one time</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Monthly Membership</span>
+                    <strong>$20/month</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Billing Date</span>
+                    <strong>10th monthly</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Payout Window</span>
+                    <strong>1st–3rd monthly</strong>
+                  </div>
+                </div>
+
+                <div style="margin-top: 18px;">
+                  <a class="btn btn-primary" href="/portal/billing.html">
+                    Manage Billing
+                  </a>
+                </div>
+              </div>
+            </aside>
+          </section>
+
+          <section class="rewards-layout">
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h2>Monthly Reward Notices</h2>
+                    <p>
+                      Important updates about referral rewards, benefit access,
+                      and payout processing.
+                    </p>
+                  </div>
+                </div>
+
+                <div id="noticesList" class="notice-list">
+                  <article class="notice-card">
+                    <h3>Preparing your reward notices...</h3>
+                    <p>
+                      We’re loading your reward notices and account-specific
+                      information now.
+                    </p>
+                  </article>
+                </div>
+              </div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h3>Next Best Steps</h3>
+                    <p>
+                      Keep your rewards moving by keeping membership active and
+                      referring new members.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="notice-list">
+                  <article class="notice-card">
+                    <h3>Keep membership active</h3>
+                    <p>
+                      Active paid members keep access to rewards, benefits,
+                      referral tracking, and the portal.
+                    </p>
+                  </article>
+
+                  <article class="notice-card">
+                    <h3>Refer more members</h3>
+                    <p>
+                      Approved referrals can add rewards to your balance and
+                      move you up the monthly leaderboard.
+                    </p>
+                  </article>
+
+                  <article class="notice-card">
+                    <h3>Watch payout timing</h3>
+                    <p>
+                      Monthly reward payouts are prepared between the 1st and 3rd
+                      of each month.
+                    </p>
+                  </article>
+                </div>
+              </div>
+            </aside>
+          </section>
+        </section>
+
+        <div class="footer-note">
+          Card Leo Rewards Member Portal · Rewards Dashboard
+        </div>
       </main>
     </div>
 
+    <script src="/assets/js/auth-guard.js"></script>
     <script>
-      const state = {
-        payload: null,
-      };
-
-      const els = {
-        statusBanner: document.getElementById("statusBanner"),
-        logoutButton: document.getElementById("logoutButton"),
-
-        heroAccessBadge: document.getElementById("heroAccessBadge"),
-        heroStatusBadge: document.getElementById("heroStatusBadge"),
-        heroCountBadge: document.getElementById("heroCountBadge"),
-        heroCopy: document.getElementById("heroCopy"),
-        heroTotalRewards: document.getElementById("heroTotalRewards"),
-        heroActiveRewards: document.getElementById("heroActiveRewards"),
-        heroPendingRewards: document.getElementById("heroPendingRewards"),
-
-        memberAvatar: document.getElementById("memberAvatar"),
-        memberName: document.getElementById("memberName"),
-        memberEmail: document.getElementById("memberEmail"),
-        memberAccessLevel: document.getElementById("memberAccessLevel"),
-        memberStatus: document.getElementById("memberStatus"),
-        memberId: document.getElementById("memberId"),
-        memberRewardSnapshot: document.getElementById("memberRewardSnapshot"),
-
-        summaryTotalRewards: document.getElementById("summaryTotalRewards"),
-        summaryActiveRewards: document.getElementById("summaryActiveRewards"),
-        summaryPendingRewards: document.getElementById("summaryPendingRewards"),
-        summaryStatusLabel: document.getElementById("summaryStatusLabel"),
-
-        rewardsList: document.getElementById("rewardsList"),
-        noticesList: document.getElementById("noticesList"),
-      };
-
-      function escapeHtml(value) {
-        return String(value ?? "")
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#39;");
-      }
-
-      function toTitleCase(value) {
-        return String(value || "")
-          .replace(/[_-]+/g, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .replace(/\b\w/g, (char) => char.toUpperCase());
-      }
-
-      function getInitials(name) {
-        const parts = String(name || "")
-          .trim()
-          .split(/\s+/)
-          .filter(Boolean);
-
-        if (!parts.length) return "CL";
-        return parts
-          .slice(0, 2)
-          .map((part) => part[0]?.toUpperCase() || "")
-          .join("");
-      }
-
-      function isObject(value) {
-        return value !== null && typeof value === "object" && !Array.isArray(value);
-      }
-
-      function toArray(value) {
-        return Array.isArray(value) ? value : [];
-      }
-
-      function firstDefined(...values) {
-        for (const value of values) {
-          if (value !== undefined && value !== null && value !== "") return value;
-        }
-        return "";
-      }
-
-      function safeNumber(value, fallback = 0) {
-        const num = Number(value);
-        return Number.isFinite(num) ? num : fallback;
-      }
-
-      function showBanner(message, type = "") {
-        if (!message) {
-          els.statusBanner.className = "status-banner";
-          els.statusBanner.textContent = "";
-          return;
-        }
-
-        els.statusBanner.textContent = message;
-        els.statusBanner.className = `status-banner show ${type}`.trim();
-      }
-
-      function buildDefaultNotices(summary) {
-        return [
-          {
-            title: "Reward access is tied to your member status",
-            body:
-              "Your visible rewards reflect your current portal access level and account status.",
-          },
-          {
-            title: "Need help unlocking more value?",
-            body:
-              "Visit the Benefits or Support sections for additional guidance, premium options, or account assistance.",
-          },
-          {
-            title: "Current status",
-            body: `Your account is currently marked as ${summary.statusLabel}.`,
-          },
-        ];
-      }
-
-      function normalizeReward(item, index) {
-        const raw = isObject(item) ? item : {};
-        const title = firstDefined(raw.title, raw.name, raw.label, `Reward ${index + 1}`);
-        const description = firstDefined(
-          raw.description,
-          raw.details,
-          raw.summary,
-          "Exclusive member reward available through your Card Leo Rewards account."
-        );
-
-        const statusRaw = firstDefined(raw.status, raw.state, raw.rewardStatus, "active");
-        const status = String(statusRaw || "active").toLowerCase();
-        const value = firstDefined(raw.value, raw.amount, raw.points, raw.rewardValue, "");
-        const category = firstDefined(raw.category, raw.type, raw.rewardType, "Member Reward");
-        const code = firstDefined(raw.code, raw.reference, raw.rewardCode, "");
-        const expiresAt = firstDefined(raw.expiresAt, raw.expiration, raw.validUntil, "");
-
-        return {
-          id: firstDefined(raw.id, raw.rewardId, `reward-${index + 1}`),
-          title: toTitleCase(title),
-          description: String(description),
-          status,
-          statusLabel: toTitleCase(status),
-          value,
-          category: toTitleCase(category),
-          code,
-          expiresAt,
+      (() => {
+        const API = {
+          me: "/api/auth/me",
+          rewards: "/api/portal/rewards",
+          logout: "/api/auth/logout",
         };
-      }
 
-      function normalizePayload(payload) {
-        const root = isObject(payload) ? payload : {};
-        const data = isObject(root.data) ? root.data : {};
+        const els = {
+          statusBanner: document.getElementById("statusBanner"),
+          logoutButton: document.getElementById("logoutButton"),
 
-        const memberRaw = isObject(root.member)
-          ? root.member
-          : isObject(data.member)
-            ? data.member
-            : {};
+          cardMemberName: document.getElementById("cardMemberName"),
+          cardMemberTier: document.getElementById("cardMemberTier"),
+          cardMemberStatus: document.getElementById("cardMemberStatus"),
+          cardRewardSnapshot: document.getElementById("cardRewardSnapshot"),
 
-        const profileRaw = isObject(root.profile)
-          ? root.profile
-          : isObject(data.profile)
-            ? data.profile
-            : {};
+          heroCopy: document.getElementById("heroCopy"),
+          rewardStatusBadge: document.getElementById("rewardStatusBadge"),
 
-        const summaryRaw = isObject(root.summary)
-          ? root.summary
-          : isObject(data.summary)
-            ? data.summary
-            : {};
+          totalRewards: document.getElementById("totalRewards"),
+          activeRewards: document.getElementById("activeRewards"),
+          pendingRewards: document.getElementById("pendingRewards"),
+          estimatedEarnings: document.getElementById("estimatedEarnings"),
 
-        const rewardsRaw =
-          toArray(root.rewards).length
-            ? root.rewards
-            : toArray(data.rewards).length
-              ? data.rewards
-              : toArray(summaryRaw.rewards).length
-                ? summaryRaw.rewards
-                : [];
+          rewardsList: document.getElementById("rewardsList"),
+          noticesList: document.getElementById("noticesList"),
 
-        const noticesRaw =
-          toArray(root.notices).length
-            ? root.notices
-            : toArray(root.announcements).length
-              ? root.announcements
-              : toArray(data.notices).length
-                ? data.notices
-                : toArray(data.announcements).length
-                  ? data.announcements
-                  : [];
-
-        const fullName = firstDefined(
-          memberRaw.fullName,
-          memberRaw.name,
-          `${firstDefined(profileRaw.firstName, memberRaw.firstName, "").trim()} ${firstDefined(
-            profileRaw.lastName,
-            memberRaw.lastName,
-            ""
-          ).trim()}`.trim(),
-          "Card Leo Member"
-        );
-
-        const email = firstDefined(profileRaw.email, memberRaw.email, "Member account");
-        const accessLevel = toTitleCase(
-          firstDefined(
-            summaryRaw.accessLevel,
-            memberRaw.accessLevel,
-            memberRaw.membershipLevel,
-            "Premium Access"
-          )
-        );
-
-        const statusLabel = toTitleCase(
-          firstDefined(summaryRaw.statusLabel, memberRaw.statusLabel, memberRaw.status, "Active")
-        );
-
-        const rewards = rewardsRaw.map(normalizeReward);
-        const totalRewards = safeNumber(
-          firstDefined(summaryRaw.totalRewards, rewards.length),
-          rewards.length
-        );
-
-        const activeRewards = safeNumber(
-          firstDefined(
-            summaryRaw.activeRewards,
-            rewards.filter((reward) => reward.status === "active").length
-          ),
-          rewards.filter((reward) => reward.status === "active").length
-        );
-
-        const pendingRewards = safeNumber(
-          firstDefined(
-            summaryRaw.pendingRewards,
-            rewards.filter((reward) => reward.status === "pending").length
-          ),
-          rewards.filter((reward) => reward.status === "pending").length
-        );
-
-        const memberId = firstDefined(
-          memberRaw.memberId,
-          memberRaw.portalUserId,
-          memberRaw.signupId,
-          profileRaw.signupId,
-          "—"
-        );
-
-        const rewardSnapshot = `${activeRewards} active / ${pendingRewards} pending`;
-
-        const notices = (noticesRaw.length ? noticesRaw : buildDefaultNotices({ statusLabel }))
-          .map((item, index) => {
-            if (isObject(item)) {
-              return {
-                id: firstDefined(item.id, `notice-${index + 1}`),
-                title: firstDefined(item.title, item.name, `Notice ${index + 1}`),
-                body: firstDefined(
-                  item.body,
-                  item.description,
-                  item.message,
-                  "Important account information is available for your review."
-                ),
-              };
-            }
-
-            return {
-              id: `notice-${index + 1}`,
-              title: `Notice ${index + 1}`,
-              body: String(item),
-            };
-          });
-
-        return {
-          member: {
-            fullName,
-            email,
-            accessLevel,
-            statusLabel,
-            memberId,
-            rewardSnapshot,
-          },
-          summary: {
-            totalRewards,
-            activeRewards,
-            pendingRewards,
-            accessLevel,
-            statusLabel,
-          },
-          rewards,
-          notices,
+          memberName: document.getElementById("memberName"),
+          memberEmail: document.getElementById("memberEmail"),
+          memberTier: document.getElementById("memberTier"),
+          membershipStatus: document.getElementById("membershipStatus"),
+          paymentStatus: document.getElementById("paymentStatus"),
         };
-      }
 
-      function rewardStatusClass(status) {
-        const value = String(status || "").toLowerCase();
+        let currentMember = null;
 
-        if (value === "active") return "is-status-active";
-        if (value === "pending") return "is-status-pending";
-        return "is-status-locked";
-      }
+        const money = (value) => {
+          const number = Number(value || 0);
 
-      function renderHeader(model) {
-        const { member, summary } = model;
+          return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(Number.isFinite(number) ? number : 0);
+        };
 
-        els.heroAccessBadge.textContent = member.accessLevel || "Premium Access";
-        els.heroStatusBadge.textContent = member.statusLabel || "Active";
-        els.heroCountBadge.textContent = `${summary.totalRewards} reward${
-          summary.totalRewards === 1 ? "" : "s"
-        } available`;
+        const escapeHtml = (value) =>
+          String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
 
-        els.heroCopy.textContent = `Your Card Leo Rewards account is currently operating at the ${member.accessLevel} level with ${summary.activeRewards} active reward${summary.activeRewards === 1 ? "" : "s"} and ${summary.pendingRewards} pending opportunity${summary.pendingRewards === 1 ? "" : "ies"}.`;
+        const isObject = (value) =>
+          Boolean(value) && typeof value === "object" && !Array.isArray(value);
 
-        els.heroTotalRewards.textContent = String(summary.totalRewards);
-        els.heroActiveRewards.textContent = String(summary.activeRewards);
-        els.heroPendingRewards.textContent = String(summary.pendingRewards);
+        const unwrap = (payload) => {
+          if (!isObject(payload)) return {};
+          return isObject(payload.data) ? payload.data : payload;
+        };
 
-        els.memberAvatar.textContent = getInitials(member.fullName);
-        els.memberName.textContent = member.fullName;
-        els.memberEmail.textContent = member.email;
-        els.memberAccessLevel.textContent = member.accessLevel;
-        els.memberStatus.textContent = member.statusLabel;
-        els.memberId.textContent = member.memberId || "—";
-        els.memberRewardSnapshot.textContent = member.rewardSnapshot;
+        const normalizeText = (value, fallback = "") => {
+          const text = String(value ?? "").trim();
+          return text || fallback;
+        };
 
-        els.summaryTotalRewards.textContent = String(summary.totalRewards);
-        els.summaryActiveRewards.textContent = String(summary.activeRewards);
-        els.summaryPendingRewards.textContent = String(summary.pendingRewards);
-        els.summaryStatusLabel.textContent = member.statusLabel;
-      }
+        const titleCase = (value) =>
+          String(value || "")
+            .replace(/[_-]+/g, " ")
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(" ");
 
-      function renderRewards(model) {
-        if (!model.rewards.length) {
-          els.rewardsList.innerHTML = `
-            <div class="empty-state">
-              No rewards are currently visible on this account yet. As your membership
-              expands, your benefits and reward inventory will appear here.
-            </div>
-          `;
-          return;
-        }
+        const safeNumber = (value, fallback = 0) => {
+          const number = Number(value);
+          return Number.isFinite(number) ? number : fallback;
+        };
 
-        els.rewardsList.innerHTML = model.rewards
-          .map((reward) => {
-            const meta = [];
-
-            meta.push(
-              `<span class="pill ${rewardStatusClass(reward.status)}">${escapeHtml(
-                reward.statusLabel
-              )}</span>`
-            );
-
-            meta.push(`<span class="pill">${escapeHtml(reward.category)}</span>`);
-
-            if (reward.value) {
-              meta.push(
-                `<span class="pill is-value">${escapeHtml(String(reward.value))}</span>`
-              );
-            }
-
-            if (reward.code) {
-              meta.push(`<span class="pill">Code: ${escapeHtml(String(reward.code))}</span>`);
-            }
-
-            if (reward.expiresAt) {
-              meta.push(
-                `<span class="pill">Valid Until: ${escapeHtml(String(reward.expiresAt))}</span>`
-              );
-            }
-
-            return `
-              <article class="reward-item">
-                <div class="reward-top">
-                  <div>
-                    <h3 class="reward-title">${escapeHtml(reward.title)}</h3>
-                    <p class="reward-description">${escapeHtml(reward.description)}</p>
-                  </div>
-                </div>
-                <div class="reward-meta">${meta.join("")}</div>
-              </article>
-            `;
-          })
-          .join("");
-      }
-
-      function renderNotices(model) {
-        els.noticesList.innerHTML = model.notices
-          .map(
-            (notice) => `
-              <article class="notice-item">
-                <h3 class="notice-title">${escapeHtml(notice.title)}</h3>
-                <p class="notice-copy">${escapeHtml(notice.body)}</p>
-              </article>
-            `
-          )
-          .join("");
-      }
-
-      async function fetchRewards() {
-        showBanner("");
-
-        try {
-          const response = await fetch("../api/portal/rewards", {
-            method: "GET",
+        async function fetchJson(url, options = {}) {
+          const response = await fetch(url, {
+            method: options.method || "GET",
+            credentials: "include",
             headers: {
               Accept: "application/json",
+              ...(options.body ? { "Content-Type": "application/json" } : {}),
+              ...(options.headers || {}),
             },
-            credentials: "include",
+            ...options,
           });
 
-          let payload = {};
-          try {
-            payload = await response.json();
-          } catch {
-            payload = {};
-          }
+          const payload = await response.json().catch(() => ({}));
 
           if (response.status === 401) {
-            window.location.href = "../login.html?next=/portal/rewards.html";
+            window.location.href =
+              "/login.html?next=" +
+              encodeURIComponent(window.location.pathname + window.location.search);
+            return null;
+          }
+
+          if (!response.ok || payload?.success === false || payload?.ok === false) {
+            const error = new Error(
+              payload?.message || payload?.error || "Request failed."
+            );
+            error.status = response.status;
+            error.payload = payload;
+            throw error;
+          }
+
+          return unwrap(payload);
+        }
+
+        function showBanner(message, type = "") {
+          if (!message) {
+            els.statusBanner.className = "status-banner";
+            els.statusBanner.textContent = "";
             return;
           }
 
-          if (response.status === 403) {
-            showBanner(
-              payload?.message ||
-                "Your account is not yet enabled for full portal rewards access.",
-              "error"
-            );
+          els.statusBanner.textContent = message;
+          els.statusBanner.className = `status-banner show ${type}`.trim();
+        }
 
-            els.rewardsList.innerHTML = `
-              <div class="empty-state">
-                Your account exists, but full rewards access has not been enabled yet.
-                Please contact support or return to your dashboard for updates.
-              </div>
-            `;
-            return;
+        function getFullName(member) {
+          const full =
+            normalizeText(member?.fullName) ||
+            normalizeText(member?.full_name) ||
+            normalizeText(member?.name);
+
+          if (full) return full;
+
+          const first = normalizeText(member?.firstName || member?.first_name);
+          const last = normalizeText(member?.lastName || member?.last_name);
+
+          return [first, last].filter(Boolean).join(" ") || "Card Leo Member";
+        }
+
+        function getTier(member) {
+          return normalizeText(
+            member?.tier_name ||
+              member?.tierName ||
+              member?.membership_tier ||
+              member?.membershipTier ||
+              member?.tier ||
+              "VIP Member"
+          );
+        }
+
+        function getStatus(member) {
+          return normalizeText(
+            member?.membership_status ||
+              member?.membershipStatus ||
+              member?.status ||
+              member?.member_status ||
+              "active"
+          ).toLowerCase();
+        }
+
+        function getPaymentStatus(member) {
+          return normalizeText(
+            member?.payment_status || member?.paymentStatus || "paid"
+          ).toLowerCase();
+        }
+
+        function getStatusLabel(member) {
+          const status = getStatus(member);
+
+          if (status === "auto_approved") return "Auto Approved";
+          if (status === "payment_pending") return "Payment Pending";
+          if (status === "pending_payment") return "Payment Pending";
+
+          return titleCase(status || "Active");
+        }
+
+        function getPaymentLabel(member) {
+          const status = getPaymentStatus(member);
+
+          if (status === "current") return "Current";
+          if (status === "succeeded") return "Paid";
+
+          return titleCase(status || "Paid");
+        }
+
+        function isPaidActive(member) {
+          const status = getStatus(member);
+          const paymentStatus = getPaymentStatus(member);
+
+          return (
+            ["active", "approved", "auto_approved", "paid"].includes(status) ||
+            ["paid", "active", "current", "succeeded"].includes(paymentStatus)
+          );
+        }
+
+        function statusBadgeClass(label) {
+          const value = normalizeText(label).toLowerCase();
+
+          if (
+            value.includes("pending") ||
+            value.includes("required") ||
+            value.includes("past due") ||
+            value.includes("unpaid")
+          ) {
+            return "status-pill pending";
           }
 
-          if (response.status === 404) {
-            showBanner(
-              payload?.message ||
-                "We could not locate a member record for this rewards account.",
-              "error"
-            );
-
-            els.rewardsList.innerHTML = `
-              <div class="empty-state">
-                A matching member record could not be found. Please contact support if
-                you believe this is an error.
-              </div>
-            `;
-            return;
+          if (
+            value.includes("declined") ||
+            value.includes("denied") ||
+            value.includes("cancel") ||
+            value.includes("suspended")
+          ) {
+            return "status-pill error";
           }
 
-          if (!response.ok) {
-            throw new Error(
-              payload?.message || "Unable to load your rewards right now. Please try again."
-            );
+          return "status-pill";
+        }
+
+        function rewardPillClass(status) {
+          const value = normalizeText(status).toLowerCase();
+
+          if (value === "active" || value === "approved" || value === "earned") {
+            return "pill green";
           }
 
-          state.payload = payload;
-          const model = normalizePayload(payload);
+          if (value === "pending" || value === "processing") {
+            return "pill yellow";
+          }
 
-          renderHeader(model);
-          renderRewards(model);
-          renderNotices(model);
+          if (value === "locked" || value === "inactive") {
+            return "pill";
+          }
 
-          showBanner("Your rewards have been loaded successfully.", "success");
-        } catch (error) {
-          console.error("[portal/rewards] load error:", error);
+          if (value === "denied" || value === "cancelled" || value === "canceled") {
+            return "pill red";
+          }
 
-          showBanner(
-            error?.message ||
-              "Something went wrong while loading your rewards. Please try again.",
-            "error"
+          return "pill gold";
+        }
+
+        function normalizeReward(item, index) {
+          const raw = isObject(item) ? item : {};
+
+          const title = normalizeText(
+            raw.title || raw.name || raw.label,
+            `Reward ${index + 1}`
           );
 
-          els.rewardsList.innerHTML = `
-            <div class="empty-state">
-              We couldn’t load your rewards right now. Refresh this page or try again in a
-              moment.
-            </div>
-          `;
+          const description = normalizeText(
+            raw.description || raw.details || raw.summary,
+            "Exclusive Card Leo Rewards member reward available through your account."
+          );
 
-          els.noticesList.innerHTML = `
-            <article class="notice-item">
-              <h3 class="notice-title">Temporary loading issue</h3>
-              <p class="notice-copy">
-                Your reward notices could not be loaded at this time. Please refresh the
-                page or contact support if the issue continues.
-              </p>
-            </article>
-          `;
+          const status = normalizeText(
+            raw.status || raw.state || raw.rewardStatus,
+            "active"
+          ).toLowerCase();
+
+          const category = normalizeText(
+            raw.category || raw.type || raw.rewardType,
+            "Member Reward"
+          );
+
+          const amount = safeNumber(
+            raw.amount || raw.value || raw.reward_amount || raw.rewardAmount,
+            0
+          );
+
+          const code = normalizeText(raw.code || raw.rewardCode || raw.reference);
+          const expiresAt = normalizeText(raw.expiresAt || raw.validUntil || raw.expiration);
+
+          return {
+            id: normalizeText(raw.id || raw.rewardId, `reward-${index + 1}`),
+            title,
+            description,
+            status,
+            statusLabel: titleCase(status),
+            category: titleCase(category),
+            amount,
+            code,
+            expiresAt,
+          };
         }
-      }
 
-      async function handleLogout() {
-        const button = els.logoutButton;
-        const originalText = button.textContent;
+        function defaultRewards(member) {
+          const paid = isPaidActive(member);
 
-        button.disabled = true;
-        button.textContent = "Logging out...";
-
-        try {
-          await fetch("../api/auth/logout", {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
+          return [
+            {
+              id: "referral-reward",
+              title: "Approved Referral Reward",
+              description:
+                "Earn reward credit for approved members who join through your referral link.",
+              status: paid ? "active" : "pending",
+              statusLabel: paid ? "Active" : "Pending",
+              category: "Referral Reward",
+              amount: 7,
             },
-            credentials: "include",
-          });
-        } catch (error) {
-          console.error("[portal/rewards] logout error:", error);
-        } finally {
-          window.location.href = "../login.html";
-          button.disabled = false;
-          button.textContent = originalText;
+            {
+              id: "monthly-leaderboard",
+              title: "Monthly Leaderboard Rewards",
+              description:
+                "Compete with other members each month and climb the referral leaderboard.",
+              status: paid ? "active" : "pending",
+              statusLabel: paid ? "Active" : "Pending",
+              category: "Leaderboard",
+              amount: 0,
+            },
+            {
+              id: "lifestyle-benefits",
+              title: "Lifestyle Benefit Access",
+              description:
+                "Access member-focused benefits across dining, travel, shopping, entertainment, and everyday value.",
+              status: paid ? "active" : "locked",
+              statusLabel: paid ? "Active" : "Locked",
+              category: "Benefits",
+              amount: 0,
+            },
+            {
+              id: "monthly-payout-window",
+              title: "Monthly Payout Window",
+              description:
+                "Eligible monthly reward payouts are prepared between the 1st and 3rd of each month.",
+              status: "processing",
+              statusLabel: "Processing",
+              category: "Payouts",
+              amount: 0,
+            },
+          ];
         }
-      }
 
-      els.logoutButton.addEventListener("click", handleLogout);
+        function defaultNotices(member) {
+          const paid = isPaidActive(member);
 
-      fetchRewards();
+          return [
+            {
+              title: "Rewards require active membership",
+              body: paid
+                ? "Your membership is active, so your reward tools and benefits can remain unlocked."
+                : "Complete your activation payment to unlock full rewards access.",
+            },
+            {
+              title: "Referral rewards",
+              body:
+                "Every approved referral can add $7 to your rewards account and help you rise on the leaderboard.",
+            },
+            {
+              title: "Payout timing",
+              body:
+                "Monthly reward payouts are prepared between the 1st and 3rd after monthly rewards are reviewed.",
+            },
+          ];
+        }
+
+        function normalizePayload(payload, memberFallback = null) {
+          const root = isObject(payload) ? payload : {};
+          const data = unwrap(root);
+
+          const member =
+            data.member ||
+            data.profile ||
+            data.user ||
+            root.member ||
+            root.profile ||
+            root.user ||
+            memberFallback ||
+            {};
+
+          const summary = data.summary || root.summary || {};
+          const rawRewards = Array.isArray(data.rewards)
+            ? data.rewards
+            : Array.isArray(root.rewards)
+              ? root.rewards
+              : [];
+
+          const rewards = rawRewards.length
+            ? rawRewards.map(normalizeReward)
+            : defaultRewards(member);
+
+          const approvedReferrals = safeNumber(
+            summary.approvedReferrals || summary.approved_referrals,
+            0
+          );
+
+          const estimatedEarnings = safeNumber(
+            summary.estimatedEarnings ||
+              summary.estimated_earnings ||
+              summary.earnedAmount ||
+              summary.earned_amount,
+            approvedReferrals * 7
+          );
+
+          const totalRewards = safeNumber(summary.totalRewards, rewards.length);
+          const activeRewards = safeNumber(
+            summary.activeRewards,
+            rewards.filter((reward) =>
+              ["active", "approved", "earned"].includes(reward.status)
+            ).length
+          );
+          const pendingRewards = safeNumber(
+            summary.pendingRewards,
+            rewards.filter((reward) =>
+              ["pending", "processing"].includes(reward.status)
+            ).length
+          );
+
+          const rawNotices = Array.isArray(data.notices)
+            ? data.notices
+            : Array.isArray(root.notices)
+              ? root.notices
+              : [];
+
+          const notices = rawNotices.length
+            ? rawNotices.map((notice, index) => ({
+                title: normalizeText(notice.title || notice.name, `Notice ${index + 1}`),
+                body: normalizeText(
+                  notice.body || notice.message || notice.description,
+                  "Important rewards information is available for your review."
+                ),
+              }))
+            : defaultNotices(member);
+
+          return {
+            member,
+            rewards,
+            notices,
+            summary: {
+              totalRewards,
+              activeRewards,
+              pendingRewards,
+              estimatedEarnings,
+              approvedReferrals,
+            },
+          };
+        }
+
+        function renderMember(member) {
+          currentMember = member;
+
+          const fullName = getFullName(member);
+          const tier = getTier(member);
+          const email = normalizeText(member.email, "Member account");
+          const statusLabel = getStatusLabel(member);
+          const paymentLabel = getPaymentLabel(member);
+          const paid = isPaidActive(member);
+
+          els.cardMemberName.textContent = fullName;
+          els.cardMemberTier.textContent = tier;
+          els.cardMemberStatus.textContent = paid ? "Rewards Active" : "Payment Required";
+
+          els.memberName.textContent = fullName;
+          els.memberEmail.textContent = email;
+          els.memberTier.textContent = tier;
+          els.membershipStatus.textContent = statusLabel;
+          els.paymentStatus.textContent = paymentLabel;
+
+          els.rewardStatusBadge.textContent = paid ? "Rewards Active" : "Payment Required";
+          els.rewardStatusBadge.className = statusBadgeClass(
+            paid ? "Rewards Active" : "Payment Required"
+          );
+
+          els.heroCopy.textContent = paid
+            ? "Your Card Leo Rewards membership is active. View your available rewards, referral earnings, payout timing, and benefit access."
+            : "Your rewards are limited until membership payment is complete. Activate your account to unlock full reward access.";
+        }
+
+        function renderStats(model) {
+          els.totalRewards.textContent = String(model.summary.totalRewards);
+          els.activeRewards.textContent = String(model.summary.activeRewards);
+          els.pendingRewards.textContent = String(model.summary.pendingRewards);
+          els.estimatedEarnings.textContent = money(model.summary.estimatedEarnings);
+
+          els.cardRewardSnapshot.textContent = `${model.summary.activeRewards} Active`;
+        }
+
+        function renderRewards(model) {
+          if (!model.rewards.length) {
+            els.rewardsList.innerHTML = `
+              <div class="empty-box">
+                No rewards are currently visible on this account. As your membership
+                and referrals grow, rewards will appear here.
+              </div>
+            `;
+            return;
+          }
+
+          els.rewardsList.innerHTML = model.rewards
+            .map((reward) => {
+              const amountPill =
+                reward.amount > 0
+                  ? `<span class="pill green">${escapeHtml(money(reward.amount))}</span>`
+                  : "";
+
+              const codePill = reward.code
+                ? `<span class="pill">Code: ${escapeHtml(reward.code)}</span>`
+                : "";
+
+              const expiresPill = reward.expiresAt
+                ? `<span class="pill">Valid Until: ${escapeHtml(reward.expiresAt)}</span>`
+                : "";
+
+              return `
+                <article class="reward-card">
+                  <div class="reward-top">
+                    <div>
+                      <h3 class="reward-title">${escapeHtml(reward.title)}</h3>
+                      <p class="reward-description">${escapeHtml(reward.description)}</p>
+                    </div>
+                    <span class="${rewardPillClass(reward.status)}">
+                      ${escapeHtml(reward.statusLabel)}
+                    </span>
+                  </div>
+
+                  <div class="reward-meta">
+                    <span class="pill gold">${escapeHtml(reward.category)}</span>
+                    ${amountPill}
+                    ${codePill}
+                    ${expiresPill}
+                  </div>
+                </article>
+              `;
+            })
+            .join("");
+        }
+
+        function renderNotices(model) {
+          els.noticesList.innerHTML = model.notices
+            .map(
+              (notice) => `
+                <article class="notice-card">
+                  <h3>${escapeHtml(notice.title)}</h3>
+                  <p>${escapeHtml(notice.body)}</p>
+                </article>
+              `
+            )
+            .join("");
+        }
+
+        async function loadSession() {
+          try {
+            const data = await fetchJson(API.me);
+            if (!data) return null;
+
+            if (data.authenticated === false) {
+              window.location.href =
+                "/login.html?next=" +
+                encodeURIComponent(window.location.pathname + window.location.search);
+              return null;
+            }
+
+            return data.member || data.profile || data.user || null;
+          } catch {
+            return null;
+          }
+        }
+
+        async function loadRewards() {
+          showBanner("");
+
+          try {
+            const authMember = await loadSession();
+
+            if (authMember) {
+              renderMember(authMember);
+            }
+
+            const data = await fetchJson(API.rewards);
+            if (!data) return;
+
+            const model = normalizePayload(data, authMember);
+
+            renderMember(model.member);
+            renderStats(model);
+            renderRewards(model);
+            renderNotices(model);
+
+            showBanner("Your rewards have been loaded successfully.", "success");
+          } catch (error) {
+            console.error("[portal/rewards] load error:", error);
+
+            const model = normalizePayload({}, currentMember || {});
+            renderStats(model);
+            renderRewards(model);
+            renderNotices(model);
+
+            showBanner(
+              error?.message || "Unable to load your rewards right now.",
+              "error"
+            );
+          }
+        }
+
+        async function handleLogout() {
+          if (!els.logoutButton) return;
+
+          const originalText = els.logoutButton.textContent;
+          els.logoutButton.disabled = true;
+          els.logoutButton.textContent = "Logging out...";
+
+          try {
+            await fetch(API.logout, {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                Accept: "application/json",
+              },
+            });
+
+            window.location.href = "/login.html";
+          } catch (error) {
+            console.error("[portal/rewards] logout error:", error);
+            els.logoutButton.disabled = false;
+            els.logoutButton.textContent = originalText;
+            alert("We couldn't log you out right now. Please try again.");
+          }
+        }
+
+        els.logoutButton?.addEventListener("click", handleLogout);
+
+        window.addEventListener("cardleo:auth-ready", (event) => {
+          const member = event?.detail?.member;
+
+          if (member && !currentMember) {
+            renderMember(member);
+          }
+        });
+
+        window.addEventListener("cardleo:auth-failed", () => {
+          window.location.href =
+            "/login.html?next=" +
+            encodeURIComponent(window.location.pathname + window.location.search);
+        });
+
+        loadRewards();
+      })();
     </script>
   </body>
 </html>

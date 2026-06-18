@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <title>How It Works | Card Leo Rewards</title>
+
+    <meta
+      name="description"
+      content="Learn how Card Leo Rewards works, including membership activation, monthly billing, referral tower rewards, lifestyle benefits, payouts, and member Q&A."
+    />
+    <meta
+      name="keywords"
+      content="Card Leo Rewards how it works, referral tower, lifestyle benefits, rewards membership, black card, member portal"
+    />
+    <meta name="theme-color" content="#030303" />
+    <meta name="robots" content="index, follow" />
+
+    <link
+      rel="canonical"
+      href="https://www.cardleorewards.com/how-it-works.html"
+    />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="/style.css" />
+
+    <meta property="og:title" content="How Card Leo Rewards Works" />
+    <meta
+      property="og:description"
+      content="See how membership activation, referral rewards, lifestyle benefits, and payouts work inside Card Leo Rewards."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Card Leo Rewards" />
+    <meta
+      property="og:url"
+      content="https://www.cardleorewards.com/how-it-works.html"
+    />
+    <meta
+      property="og:image"
+      content="https://www.cardleorewards.com/assets/cardleo-cover.jpg"
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="How Card Leo Rewards Works" />
+    <meta
+      name="twitter:description"
+      content="Membership activation, referral tower rewards, lifestyle benefits, payouts, and Q&A."
+    />
+    <meta
+      name="twitter:image"
+      content="https://www.cardleorewards.com/assets/cardleo-cover.jpg"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --leo-black: #030303;
+        --leo-panel: rgba(12, 12, 12, 0.9);
+        --leo-panel-2: rgba(255, 255, 255, 0.045);
+        --leo-line: rgba(231, 182, 79, 0.23);
+        --leo-gold: #e7b64f;
+        --leo-gold-2: #f7d98b;
+        --leo-gold-3: #a66f10;
+        --leo-white: #f8f3e7;
+        --leo-muted: rgba(248, 243, 231, 0.72);
+        --leo-muted-2: rgba(248, 243, 231, 0.52);
+        --leo-green: #48f06b;
+        --leo-red: #ff7676;
+        --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        color: var(--leo-white);
+        background:
+          radial-gradient(circle at 82% 8%, rgba(231, 182, 79, 0.14), transparent 28%),
+          radial-gradient(circle at 50% 95%, rgba(231, 182, 79, 0.1), transparent 30%),
+          linear-gradient(180deg, #030303 0%, #080808 48%, #010101 100%);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      img,
+      video {
+        max-width: 100%;
+        display: block;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      .site-shell {
+        min-height: 100vh;
+        overflow: hidden;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          radial-gradient(circle at 72% 24%, rgba(231, 182, 79, 0.08), transparent 28%);
+        background-size: 96px 96px, auto;
+      }
+
+      .container {
+        width: min(100% - 2rem, 1320px);
+        margin: 0 auto;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.86);
+        border-bottom: 1px solid rgba(231, 182, 79, 0.18);
+        backdrop-filter: blur(18px);
+      }
+
+      .nav-wrap {
+        min-height: 86px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.85rem;
+      }
+
+      .brand-logo {
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        object-fit: contain;
+        padding: 0.35rem;
+        border: 1px solid rgba(231, 182, 79, 0.35);
+        background:
+          radial-gradient(circle at top, rgba(247, 217, 139, 0.28), transparent 48%),
+          linear-gradient(145deg, #0b0b0b, #000);
+        box-shadow: 0 0 26px rgba(231, 182, 79, 0.18);
+      }
+
+      .brand-fallback {
+        width: 54px;
+        height: 54px;
+        display: none;
+        place-items: center;
+        border-radius: 16px;
+        border: 1px solid rgba(231, 182, 79, 0.35);
+        background:
+          radial-gradient(circle at top, rgba(247, 217, 139, 0.28), transparent 48%),
+          linear-gradient(145deg, #0b0b0b, #000);
+        color: var(--leo-gold-2);
+        font-weight: 900;
+        letter-spacing: 0.08em;
+      }
+
+      .brand-copy {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.08;
+      }
+
+      .brand-title {
+        color: var(--leo-white);
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-subtitle {
+        margin-top: 0.2rem;
+        color: var(--leo-gold);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      .site-nav {
+        display: flex;
+        align-items: center;
+        gap: 1.1rem;
+      }
+
+      .site-nav a {
+        color: rgba(248, 243, 231, 0.75);
+        font-weight: 800;
+        font-size: 0.95rem;
+        transition: color 0.22s ease;
+      }
+
+      .site-nav a:hover,
+      .site-nav a.is-active {
+        color: var(--leo-gold-2);
+      }
+
+      .nav-cta {
+        min-height: 46px;
+        padding: 0.78rem 1.1rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 50%, #8b5b0b 100%);
+        color: #080808 !important;
+        box-shadow:
+          0 18px 42px rgba(216, 154, 34, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+
+      .menu-toggle {
+        display: none;
+        width: 48px;
+        height: 48px;
+        border: 1px solid rgba(231, 182, 79, 0.2);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .menu-toggle span {
+        width: 20px;
+        height: 2px;
+        border-radius: 999px;
+        background: var(--leo-white);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 54px;
+        padding: 0.95rem 1.35rem;
+        border-radius: 999px;
+        border: 0;
+        font-weight: 900;
+        transition: 0.22s ease;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 50%, #8b5b0b 100%);
+        color: #080808;
+        box-shadow:
+          0 18px 42px rgba(216, 154, 34, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+
+      .btn-secondary {
+        border: 1px solid rgba(231, 182, 79, 0.28);
+        background: rgba(255, 255, 255, 0.045);
+        color: var(--leo-white);
+      }
+
+      .hero {
+        padding: 58px 0 90px;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 2rem;
+        align-items: center;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin: 0 0 1rem;
+        color: var(--leo-gold);
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-weight: 900;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 34px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--leo-gold), transparent);
+      }
+
+      .hero h1,
+      .section-heading h2,
+      .section-copy h2,
+      .cta-panel h2 {
+        margin: 0;
+        font-family: "Playfair Display", Georgia, serif;
+        line-height: 1.02;
+        letter-spacing: -0.055em;
+      }
+
+      .hero h1 {
+        font-size: clamp(3rem, 7vw, 5.6rem);
+      }
+
+      .section-heading h2,
+      .section-copy h2,
+      .cta-panel h2 {
+        font-size: clamp(2rem, 4vw, 3.4rem);
+      }
+
+      .text-gradient {
+        background: linear-gradient(135deg, #ffffff 0%, #f7d98b 40%, #e7b64f 70%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .hero-text,
+      .section-heading p,
+      .section-copy p,
+      .cta-panel p {
+        color: var(--leo-muted);
+        line-height: 1.75;
+      }
+
+      .hero-text {
+        max-width: 62ch;
+        margin: 1rem 0 0;
+        font-size: 1.08rem;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem;
+        margin-top: 1.5rem;
+      }
+
+      .video-card {
+        border-radius: 34px;
+        overflow: hidden;
+        border: 1px solid rgba(231, 182, 79, 0.26);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.14), transparent 34%),
+          #050505;
+        box-shadow: var(--leo-shadow);
+      }
+
+      .video-top {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        border-bottom: 1px solid rgba(231, 182, 79, 0.14);
+      }
+
+      .video-top strong {
+        color: var(--leo-gold-2);
+      }
+
+      .video-top span {
+        color: var(--leo-muted);
+        font-size: 0.9rem;
+      }
+
+      .video-frame {
+        aspect-ratio: 16 / 9;
+        width: 100%;
+        background:
+          linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)),
+          url("/assets/cardleo-cover.jpg") center / cover no-repeat;
+        display: grid;
+        place-items: center;
+        position: relative;
+      }
+
+      .video-frame video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .video-placeholder {
+        padding: 2rem;
+        text-align: center;
+      }
+
+      .play-icon {
+        width: 86px;
+        height: 86px;
+        margin: 0 auto 1rem;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        border: 1px solid rgba(247, 217, 139, 0.34);
+        background: rgba(0, 0, 0, 0.68);
+        color: var(--leo-gold-2);
+        font-size: 2rem;
+        box-shadow: 0 0 42px rgba(231, 182, 79, 0.28);
+      }
+
+      .video-placeholder h2 {
+        margin: 0 0 0.5rem;
+        color: var(--leo-white);
+      }
+
+      .video-placeholder p {
+        margin: 0;
+        color: var(--leo-muted);
+      }
+
+      .section {
+        padding: 92px 0;
+      }
+
+      .section-dark {
+        border-top: 1px solid rgba(231, 182, 79, 0.11);
+        border-bottom: 1px solid rgba(231, 182, 79, 0.11);
+        background:
+          radial-gradient(circle at 80% 20%, rgba(231, 182, 79, 0.08), transparent 32%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.015));
+      }
+
+      .section-heading {
+        max-width: 790px;
+        margin: 0 auto 2.8rem;
+        text-align: center;
+      }
+
+      .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+      }
+
+      .info-card,
+      .step-card,
+      .benefit-card,
+      .tower-floor,
+      .qa-item {
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 34%),
+          rgba(255, 255, 255, 0.035);
+        box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32);
+      }
+
+      .step-card {
+        padding: 1.2rem;
+        border-radius: 22px;
+      }
+
+      .step-card span {
+        display: inline-flex;
+        color: var(--leo-gold);
+        font-size: 0.76rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .step-card h3 {
+        margin: 0.7rem 0 0.45rem;
+      }
+
+      .step-card p {
+        margin: 0;
+        color: var(--leo-muted);
+        line-height: 1.6;
+      }
+
+      .tower-grid {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 2rem;
+        align-items: center;
+      }
+
+      .tower-visual {
+        padding: 1.2rem;
+        border-radius: 30px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
+        background:
+          radial-gradient(circle at top, rgba(231, 182, 79, 0.18), transparent 36%),
+          linear-gradient(180deg, rgba(12, 12, 12, 0.92), rgba(0, 0, 0, 0.95));
+        box-shadow: var(--leo-shadow);
+      }
+
+      .tower-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .tower-header h3 {
+        margin: 0;
+        font-size: 1.35rem;
+      }
+
+      .tower-header span {
+        color: var(--leo-gold-2);
+        font-weight: 900;
+      }
+
+      .tower-stack {
+        display: grid;
+        gap: 0.55rem;
+      }
+
+      .tower-floor {
+        min-height: 48px;
+        display: grid;
+        grid-template-columns: 48px 1fr auto;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 0.65rem 0.8rem;
+        border-radius: 16px;
+      }
+
+      .tower-floor.approved {
+        background:
+          linear-gradient(135deg, rgba(247, 217, 139, 0.34), rgba(231, 182, 79, 0.14)),
+          rgba(255, 255, 255, 0.04);
+      }
+
+      .tower-floor.pending {
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)),
+          rgba(255, 255, 255, 0.04);
+      }
+
+      .tower-floor.locked {
+        opacity: 0.55;
+      }
+
+      .floor-num {
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.38);
+        color: var(--leo-gold-2);
+        font-weight: 900;
+      }
+
+      .floor-name {
+        font-weight: 800;
+      }
+
+      .floor-status {
+        color: var(--leo-muted);
+        font-size: 0.9rem;
+      }
+
+      .floor-money {
+        color: var(--leo-green);
+        font-weight: 900;
+      }
+
+      .tower-rules {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .info-card {
+        padding: 1.15rem;
+        border-radius: 22px;
+      }
+
+      .info-card h3 {
+        margin: 0 0 0.45rem;
+        color: var(--leo-white);
+      }
+
+      .info-card p {
+        margin: 0;
+        color: var(--leo-muted);
+        line-height: 1.65;
+      }
+
+      .benefits-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+
+      .benefit-card {
+        padding: 1.2rem;
+        border-radius: 22px;
+      }
+
+      .benefit-icon {
+        width: 54px;
+        height: 54px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 0.95rem;
+        border-radius: 18px;
+        border: 1px solid rgba(231, 182, 79, 0.26);
+        background: rgba(231, 182, 79, 0.1);
+        color: var(--leo-gold-2);
+        font-size: 1.35rem;
+      }
+
+      .benefit-card h3 {
+        margin: 0 0 0.45rem;
+      }
+
+      .benefit-card p {
+        margin: 0;
+        color: var(--leo-muted);
+        line-height: 1.65;
+      }
+
+      .rules-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        align-items: start;
+      }
+
+      .rules-list {
+        margin: 0;
+        padding-left: 1.2rem;
+        color: var(--leo-muted);
+      }
+
+      .rules-list li {
+        margin: 0.55rem 0;
+      }
+
+      .rules-list strong {
+        color: var(--leo-gold-2);
+      }
+
+      .qa-grid {
+        display: grid;
+        gap: 0.85rem;
+        max-width: 980px;
+        margin: 0 auto;
+      }
+
+      .qa-item {
+        border-radius: 20px;
+        overflow: hidden;
+      }
+
+      .qa-question {
+        width: 100%;
+        min-height: 62px;
+        padding: 1rem 1.15rem;
+        border: 0;
+        background: transparent;
+        color: var(--leo-white);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        text-align: left;
+        cursor: pointer;
+        font-weight: 900;
+      }
+
+      .qa-question span {
+        color: var(--leo-gold-2);
+        font-size: 1.25rem;
+      }
+
+      .qa-answer {
+        display: none;
+        padding: 0 1.15rem 1.15rem;
+        color: var(--leo-muted);
+        line-height: 1.7;
+      }
+
+      .qa-item.is-open .qa-answer {
+        display: block;
+      }
+
+      .qa-item.is-open .qa-question span {
+        transform: rotate(45deg);
+      }
+
+      .cta-panel {
+        padding: clamp(1.7rem, 4vw, 3rem);
+        border-radius: 32px;
+        text-align: center;
+        border: 1px solid rgba(231, 182, 79, 0.22);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.16), transparent 34%),
+          linear-gradient(180deg, rgba(19, 19, 19, 0.92), rgba(4, 4, 4, 0.95));
+        box-shadow: var(--leo-shadow);
+      }
+
+      .cta-actions {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.85rem;
+        margin-top: 1.4rem;
+      }
+
+      .site-footer {
+        padding: 2rem 0;
+        border-top: 1px solid rgba(231, 182, 79, 0.12);
+        color: var(--leo-muted);
+      }
+
+      .footer-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .back-to-top {
+        color: var(--leo-gold-2);
+        font-weight: 900;
+      }
+
+      @media (max-width: 1100px) {
+        .hero-grid,
+        .tower-grid,
+        .rules-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .steps-grid,
+        .benefits-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 980px) {
+        .menu-toggle {
+          display: inline-flex;
+        }
+
+        .site-nav {
+          position: absolute;
+          top: calc(100% + 0.75rem);
+          left: 1rem;
+          right: 1rem;
+          display: grid;
+          gap: 0.85rem;
+          padding: 1rem;
+          border-radius: 22px;
+          border: 1px solid rgba(231, 182, 79, 0.2);
+          background: rgba(0, 0, 0, 0.96);
+          box-shadow: var(--leo-shadow);
+          opacity: 0;
+          pointer-events: none;
+          transform: translateY(-8px);
+          transition: 0.22s ease;
+        }
+
+        .site-nav.is-open {
+          opacity: 1;
+          pointer-events: auto;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 680px) {
+        .container {
+          width: min(100% - 1.2rem, 1320px);
+        }
+
+        .brand-subtitle {
+          display: none;
+        }
+
+        .brand-logo,
+        .brand-fallback {
+          width: 46px;
+          height: 46px;
+        }
+
+        .nav-wrap {
+          min-height: 78px;
+        }
+
+        .hero {
+          padding: 34px 0 70px;
+        }
+
+        .hero h1 {
+          font-size: clamp(2.45rem, 12vw, 4rem);
+        }
+
+        .steps-grid,
+        .benefits-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-actions,
+        .cta-actions {
+          flex-direction: column;
+        }
+
+        .btn {
+          width: 100%;
+        }
+
+        .tower-floor {
+          grid-template-columns: 42px 1fr;
+        }
+
+        .floor-money {
+          grid-column: 2;
+        }
+
+        .footer-bottom {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="site-shell">
+      <header class="site-header" id="top">
+        <div class="container nav-wrap">
+          <a href="/" class="brand" aria-label="Card Leo Rewards home">
+            <img
+              class="brand-logo"
+              src="/assets/cardleo-logo.png"
+              alt="Card Leo Rewards Logo"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='grid';"
+            />
+            <div class="brand-fallback">CL</div>
+
+            <div class="brand-copy">
+              <span class="brand-title">Card Leo Rewards</span>
+              <span class="brand-subtitle">Lead The Game</span>
+            </div>
+          </a>
+
+          <button
+            class="menu-toggle"
+            type="button"
+            aria-label="Open navigation"
+            aria-expanded="false"
+            aria-controls="site-nav"
+            id="menuToggle"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+          <nav class="site-nav" id="site-nav">
+            <a href="/">Home</a>
+            <a href="/how-it-works.html" class="is-active">How It Works</a>
+            <a href="/signup.html" class="nav-cta">Join Now</a>
+            <a href="/login.html">Member Login</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="container hero-grid">
+            <div class="hero-copy">
+              <p class="eyebrow">How It Works</p>
+
+              <h1>
+                Join.
+                <span class="text-gradient">Activate.</span>
+                Refer. Earn.
+              </h1>
+
+              <p class="hero-text">
+                Card Leo Rewards is built to be simple. Members activate their
+                account, unlock lifestyle benefits, share their referral link,
+                and track rewards inside the private member portal.
+              </p>
+
+              <div class="hero-actions">
+                <a href="/signup.html" class="btn btn-primary">Join Now</a>
+                <a href="#qa" class="btn btn-secondary">View Q&A</a>
+              </div>
+            </div>
+
+            <div class="video-card">
+              <div class="video-top">
+                <strong>Card Leo Rewards Explainer</strong>
+                <span>Video Overview</span>
+              </div>
+
+              <div class="video-frame">
+                <video
+                  controls
+                  playsinline
+                  preload="metadata"
+                  poster="/assets/cardleo-cover.jpg"
+                >
+                  <source
+                    src="/assets/videos/cardleo-how-it-works.mp4"
+                    type="video/mp4"
+                  />
+                </video>
+
+                <noscript>
+                  <div class="video-placeholder">
+                    <div class="play-icon">▶</div>
+                    <h2>How Card Leo Rewards Works</h2>
+                    <p>Enable JavaScript to view the video player.</p>
+                  </div>
+                </noscript>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section section-dark">
+          <div class="container">
+            <div class="section-heading">
+              <p class="eyebrow">Simple Process</p>
+              <h2>Four Steps To Start Using Card Leo Rewards</h2>
+              <p>
+                This page explains the full member flow so nobody gets confused.
+              </p>
+            </div>
+
+            <div class="steps-grid">
+              <article class="step-card">
+                <span>Step 01</span>
+                <h3>Create Your Account</h3>
+                <p>
+                  Fill out the signup form with your name, email, phone, and
+                  referral details.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <span>Step 02</span>
+                <h3>Activate Membership</h3>
+                <p>
+                  Pay the $25 one-time activation fee and start your $20 monthly
+                  membership.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <span>Step 03</span>
+                <h3>Get Approved</h3>
+                <p>
+                  Once payment is confirmed, your account can be automatically
+                  approved.
+                </p>
+              </article>
+
+              <article class="step-card">
+                <span>Step 04</span>
+                <h3>Refer And Track</h3>
+                <p>
+                  Share your referral link, track your referral tower, and view
+                  rewards inside your portal.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="referral-tower">
+          <div class="container tower-grid">
+            <div class="tower-visual">
+              <div class="tower-header">
+                <h3>Referral Tower Example</h3>
+                <span>$7 Each Approved Referral</span>
+              </div>
+
+              <div class="tower-stack">
+                <div class="tower-floor locked">
+                  <span class="floor-num">12</span>
+                  <span class="floor-name">Open Floor</span>
+                  <span class="floor-status">Locked</span>
+                </div>
+
+                <div class="tower-floor locked">
+                  <span class="floor-num">11</span>
+                  <span class="floor-name">Open Floor</span>
+                  <span class="floor-status">Locked</span>
+                </div>
+
+                <div class="tower-floor locked">
+                  <span class="floor-num">10</span>
+                  <span class="floor-name">Open Floor</span>
+                  <span class="floor-status">Locked</span>
+                </div>
+
+                <div class="tower-floor approved">
+                  <span class="floor-num">09</span>
+                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-money">+$7.00</span>
+                </div>
+
+                <div class="tower-floor approved">
+                  <span class="floor-num">08</span>
+                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-money">+$7.00</span>
+                </div>
+
+                <div class="tower-floor approved">
+                  <span class="floor-num">07</span>
+                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-money">+$7.00</span>
+                </div>
+
+                <div class="tower-floor pending">
+                  <span class="floor-num">06</span>
+                  <span class="floor-name">Pending Referral</span>
+                  <span class="floor-status">Waiting Approval</span>
+                </div>
+
+                <div class="tower-floor pending">
+                  <span class="floor-num">05</span>
+                  <span class="floor-name">Pending Referral</span>
+                  <span class="floor-status">Waiting Payment</span>
+                </div>
+
+                <div class="tower-floor approved">
+                  <span class="floor-num">04</span>
+                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-money">+$7.00</span>
+                </div>
+
+                <div class="tower-floor approved">
+                  <span class="floor-num">03</span>
+                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-money">+$7.00</span>
+                </div>
+
+                <div class="tower-floor approved">
+                  <span class="floor-num">02</span>
+                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-money">+$7.00</span>
+                </div>
+
+                <div class="tower-floor approved">
+                  <span class="floor-num">01</span>
+                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-money">+$7.00</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="tower-rules">
+              <div class="section-copy">
+                <p class="eyebrow">Referral Rewards</p>
+                <h2>Every Approved Referral Adds To Your Tower.</h2>
+                <p>
+                  Members get their own referral link. When someone joins,
+                  pays, and becomes approved, that referral can count toward
+                  rewards and leaderboard placement.
+                </p>
+              </div>
+
+              <article class="info-card">
+                <h3>Approved Means Paid And Activated</h3>
+                <p>
+                  A referral should only count as approved after the new member
+                  completes payment and account activation.
+                </p>
+              </article>
+
+              <article class="info-card">
+                <h3>Monthly Leaderboard</h3>
+                <p>
+                  Members with the strongest approved referral activity can show
+                  on the monthly leaderboard inside the portal.
+                </p>
+              </article>
+
+              <article class="info-card">
+                <h3>Payout Window</h3>
+                <p>
+                  Eligible referral payouts are prepared between the 1st and 3rd
+                  of every month.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section section-dark" id="lifestyle">
+          <div class="container">
+            <div class="section-heading">
+              <p class="eyebrow">Lifestyle Benefits</p>
+              <h2>Member Savings And Perks In One Place</h2>
+              <p>
+                Card Leo Rewards is not just referrals. Members also get access
+                to lifestyle savings and member benefits.
+              </p>
+            </div>
+
+            <div class="benefits-grid">
+              <article class="benefit-card">
+                <div class="benefit-icon">🍽</div>
+                <h3>Dining Savings</h3>
+                <p>
+                  Access restaurant and dining offers for local and everyday
+                  savings.
+                </p>
+              </article>
+
+              <article class="benefit-card">
+                <div class="benefit-icon">✈</div>
+                <h3>Travel Deals</h3>
+                <p>
+                  Explore travel, hotel, and trip-related offers for members.
+                </p>
+              </article>
+
+              <article class="benefit-card">
+                <div class="benefit-icon">🛍</div>
+                <h3>Shopping Perks</h3>
+                <p>
+                  Find savings and special offers across shopping categories.
+                </p>
+              </article>
+
+              <article class="benefit-card">
+                <div class="benefit-icon">🎟</div>
+                <h3>Entertainment</h3>
+                <p>
+                  Member perks can include events, activities, entertainment,
+                  and experiences.
+                </p>
+              </article>
+
+              <article class="benefit-card">
+                <div class="benefit-icon">💪</div>
+                <h3>Health And Fitness</h3>
+                <p>
+                  Lifestyle value can include wellness, fitness, and health
+                  related offers.
+                </p>
+              </article>
+
+              <article class="benefit-card">
+                <div class="benefit-icon">📱</div>
+                <h3>App And Portal Access</h3>
+                <p>
+                  Members can use their portal to track referrals, rewards,
+                  billing, and benefits.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="rules">
+          <div class="container rules-grid">
+            <div class="section-copy">
+              <p class="eyebrow">Membership Rules</p>
+              <h2>Clear Pricing. Clear Approval. Clear Payouts.</h2>
+              <p>
+                These rules keep the member experience direct and easy to
+                understand.
+              </p>
+            </div>
+
+            <div class="info-card">
+              <ul class="rules-list">
+                <li><strong>$25</strong> one-time activation fee.</li>
+                <li><strong>$20/month</strong> recurring membership.</li>
+                <li>Recurring billing happens on the <strong>10th</strong>.</li>
+                <li>Approval happens <strong>automatically after payment</strong>.</li>
+                <li>Earn <strong>$7</strong> per approved referral.</li>
+                <li>Payouts are sent between the <strong>1st and 3rd</strong>.</li>
+                <li>Existing member tiers stay the same.</li>
+                <li>Denied, cancelled, or unpaid members should not count as approved.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="section section-dark" id="qa">
+          <div class="container">
+            <div class="section-heading">
+              <p class="eyebrow">Q&A</p>
+              <h2>Common Questions</h2>
+              <p>
+                Quick answers for new members before they join.
+              </p>
+            </div>
+
+            <div class="qa-grid">
+              <article class="qa-item is-open">
+                <button class="qa-question" type="button">
+                  How much does it cost to join?
+                  <span>+</span>
+                </button>
+                <div class="qa-answer">
+                  It is a $25 one-time activation fee, then $20 per month.
+                  Monthly billing happens on the 10th.
+                </div>
+              </article>
+
+              <article class="qa-item">
+                <button class="qa-question" type="button">
+                  When is my account approved?
+                  <span>+</span>
+                </button>
+                <div class="qa-answer">
+                  Your account can be automatically approved after your payment
+                  is successfully confirmed.
+                </div>
+              </article>
+
+              <article class="qa-item">
+                <button class="qa-question" type="button">
+                  How do referral rewards work?
+                  <span>+</span>
+                </button>
+                <div class="qa-answer">
+                  You share your referral link. When someone joins, pays, and
+                  becomes an approved member, you can earn $7 for that approved
+                  referral.
+                </div>
+              </article>
+
+              <article class="qa-item">
+                <button class="qa-question" type="button">
+                  When are payouts sent?
+                  <span>+</span>
+                </button>
+                <div class="qa-answer">
+                  Eligible reward payouts are sent between the 1st and 3rd of
+                  every month.
+                </div>
+              </article>
+
+              <article class="qa-item">
+                <button class="qa-question" type="button">
+                  Are we changing the tiers?
+                  <span>+</span>
+                </button>
+                <div class="qa-answer">
+                  No. The existing member tiers stay the same. The rewards,
+                  billing, and portal pages should continue using the current
+                  tier names.
+                </div>
+              </article>
+
+              <article class="qa-item">
+                <button class="qa-question" type="button">
+                  What do members get access to?
+                  <span>+</span>
+                </button>
+                <div class="qa-answer">
+                  Members can access lifestyle benefits, referral tracking,
+                  rewards information, billing tools, and their private member
+                  portal.
+                </div>
+              </article>
+
+              <article class="qa-item">
+                <button class="qa-question" type="button">
+                  Where do I track referrals?
+                  <span>+</span>
+                </button>
+                <div class="qa-answer">
+                  Approved and pending referrals can be tracked inside the
+                  member portal, including the referral tower and leaderboard.
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="container">
+            <div class="cta-panel">
+              <p class="eyebrow">Ready To Start?</p>
+              <h2>Join Card Leo Rewards Today.</h2>
+              <p>
+                Activate your membership, unlock your portal, and start building
+                your referral rewards.
+              </p>
+
+              <div class="cta-actions">
+                <a href="/signup.html" class="btn btn-primary">Join Now</a>
+                <a href="/login.html" class="btn btn-secondary">Member Login</a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="container footer-bottom">
+          <p>© <span data-year></span> Card Leo Rewards. All rights reserved.</p>
+          <a href="#top" class="back-to-top">Back To Top ↑</a>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      (() => {
+        const year = document.querySelector("[data-year]");
+        if (year) year.textContent = new Date().getFullYear();
+
+        const menuToggle = document.getElementById("menuToggle");
+        const nav = document.getElementById("site-nav");
+
+        menuToggle?.addEventListener("click", () => {
+          const isOpen = nav.classList.toggle("is-open");
+          menuToggle.setAttribute("aria-expanded", String(isOpen));
+        });
+
+        nav?.querySelectorAll("a").forEach((link) => {
+          link.addEventListener("click", () => {
+            nav.classList.remove("is-open");
+            menuToggle?.setAttribute("aria-expanded", "false");
+          });
+        });
+
+        document.querySelectorAll(".qa-question").forEach((button) => {
+          button.addEventListener("click", () => {
+            const item = button.closest(".qa-item");
+            if (!item) return;
+            item.classList.toggle("is-open");
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

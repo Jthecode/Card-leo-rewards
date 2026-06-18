@@ -1,0 +1,1818 @@
+<!-- admin/rewards.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <title>Admin Rewards | Card Leo Rewards</title>
+
+    <meta
+      name="description"
+      content="Card Leo Rewards admin rewards dashboard for managing referral rewards, member rewards, monthly reward settings, benefit access, and reward statuses."
+    />
+    <meta
+      name="keywords"
+      content="Card Leo Rewards admin, rewards admin, referral rewards, member rewards, reward management, monthly rewards"
+    />
+    <meta name="theme-color" content="#030303" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link
+      rel="canonical"
+      href="https://www.cardleorewards.com/admin/rewards.html"
+    />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/assets/css/admin.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --leo-black: #030303;
+        --leo-panel: rgba(9, 9, 9, 0.92);
+        --leo-gold: #e7b64f;
+        --leo-gold-2: #f7d98b;
+        --leo-white: #f8f3e7;
+        --leo-muted: rgba(248, 243, 231, 0.68);
+        --leo-muted-2: rgba(248, 243, 231, 0.5);
+        --leo-green: #48f06b;
+        --leo-red: #ff7676;
+        --leo-yellow: #ffd166;
+        --leo-line: rgba(231, 182, 79, 0.22);
+        --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
+        --sidebar-width: 290px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--leo-white);
+        background:
+          radial-gradient(circle at 84% 9%, rgba(231, 182, 79, 0.13), transparent 26%),
+          radial-gradient(circle at 55% 100%, rgba(231, 182, 79, 0.08), transparent 28%),
+          linear-gradient(180deg, #030303 0%, #080808 46%, #010101 100%);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      .admin-shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: var(--sidebar-width) 1fr;
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          radial-gradient(circle at 72% 24%, rgba(231, 182, 79, 0.07), transparent 28%);
+        background-size: 96px 96px, auto;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: auto;
+        padding: 30px 22px;
+        border-right: 1px solid rgba(231, 182, 79, 0.18);
+        background:
+          radial-gradient(circle at top, rgba(231, 182, 79, 0.12), transparent 30%),
+          rgba(0, 0, 0, 0.72);
+        backdrop-filter: blur(20px);
+      }
+
+      .brand-lockup {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .lion-logo {
+        width: 128px;
+        height: 78px;
+        margin: 0 auto 8px;
+        display: grid;
+        place-items: center;
+        color: var(--leo-gold-2);
+        font-size: 2.8rem;
+        filter: drop-shadow(0 0 20px rgba(231, 182, 79, 0.3));
+      }
+
+      .brand-lockup h1 {
+        margin: 0;
+        font-family: "Playfair Display", serif;
+        font-size: 1.82rem;
+        line-height: 0.95;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .brand-lockup span {
+        display: block;
+        margin-top: 0.28rem;
+        color: var(--leo-gold);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+
+      .side-nav {
+        display: grid;
+        gap: 8px;
+      }
+
+      .side-link,
+      .logout-btn {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        min-height: 52px;
+        width: 100%;
+        padding: 0 16px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        background: transparent;
+        color: rgba(248, 243, 231, 0.82);
+        font-size: 0.98rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.22s ease;
+      }
+
+      .side-link:hover,
+      .logout-btn:hover,
+      .side-link.is-active {
+        color: #070707;
+        background: linear-gradient(135deg, #f7d98b, #b87912);
+        box-shadow: 0 16px 42px rgba(184, 121, 18, 0.24);
+      }
+
+      .side-icon {
+        width: 24px;
+        text-align: center;
+        font-size: 1.08rem;
+      }
+
+      .admin-card {
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.16), transparent 36%),
+          rgba(255, 255, 255, 0.035);
+      }
+
+      .admin-card h2 {
+        margin: 0 0 10px;
+        color: var(--leo-gold-2);
+        font-size: 1.35rem;
+        line-height: 1.05;
+        text-transform: uppercase;
+      }
+
+      .admin-card p {
+        margin: 0;
+        color: var(--leo-muted);
+        line-height: 1.55;
+      }
+
+      .mobile-topbar {
+        display: none;
+      }
+
+      .main {
+        min-width: 0;
+        padding: 28px;
+      }
+
+      .panel {
+        position: relative;
+        overflow: hidden;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
+        background:
+          radial-gradient(circle at 90% 10%, rgba(231, 182, 79, 0.14), transparent 34%),
+          linear-gradient(180deg, rgba(19, 19, 19, 0.92), rgba(4, 4, 4, 0.94));
+        box-shadow: var(--leo-shadow);
+      }
+
+      .panel-inner {
+        position: relative;
+        z-index: 1;
+        padding: 24px;
+      }
+
+      .top-grid {
+        display: grid;
+        grid-template-columns: 1fr minmax(280px, 420px);
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        color: var(--leo-gold);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.72rem;
+        font-weight: 900;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 30px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--leo-gold), transparent);
+      }
+
+      .hero-title {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        line-height: 1;
+        letter-spacing: -0.05em;
+      }
+
+      .hero-title span {
+        color: var(--leo-gold);
+      }
+
+      .hero-text {
+        max-width: 760px;
+        margin: 14px 0 0;
+        color: var(--leo-muted);
+        line-height: 1.75;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 26px;
+      }
+
+      .btn,
+      .status-pill,
+      .admin-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        transition: 0.25s ease;
+        white-space: nowrap;
+      }
+
+      .btn {
+        min-height: 48px;
+        padding: 0 18px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 52%, #8b5b0b 100%);
+        color: #080808;
+        box-shadow:
+          0 18px 42px rgba(216, 154, 34, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow:
+          0 22px 48px rgba(216, 154, 34, 0.34),
+          inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.045);
+        border-color: rgba(231, 182, 79, 0.22);
+        color: var(--leo-white);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .btn-danger {
+        background: rgba(255, 118, 118, 0.12);
+        border-color: rgba(255, 118, 118, 0.24);
+        color: #ffd2d8;
+      }
+
+      .btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .admin-badge,
+      .status-pill {
+        min-height: 34px;
+        padding: 0 12px;
+        font-size: 0.82rem;
+        font-weight: 800;
+      }
+
+      .admin-badge {
+        border-color: rgba(231, 182, 79, 0.36);
+        background: rgba(231, 182, 79, 0.12);
+        color: var(--leo-gold-2);
+      }
+
+      .status-pill {
+        background: rgba(72, 240, 107, 0.12);
+        border-color: rgba(72, 240, 107, 0.22);
+        color: #bfffe5;
+      }
+
+      .status-pill.pending {
+        background: rgba(255, 209, 102, 0.12);
+        border-color: rgba(255, 209, 102, 0.24);
+        color: #ffeaa6;
+      }
+
+      .status-pill.error {
+        background: rgba(255, 118, 118, 0.12);
+        border-color: rgba(255, 118, 118, 0.24);
+        color: #ffd2d8;
+      }
+
+      .black-card-preview {
+        min-height: 255px;
+        border-radius: 24px;
+        overflow: hidden;
+        padding: 22px;
+        background:
+          radial-gradient(circle at 82% 14%, rgba(247, 217, 139, 0.24), transparent 32%),
+          linear-gradient(145deg, #050505, #101010 46%, #000);
+        border: 1px solid rgba(231, 182, 79, 0.28);
+        box-shadow:
+          0 28px 70px rgba(0, 0, 0, 0.5),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.045);
+      }
+
+      .black-card-top,
+      .black-card-bottom {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .black-card-logo {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 22px;
+        border: 1px solid rgba(231, 182, 79, 0.35);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--leo-gold-2);
+        font-weight: 900;
+        letter-spacing: 0.08em;
+      }
+
+      .black-card-chip {
+        width: 54px;
+        height: 38px;
+        border-radius: 12px;
+        background:
+          linear-gradient(135deg, #f7d98b, #a66f10),
+          #d89a22;
+        box-shadow: 0 12px 28px rgba(216, 154, 34, 0.28);
+      }
+
+      .black-card-middle {
+        margin-top: 2.4rem;
+      }
+
+      .black-card-middle h2 {
+        margin: 0;
+        color: var(--leo-white);
+        font-size: clamp(1.5rem, 3vw, 2.1rem);
+        letter-spacing: -0.04em;
+      }
+
+      .black-card-middle p {
+        margin: 0.4rem 0 0;
+        color: var(--leo-muted);
+      }
+
+      .black-card-bottom {
+        margin-top: 2rem;
+        color: var(--leo-gold);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+
+      .stat-card .panel-inner {
+        display: grid;
+        gap: 8px;
+        text-align: center;
+        min-height: 150px;
+        place-items: center;
+      }
+
+      .stat-label {
+        color: var(--leo-muted-2);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-weight: 900;
+      }
+
+      .stat-number {
+        color: var(--leo-gold);
+        font-size: clamp(1.6rem, 4vw, 2.35rem);
+        line-height: 1;
+        font-weight: 900;
+      }
+
+      .stat-note {
+        color: var(--leo-muted);
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .section-title-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .section-title-row h2,
+      .section-title-row h3 {
+        margin: 0;
+        color: var(--leo-white);
+        font-size: 1.45rem;
+        letter-spacing: -0.03em;
+      }
+
+      .section-title-row p {
+        margin: 8px 0 0;
+        color: var(--leo-muted);
+        line-height: 1.65;
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: 1fr 180px 180px auto;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .filters input,
+      .filters select,
+      .reward-form input,
+      .reward-form select,
+      .reward-form textarea {
+        width: 100%;
+        min-height: 48px;
+        border-radius: 14px;
+        border: 1px solid rgba(231, 182, 79, 0.16);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--leo-white);
+        padding: 0 14px;
+        outline: none;
+      }
+
+      .reward-form textarea {
+        min-height: 120px;
+        padding: 14px;
+        resize: vertical;
+      }
+
+      .filters input::placeholder,
+      .reward-form input::placeholder,
+      .reward-form textarea::placeholder {
+        color: rgba(248, 243, 231, 0.45);
+      }
+
+      .filters input:focus,
+      .filters select:focus,
+      .reward-form input:focus,
+      .reward-form select:focus,
+      .reward-form textarea:focus {
+        border-color: rgba(231, 182, 79, 0.46);
+        box-shadow: 0 0 0 4px rgba(231, 182, 79, 0.08);
+      }
+
+      .table-wrap {
+        overflow: auto;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      table {
+        width: 100%;
+        min-width: 980px;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        vertical-align: middle;
+      }
+
+      th {
+        color: rgba(248, 243, 231, 0.6);
+        font-size: 0.76rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      td {
+        color: var(--leo-white);
+        font-size: 0.92rem;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .muted {
+        color: var(--leo-muted);
+      }
+
+      .money {
+        color: var(--leo-green);
+        font-weight: 900;
+      }
+
+      .status-tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 28px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 800;
+      }
+
+      .status-tag.active {
+        color: #d9ffe2;
+        background: rgba(72, 240, 107, 0.14);
+        border: 1px solid rgba(72, 240, 107, 0.25);
+      }
+
+      .status-tag.pending {
+        color: #ffeaa6;
+        background: rgba(255, 209, 102, 0.12);
+        border: 1px solid rgba(255, 209, 102, 0.24);
+      }
+
+      .status-tag.locked,
+      .status-tag.inactive {
+        color: rgba(248, 243, 231, 0.7);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      .status-tag.deleted,
+      .status-tag.cancelled {
+        color: #ffd2d8;
+        background: rgba(255, 118, 118, 0.12);
+        border: 1px solid rgba(255, 118, 118, 0.24);
+      }
+
+      .row-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .mini-btn {
+        min-height: 34px;
+        padding: 0 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--leo-white);
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      .mini-btn.activate {
+        color: #06120a;
+        border-color: transparent;
+        background: linear-gradient(135deg, #a6ffd0, #48f06b);
+      }
+
+      .mini-btn.danger {
+        color: #ffd2d8;
+        border-color: rgba(255, 118, 118, 0.24);
+        background: rgba(255, 118, 118, 0.1);
+      }
+
+      .reward-layout {
+        display: grid;
+        grid-template-columns: 1fr 0.85fr;
+        gap: 20px;
+      }
+
+      .reward-form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        color: var(--leo-muted-2);
+        font-size: 0.78rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-weight: 900;
+      }
+
+      .summary-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.035);
+        border: 1px solid rgba(231, 182, 79, 0.14);
+      }
+
+      .summary-row span {
+        color: var(--leo-muted);
+      }
+
+      .summary-row strong {
+        color: var(--leo-gold-2);
+        text-align: right;
+      }
+
+      .status-banner {
+        display: none;
+        margin-bottom: 18px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--leo-muted);
+      }
+
+      .status-banner.show {
+        display: block;
+      }
+
+      .status-banner.success {
+        color: #bfffe5;
+        border-color: rgba(72, 240, 107, 0.24);
+        background: rgba(72, 240, 107, 0.1);
+      }
+
+      .status-banner.error {
+        color: #ffd2d8;
+        border-color: rgba(255, 118, 118, 0.24);
+        background: rgba(255, 118, 118, 0.1);
+      }
+
+      .status-banner.warning {
+        color: #ffeaa6;
+        border-color: rgba(255, 209, 102, 0.24);
+        background: rgba(255, 209, 102, 0.1);
+      }
+
+      .empty-box {
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px dashed rgba(255, 255, 255, 0.16);
+        color: var(--leo-muted);
+        text-align: center;
+      }
+
+      .footer-note {
+        margin-top: 22px;
+        text-align: center;
+        color: var(--leo-muted-2);
+        font-size: 0.86rem;
+      }
+
+      @media (max-width: 1180px) {
+        .admin-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          display: none;
+        }
+
+        .mobile-topbar {
+          display: flex;
+          position: sticky;
+          top: 0;
+          z-index: 50;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 14px 18px;
+          border-bottom: 1px solid rgba(231, 182, 79, 0.18);
+          background: rgba(0, 0, 0, 0.82);
+          backdrop-filter: blur(18px);
+        }
+
+        .mobile-topbar strong {
+          color: var(--leo-gold-2);
+        }
+
+        .top-grid,
+        .reward-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .stat-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .filters {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .main {
+          padding: 18px;
+        }
+
+        .stat-grid,
+        .filters,
+        .field-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .section-title-row,
+        .summary-row,
+        .black-card-bottom {
+          flex-direction: column;
+        }
+
+        .summary-row strong {
+          text-align: left;
+        }
+
+        .hero-actions,
+        .btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+
+  <body data-require-auth data-cardleo-admin-guard="auto">
+    <div class="mobile-topbar">
+      <strong>Card Leo Admin</strong>
+      <a href="/admin/rewards.html" class="admin-badge">Rewards</a>
+    </div>
+
+    <div class="admin-shell">
+      <aside class="sidebar">
+        <div class="brand-lockup">
+          <div class="lion-logo" aria-hidden="true">♛</div>
+          <h1>Card Leo</h1>
+          <span>Admin</span>
+        </div>
+
+        <nav class="side-nav" aria-label="Admin navigation">
+          <a class="side-link" href="/admin/members.html">
+            <span class="side-icon">▣</span>
+            <span>Members</span>
+          </a>
+
+          <a class="side-link is-active" href="/admin/rewards.html">
+            <span class="side-icon">🎁</span>
+            <span>Rewards</span>
+          </a>
+
+          <a class="side-link" href="/admin/payouts.html">
+            <span class="side-icon">▱</span>
+            <span>Payouts</span>
+          </a>
+
+          <a class="side-link" href="/admin/reports.html">
+            <span class="side-icon">◷</span>
+            <span>Reports</span>
+          </a>
+
+          <a class="side-link" href="/portal/index.html">
+            <span class="side-icon">♚</span>
+            <span>Portal View</span>
+          </a>
+
+          <button class="logout-btn" type="button" id="logoutButton">
+            <span class="side-icon">↪</span>
+            <span>Logout</span>
+          </button>
+        </nav>
+
+        <div class="admin-card">
+          <h2>Reward Control</h2>
+          <p>Create rewards, manage reward status, and control what members see.</p>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div id="statusBanner" class="status-banner"></div>
+
+        <section class="top-grid">
+          <article class="panel">
+            <div class="panel-inner">
+              <div class="eyebrow">Admin Rewards</div>
+
+              <h1 class="hero-title">
+                Manage member <span>rewards.</span>
+              </h1>
+
+              <p class="hero-text">
+                Create and update referral rewards, lifestyle benefits, monthly
+                leaderboard rewards, payout notes, and member-visible reward access.
+              </p>
+
+              <div class="hero-actions">
+                <button class="btn btn-primary" id="createRewardButton" type="button">
+                  Create Reward
+                </button>
+
+                <button class="btn btn-secondary" id="refreshButton" type="button">
+                  Refresh Rewards
+                </button>
+
+                <a class="btn btn-secondary" href="/admin/payouts.html">
+                  Payouts
+                </a>
+              </div>
+            </div>
+          </article>
+
+          <aside class="black-card-preview">
+            <div class="black-card-top">
+              <div class="black-card-logo">CL</div>
+              <div class="black-card-chip"></div>
+            </div>
+
+            <div class="black-card-middle">
+              <h2>Rewards Admin</h2>
+              <p id="cardSubtitle">Member reward control</p>
+            </div>
+
+            <div class="black-card-bottom">
+              <span>Referral Rewards</span>
+              <span id="cardStatus">Ready</span>
+            </div>
+          </aside>
+        </section>
+
+        <section class="stat-grid">
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Total Rewards</div>
+              <div class="stat-number" id="totalRewards">0</div>
+              <div class="stat-note">All reward records.</div>
+            </div>
+          </article>
+
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Active Rewards</div>
+              <div class="stat-number" id="activeRewards">0</div>
+              <div class="stat-note">Visible to active members.</div>
+            </div>
+          </article>
+
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Referral Value</div>
+              <div class="stat-number" id="referralValue">$7</div>
+              <div class="stat-note">Per approved referral.</div>
+            </div>
+          </article>
+
+          <article class="panel stat-card">
+            <div class="panel-inner">
+              <div class="stat-label">Pending Rewards</div>
+              <div class="stat-number" id="pendingRewards">0</div>
+              <div class="stat-note">Draft or processing rewards.</div>
+            </div>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <section class="reward-layout">
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h2>Reward Inventory</h2>
+                    <p>
+                      Manage all rewards that can appear in member accounts and
+                      admin reports.
+                    </p>
+                  </div>
+
+                  <span class="status-pill pending" id="rewardsStatusBadge">
+                    Loading
+                  </span>
+                </div>
+
+                <div class="filters">
+                  <input
+                    id="searchInput"
+                    type="search"
+                    placeholder="Search reward title, category, code..."
+                  />
+
+                  <select id="statusFilter">
+                    <option value="">All statuses</option>
+                    <option value="active">Active</option>
+                    <option value="pending">Pending</option>
+                    <option value="locked">Locked</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+
+                  <select id="categoryFilter">
+                    <option value="">All categories</option>
+                    <option value="referral">Referral</option>
+                    <option value="leaderboard">Leaderboard</option>
+                    <option value="benefits">Benefits</option>
+                    <option value="payouts">Payouts</option>
+                    <option value="lifestyle">Lifestyle</option>
+                  </select>
+
+                  <button class="btn btn-secondary" id="applyFiltersButton" type="button">
+                    Apply
+                  </button>
+                </div>
+
+                <div class="table-wrap">
+                  <table aria-label="Reward inventory">
+                    <thead>
+                      <tr>
+                        <th>Reward</th>
+                        <th>Category</th>
+                        <th>Value</th>
+                        <th>Status</th>
+                        <th>Visibility</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+
+                    <tbody id="rewardsTableBody">
+                      <tr>
+                        <td colspan="6">
+                          <div class="empty-box">Loading rewards...</div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h3 id="formTitle">Create Reward</h3>
+                    <p>
+                      Add a new reward or update an existing reward record.
+                    </p>
+                  </div>
+                </div>
+
+                <form class="reward-form" id="rewardForm" novalidate>
+                  <input type="hidden" id="rewardId" name="rewardId" />
+
+                  <div class="field">
+                    <label for="rewardTitle">Reward Title</label>
+                    <input
+                      id="rewardTitle"
+                      name="title"
+                      type="text"
+                      placeholder="Approved Referral Reward"
+                      required
+                    />
+                  </div>
+
+                  <div class="field">
+                    <label for="rewardDescription">Description</label>
+                    <textarea
+                      id="rewardDescription"
+                      name="description"
+                      placeholder="Describe what members receive..."
+                      required
+                    ></textarea>
+                  </div>
+
+                  <div class="field-grid">
+                    <div class="field">
+                      <label for="rewardCategory">Category</label>
+                      <select id="rewardCategory" name="category" required>
+                        <option value="referral">Referral</option>
+                        <option value="leaderboard">Leaderboard</option>
+                        <option value="benefits">Benefits</option>
+                        <option value="payouts">Payouts</option>
+                        <option value="lifestyle">Lifestyle</option>
+                      </select>
+                    </div>
+
+                    <div class="field">
+                      <label for="rewardStatus">Status</label>
+                      <select id="rewardStatus" name="status" required>
+                        <option value="active">Active</option>
+                        <option value="pending">Pending</option>
+                        <option value="locked">Locked</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="field-grid">
+                    <div class="field">
+                      <label for="rewardValue">Value</label>
+                      <input
+                        id="rewardValue"
+                        name="value"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="7.00"
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label for="rewardCode">Code / Reference</label>
+                      <input
+                        id="rewardCode"
+                        name="code"
+                        type="text"
+                        placeholder="REFERRAL-7"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label for="rewardVisibility">Visibility</label>
+                    <select id="rewardVisibility" name="visibility">
+                      <option value="member">Member visible</option>
+                      <option value="admin">Admin only</option>
+                      <option value="hidden">Hidden</option>
+                    </select>
+                  </div>
+
+                  <div class="hero-actions">
+                    <button class="btn btn-primary" id="saveRewardButton" type="submit">
+                      Save Reward
+                    </button>
+
+                    <button class="btn btn-secondary" id="resetFormButton" type="button">
+                      Reset
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </aside>
+          </section>
+
+          <section class="reward-layout">
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h2>Default Reward Rules</h2>
+                    <p>
+                      Current rules connected to the Card Leo Rewards member system.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="summary-grid">
+                  <div class="summary-row">
+                    <span>Approved Referral Reward</span>
+                    <strong>$7 per approved referral</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Payout Window</span>
+                    <strong>1st–3rd monthly</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Activation Fee</span>
+                    <strong>$25 one time</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Monthly Membership</span>
+                    <strong>$20/month on the 10th</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Member Approval</span>
+                    <strong>Automatic after payment</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h2>Reward Categories</h2>
+                    <p>
+                      These categories appear in member rewards, benefits, and
+                      admin reporting.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="summary-grid">
+                  <div class="summary-row">
+                    <span>Referral</span>
+                    <strong>Referral tower earnings</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Leaderboard</span>
+                    <strong>Monthly competition rewards</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Benefits</span>
+                    <strong>Member perk access</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Lifestyle</span>
+                    <strong>Dining, travel, shopping, entertainment</strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Payouts</span>
+                    <strong>Monthly reward disbursements</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+        </section>
+
+        <div class="footer-note">
+          Card Leo Rewards Admin · Reward Management
+        </div>
+      </main>
+    </div>
+
+    <script src="/assets/js/auth-guard.js"></script>
+    <script>
+      (() => {
+        const API = {
+          rewards: "/api/admin/rewards",
+          createReward: "/api/admin/rewards/create",
+          updateReward: "/api/admin/rewards/update",
+          deleteReward: "/api/admin/rewards/delete",
+          logout: "/api/auth/logout",
+        };
+
+        const els = {
+          statusBanner: document.getElementById("statusBanner"),
+          logoutButton: document.getElementById("logoutButton"),
+
+          createRewardButton: document.getElementById("createRewardButton"),
+          refreshButton: document.getElementById("refreshButton"),
+          applyFiltersButton: document.getElementById("applyFiltersButton"),
+
+          searchInput: document.getElementById("searchInput"),
+          statusFilter: document.getElementById("statusFilter"),
+          categoryFilter: document.getElementById("categoryFilter"),
+
+          rewardsStatusBadge: document.getElementById("rewardsStatusBadge"),
+
+          totalRewards: document.getElementById("totalRewards"),
+          activeRewards: document.getElementById("activeRewards"),
+          referralValue: document.getElementById("referralValue"),
+          pendingRewards: document.getElementById("pendingRewards"),
+
+          rewardsTableBody: document.getElementById("rewardsTableBody"),
+
+          formTitle: document.getElementById("formTitle"),
+          rewardForm: document.getElementById("rewardForm"),
+          rewardId: document.getElementById("rewardId"),
+          rewardTitle: document.getElementById("rewardTitle"),
+          rewardDescription: document.getElementById("rewardDescription"),
+          rewardCategory: document.getElementById("rewardCategory"),
+          rewardStatus: document.getElementById("rewardStatus"),
+          rewardValue: document.getElementById("rewardValue"),
+          rewardCode: document.getElementById("rewardCode"),
+          rewardVisibility: document.getElementById("rewardVisibility"),
+          saveRewardButton: document.getElementById("saveRewardButton"),
+          resetFormButton: document.getElementById("resetFormButton"),
+
+          cardSubtitle: document.getElementById("cardSubtitle"),
+          cardStatus: document.getElementById("cardStatus"),
+        };
+
+        let rewards = [];
+
+        const money = (value) => {
+          const number = Number(value || 0);
+
+          return new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(Number.isFinite(number) ? number : 0);
+        };
+
+        const escapeHtml = (value) =>
+          String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#39;");
+
+        const normalizeText = (value, fallback = "") => {
+          const text = String(value ?? "").trim();
+          return text || fallback;
+        };
+
+        const titleCase = (value) =>
+          String(value || "")
+            .replace(/[_-]+/g, " ")
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(" ");
+
+        const isObject = (value) =>
+          Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+        const unwrap = (payload) => {
+          if (!isObject(payload)) return {};
+          return isObject(payload.data) ? payload.data : payload;
+        };
+
+        async function fetchJson(url, options = {}) {
+          const response = await fetch(url, {
+            method: options.method || "GET",
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              ...(options.body ? { "Content-Type": "application/json" } : {}),
+              ...(options.headers || {}),
+            },
+            ...options,
+          });
+
+          const payload = await response.json().catch(() => ({}));
+
+          if (response.status === 401) {
+            window.location.href =
+              "/login.html?next=" +
+              encodeURIComponent(window.location.pathname + window.location.search);
+            return null;
+          }
+
+          if (!response.ok || payload?.success === false || payload?.ok === false) {
+            const error = new Error(
+              payload?.message || payload?.error || "Request failed."
+            );
+            error.status = response.status;
+            error.payload = payload;
+            throw error;
+          }
+
+          return unwrap(payload);
+        }
+
+        function showBanner(message, type = "") {
+          if (!message) {
+            els.statusBanner.className = "status-banner";
+            els.statusBanner.textContent = "";
+            return;
+          }
+
+          els.statusBanner.textContent = message;
+          els.statusBanner.className = `status-banner show ${type}`.trim();
+        }
+
+        function setLoading(button, loading, loadingText) {
+          if (!button) return;
+
+          if (!button.dataset.originalText) {
+            button.dataset.originalText = button.textContent;
+          }
+
+          button.disabled = loading;
+          button.textContent = loading ? loadingText : button.dataset.originalText;
+        }
+
+        function defaultRewards() {
+          return [
+            {
+              id: "referral-reward",
+              title: "Approved Referral Reward",
+              description:
+                "Earn $7 for every approved member who joins through a referral link.",
+              category: "referral",
+              status: "active",
+              value: 7,
+              code: "REFERRAL-7",
+              visibility: "member",
+            },
+            {
+              id: "monthly-leaderboard",
+              title: "Monthly Leaderboard Reward",
+              description:
+                "Members compete monthly for top referral placement and reward opportunities.",
+              category: "leaderboard",
+              status: "active",
+              value: 0,
+              code: "LEADERBOARD",
+              visibility: "member",
+            },
+            {
+              id: "lifestyle-benefits",
+              title: "Lifestyle Benefit Access",
+              description:
+                "Dining, travel, shopping, entertainment, and member lifestyle value.",
+              category: "lifestyle",
+              status: "active",
+              value: 0,
+              code: "LIFESTYLE",
+              visibility: "member",
+            },
+            {
+              id: "monthly-payout-window",
+              title: "Monthly Payout Window",
+              description:
+                "Monthly reward payouts are prepared between the 1st and 3rd.",
+              category: "payouts",
+              status: "active",
+              value: 0,
+              code: "PAYOUT-1-3",
+              visibility: "member",
+            },
+          ];
+        }
+
+        function normalizeReward(row, index) {
+          return {
+            id:
+              normalizeText(row.id) ||
+              normalizeText(row.reward_id) ||
+              normalizeText(row.rewardId) ||
+              `reward-${index + 1}`,
+            title:
+              normalizeText(row.title) ||
+              normalizeText(row.name) ||
+              `Reward ${index + 1}`,
+            description:
+              normalizeText(row.description) ||
+              normalizeText(row.details) ||
+              "Card Leo Rewards member reward.",
+            category:
+              normalizeText(row.category) ||
+              normalizeText(row.type) ||
+              "referral",
+            status:
+              normalizeText(row.status) ||
+              normalizeText(row.state) ||
+              "active",
+            value: Number(row.value || row.amount || row.reward_amount || 0),
+            code:
+              normalizeText(row.code) ||
+              normalizeText(row.reward_code) ||
+              normalizeText(row.reference),
+            visibility:
+              normalizeText(row.visibility) ||
+              normalizeText(row.visible_to) ||
+              "member",
+          };
+        }
+
+        function normalizePayload(payload = {}) {
+          const root = unwrap(payload);
+
+          const rows = Array.isArray(root.rewards)
+            ? root.rewards
+            : Array.isArray(root.rows)
+              ? root.rows
+              : Array.isArray(root.items)
+                ? root.items
+                : [];
+
+          const normalized = rows.length
+            ? rows.map(normalizeReward)
+            : defaultRewards();
+
+          return normalized;
+        }
+
+        function renderStats() {
+          const total = rewards.length;
+          const active = rewards.filter((reward) => reward.status === "active").length;
+          const pending = rewards.filter((reward) =>
+            ["pending", "locked"].includes(reward.status)
+          ).length;
+
+          const referralReward = rewards.find(
+            (reward) => reward.category === "referral" && Number(reward.value) > 0
+          );
+
+          els.totalRewards.textContent = String(total);
+          els.activeRewards.textContent = String(active);
+          els.pendingRewards.textContent = String(pending);
+          els.referralValue.textContent = money(referralReward?.value || 7);
+
+          els.cardSubtitle.textContent = `${active} active rewards`;
+          els.cardStatus.textContent = `${total} Total`;
+        }
+
+        function getFilteredRewards() {
+          const search = normalizeText(els.searchInput.value).toLowerCase();
+          const status = normalizeText(els.statusFilter.value).toLowerCase();
+          const category = normalizeText(els.categoryFilter.value).toLowerCase();
+
+          return rewards.filter((reward) => {
+            const matchesSearch =
+              !search ||
+              reward.title.toLowerCase().includes(search) ||
+              reward.description.toLowerCase().includes(search) ||
+              reward.code.toLowerCase().includes(search) ||
+              reward.category.toLowerCase().includes(search);
+
+            const matchesStatus = !status || reward.status === status;
+            const matchesCategory = !category || reward.category === category;
+
+            return matchesSearch && matchesStatus && matchesCategory;
+          });
+        }
+
+        function renderTable() {
+          const rows = getFilteredRewards();
+
+          if (!rows.length) {
+            els.rewardsTableBody.innerHTML = `
+              <tr>
+                <td colspan="6">
+                  <div class="empty-box">No rewards found.</div>
+                </td>
+              </tr>
+            `;
+            return;
+          }
+
+          els.rewardsTableBody.innerHTML = rows
+            .map((reward) => {
+              return `
+                <tr>
+                  <td>
+                    <strong>${escapeHtml(reward.title)}</strong>
+                    <div class="muted">${escapeHtml(reward.description)}</div>
+                  </td>
+                  <td>${escapeHtml(titleCase(reward.category))}</td>
+                  <td class="money">${escapeHtml(money(reward.value))}</td>
+                  <td>
+                    <span class="status-tag ${escapeHtml(reward.status)}">
+                      ${escapeHtml(titleCase(reward.status))}
+                    </span>
+                  </td>
+                  <td>${escapeHtml(titleCase(reward.visibility))}</td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="mini-btn" type="button" data-edit="${escapeHtml(reward.id)}">
+                        Edit
+                      </button>
+                      ${
+                        reward.status === "active"
+                          ? `<button class="mini-btn danger" type="button" data-toggle="${escapeHtml(reward.id)}" data-status="inactive">Deactivate</button>`
+                          : `<button class="mini-btn activate" type="button" data-toggle="${escapeHtml(reward.id)}" data-status="active">Activate</button>`
+                      }
+                    </div>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("");
+        }
+
+        function resetForm() {
+          els.formTitle.textContent = "Create Reward";
+          els.rewardId.value = "";
+          els.rewardTitle.value = "";
+          els.rewardDescription.value = "";
+          els.rewardCategory.value = "referral";
+          els.rewardStatus.value = "active";
+          els.rewardValue.value = "";
+          els.rewardCode.value = "";
+          els.rewardVisibility.value = "member";
+          showBanner("");
+        }
+
+        function editReward(id) {
+          const reward = rewards.find((item) => item.id === id);
+
+          if (!reward) {
+            showBanner("Reward not found.", "error");
+            return;
+          }
+
+          els.formTitle.textContent = "Update Reward";
+          els.rewardId.value = reward.id;
+          els.rewardTitle.value = reward.title;
+          els.rewardDescription.value = reward.description;
+          els.rewardCategory.value = reward.category;
+          els.rewardStatus.value = reward.status;
+          els.rewardValue.value = reward.value;
+          els.rewardCode.value = reward.code;
+          els.rewardVisibility.value = reward.visibility;
+
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        function getFormData() {
+          return {
+            id: normalizeText(els.rewardId.value),
+            title: normalizeText(els.rewardTitle.value),
+            description: normalizeText(els.rewardDescription.value),
+            category: normalizeText(els.rewardCategory.value, "referral"),
+            status: normalizeText(els.rewardStatus.value, "active"),
+            value: Number(els.rewardValue.value || 0),
+            code: normalizeText(els.rewardCode.value),
+            visibility: normalizeText(els.rewardVisibility.value, "member"),
+          };
+        }
+
+        async function loadRewards() {
+          setLoading(els.refreshButton, true, "Refreshing...");
+          els.rewardsStatusBadge.textContent = "Loading";
+          els.rewardsStatusBadge.className = "status-pill pending";
+
+          try {
+            const data = await fetchJson(API.rewards);
+            rewards = normalizePayload(data);
+
+            renderStats();
+            renderTable();
+
+            els.rewardsStatusBadge.textContent = "Loaded";
+            els.rewardsStatusBadge.className = "status-pill";
+            showBanner("Rewards loaded.", "success");
+          } catch (error) {
+            console.error("[admin/rewards] load error:", error);
+
+            rewards = defaultRewards();
+            renderStats();
+            renderTable();
+
+            els.rewardsStatusBadge.textContent = "Fallback";
+            els.rewardsStatusBadge.className = "status-pill pending";
+            showBanner(
+              error?.message ||
+                "Unable to load API rewards. Showing default reward rules.",
+              "warning"
+            );
+          } finally {
+            setLoading(els.refreshButton, false, "Refresh Rewards");
+          }
+        }
+
+        async function saveReward(event) {
+          event.preventDefault();
+
+          const formData = getFormData();
+
+          if (!formData.title) {
+            showBanner("Please enter a reward title.", "error");
+            els.rewardTitle.focus();
+            return;
+          }
+
+          if (!formData.description) {
+            showBanner("Please enter a reward description.", "error");
+            els.rewardDescription.focus();
+            return;
+          }
+
+          setLoading(els.saveRewardButton, true, "Saving...");
+
+          try {
+            const isUpdate = Boolean(formData.id);
+
+            const data = await fetchJson(
+              isUpdate ? API.updateReward : API.createReward,
+              {
+                method: "POST",
+                body: JSON.stringify(formData),
+              }
+            );
+
+            const savedReward = normalizeReward(
+              data.reward || data.item || formData,
+              rewards.length
+            );
+
+            if (isUpdate) {
+              rewards = rewards.map((reward) =>
+                reward.id === formData.id ? { ...reward, ...savedReward } : reward
+              );
+            } else {
+              rewards = [
+                ...rewards,
+                {
+                  ...savedReward,
+                  id: savedReward.id || `reward-${Date.now()}`,
+                },
+              ];
+            }
+
+            renderStats();
+            renderTable();
+            resetForm();
+
+            showBanner(
+              data?.message ||
+                `Reward ${isUpdate ? "updated" : "created"} successfully.`,
+              "success"
+            );
+          } catch (error) {
+            console.error("[admin/rewards] save error:", error);
+            showBanner(error?.message || "Unable to save reward.", "error");
+          } finally {
+            setLoading(els.saveRewardButton, false, "Save Reward");
+          }
+        }
+
+        async function toggleRewardStatus(id, status) {
+          const reward = rewards.find((item) => item.id === id);
+
+          if (!reward) {
+            showBanner("Reward not found.", "error");
+            return;
+          }
+
+          try {
+            await fetchJson(API.updateReward, {
+              method: "POST",
+              body: JSON.stringify({
+                ...reward,
+                status,
+              }),
+            });
+
+            rewards = rewards.map((item) =>
+              item.id === id ? { ...item, status } : item
+            );
+
+            renderStats();
+            renderTable();
+
+            showBanner(`Reward marked ${titleCase(status)}.`, "success");
+          } catch (error) {
+            console.error("[admin/rewards] toggle error:", error);
+
+            rewards = rewards.map((item) =>
+              item.id === id ? { ...item, status } : item
+            );
+
+            renderStats();
+            renderTable();
+
+            showBanner(
+              error?.message ||
+                "Reward status updated locally, but the API did not confirm.",
+              "warning"
+            );
+          }
+        }
+
+        async function handleLogout() {
+          if (!els.logoutButton) return;
+
+          const originalText = els.logoutButton.textContent;
+          els.logoutButton.disabled = true;
+          els.logoutButton.textContent = "Logging out...";
+
+          try {
+            await fetch(API.logout, {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                Accept: "application/json",
+              },
+            });
+
+            window.location.href = "/login.html";
+          } catch (error) {
+            console.error("[admin/rewards] logout error:", error);
+            els.logoutButton.disabled = false;
+            els.logoutButton.textContent = originalText;
+            alert("We couldn't log you out right now. Please try again.");
+          }
+        }
+
+        els.createRewardButton?.addEventListener("click", () => {
+          resetForm();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          els.rewardTitle.focus();
+        });
+
+        els.refreshButton?.addEventListener("click", loadRewards);
+        els.applyFiltersButton?.addEventListener("click", renderTable);
+        els.searchInput?.addEventListener("input", renderTable);
+        els.statusFilter?.addEventListener("change", renderTable);
+        els.categoryFilter?.addEventListener("change", renderTable);
+        els.rewardForm?.addEventListener("submit", saveReward);
+        els.resetFormButton?.addEventListener("click", resetForm);
+        els.logoutButton?.addEventListener("click", handleLogout);
+
+        els.rewardsTableBody?.addEventListener("click", (event) => {
+          const editButton = event.target.closest("[data-edit]");
+          const toggleButton = event.target.closest("[data-toggle]");
+
+          if (editButton) {
+            editReward(editButton.getAttribute("data-edit"));
+            return;
+          }
+
+          if (toggleButton) {
+            toggleRewardStatus(
+              toggleButton.getAttribute("data-toggle"),
+              toggleButton.getAttribute("data-status")
+            );
+          }
+        });
+
+        loadRewards();
+      })();
+    </script>
+  </body>
+</html>

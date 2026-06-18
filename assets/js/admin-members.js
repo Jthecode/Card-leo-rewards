@@ -1,39 +1,56 @@
 // assets/js/admin-members.js
 
 (() => {
-  const state = {
-    admin: null,
-    filters: {
-      status: "all",
-      tier: "all",
-      role: "all",
-      sort: "newest",
-      search: "",
-      limit: 20,
-      page: 1,
-    },
-    options: {
-      statuses: [],
-      tiers: [],
-      roles: [],
-      sorts: [],
-    },
-    pagination: null,
-    summary: null,
-    members: [],
-    selectedMemberId: null,
+  const API = {
+    me: "/api/auth/me",
+    members: "/api/admin/members",
+    updateMember: "/api/admin/members/update",
+    logout: "/api/auth/logout",
   };
 
-  const SORT_LABELS = {
-    newest: "Newest",
-    oldest: "Oldest",
-    name: "Name",
-    status: "Status",
-    tier: "Tier",
+  const CONFIG = {
+    activationFee: 25,
+    monthlyFee: 20,
+    billingDay: 10,
+    referralRewardAmount: 7,
+    payoutWindow: "1st–3rd monthly",
   };
 
-  function $(id) {
-    return document.getElementById(id);
+  const els = {
+    statusBanner: document.getElementById("statusBanner"),
+    logoutButton: document.getElementById("logoutButton"),
+
+    refreshButton: document.getElementById("refreshButton"),
+    exportButton: document.getElementById("exportButton"),
+    applyFiltersButton: document.getElementById("applyFiltersButton"),
+
+    searchInput: document.getElementById("searchInput"),
+    statusFilter: document.getElementById("statusFilter"),
+    tierFilter: document.getElementById("tierFilter"),
+
+    membersStatusBadge: document.getElementById("membersStatusBadge"),
+
+    totalMembers: document.getElementById("totalMembers"),
+    paidMembers: document.getElementById("paidMembers"),
+    pendingMembers: document.getElementById("pendingMembers"),
+    deniedMembers: document.getElementById("deniedMembers"),
+
+    membersTableBody: document.getElementById("membersTableBody"),
+
+    cardSubtitle: document.getElementById("cardSubtitle"),
+    cardStatus: document.getElementById("cardStatus"),
+  };
+
+  let members = [];
+  let admin = null;
+
+  function money(value) {
+    const number = Number(value || 0);
+
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(Number.isFinite(number) ? number : 0);
   }
 
   function escapeHtml(value) {
@@ -45,276 +62,476 @@
       .replaceAll("'", "&#39;");
   }
 
+  function normalizeText(value, fallback = "") {
+    const text = String(value ?? "").trim();
+    return text || fallback;
+  }
+
   function titleCase(value) {
     return String(value || "")
-      .split(/[\s_-]+/)
+      .replace(/[_-]+/g, " ")
+      .split(/\s+/)
       .filter(Boolean)
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(" ");
   }
 
-  function formatDate(value) {
-    if (!value) return "—";
-
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "—";
-
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(date);
+  function isObject(value) {
+    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
   }
 
-  function formatCount(value) {
-    const num = Number(value || 0);
-    return Number.isFinite(num) ? num.toLocaleString() : "0";
+  function unwrap(payload) {
+    if (!isObject(payload)) return {};
+    return isObject(payload.data) ? payload.data : payload;
   }
 
-  function formatPoints(value) {
-    return `${formatCount(value)} pts`;
+  function redirectToLogin() {
+    window.location.href =
+      "/login.html?next=" +
+      encodeURIComponent(window.location.pathname + window.location.search);
   }
 
-  function setText(id, value) {
-    const el = $(id);
-    if (el) el.textContent = value;
-  }
-
-  async function api(url, options = {}) {
+  async function fetchJson(url, options = {}) {
     const response = await fetch(url, {
+      method: options.method || "GET",
       credentials: "include",
       headers: {
         Accept: "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
         ...(options.headers || {}),
       },
       ...options,
     });
 
-    const contentType = response.headers.get("content-type") || "";
-    const body = contentType.includes("application/json")
-      ? await response.json()
-      : { success: false, message: "Unexpected server response." };
+    const payload = await response.json().catch(() => ({}));
 
-    if (!response.ok || body?.success === false) {
-      const error = new Error(body?.message || "Request failed.");
+    if (response.status === 401) {
+      redirectToLogin();
+      return null;
+    }
+
+    if (response.status === 403) {
+      window.location.href = "/unauthorized.html";
+      return null;
+    }
+
+    if (!response.ok || payload?.success === false || payload?.ok === false) {
+      const error = new Error(
+        payload?.message || payload?.error || "Request failed."
+      );
+
       error.status = response.status;
-      error.payload = body;
+      error.payload = payload;
       throw error;
     }
 
-    return body;
+    return unwrap(payload);
   }
 
-  function buildQuery() {
-    const params = new URLSearchParams();
-    params.set("status", state.filters.status);
-    params.set("tier", state.filters.tier);
-    params.set("role", state.filters.role);
-    params.set("sort", state.filters.sort);
-    params.set("search", state.filters.search);
-    params.set("limit", String(state.filters.limit));
-    params.set("page", String(state.filters.page));
-    return params.toString();
-  }
+  function showBanner(message, type = "") {
+    if (!els.statusBanner) return;
 
-  function getStatusClass(status) {
-    const normalized = String(status || "").toLowerCase();
-
-    if (normalized === "active") return "status-active";
-    if (normalized === "pending") return "status-pending";
-    if (normalized === "closed") return "status-closed";
-    if (normalized === "paused" || normalized === "suspended") {
-      return "status-paused";
+    if (!message) {
+      els.statusBanner.className = "status-banner";
+      els.statusBanner.textContent = "";
+      return;
     }
 
-    return "status-pending";
+    els.statusBanner.textContent = message;
+    els.statusBanner.className = `status-banner show ${type}`.trim();
   }
 
-  function getTierClass(tier) {
-    const normalized = String(tier || "").toLowerCase();
+  function setLoading(button, loading, loadingText) {
+    if (!button) return;
 
-    if (normalized === "vip") return "tier-vip";
-    if (normalized === "gold") return "tier-gold";
-    if (normalized === "platinum") return "tier-platinum";
+    if (!button.dataset.originalText) {
+      button.dataset.originalText = button.textContent;
+    }
 
-    return "";
+    button.disabled = loading;
+    button.textContent = loading ? loadingText : button.dataset.originalText;
   }
 
-  function renderHeader() {
-    if (!state.admin) return;
+  function setStaticText() {
+    document.querySelectorAll("[data-static-activation-fee]").forEach((node) => {
+      node.textContent = money(CONFIG.activationFee);
+    });
 
-    setText("adminName", state.admin.fullName || state.admin.email || "Admin");
-    setText(
-      "adminAccess",
-      state.admin.isSuperAdmin ? "Super Admin" : "Members Admin"
+    document.querySelectorAll("[data-static-monthly-fee]").forEach((node) => {
+      node.textContent = `${money(CONFIG.monthlyFee)}/month`;
+    });
+
+    document.querySelectorAll("[data-static-billing-day]").forEach((node) => {
+      node.textContent = `${CONFIG.billingDay}th monthly`;
+    });
+
+    document.querySelectorAll("[data-static-payout-window]").forEach((node) => {
+      node.textContent = CONFIG.payoutWindow;
+    });
+
+    document.querySelectorAll("[data-static-referral-reward]").forEach((node) => {
+      node.textContent = money(CONFIG.referralRewardAmount);
+    });
+  }
+
+  function getFullName(member, index = 0) {
+    const full =
+      normalizeText(member.fullName) ||
+      normalizeText(member.full_name) ||
+      normalizeText(member.name);
+
+    if (full) return full;
+
+    const first = normalizeText(member.firstName || member.first_name);
+    const last = normalizeText(member.lastName || member.last_name);
+
+    return [first, last].filter(Boolean).join(" ") || `Member #${index + 1}`;
+  }
+
+  function getMemberStatus(member) {
+    return normalizeText(
+      member.membership_status ||
+        member.membershipStatus ||
+        member.memberStatus ||
+        member.member_status ||
+        member.status ||
+        "payment_pending"
+    ).toLowerCase();
+  }
+
+  function getPaymentStatus(member) {
+    return normalizeText(
+      member.payment_status ||
+        member.paymentStatus ||
+        "payment_pending"
+    ).toLowerCase();
+  }
+
+  function getApprovalStatus(member) {
+    return normalizeText(
+      member.approval_status ||
+        member.approvalStatus ||
+        ""
+    ).toLowerCase();
+  }
+
+  function getTier(member) {
+    return normalizeText(
+      member.tier_name ||
+        member.tierName ||
+        member.membership_tier ||
+        member.membershipTier ||
+        member.tier ||
+        member.accessLevel ||
+        member.access_level ||
+        "VIP Member"
     );
-    setText("lastRefresh", formatDate(new Date().toISOString()));
   }
 
-  function renderFilters() {
-    const statusFilter = $("statusFilter");
-    const tierFilter = $("tierFilter");
-    const roleFilter = $("roleFilter");
-    const sortFilter = $("sortFilter");
+  function isPaidMember(member) {
+    const status = getMemberStatus(member);
+    const payment = getPaymentStatus(member);
+    const approval = getApprovalStatus(member);
 
-    if (statusFilter && !statusFilter.dataset.ready) {
-      statusFilter.innerHTML = (state.options.statuses || [])
-        .map(
-          (value) =>
-            `<option value="${escapeHtml(value)}">${escapeHtml(
-              value === "all" ? "All Statuses" : titleCase(value)
-            )}</option>`
-        )
-        .join("");
-      statusFilter.dataset.ready = "true";
-    }
-
-    if (tierFilter && !tierFilter.dataset.ready) {
-      tierFilter.innerHTML = (state.options.tiers || [])
-        .map(
-          (value) =>
-            `<option value="${escapeHtml(value)}">${escapeHtml(
-              value === "all" ? "All Tiers" : titleCase(value)
-            )}</option>`
-        )
-        .join("");
-      tierFilter.dataset.ready = "true";
-    }
-
-    if (roleFilter && !roleFilter.dataset.ready) {
-      roleFilter.innerHTML = (state.options.roles || [])
-        .map(
-          (value) =>
-            `<option value="${escapeHtml(value)}">${escapeHtml(
-              value === "all" ? "All Roles" : titleCase(value)
-            )}</option>`
-        )
-        .join("");
-      roleFilter.dataset.ready = "true";
-    }
-
-    if (sortFilter && !sortFilter.dataset.ready) {
-      sortFilter.innerHTML = (state.options.sorts || [])
-        .map(
-          (value) =>
-            `<option value="${escapeHtml(value)}">${escapeHtml(
-              SORT_LABELS[value] || titleCase(value)
-            )}</option>`
-        )
-        .join("");
-      sortFilter.dataset.ready = "true";
-    }
-
-    if (statusFilter) statusFilter.value = state.filters.status;
-    if (tierFilter) tierFilter.value = state.filters.tier;
-    if (roleFilter) roleFilter.value = state.filters.role;
-    if (sortFilter) sortFilter.value = state.filters.sort;
-    if ($("limitFilter")) $("limitFilter").value = String(state.filters.limit);
-    if ($("searchInput")) $("searchInput").value = state.filters.search;
-    if ($("pageIndicator")) $("pageIndicator").value = String(state.filters.page);
+    return (
+      ["active", "approved", "auto_approved", "paid"].includes(status) ||
+      ["paid", "active", "current", "succeeded"].includes(payment) ||
+      ["approved", "auto_approved", "paid"].includes(approval)
+    );
   }
 
-  function renderSummary() {
-    const summary = state.summary || {};
-    const vipCount = (state.members || []).filter(
-      (member) => String(member.tier || "").toLowerCase() === "vip"
-    ).length;
+  function isPendingMember(member) {
+    const status = getMemberStatus(member);
+    const payment = getPaymentStatus(member);
+    const approval = getApprovalStatus(member);
 
-    setText("valueTotal", formatCount(summary.total || 0));
-    setText("valueActive", formatCount(summary.activeMembers || 0));
-    setText("valuePending", formatCount(summary.statusCounts?.pending || 0));
-    setText("valueVip", formatCount(vipCount));
-    setText("valueAdmins", formatCount(summary.adminOperators || 0));
-    setText("valueSupport", formatCount(summary.supportOperators || 0));
+    return (
+      ["pending", "payment_pending", "pending_payment", "unpaid", "checkout_created"].includes(status) ||
+      ["pending", "payment_pending", "pending_payment", "unpaid", "checkout_created"].includes(payment) ||
+      ["pending", "payment_pending", "pending_payment"].includes(approval)
+    );
+  }
 
-    [
-      "cardTotal",
-      "cardActive",
-      "cardPending",
-      "cardVip",
-      "cardAdmins",
-      "cardSupport",
-    ].forEach((id) => {
-      const el = $(id);
-      if (el) el.classList.remove("loading");
+  function isDeniedMember(member) {
+    const status = getMemberStatus(member);
+    const payment = getPaymentStatus(member);
+    const approval = getApprovalStatus(member);
+
+    return (
+      ["denied", "declined", "cancelled", "canceled", "failed", "suspended", "past_due"].includes(status) ||
+      ["denied", "declined", "cancelled", "canceled", "failed", "past_due"].includes(payment) ||
+      ["denied", "declined", "cancelled", "canceled", "failed"].includes(approval)
+    );
+  }
+
+  function normalizeMember(row, index) {
+    const approvedReferrals = Number(
+      row.approvedReferrals ||
+        row.approved_referrals ||
+        row.approved ||
+        row.approved_count ||
+        0
+    );
+
+    const totalReferrals = Number(
+      row.totalReferrals ||
+        row.total_referrals ||
+        row.referrals ||
+        approvedReferrals ||
+        0
+    );
+
+    const earned = Number(
+      row.earned ||
+        row.totalEarned ||
+        row.total_earned ||
+        row.earned_amount ||
+        approvedReferrals * CONFIG.referralRewardAmount ||
+        0
+    );
+
+    return {
+      id:
+        normalizeText(row.id) ||
+        normalizeText(row.signup_id) ||
+        normalizeText(row.member_id) ||
+        `member-${index + 1}`,
+
+      name: getFullName(row, index),
+
+      email:
+        normalizeText(row.email) ||
+        normalizeText(row.member_email) ||
+        "No email",
+
+      phone:
+        normalizeText(row.phone) ||
+        normalizeText(row.phone_number) ||
+        "—",
+
+      city: normalizeText(row.city),
+      state: normalizeText(row.state),
+
+      status: getMemberStatus(row),
+      payment: getPaymentStatus(row),
+      approval: getApprovalStatus(row) || (isPaidMember(row) ? "auto_approved" : "payment_pending"),
+
+      tier: getTier(row),
+
+      referralName:
+        normalizeText(row.referralName) ||
+        normalizeText(row.referral_name) ||
+        normalizeText(row.sponsor) ||
+        "—",
+
+      referralCode:
+        normalizeText(row.referralCode) ||
+        normalizeText(row.referral_code) ||
+        normalizeText(row.code) ||
+        "",
+
+      approvedReferrals,
+      totalReferrals,
+      earned,
+
+      activationPaid:
+        row.activationPaid === true ||
+        row.activation_paid === true ||
+        row.activation_payment_status === "paid" ||
+        row.activation_payment_status === "succeeded" ||
+        isPaidMember(row),
+
+      monthlyPaid:
+        row.monthlyPaid === true ||
+        row.monthly_paid === true ||
+        row.monthly_payment_status === "paid" ||
+        row.monthly_payment_status === "current" ||
+        row.monthly_payment_status === "succeeded" ||
+        isPaidMember(row),
+
+      stripeCustomerId:
+        normalizeText(row.stripeCustomerId) ||
+        normalizeText(row.stripe_customer_id) ||
+        "",
+
+      stripeSubscriptionId:
+        normalizeText(row.stripeSubscriptionId) ||
+        normalizeText(row.stripe_subscription_id) ||
+        "",
+
+      joinedAt:
+        row.joinedAt ||
+        row.joined_at ||
+        row.createdAt ||
+        row.created_at ||
+        "",
+
+      updatedAt:
+        row.updatedAt ||
+        row.updated_at ||
+        "",
+
+      raw: row,
+    };
+  }
+
+  function normalizePayload(payload = {}) {
+    const root = unwrap(payload);
+
+    admin = root.admin || root.user || admin;
+
+    const rows = Array.isArray(root.members)
+      ? root.members
+      : Array.isArray(root.signups)
+        ? root.signups
+        : Array.isArray(root.rows)
+          ? root.rows
+          : Array.isArray(root.items)
+            ? root.items
+            : [];
+
+    return rows.map(normalizeMember);
+  }
+
+  function renderStats() {
+    const total = members.length;
+    const paid = members.filter(isPaidMember).length;
+    const pending = members.filter(isPendingMember).length;
+    const denied = members.filter(isDeniedMember).length;
+
+    if (els.totalMembers) els.totalMembers.textContent = String(total);
+    if (els.paidMembers) els.paidMembers.textContent = String(paid);
+    if (els.pendingMembers) els.pendingMembers.textContent = String(pending);
+    if (els.deniedMembers) els.deniedMembers.textContent = String(denied);
+
+    if (els.cardSubtitle) {
+      els.cardSubtitle.textContent = `${total} member records`;
+    }
+
+    if (els.cardStatus) {
+      els.cardStatus.textContent = `${paid} Paid`;
+    }
+
+    document.querySelectorAll("[data-total-members]").forEach((node) => {
+      node.textContent = String(total);
+    });
+
+    document.querySelectorAll("[data-paid-members]").forEach((node) => {
+      node.textContent = String(paid);
+    });
+
+    document.querySelectorAll("[data-pending-members]").forEach((node) => {
+      node.textContent = String(pending);
+    });
+
+    document.querySelectorAll("[data-denied-members]").forEach((node) => {
+      node.textContent = String(denied);
+    });
+  }
+
+  function getFilteredMembers() {
+    const search = normalizeText(els.searchInput?.value).toLowerCase();
+    const status = normalizeText(els.statusFilter?.value).toLowerCase();
+    const tier = normalizeText(els.tierFilter?.value).toLowerCase();
+
+    return members.filter((member) => {
+      const matchesSearch =
+        !search ||
+        member.name.toLowerCase().includes(search) ||
+        member.email.toLowerCase().includes(search) ||
+        member.phone.toLowerCase().includes(search) ||
+        member.referralName.toLowerCase().includes(search) ||
+        member.referralCode.toLowerCase().includes(search);
+
+      const matchesStatus =
+        !status ||
+        member.status === status ||
+        member.payment === status ||
+        member.approval === status ||
+        (status === "paid" && isPaidMember(member)) ||
+        (status === "active" && isPaidMember(member)) ||
+        (status === "payment_pending" && isPendingMember(member)) ||
+        (status === "pending" && isPendingMember(member)) ||
+        (status === "denied" && isDeniedMember(member)) ||
+        (status === "cancelled" && isDeniedMember(member));
+
+      const matchesTier =
+        !tier || member.tier.toLowerCase().includes(tier);
+
+      return matchesSearch && matchesStatus && matchesTier;
     });
   }
 
   function renderTable() {
-    const body = $("membersTableBody");
-    if (!body) return;
+    if (!els.membersTableBody) return;
 
-    if (!state.members.length) {
-      body.innerHTML = `
+    const rows = getFilteredMembers();
+
+    if (!rows.length) {
+      els.membersTableBody.innerHTML = `
         <tr>
-          <td colspan="8" class="muted">No members matched your filters.</td>
+          <td colspan="9">
+            <div class="empty-box">No members found.</div>
+          </td>
         </tr>
       `;
       return;
     }
 
-    body.innerHTML = state.members
-      .map((item) => {
-        const isActive = item.id === state.selectedMemberId;
-        const onboardingPercent = Number(item.metrics?.onboardingPercent || 0);
-        const pointsAvailable = Number(item.metrics?.pointsAvailable || 0);
-        const openSupport = Number(item.metrics?.openSupportTickets || 0);
+    els.membersTableBody.innerHTML = rows
+      .map((member) => {
+        const paid = isPaidMember(member);
 
         return `
-          <tr data-member-id="${escapeHtml(item.id)}" class="${isActive ? "active" : ""}">
+          <tr>
             <td>
-              <div class="name-cell">
-                <div class="name-title">${escapeHtml(item.fullName || item.email || "Member")}</div>
-                <div class="meta-line">${escapeHtml(item.email || "No email")}</div>
-                <div class="meta-line">${escapeHtml(item.phone || "No phone")}</div>
+              <div class="member-cell">
+                <span class="avatar">${escapeHtml(member.name.charAt(0))}</span>
+                <span>
+                  <strong>${escapeHtml(member.name)}</strong>
+                  <div class="muted">Ref: ${escapeHtml(member.referralName)}</div>
+                </span>
               </div>
             </td>
+
+            <td class="muted">${escapeHtml(member.email)}</td>
+            <td class="muted">${escapeHtml(member.phone)}</td>
+
             <td>
-              <span class="status-tag ${getStatusClass(item.memberStatus)}">
-                ${escapeHtml(item.memberStatusLabel || titleCase(item.memberStatus))}
+              <span class="status-tag ${escapeHtml(member.status)}">
+                ${escapeHtml(titleCase(member.status))}
               </span>
             </td>
+
             <td>
-              <span class="tier-tag ${getTierClass(item.tier)}">
-                ${escapeHtml(item.tierLabel || titleCase(item.tier))}
+              <span class="status-tag ${escapeHtml(member.payment)}">
+                ${escapeHtml(titleCase(member.payment))}
               </span>
             </td>
+
+            <td>${escapeHtml(member.tier)}</td>
+
             <td>
-              <div class="name-cell">
-                <div class="name-title">${escapeHtml(item.roleLabel || titleCase(item.role))}</div>
-                <div class="meta-line">${item.flags?.isAdminOperator ? "Operator access" : "Standard access"}</div>
-              </div>
+              ${escapeHtml(member.approvedReferrals)} approved / ${escapeHtml(member.totalReferrals)} total
             </td>
+
+            <td class="money">${escapeHtml(money(member.earned))}</td>
+
             <td>
-              <div class="name-cell">
-                <div class="name-title">${formatCount(onboardingPercent)}%</div>
-                <div class="meta-line">${
-                  item.onboarding?.onboardingStatus
-                    ? escapeHtml(titleCase(item.onboarding.onboardingStatus))
-                    : "No onboarding data"
-                }</div>
-              </div>
-            </td>
-            <td>
-              <div class="name-cell">
-                <div class="name-title">${escapeHtml(formatPoints(pointsAvailable))}</div>
-                <div class="meta-line">${escapeHtml(
-                  formatPoints(item.metrics?.pointsPending || 0)
-                )} pending</div>
-              </div>
-            </td>
-            <td>
-              <div class="name-cell">
-                <div class="name-title">${formatCount(openSupport)}</div>
-                <div class="meta-line">${openSupport ? "Open tickets" : "No open tickets"}</div>
-              </div>
-            </td>
-            <td>
-              <div class="name-cell">
-                <div class="name-title">${escapeHtml(formatDate(item.updatedAt))}</div>
-                <div class="meta-line">${escapeHtml(formatDate(item.lastLoginAt))}</div>
+              <div class="row-actions">
+                ${
+                  paid
+                    ? `<button class="mini-btn" type="button" disabled>Paid</button>`
+                    : `<button class="mini-btn approve" type="button" data-mark-paid="${escapeHtml(member.id)}">Mark Paid</button>`
+                }
+
+                <button class="mini-btn" type="button" data-view="${escapeHtml(member.id)}">
+                  View
+                </button>
+
+                <button class="mini-btn danger" type="button" data-suspend="${escapeHtml(member.id)}">
+                  Suspend
+                </button>
               </div>
             </td>
           </tr>
@@ -323,351 +540,332 @@
       .join("");
   }
 
-  function getSelectedMember() {
-    return state.members.find((item) => item.id === state.selectedMemberId) || null;
-  }
+  async function loadAdminSession() {
+    try {
+      const data = await fetchJson(API.me);
+      if (!data) return;
 
-  function renderDetail() {
-    const container = $("detailBody");
-    if (!container) return;
+      admin = data.admin || data.user || data.member || null;
+    } catch (error) {
+      if (error?.status === 401) {
+        redirectToLogin();
+        return;
+      }
 
-    const item = getSelectedMember();
-
-    if (!item) {
-      container.innerHTML = `
-        <div class="detail-empty">
-          Select a member from the table to view full detail.
-        </div>
-      `;
-      return;
+      console.warn("[admin-members] admin session check skipped:", error);
     }
-
-    container.innerHTML = `
-      <div class="detail-block">
-        <h4>Profile Overview</h4>
-        <div class="kv">
-          <div class="k">Name</div>
-          <div class="v">${escapeHtml(item.fullName || "—")}</div>
-
-          <div class="k">Email</div>
-          <div class="v">${escapeHtml(item.email || "—")}</div>
-
-          <div class="k">Phone</div>
-          <div class="v">${escapeHtml(item.phone || "—")}</div>
-
-          <div class="k">Status</div>
-          <div class="v">
-            <span class="status-tag ${getStatusClass(item.memberStatus)}">
-              ${escapeHtml(item.memberStatusLabel || titleCase(item.memberStatus))}
-            </span>
-          </div>
-
-          <div class="k">Tier</div>
-          <div class="v">
-            <span class="tier-tag ${getTierClass(item.tier)}">
-              ${escapeHtml(item.tierLabel || titleCase(item.tier))}
-            </span>
-          </div>
-
-          <div class="k">Role</div>
-          <div class="v">${escapeHtml(item.roleLabel || titleCase(item.role))}</div>
-
-          <div class="k">Referral Code</div>
-          <div class="v">${escapeHtml(item.referralCode || "—")}</div>
-
-          <div class="k">Portal Login</div>
-          <div class="v">${
-            item.portalLoginUrl
-              ? `<a href="${escapeHtml(item.portalLoginUrl)}" target="_blank" rel="noreferrer">${escapeHtml(item.portalLoginUrl)}</a>`
-              : "—"
-          }</div>
-        </div>
-      </div>
-
-      <div class="detail-block">
-        <h4>Onboarding</h4>
-        <div class="kv">
-          <div class="k">Progress</div>
-          <div class="v">${formatCount(item.metrics?.onboardingPercent || 0)}%</div>
-
-          <div class="k">Status</div>
-          <div class="v">${escapeHtml(
-            titleCase(item.onboarding?.onboardingStatus || "not_started")
-          )}</div>
-
-          <div class="k">Terms Accepted</div>
-          <div class="v">${item.onboarding?.acceptedTerms ? "Yes" : "No"}</div>
-
-          <div class="k">Privacy Accepted</div>
-          <div class="v">${item.onboarding?.acceptedPrivacy ? "Yes" : "No"}</div>
-
-          <div class="k">Profile Completed</div>
-          <div class="v">${item.onboarding?.profileCompleted ? "Yes" : "No"}</div>
-
-          <div class="k">Email Verified</div>
-          <div class="v">${item.flags?.hasVerifiedEmail ? "Yes" : "No"}</div>
-
-          <div class="k">Rewards Activated</div>
-          <div class="v">${item.onboarding?.rewardsActivated ? "Yes" : "No"}</div>
-
-          <div class="k">First Login Completed</div>
-          <div class="v">${item.onboarding?.firstLoginCompleted ? "Yes" : "No"}</div>
-        </div>
-      </div>
-
-      <div class="detail-block">
-        <h4>Rewards Snapshot</h4>
-        <div class="kv">
-          <div class="k">Account Status</div>
-          <div class="v">${escapeHtml(
-            titleCase(item.rewardAccount?.accountStatus || "active")
-          )}</div>
-
-          <div class="k">Available</div>
-          <div class="v">${escapeHtml(
-            formatPoints(item.rewardAccount?.pointsAvailable || 0)
-          )}</div>
-
-          <div class="k">Pending</div>
-          <div class="v">${escapeHtml(
-            formatPoints(item.rewardAccount?.pointsPending || 0)
-          )}</div>
-
-          <div class="k">Lifetime Earned</div>
-          <div class="v">${escapeHtml(
-            formatPoints(item.rewardAccount?.pointsLifetimeEarned || 0)
-          )}</div>
-
-          <div class="k">Lifetime Redeemed</div>
-          <div class="v">${escapeHtml(
-            formatPoints(item.rewardAccount?.pointsLifetimeRedeemed || 0)
-          )}</div>
-
-          <div class="k">Lifetime Expired</div>
-          <div class="v">${escapeHtml(
-            formatPoints(item.rewardAccount?.pointsLifetimeExpired || 0)
-          )}</div>
-
-          <div class="k">Last Earned</div>
-          <div class="v">${escapeHtml(formatDate(item.rewardAccount?.lastEarnedAt))}</div>
-
-          <div class="k">Last Redeemed</div>
-          <div class="v">${escapeHtml(formatDate(item.rewardAccount?.lastRedeemedAt))}</div>
-        </div>
-      </div>
-
-      <div class="detail-block">
-        <h4>Operational Flags</h4>
-        <div class="flag-row">
-          <span class="flag">${item.flags?.hasVerifiedEmail ? "Verified Email" : "Email Not Verified"}</span>
-          <span class="flag">${item.flags?.hasVerifiedPhone ? "Verified Phone" : "Phone Not Verified"}</span>
-          <span class="flag">${item.flags?.hasCompletedOnboarding ? "Onboarding Complete" : "Onboarding Incomplete"}</span>
-          <span class="flag">${item.flags?.hasCompletedProfile ? "Profile Complete" : "Profile Incomplete"}</span>
-          <span class="flag">${item.flags?.hasRewardsActivated ? "Rewards Active" : "Rewards Pending"}</span>
-          <span class="flag">${item.flags?.hasPortalLoginUrl ? "Portal Ready" : "Portal Link Missing"}</span>
-          <span class="flag">${item.flags?.isAdminOperator ? "Operator Profile" : "Member Profile"}</span>
-          <span class="flag">${item.flags?.hasOpenSupportTickets ? "Open Support Ticket" : "No Open Support Tickets"}</span>
-        </div>
-      </div>
-
-      <div class="detail-block">
-        <h4>Linked Records</h4>
-        <div class="kv">
-          <div class="k">Signup Source</div>
-          <div class="v">${escapeHtml(item.signup?.sourceLabel || "—")}</div>
-
-          <div class="k">Signup Status</div>
-          <div class="v">${escapeHtml(item.signup?.statusLabel || "—")}</div>
-
-          <div class="k">Signup Page</div>
-          <div class="v">${escapeHtml(item.signup?.signupPage || "—")}</div>
-
-          <div class="k">Open Support Tickets</div>
-          <div class="v">${formatCount(item.metrics?.openSupportTickets || 0)}</div>
-
-          <div class="k">Internal Note Count</div>
-          <div class="v">${formatCount(item.metrics?.noteCount || 0)}</div>
-
-          <div class="k">Last Login</div>
-          <div class="v">${escapeHtml(formatDate(item.lastLoginAt))}</div>
-
-          <div class="k">Created</div>
-          <div class="v">${escapeHtml(formatDate(item.createdAt))}</div>
-
-          <div class="k">Updated</div>
-          <div class="v">${escapeHtml(formatDate(item.updatedAt))}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderMeta() {
-    const pagination = state.pagination || {};
-
-    setText(
-      "tableMeta",
-      `${formatCount(pagination.total || 0)} members • page ${formatCount(
-        pagination.page || 1
-      )} of ${formatCount(pagination.totalPages || 1)}`
-    );
-
-    setText(
-      "paginationMeta",
-      pagination.total
-        ? `Showing ${formatCount(pagination.from)}–${formatCount(
-            pagination.to
-          )} of ${formatCount(pagination.total)} members`
-        : "No members to show"
-    );
-
-    if ($("pageIndicator")) {
-      $("pageIndicator").value = String(
-        pagination.page || state.filters.page || 1
-      );
-    }
-
-    if ($("prevPageBtn")) $("prevPageBtn").disabled = !pagination.hasPreviousPage;
-    if ($("nextPageBtn")) $("nextPageBtn").disabled = !pagination.hasNextPage;
-  }
-
-  function renderAll() {
-    renderHeader();
-    renderFilters();
-    renderSummary();
-    renderTable();
-    renderDetail();
-    renderMeta();
   }
 
   async function loadMembers() {
+    setLoading(els.refreshButton, true, "Refreshing...");
+
+    if (els.membersStatusBadge) {
+      els.membersStatusBadge.textContent = "Loading";
+      els.membersStatusBadge.className = "status-pill pending";
+    }
+
     try {
-      const me = await api("/api/auth/me");
-      state.admin = me?.data?.user || null;
-    } catch (error) {
-      if (error?.status === 401) {
-        const next = encodeURIComponent("/admin/members.html");
-        window.location.href = `/login.html?next=${next}`;
-        return;
+      const params = new URLSearchParams();
+
+      const status = normalizeText(els.statusFilter?.value);
+      const tier = normalizeText(els.tierFilter?.value);
+      const search = normalizeText(els.searchInput?.value);
+
+      if (status) params.set("status", status);
+      if (tier) params.set("tier", tier);
+      if (search) params.set("search", search);
+
+      const url = params.toString()
+        ? `${API.members}?${params.toString()}`
+        : API.members;
+
+      const data = await fetchJson(url);
+      if (!data) return;
+
+      members = normalizePayload(data);
+
+      renderStats();
+      renderTable();
+
+      if (els.membersStatusBadge) {
+        els.membersStatusBadge.textContent = "Loaded";
+        els.membersStatusBadge.className = "status-pill";
       }
-      throw error;
+
+      showBanner("Members loaded.", "success");
+    } catch (error) {
+      console.error("[admin-members] load error:", error);
+
+      members = [];
+
+      renderStats();
+      renderTable();
+
+      if (els.membersStatusBadge) {
+        els.membersStatusBadge.textContent = "Error";
+        els.membersStatusBadge.className = "status-pill error";
+      }
+
+      showBanner(error?.message || "Unable to load members.", "error");
+    } finally {
+      setLoading(els.refreshButton, false, "Refresh Members");
+    }
+  }
+
+  async function updateMemberStatus(memberId, payload) {
+    try {
+      await fetchJson(API.updateMember, {
+        method: "POST",
+        body: JSON.stringify({
+          id: memberId,
+          ...payload,
+        }),
+      });
+
+      members = members.map((member) => {
+        if (member.id !== memberId) return member;
+
+        return {
+          ...member,
+          status: payload.membership_status || payload.status || member.status,
+          payment: payload.payment_status || member.payment,
+          approval: payload.approval_status || member.approval,
+          activationPaid: payload.payment_status === "paid" || member.activationPaid,
+          monthlyPaid: payload.payment_status === "paid" || member.monthlyPaid,
+        };
+      });
+
+      renderStats();
+      renderTable();
+
+      showBanner("Member updated.", "success");
+    } catch (error) {
+      console.error("[admin-members] update error:", error);
+
+      showBanner(error?.message || "Unable to update member.", "error");
+    }
+  }
+
+  function viewMember(memberId) {
+    const member = members.find((item) => item.id === memberId);
+
+    if (!member) {
+      showBanner("Member not found.", "error");
+      return;
     }
 
-    const result = await api(`/api/admin/members?${buildQuery()}`);
+    window.alert(
+      [
+        `Member: ${member.name}`,
+        `Email: ${member.email}`,
+        `Phone: ${member.phone}`,
+        `Status: ${titleCase(member.status)}`,
+        `Payment: ${titleCase(member.payment)}`,
+        `Approval: ${titleCase(member.approval)}`,
+        `Tier: ${member.tier}`,
+        `Activation Fee: ${member.activationPaid ? "Paid" : "Not Paid"}`,
+        `Monthly Membership: ${member.monthlyPaid ? "Paid/Current" : "Not Paid"}`,
+        `Approved Referrals: ${member.approvedReferrals}`,
+        `Total Referrals: ${member.totalReferrals}`,
+        `Earned: ${money(member.earned)}`,
+        `Stripe Customer: ${member.stripeCustomerId || "—"}`,
+        `Stripe Subscription: ${member.stripeSubscriptionId || "—"}`,
+      ].join("\n")
+    );
+  }
 
-    state.options.statuses = result?.data?.filters?.statuses || [];
-    state.options.tiers = result?.data?.filters?.tiers || [];
-    state.options.roles = result?.data?.filters?.roles || [];
-    state.options.sorts = result?.data?.filters?.sorts || [];
-    state.summary = result?.data?.summary || null;
-    state.pagination = result?.data?.pagination || null;
-    state.members = result?.data?.members || [];
-    state.admin = result?.data?.admin || state.admin;
+  function exportCsv() {
+    const rows = getFilteredMembers();
 
-    if (!state.selectedMemberId && state.members.length) {
-      state.selectedMemberId = state.members[0].id;
-    }
+    const headers = [
+      "ID",
+      "Name",
+      "Email",
+      "Phone",
+      "Status",
+      "Payment",
+      "Approval",
+      "Tier",
+      "Referral Name",
+      "Referral Code",
+      "Approved Referrals",
+      "Total Referrals",
+      "Earned",
+      "Activation Paid",
+      "Monthly Paid",
+      "Stripe Customer",
+      "Stripe Subscription",
+    ];
 
-    if (
-      state.selectedMemberId &&
-      !state.members.some((item) => item.id === state.selectedMemberId)
-    ) {
-      state.selectedMemberId = state.members.length ? state.members[0].id : null;
-    }
+    const csvRows = [
+      headers,
+      ...rows.map((member) => [
+        member.id,
+        member.name,
+        member.email,
+        member.phone,
+        member.status,
+        member.payment,
+        member.approval,
+        member.tier,
+        member.referralName,
+        member.referralCode,
+        member.approvedReferrals,
+        member.totalReferrals,
+        member.earned,
+        member.activationPaid ? "Yes" : "No",
+        member.monthlyPaid ? "Yes" : "No",
+        member.stripeCustomerId,
+        member.stripeSubscriptionId,
+      ]),
+    ];
 
-    renderAll();
+    const csv = csvRows
+      .map((row) =>
+        row
+          .map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`)
+          .join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([csv], {
+      type: "text/csv;charset=utf-8",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "card-leo-members.csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+
+    showBanner("Members CSV exported.", "success");
   }
 
   async function handleLogout() {
+    if (!els.logoutButton) return;
+
+    const originalText = els.logoutButton.textContent;
+
+    els.logoutButton.disabled = true;
+    els.logoutButton.textContent = "Logging out...";
+
     try {
-      await api("/api/auth/logout", { method: "POST" });
-    } catch {
-      // no-op
-    } finally {
+      await fetch(API.logout, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
       window.location.href = "/login.html";
+    } catch (error) {
+      console.error("[admin-members] logout error:", error);
+
+      els.logoutButton.disabled = false;
+      els.logoutButton.textContent = originalText;
+
+      alert("We couldn't log you out right now. Please try again.");
     }
   }
 
-  function clearFilters() {
-    state.filters = {
-      status: "all",
-      tier: "all",
-      role: "all",
-      sort: "newest",
-      search: "",
-      limit: 20,
-      page: 1,
-    };
-
-    renderFilters();
-    loadMembers();
-  }
-
   function bindEvents() {
-    $("refreshBtn")?.addEventListener("click", loadMembers);
-    $("logoutBtn")?.addEventListener("click", handleLogout);
+    els.refreshButton?.addEventListener("click", loadMembers);
+    els.exportButton?.addEventListener("click", exportCsv);
 
-    $("applyFiltersBtn")?.addEventListener("click", () => {
-      state.filters.search = $("searchInput")?.value.trim() || "";
-      state.filters.status = $("statusFilter")?.value || "all";
-      state.filters.tier = $("tierFilter")?.value || "all";
-      state.filters.role = $("roleFilter")?.value || "all";
-      state.filters.sort = $("sortFilter")?.value || "newest";
-      state.filters.limit = Number($("limitFilter")?.value || 20);
-      state.filters.page = 1;
-      loadMembers();
-    });
-
-    $("clearFiltersBtn")?.addEventListener("click", clearFilters);
-
-    $("prevPageBtn")?.addEventListener("click", () => {
-      if (!state.pagination?.hasPreviousPage) return;
-      state.filters.page = Math.max(1, Number(state.filters.page || 1) - 1);
-      loadMembers();
-    });
-
-    $("nextPageBtn")?.addEventListener("click", () => {
-      if (!state.pagination?.hasNextPage) return;
-      state.filters.page = Number(state.filters.page || 1) + 1;
-      loadMembers();
-    });
-
-    $("membersTableBody")?.addEventListener("click", (event) => {
-      const row = event.target.closest("tr[data-member-id]");
-      if (!row) return;
-
-      state.selectedMemberId = row.getAttribute("data-member-id");
+    els.applyFiltersButton?.addEventListener("click", () => {
       renderTable();
-      renderDetail();
+      showBanner("Filters applied.", "success");
+    });
+
+    els.searchInput?.addEventListener("input", renderTable);
+    els.statusFilter?.addEventListener("change", renderTable);
+    els.tierFilter?.addEventListener("change", renderTable);
+
+    els.logoutButton?.addEventListener("click", handleLogout);
+
+    els.membersTableBody?.addEventListener("click", (event) => {
+      const markPaidButton = event.target.closest("[data-mark-paid]");
+      const viewButton = event.target.closest("[data-view]");
+      const suspendButton = event.target.closest("[data-suspend]");
+
+      if (markPaidButton) {
+        updateMemberStatus(markPaidButton.getAttribute("data-mark-paid"), {
+          membership_status: "active",
+          payment_status: "paid",
+          approval_status: "auto_approved",
+          activation_fee_amount: CONFIG.activationFee,
+          monthly_fee_amount: CONFIG.monthlyFee,
+          billing_day: CONFIG.billingDay,
+        });
+        return;
+      }
+
+      if (viewButton) {
+        viewMember(viewButton.getAttribute("data-view"));
+        return;
+      }
+
+      if (suspendButton) {
+        const confirmed = window.confirm("Suspend this member?");
+        if (!confirmed) return;
+
+        updateMemberStatus(suspendButton.getAttribute("data-suspend"), {
+          membership_status: "suspended",
+          payment_status: "suspended",
+          approval_status: "suspended",
+        });
+      }
+    });
+
+    document.querySelectorAll("[data-export-members]").forEach((button) => {
+      if (button.dataset.exportMembersBound === "true") return;
+
+      button.dataset.exportMembersBound = "true";
+
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        exportCsv();
+      });
     });
   }
 
   async function init() {
+    setStaticText();
     bindEvents();
-
-    try {
-      await loadMembers();
-    } catch (error) {
-      if (error?.status === 403) {
-        window.location.href = "/unauthorized.html";
-        return;
-      }
-
-      const table = $("membersTableBody");
-      if (table) {
-        table.innerHTML = `
-          <tr>
-            <td colspan="8" class="muted">${escapeHtml(
-              error?.message || "Unable to load members."
-            )}</td>
-          </tr>
-        `;
-      }
-    }
+    await loadAdminSession();
+    await loadMembers();
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, { once: true });
+    document.addEventListener("DOMContentLoaded", init, {
+      once: true,
+    });
   } else {
     init();
   }
+
+  window.CardLeoAdminMembers = {
+    init,
+    reload: loadMembers,
+    updateMemberStatus,
+    exportCsv,
+    getState() {
+      return {
+        admin,
+        members: [...members],
+      };
+    },
+    helpers: {
+      money,
+      titleCase,
+      isPaidMember,
+      isPendingMember,
+      isDeniedMember,
+    },
+  };
 })();

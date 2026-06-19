@@ -75,6 +75,7 @@
         --leo-muted: rgba(248, 243, 231, 0.72);
         --leo-muted-2: rgba(248, 243, 231, 0.52);
         --leo-green: #48f06b;
+        --leo-blue: #7ec8ff;
         --leo-red: #ff7676;
         --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
       }
@@ -465,6 +466,23 @@
           radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 34%),
           rgba(255, 255, 255, 0.035);
         box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32);
+        transition: none !important;
+        transform: none !important;
+        cursor: default;
+      }
+
+      .info-card:hover,
+      .step-card:hover,
+      .benefit-card:hover,
+      .tower-floor:hover,
+      .qa-item:hover {
+        border-color: rgba(231, 182, 79, 0.18) !important;
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 34%),
+          rgba(255, 255, 255, 0.035) !important;
+        box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32) !important;
+        transform: none !important;
+        filter: none !important;
       }
 
       .step-card {
@@ -553,8 +571,18 @@
           rgba(255, 255, 255, 0.04);
       }
 
-      .tower-floor.locked {
-        opacity: 0.55;
+      .tower-floor.team {
+        border-color: rgba(126, 200, 255, 0.26);
+        background:
+          linear-gradient(135deg, rgba(126, 200, 255, 0.18), rgba(231, 182, 79, 0.08)),
+          rgba(255, 255, 255, 0.04);
+      }
+
+      .tower-floor.team:hover {
+        border-color: rgba(126, 200, 255, 0.26) !important;
+        background:
+          linear-gradient(135deg, rgba(126, 200, 255, 0.18), rgba(231, 182, 79, 0.08)),
+          rgba(255, 255, 255, 0.04) !important;
       }
 
       .floor-num {
@@ -580,6 +608,10 @@
       .floor-money {
         color: var(--leo-green);
         font-weight: 900;
+      }
+
+      .tower-floor.team .floor-money {
+        color: var(--leo-blue);
       }
 
       .tower-rules {
@@ -897,9 +929,9 @@
               </h1>
 
               <p class="hero-text">
-                Card Leo Rewards is built to be simple. Members activate their
-                account, unlock lifestyle benefits, share their referral link,
-                and track rewards inside the private member portal.
+                Card Leo Rewards is built to be simple. Create your account,
+                activate your membership, use the Discount Mobile App, and track
+                referral rewards inside your private member portal.
               </p>
 
               <div class="hero-actions">
@@ -945,7 +977,8 @@
               <p class="eyebrow">Simple Process</p>
               <h2>Four Steps To Start Using Card Leo Rewards</h2>
               <p>
-                This page explains the full member flow so nobody gets confused.
+                Start with your account, activate your membership, unlock your
+                benefits, then refer and track your rewards.
               </p>
             </div>
 
@@ -954,8 +987,8 @@
                 <span>Step 01</span>
                 <h3>Create Your Account</h3>
                 <p>
-                  Fill out the signup form with your name, email, phone, and
-                  referral details.
+                  Fill out the signup form with your name, email, phone number,
+                  password, and referral details so your member profile can be created.
                 </p>
               </article>
 
@@ -964,25 +997,25 @@
                 <h3>Activate Membership</h3>
                 <p>
                   Pay the $25 one-time activation fee and start your $20 monthly
-                  membership.
+                  membership. Once payment is confirmed, your account can be approved.
                 </p>
               </article>
 
               <article class="step-card">
                 <span>Step 03</span>
-                <h3>Get Approved</h3>
+                <h3>Download Discount Mobile App</h3>
                 <p>
-                  Once payment is confirmed, your account can be automatically
-                  approved.
+                  Use the Discount Mobile App to access savings, deals, perks,
+                  and lifestyle benefits included with your membership.
                 </p>
               </article>
 
               <article class="step-card">
                 <span>Step 04</span>
-                <h3>Refer And Track</h3>
+                <h3>Refer And Track Rewards</h3>
                 <p>
                   Share your referral link, track your referral tower, and view
-                  rewards inside your portal.
+                  direct rewards, team-building rewards, and allowance progress.
                 </p>
               </article>
             </div>
@@ -994,43 +1027,43 @@
             <div class="tower-visual">
               <div class="tower-header">
                 <h3>Referral Tower Example</h3>
-                <span>$7 Each Approved Referral</span>
+                <span>$7 Direct / $2 Team</span>
               </div>
 
               <div class="tower-stack">
-                <div class="tower-floor locked">
+                <div class="tower-floor team">
                   <span class="floor-num">12</span>
-                  <span class="floor-name">Open Floor</span>
-                  <span class="floor-status">Locked</span>
+                  <span class="floor-name">Member C Approved Team Referral</span>
+                  <span class="floor-money">+$2.00</span>
                 </div>
 
-                <div class="tower-floor locked">
+                <div class="tower-floor team">
                   <span class="floor-num">11</span>
-                  <span class="floor-name">Open Floor</span>
-                  <span class="floor-status">Locked</span>
+                  <span class="floor-name">Member B Refers Member C</span>
+                  <span class="floor-money">+$2.00</span>
                 </div>
 
-                <div class="tower-floor locked">
+                <div class="tower-floor approved">
                   <span class="floor-num">10</span>
-                  <span class="floor-name">Open Floor</span>
-                  <span class="floor-status">Locked</span>
+                  <span class="floor-name">Approved Direct Referral #10</span>
+                  <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">09</span>
-                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-name">Approved Direct Referral</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">08</span>
-                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-name">Approved Direct Referral</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">07</span>
-                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-name">Approved Direct Referral</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
@@ -1048,25 +1081,25 @@
 
                 <div class="tower-floor approved">
                   <span class="floor-num">04</span>
-                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-name">Approved Direct Referral</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">03</span>
-                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-name">Member A Refers Member C</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">02</span>
-                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-name">Approved Direct Referral</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">01</span>
-                  <span class="floor-name">Approved Referral</span>
+                  <span class="floor-name">Member A Refers Member B</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
               </div>
@@ -1084,26 +1117,26 @@
               </div>
 
               <article class="info-card">
-                <h3>Approved Means Paid And Activated</h3>
+                <h3>$7 Direct Referral Reward</h3>
                 <p>
-                  A referral should only count as approved after the new member
-                  completes payment and account activation.
+                  Member A earns $7 when Member A directly refers an approved
+                  paid member, like Member A referring Member B or Member C.
                 </p>
               </article>
 
               <article class="info-card">
-                <h3>Monthly Leaderboard</h3>
+                <h3>$2 Team-Building Reward</h3>
                 <p>
-                  Members with the strongest approved referral activity can show
-                  on the monthly leaderboard inside the portal.
+                  When Member B refers Member C and Member C becomes approved,
+                  it can count as a $2 team-building reward example.
                 </p>
               </article>
 
               <article class="info-card">
-                <h3>Payout Window</h3>
+                <h3>10 Approved Referrals</h3>
                 <p>
-                  Eligible referral payouts are prepared between the 1st and 3rd
-                  of every month.
+                  Once Member A reaches 10 approved direct referrals, Member A
+                  can qualify for the $100 allowance.
                 </p>
               </article>
             </div>
@@ -1167,10 +1200,10 @@
 
               <article class="benefit-card">
                 <div class="benefit-icon">📱</div>
-                <h3>App And Portal Access</h3>
+                <h3>Discount Mobile App</h3>
                 <p>
-                  Members can use their portal to track referrals, rewards,
-                  billing, and benefits.
+                  Members can use the Discount Mobile App to access savings,
+                  deals, perks, and lifestyle benefits.
                 </p>
               </article>
             </div>
@@ -1194,7 +1227,9 @@
                 <li><strong>$20/month</strong> recurring membership.</li>
                 <li>Recurring billing happens on the <strong>10th</strong>.</li>
                 <li>Approval happens <strong>automatically after payment</strong>.</li>
-                <li>Earn <strong>$7</strong> per approved referral.</li>
+                <li>Earn <strong>$7</strong> per approved direct referral.</li>
+                <li>Team-building example: <strong>Member B → Member C = $2</strong>.</li>
+                <li><strong>10 approved referrals</strong> can qualify for a <strong>$100 allowance</strong>.</li>
                 <li>Payouts are sent between the <strong>1st and 3rd</strong>.</li>
                 <li>Existing member tiers stay the same.</li>
                 <li>Denied, cancelled, or unpaid members should not count as approved.</li>
@@ -1244,7 +1279,29 @@
                 <div class="qa-answer">
                   You share your referral link. When someone joins, pays, and
                   becomes an approved member, you can earn $7 for that approved
-                  referral.
+                  direct referral.
+                </div>
+              </article>
+
+              <article class="qa-item">
+                <button class="qa-question" type="button">
+                  How does Member B referring Member C work?
+                  <span>+</span>
+                </button>
+                <div class="qa-answer">
+                  When Member B refers Member C and Member C becomes approved,
+                  it can count as a $2 team-building reward example.
+                </div>
+              </article>
+
+              <article class="qa-item">
+                <button class="qa-question" type="button">
+                  What happens at 10 approved referrals?
+                  <span>+</span>
+                </button>
+                <div class="qa-answer">
+                  10 approved direct referrals can qualify the member for a
+                  $100 allowance.
                 </div>
               </article>
 
@@ -1278,8 +1335,8 @@
                 </button>
                 <div class="qa-answer">
                   Members can access lifestyle benefits, referral tracking,
-                  rewards information, billing tools, and their private member
-                  portal.
+                  rewards information, billing tools, the Discount Mobile App,
+                  and their private member portal.
                 </div>
               </article>
 

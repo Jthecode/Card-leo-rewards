@@ -16,8 +16,35 @@ import {
 } from "../../lib/logger.js";
 
 const DEFAULT_REDIRECT = "/portal/index.html";
+const LOGIN_REDIRECT = "/login.html";
+const SIGNUP_REDIRECT = "/signup.html?status=payment_required";
 
-const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
+const ACTIVE_STATUSES = new Set(["active", "approved", "invited", "paid"]);
+const PAID_PAYMENT_STATUSES = new Set([
+  "paid",
+  "active",
+  "current",
+  "succeeded",
+  "complete",
+  "completed",
+]);
+const ACTIVE_MEMBERSHIP_STATUSES = new Set([
+  "active",
+  "activated",
+  "paid",
+  "approved",
+  "current",
+]);
+const PAYMENT_REQUIRED_STATUSES = new Set([
+  "unpaid",
+  "payment_pending",
+  "pending_payment",
+  "requires_payment",
+  "incomplete",
+  "past_due",
+  "pending",
+  "inactive",
+]);
 
 const POSSIBLE_SESSION_COOKIE_NAMES = [
   "cardleo_session",
@@ -52,7 +79,7 @@ function normalizeEmail(value) {
 }
 
 function normalizeStatus(value) {
-  return normalizeString(value || "pending").toLowerCase();
+  return normalizeString(value || "").toLowerCase();
 }
 
 function normalizeTier(value) {
@@ -63,17 +90,6 @@ function normalizeTier(value) {
   }
 
   return "core";
-}
-
-function normalizeMemberStatus(value) {
-  const status = normalizeStatus(value);
-
-  if (["active", "approved", "invited"].includes(status)) return "active";
-  if (["pending", "reviewing"].includes(status)) return "pending";
-  if (["disabled", "suspended", "paused"].includes(status)) return "suspended";
-  if (["denied", "closed"].includes(status)) return status;
-
-  return status || "pending";
 }
 
 function titleCase(value) {
@@ -316,13 +332,16 @@ function getSessionIdentity(sessionCookie) {
   const portalUserIds = [
     value.portalUserId,
     value.portal_user_id,
+
     member.portalUserId,
     member.portal_user_id,
-    member.portalUserId,
+
     profile.portalUserId,
     profile.portal_user_id,
+
     user.portalUserId,
     user.portal_user_id,
+
     userMetadata.portalUserId,
     userMetadata.portal_user_id,
   ]
@@ -358,11 +377,69 @@ function getDisplayName(member) {
   );
 }
 
+function hasPortalAccessForMember(member) {
+  if (!member) return false;
+
+  const status = normalizeStatus(member.status);
+  const paymentStatus = normalizeStatus(member.payment_status);
+  const membershipStatus = normalizeStatus(member.membership_status);
+
+  return (
+    ACTIVE_STATUSES.has(status) ||
+    PAID_PAYMENT_STATUSES.has(paymentStatus) ||
+    ACTIVE_MEMBERSHIP_STATUSES.has(membershipStatus)
+  );
+}
+
+function doesMemberRequirePayment(member) {
+  if (!member) return true;
+
+  if (hasPortalAccessForMember(member)) return false;
+
+  const status = normalizeStatus(member.status);
+  const paymentStatus = normalizeStatus(member.payment_status);
+  const membershipStatus = normalizeStatus(member.membership_status);
+
+  return (
+    PAYMENT_REQUIRED_STATUSES.has(status) ||
+    PAYMENT_REQUIRED_STATUSES.has(paymentStatus) ||
+    PAYMENT_REQUIRED_STATUSES.has(membershipStatus)
+  );
+}
+
+function normalizeMemberStatus(member) {
+  if (!member) return "pending";
+
+  if (hasPortalAccessForMember(member)) return "active";
+
+  const status = normalizeStatus(member.status);
+
+  if (["pending", "reviewing"].includes(status)) return "pending";
+  if (["disabled", "suspended", "paused"].includes(status)) return "suspended";
+  if (["denied", "closed"].includes(status)) return status;
+
+  return status || "pending";
+}
+
+function resolvePortalLoginUrl(member) {
+  const portalLoginUrl = normalizeString(member?.portal_login_url);
+
+  if (portalLoginUrl.startsWith("/") && !portalLoginUrl.startsWith("//")) {
+    return portalLoginUrl;
+  }
+
+  return DEFAULT_REDIRECT;
+}
+
 function sanitizeMember(member) {
   if (!member) return null;
 
   const tier = normalizeTier(member.tier || "core");
-  const status = normalizeStatus(member.status);
+  const status = normalizeStatus(member.status || "pending");
+  const paymentStatus = normalizeStatus(member.payment_status || "");
+  const membershipStatus = normalizeStatus(member.membership_status || "");
+  const portalAccess = hasPortalAccessForMember(member);
+  const requiresPayment = doesMemberRequirePayment(member);
 
   return {
     id: member.id || null,
@@ -382,15 +459,35 @@ function sanitizeMember(member) {
     goals: member.goals || "",
     referralName: member.referral_name || "",
 
-    status: member.status || "",
-    memberStatus: normalizeMemberStatus(member.status),
+    status,
+    payment_status: paymentStatus,
+    membership_status: membershipStatus,
+    approval_status: portalAccess ? "approved" : status,
+
+    paymentStatus,
+    membershipStatus,
+    approvalStatus: portalAccess ? "approved" : status,
+
+    memberStatus: normalizeMemberStatus(member),
+    requires_payment: requiresPayment,
+    requiresPayment,
+    payment_required: requiresPayment,
+    paymentRequired: requiresPayment,
+
+    activation_fee_amount: Number(member.activation_fee_amount || 25),
+    monthly_fee_amount: Number(member.monthly_fee_amount || 20),
+    billing_day: Number(member.billing_day || 10),
+
+    activationFeeAmount: Number(member.activation_fee_amount || 25),
+    monthlyFeeAmount: Number(member.monthly_fee_amount || 20),
+    billingDay: Number(member.billing_day || 10),
 
     tier,
     tierLabel: titleCase(tier),
     referralCode: member.referral_code || "",
 
-    portalLoginUrl: member.portal_login_url || DEFAULT_REDIRECT,
-    portalAccess: ACTIVE_STATUSES.has(status),
+    portalLoginUrl: resolvePortalLoginUrl(member),
+    portalAccess,
     accessLevel: "member",
 
     emailVerified: Boolean(member.email_verified),
@@ -418,6 +515,10 @@ function buildUser(member) {
       first_name: safeMember.firstName,
       last_name: safeMember.lastName,
       status: safeMember.status,
+      payment_status: safeMember.paymentStatus,
+      membership_status: safeMember.membershipStatus,
+      approval_status: safeMember.approvalStatus,
+      requires_payment: safeMember.requiresPayment,
       signup_id: safeMember.id,
       member_id: safeMember.id,
       portal_user_id: safeMember.portalUserId,
@@ -450,6 +551,13 @@ function buildProfile(member) {
     referral_code: safeMember.referralCode,
     role: "member",
     status: safeMember.status,
+    payment_status: safeMember.paymentStatus,
+    membership_status: safeMember.membershipStatus,
+    approval_status: safeMember.approvalStatus,
+    requires_payment: safeMember.requiresPayment,
+    activation_fee_amount: safeMember.activationFeeAmount,
+    monthly_fee_amount: safeMember.monthlyFeeAmount,
+    billing_day: safeMember.billingDay,
     email_verified: safeMember.emailVerified,
     email_verified_at: safeMember.emailVerifiedAt,
     created_at: safeMember.createdAt,
@@ -519,7 +627,7 @@ function buildSessionCookieValue(member, oldSessionCookie) {
     created_at: Number(oldValue.created_at || now),
     checked_at: now,
     expires_at: expiresAt,
-    redirectTo: DEFAULT_REDIRECT,
+    redirectTo: safeMember?.portalLoginUrl || DEFAULT_REDIRECT,
     role: "member",
     member: safeMember,
     user,
@@ -591,6 +699,11 @@ function getSelectFields({ extended = true } = {}) {
     "referral_code",
     "email_verified",
     "email_verified_at",
+    "payment_status",
+    "membership_status",
+    "activation_fee_amount",
+    "monthly_fee_amount",
+    "billing_day",
     "portal_settings",
     "portal_sessions",
   ].join(", ");
@@ -694,6 +807,11 @@ async function findMemberFromSession(sessionCookie) {
           referral_code: result.data.referral_code || "",
           email_verified: Boolean(result.data.email_verified),
           email_verified_at: result.data.email_verified_at || null,
+          payment_status: result.data.payment_status || "",
+          membership_status: result.data.membership_status || "",
+          activation_fee_amount: result.data.activation_fee_amount || 25,
+          monthly_fee_amount: result.data.monthly_fee_amount || 20,
+          billing_day: result.data.billing_day || 10,
           portal_settings: isObject(result.data.portal_settings)
             ? result.data.portal_settings
             : {},
@@ -726,16 +844,44 @@ function unauthenticatedResponse(res, message = "No active session.", extra = {}
       member: null,
       session: null,
       role: "",
-      redirectTo: "/login.html",
+      redirectTo: LOGIN_REDIRECT,
       ...extra,
     },
     message
   );
 }
 
+function paymentRequiredResponse(res, member, message = "Membership payment is required.") {
+  const safeMember = sanitizeMember(member);
+
+  return ok(
+    res,
+    {
+      authenticated: false,
+      user: null,
+      profile: safeMember ? buildProfile(member) : null,
+      member: safeMember,
+      session: null,
+      role: "",
+      status: safeMember?.status || "",
+      payment_status: safeMember?.paymentStatus || "",
+      membership_status: safeMember?.membershipStatus || "",
+      approval_status: safeMember?.approvalStatus || "",
+      requires_payment: true,
+      payment_required: true,
+      redirectTo: SIGNUP_REDIRECT,
+    },
+    message,
+    {
+      redirectTo: SIGNUP_REDIRECT,
+    }
+  );
+}
+
 function activeSessionResponse(res, member, sessionCookie) {
   const sessionPayload = buildSessionCookieValue(member, sessionCookie);
   const maxAge = getSessionMaxAge(sessionCookie);
+  const redirectTo = sessionPayload.member?.portalLoginUrl || DEFAULT_REDIRECT;
 
   setSessionCookie(res, JSON.stringify(sessionPayload), {
     httpOnly: true,
@@ -750,12 +896,18 @@ function activeSessionResponse(res, member, sessionCookie) {
       profile: sessionPayload.profile,
       member: sessionPayload.member,
       role: "member",
+      status: sessionPayload.member?.status || "",
+      payment_status: sessionPayload.member?.paymentStatus || "",
+      membership_status: sessionPayload.member?.membershipStatus || "",
+      approval_status: sessionPayload.member?.approvalStatus || "",
+      requires_payment: false,
+      payment_required: false,
       session: sessionPayload.session,
-      redirectTo: DEFAULT_REDIRECT,
+      redirectTo,
     },
     "Session active.",
     {
-      redirectTo: DEFAULT_REDIRECT,
+      redirectTo,
     }
   );
 }
@@ -834,40 +986,44 @@ export default async function handler(req, res) {
       );
     }
 
-    const status = normalizeStatus(member.status || "pending");
+    if (!hasPortalAccessForMember(member)) {
+      const requiresPayment = doesMemberRequirePayment(member);
 
-    if (!ACTIVE_STATUSES.has(status)) {
-      clearEveryAuthCookie(res);
-
-      logAuthEvent("Session blocked for inactive account.", {
+      logAuthEvent("Session blocked for inactive or unpaid account.", {
         email: member.email,
         memberId: member.id,
-        status,
+        status: normalizeStatus(member.status),
+        paymentStatus: normalizeStatus(member.payment_status),
+        membershipStatus: normalizeStatus(member.membership_status),
+        requiresPayment,
         ip: getClientIp(req),
       });
 
-      return ok(
-        res,
-        {
-          authenticated: false,
-          user: null,
-          profile: null,
-          member: null,
-          session: null,
-          role: "",
-          status,
-          redirectTo: "/login.html",
-        },
-        status === "pending" || status === "reviewing"
-          ? "Your account is pending approval."
-          : "Your account is not active."
-      );
+      if (requiresPayment) {
+        return paymentRequiredResponse(
+          res,
+          member,
+          "Membership payment is required before portal access."
+        );
+      }
+
+      clearEveryAuthCookie(res);
+
+      return unauthenticatedResponse(res, "Your account is not active.", {
+        status: normalizeStatus(member.status),
+        payment_status: normalizeStatus(member.payment_status),
+        membership_status: normalizeStatus(member.membership_status),
+        redirectTo: LOGIN_REDIRECT,
+      });
     }
 
     logAuthEvent("Session check successful.", {
       email: member.email,
       memberId: member.id,
       matchedBy: matchedBy || "",
+      status: normalizeStatus(member.status),
+      paymentStatus: normalizeStatus(member.payment_status),
+      membershipStatus: normalizeStatus(member.membership_status),
       ip: getClientIp(req),
     });
 

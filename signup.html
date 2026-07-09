@@ -658,6 +658,8 @@
         line-height: 1.5;
         color: var(--leo-muted);
         min-height: 1.5em;
+        white-space: pre-wrap;
+        word-break: break-word;
       }
 
       .signup-status.is-error {
@@ -1218,6 +1220,53 @@
         const normalizeEmail = (value) => normalizeText(value).toLowerCase();
         const digitsOnly = (value) => normalizeText(value).replace(/\D/g, "");
 
+        const getReadableError = (
+          error,
+          fallback = "Something went wrong. Please try again."
+        ) => {
+          if (!error) return fallback;
+
+          if (typeof error === "string") {
+            return error.trim() || fallback;
+          }
+
+          if (error instanceof Error) {
+            return typeof error.message === "string" && error.message.trim()
+              ? error.message
+              : fallback;
+          }
+
+          if (typeof error === "object") {
+            if (typeof error.message === "string" && error.message.trim()) {
+              return error.message;
+            }
+
+            if (typeof error.error === "string" && error.error.trim()) {
+              return error.error;
+            }
+
+            if (typeof error.details === "string" && error.details.trim()) {
+              return error.details;
+            }
+
+            if (typeof error.hint === "string" && error.hint.trim()) {
+              return error.hint;
+            }
+
+            try {
+              const cleanJson = JSON.stringify(error, null, 2);
+
+              if (cleanJson && cleanJson !== "{}") {
+                return cleanJson;
+              }
+            } catch {
+              return fallback;
+            }
+          }
+
+          return String(error || fallback);
+        };
+
         const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
         const validateForm = (data) => {
@@ -1367,6 +1416,28 @@
           return "";
         };
 
+        const parseJsonResponse = async (response) => {
+          const contentType = response.headers.get("content-type") || "";
+
+          if (!contentType.includes("application/json")) {
+            const text = await response.text().catch(() => "");
+
+            return {
+              success: false,
+              ok: false,
+              message:
+                text ||
+                "The server returned an unexpected response. Please check the API route.",
+            };
+          }
+
+          return response.json().catch(() => ({
+            success: false,
+            ok: false,
+            message: "The server response could not be read.",
+          }));
+        };
+
         const createCheckoutSession = async (payload, signupResult) => {
           const signupId = resolveSignupId(signupResult);
 
@@ -1404,16 +1475,14 @@
             body: JSON.stringify(checkoutPayload),
           });
 
-          const contentType = response.headers.get("content-type") || "";
-          const result = contentType.includes("application/json")
-            ? await response.json().catch(() => ({}))
-            : {};
+          const result = await parseJsonResponse(response);
 
           if (!response.ok || result?.success === false || result?.ok === false) {
             throw new Error(
-              result?.message ||
-                result?.error ||
+              getReadableError(
+                result?.message || result?.error || result,
                 "Your account was created, but secure checkout could not be started."
+              )
             );
           }
 
@@ -1421,7 +1490,7 @@
 
           if (!isStripeCheckoutUrl(checkoutUrl)) {
             throw new Error(
-              "Your account was created, but Stripe Checkout did not return a valid payment link."
+              "Your account was created, but Stripe Checkout did not return a valid payment link. Please check your Stripe price IDs and Vercel environment variables."
             );
           }
 
@@ -1463,16 +1532,14 @@
               body: JSON.stringify(payload),
             });
 
-            const contentType = response.headers.get("content-type") || "";
-            const result = contentType.includes("application/json")
-              ? await response.json().catch(() => ({}))
-              : {};
+            const result = await parseJsonResponse(response);
 
             if (!response.ok || result?.success === false || result?.ok === false) {
               throw new Error(
-                result?.message ||
-                  result?.error ||
+                getReadableError(
+                  result?.message || result?.error || result,
                   "We couldn't complete your registration right now."
+                )
               );
             }
 
@@ -1496,8 +1563,10 @@
             }, 550);
           } catch (error) {
             setStatus(
-              error?.message ||
-                "Something went wrong while creating your account.",
+              getReadableError(
+                error,
+                "Something went wrong while creating your account."
+              ),
               "error"
             );
           } finally {

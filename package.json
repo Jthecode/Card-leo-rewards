@@ -4,10 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "local": "vercel dev"
+    "local": "vercel dev",
+    "dev": "vercel dev",
+    "start": "vercel dev"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.1"
+    "@supabase/supabase-js": "^2.49.1",
+    "stripe": "^17.7.0"
   },
   "devDependencies": {
     "vercel": "^54.12.2"

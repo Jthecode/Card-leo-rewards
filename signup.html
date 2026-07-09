@@ -516,6 +516,18 @@
         accent-color: var(--leo-gold-2);
       }
 
+      .signup-consent a {
+        color: var(--leo-gold-2);
+        font-weight: 900;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .signup-consent a:hover,
+      .signup-consent a:focus-visible {
+        color: var(--leo-white);
+      }
+
       .payment-box {
         margin: 1.15rem 0 1.25rem;
         overflow: hidden;
@@ -1072,7 +1084,10 @@
                       <span>
                         I agree to be contacted about my Card Leo Rewards
                         registration and understand payment is required to activate
-                        my membership and access the member portal.
+                        my membership and access the member portal. I also agree to the
+                        <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms</a>
+                        and
+                        <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
                       </span>
                     </label>
                   </div>
@@ -1106,15 +1121,15 @@
 
                     <div class="payment-total">
                       <div class="payment-total-row">
-                        <span>Due Today</span>
-                        <strong>$25.00</strong>
+                        <span>Secure Checkout</span>
+                        <strong>Required</strong>
                       </div>
                     </div>
 
                     <div class="payment-note">
-                      <strong>Important:</strong> once payment is confirmed, your
-                      account can be automatically approved. Eligible payouts are
-                      prepared between the 1st and 3rd monthly.
+                      <strong>Important:</strong> your account will stay pending
+                      until Stripe payment is completed. Once payment is confirmed,
+                      your member access can unlock automatically.
                     </div>
                   </div>
 
@@ -1312,23 +1327,44 @@
           ]);
         };
 
+        const isStripeCheckoutUrl = (url) => {
+          const value = normalizeText(url);
+
+          if (!value) return false;
+          if (value.startsWith("/")) return false;
+
+          try {
+            const parsed = new URL(value);
+            const host = parsed.hostname.toLowerCase();
+
+            return (
+              parsed.protocol === "https:" &&
+              (host === "checkout.stripe.com" || host.endsWith(".stripe.com"))
+            );
+          } catch {
+            return false;
+          }
+        };
+
         const resolveCheckoutUrl = (result) => {
-          return readResultValue(result, [
+          const checkoutUrl = readResultValue(result, [
             "checkout_url",
             "checkoutUrl",
-            "url",
             "payment_url",
             "paymentUrl",
-            "redirectTo",
-            "redirect",
             "data.checkout_url",
             "data.checkoutUrl",
-            "data.url",
             "data.payment_url",
             "data.paymentUrl",
-            "data.redirectTo",
-            "data.redirect",
           ]);
+
+          if (isStripeCheckoutUrl(checkoutUrl)) return checkoutUrl;
+
+          const url = readResultValue(result, ["url", "data.url"]);
+
+          if (isStripeCheckoutUrl(url)) return url;
+
+          return "";
         };
 
         const createCheckoutSession = async (payload, signupResult) => {
@@ -1383,9 +1419,9 @@
 
           const checkoutUrl = resolveCheckoutUrl(result);
 
-          if (!checkoutUrl) {
+          if (!isStripeCheckoutUrl(checkoutUrl)) {
             throw new Error(
-              "Your account was created, but the payment checkout link was missing."
+              "Your account was created, but Stripe Checkout did not return a valid payment link."
             );
           }
 
@@ -1440,14 +1476,20 @@
               );
             }
 
-            setStatus(
-              "Account created. Sending you to secure payment now...",
-              "success"
-            );
-
             const directCheckoutUrl = resolveCheckoutUrl(result);
             const checkoutUrl =
               directCheckoutUrl || (await createCheckoutSession(payload, result));
+
+            if (!isStripeCheckoutUrl(checkoutUrl)) {
+              throw new Error(
+                "Secure payment could not be started. Please try again or contact support."
+              );
+            }
+
+            setStatus(
+              "Account created. Sending you to secure Stripe Checkout now...",
+              "success"
+            );
 
             window.setTimeout(() => {
               window.location.href = checkoutUrl;

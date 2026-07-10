@@ -1723,3 +1723,171 @@ select:focus-visible {
     transform: none !important;
   }
 }
+
+/* =========================================
+   FIX: REMOVE CARD / BOX MOVEMENT + HOVER GLOW
+   Keeps design, removes jumping/lifting/glowing
+========================================= */
+
+/* Buttons stay still */
+.btn,
+.btn:hover,
+.btn:active,
+.btn-primary,
+.btn-primary:hover,
+.btn-secondary,
+.btn-secondary:hover,
+.nav-cta,
+.nav-cta:hover,
+.mini-btn,
+.mini-btn:hover {
+  transform: none !important;
+  animation: none !important;
+  will-change: auto !important;
+}
+
+/* Keep button shadows stable */
+.btn-primary,
+.btn-primary:hover {
+  box-shadow:
+    0 18px 44px rgba(216, 154, 34, 0.31),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+}
+
+.btn-secondary,
+.btn-secondary:hover {
+  border-color: rgba(231, 182, 79, 0.2) !important;
+  background: rgba(255, 255, 255, 0.045) !important;
+}
+
+/* Cards/boxes stay still */
+.feature-card,
+.feature-card:hover,
+.benefit-card,
+.benefit-card:hover,
+.trust-item,
+.trust-item:hover,
+.step-card,
+.step-card:hover,
+.quote-card,
+.quote-card:hover,
+.contact-form,
+.contact-form:hover,
+.spotlight-card,
+.spotlight-card:hover,
+.signup-panel,
+.signup-panel:hover,
+.auth-panel,
+.auth-panel:hover,
+.form-panel,
+.form-panel:hover,
+.payment-box,
+.payment-box:hover,
+.payment-box-inner,
+.payment-box-inner:hover,
+.payment-rule-card,
+.payment-rule-card:hover,
+.rules-panel,
+.rules-panel:hover,
+.cta-panel,
+.cta-panel:hover,
+.black-card-preview,
+.black-card-preview:hover,
+.cardleo-black-card,
+.cardleo-black-card:hover,
+.membership-card,
+.membership-card:hover,
+.glass-card,
+.glass-card:hover,
+.bulletin-card,
+.bulletin-card:hover,
+.point-card,
+.point-card:hover {
+  transform: none !important;
+  animation: none !important;
+  filter: none !important;
+  will-change: auto !important;
+}
+
+/* Remove hover glow only — keep normal shadow */
+.feature-card:hover,
+.benefit-card:hover,
+.trust-item:hover,
+.step-card:hover,
+.quote-card:hover,
+.contact-form:hover,
+.spotlight-card:hover {
+  border-color: rgba(231, 182, 79, 0.16) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* Keep benefit card normal transition but no transform/glow */
+.benefit-card {
+  transition:
+    border-color var(--ease),
+    background var(--ease),
+    opacity var(--ease) !important;
+}
+
+/* Step cards: no movement, no glow, no button-like behavior */
+.step-card,
+.step-card:hover,
+.how-grid .step-card,
+.how-grid .step-card:hover,
+.steps-grid .step-card,
+.steps-grid .step-card:hover {
+  cursor: default !important;
+  transform: none !important;
+  animation: none !important;
+  filter: none !important;
+  border-color: rgba(231, 182, 79, 0.16) !important;
+  box-shadow: var(--shadow-sm) !important;
+  background:
+    radial-gradient(circle at top right, rgba(231, 182, 79, 0.08), transparent 35%),
+    rgba(255, 255, 255, 0.045) !important;
+}
+
+/* Remove black card shine animation */
+.black-card-preview::before,
+.cardleo-black-card::before,
+.membership-card::before {
+  content: none !important;
+  display: none !important;
+  animation: none !important;
+  transform: none !important;
+}
+
+/* Stop mobile nav from sliding while keeping open/close working */
+@media (max-width: 940px) {
+  .site-nav {
+    transition: opacity var(--ease) !important;
+    transform: none !important;
+  }
+
+  .site-nav.is-open {
+    transform: none !important;
+  }
+}
+
+/* Optional: stop reveal sections from moving */
+.reveal,
+.reveal.is-hidden,
+.reveal.is-visible {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Keep accessibility reduced motion clean */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}

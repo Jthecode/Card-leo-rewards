@@ -13,12 +13,8 @@
       name="description"
       content="Card Leo Rewards member portal dashboard. View membership status, rewards, benefits, referral tower, leaderboard, billing, profile details, and support."
     />
-    <meta
-      name="keywords"
-      content="Card Leo Rewards, member portal, rewards dashboard, referral tower, leaderboard, billing, premium membership"
-    />
-    <meta name="theme-color" content="#030303" />
     <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#030303" />
 
     <link
       rel="canonical"
@@ -38,15 +34,11 @@
     <style>
       :root {
         --leo-black: #030303;
-        --leo-black-2: #080808;
-        --leo-black-3: #111111;
         --leo-panel: rgba(9, 9, 9, 0.92);
-        --leo-panel-2: rgba(18, 18, 18, 0.9);
         --leo-line: rgba(231, 182, 79, 0.22);
         --leo-line-soft: rgba(255, 255, 255, 0.08);
         --leo-gold: #e7b64f;
         --leo-gold-2: #f7d98b;
-        --leo-gold-3: #a66f10;
         --leo-white: #f8f3e7;
         --leo-muted: rgba(248, 243, 231, 0.68);
         --leo-muted-2: rgba(248, 243, 231, 0.5);
@@ -54,9 +46,6 @@
         --leo-red: #ff7676;
         --leo-yellow: #ffd166;
         --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
-        --radius-xl: 30px;
-        --radius-lg: 22px;
-        --radius-md: 16px;
         --sidebar-width: 290px;
       }
 
@@ -88,6 +77,10 @@
       button,
       input {
         font: inherit;
+      }
+
+      button {
+        cursor: pointer;
       }
 
       .portal-shell {
@@ -167,8 +160,6 @@
         color: rgba(248, 243, 231, 0.82);
         font-size: 0.98rem;
         font-weight: 700;
-        cursor: pointer;
-        transition: 0.22s ease;
       }
 
       .side-link:hover,
@@ -324,7 +315,6 @@
         color: #050505;
         font-size: 1.15rem;
         font-weight: 900;
-        cursor: pointer;
       }
 
       .balance-card .panel-inner {
@@ -398,7 +388,6 @@
         height: 34px;
         clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
         background: linear-gradient(135deg, #f7d98b, #b87912);
-        filter: drop-shadow(0 10px 22px rgba(231, 182, 79, 0.25));
       }
 
       .tower-floors {
@@ -566,6 +555,65 @@
         color: var(--leo-gold);
         font-size: 0.92rem;
         font-weight: 700;
+      }
+
+      .benefits-panel {
+        border-color: rgba(247, 217, 139, 0.32);
+        background:
+          radial-gradient(circle at top right, rgba(247, 217, 139, 0.18), transparent 36%),
+          linear-gradient(180deg, rgba(23, 18, 8, 0.96), rgba(3, 3, 3, 0.95));
+      }
+
+      .benefits-grid {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 18px;
+        align-items: center;
+      }
+
+      .benefits-icon {
+        display: grid;
+        place-items: center;
+        width: 66px;
+        height: 66px;
+        border-radius: 20px;
+        border: 1px solid rgba(247, 217, 139, 0.34);
+        color: var(--leo-gold-2);
+        background: rgba(247, 217, 139, 0.09);
+        font-size: 2rem;
+      }
+
+      .benefits-panel h3 {
+        margin: 0 0 6px;
+        color: var(--leo-gold-2);
+        font-size: 1.35rem;
+      }
+
+      .benefits-panel p {
+        margin: 0;
+        color: var(--leo-muted);
+        line-height: 1.55;
+      }
+
+      .benefits-actions {
+        display: grid;
+        gap: 8px;
+        min-width: 180px;
+      }
+
+      .benefits-status {
+        margin-top: 12px;
+        color: var(--leo-muted);
+        font-size: 0.92rem;
+        line-height: 1.55;
+      }
+
+      .benefits-status.success {
+        color: #bfffe5;
+      }
+
+      .benefits-status.error {
+        color: #ffd2d8;
       }
 
       .table-wrap {
@@ -764,7 +812,6 @@
           padding: 18px;
         }
 
-        .preview-top,
         .stat-grid {
           grid-template-columns: repeat(2, 1fr);
         }
@@ -781,8 +828,13 @@
           grid-column: 2;
         }
 
-        .promo-card {
+        .promo-card,
+        .benefits-grid {
           grid-template-columns: 1fr;
+        }
+
+        .benefits-actions {
+          min-width: 0;
         }
       }
 
@@ -944,56 +996,67 @@
                     <span class="floor-name">Open Floor</span>
                     <span class="floor-money">Locked</span>
                   </div>
+
                   <div class="tower-floor locked">
                     <span class="floor-number">11</span>
                     <span class="floor-name">Open Floor</span>
                     <span class="floor-money">Locked</span>
                   </div>
+
                   <div class="tower-floor locked">
                     <span class="floor-number">10</span>
                     <span class="floor-name">Open Floor</span>
                     <span class="floor-money">Locked</span>
                   </div>
+
                   <div class="tower-floor locked">
                     <span class="floor-number">9</span>
                     <span class="floor-name">Open Floor</span>
                     <span class="floor-money">Locked</span>
                   </div>
+
                   <div class="tower-floor earned">
                     <span class="floor-number">8</span>
                     <span class="floor-name">Approved Referral</span>
                     <span class="floor-money">+$7.00</span>
                   </div>
+
                   <div class="tower-floor earned">
                     <span class="floor-number">7</span>
                     <span class="floor-name">Approved Referral</span>
                     <span class="floor-money">+$7.00</span>
                   </div>
+
                   <div class="tower-floor earned">
                     <span class="floor-number">6</span>
                     <span class="floor-name">Approved Referral</span>
                     <span class="floor-money">+$7.00</span>
                   </div>
+
                   <div class="tower-floor earned">
                     <span class="floor-number">5</span>
                     <span class="floor-name">Approved Referral</span>
                     <span class="floor-money">+$7.00</span>
                   </div>
+
                   <div class="tower-floor pending">
                     <span class="floor-number">4</span>
                     <span class="floor-name">Pending Referral</span>
                     <span class="floor-money">Pending</span>
                   </div>
+
                   <div class="tower-floor pending">
                     <span class="floor-number">3</span>
                     <span class="floor-name">Pending Referral</span>
                     <span class="floor-money">Pending</span>
                   </div>
+
                   <div class="tower-floor pending">
                     <span class="floor-number">2</span>
                     <span class="floor-name">Pending Referral</span>
                     <span class="floor-money">Pending</span>
                   </div>
+
                   <div class="tower-floor pending">
                     <span class="floor-number">1</span>
                     <span class="floor-name">Pending Referral</span>
@@ -1047,6 +1110,41 @@
                   <div class="stat-label">Total Earned</div>
                 </div>
               </article>
+            </section>
+
+            <section class="panel benefits-panel" id="benefitsPanel">
+              <div class="panel-inner benefits-grid">
+                <div class="benefits-icon">♔</div>
+
+                <div>
+                  <h3 id="benefitsTitle">Card Leo Lifestyle Benefits</h3>
+                  <p id="benefitsSubtitle">
+                    Access restaurants, travel, shopping, entertainment,
+                    fitness, and local savings.
+                  </p>
+                  <div
+                    class="benefits-status"
+                    id="benefitsStatus"
+                    aria-live="polite"
+                  >
+                    Loading benefits access...
+                  </div>
+                </div>
+
+                <div class="benefits-actions">
+                  <button
+                    class="btn btn-primary"
+                    type="button"
+                    id="openBenefitsButton"
+                  >
+                    Open My Benefits
+                  </button>
+
+                  <a class="btn btn-secondary" href="/portal/benefits.html">
+                    View Details
+                  </a>
+                </div>
+              </div>
             </section>
 
             <section class="panel">
@@ -1110,6 +1208,7 @@
     </div>
 
     <script src="/assets/js/auth-guard.js"></script>
+
     <script>
       (() => {
         const API = {
@@ -1118,6 +1217,9 @@
           referralTower: "/api/portal/referral-tower",
           logout: "/api/auth/logout",
           billingPortal: "/api/billing/portal",
+          benefits: "/api/access/get-member-benefits",
+          enrollBenefits: "/api/access/enroll-member",
+          ssoBenefits: "/api/access/sso-link",
         };
 
         const els = {
@@ -1136,11 +1238,17 @@
           leaderboardTable: document.getElementById("leaderboardTable"),
           recentReferralsTable: document.getElementById("recentReferralsTable"),
           logoutButton: document.getElementById("logoutButton"),
+          openBenefitsButton: document.getElementById("openBenefitsButton"),
+          benefitsTitle: document.getElementById("benefitsTitle"),
+          benefitsSubtitle: document.getElementById("benefitsSubtitle"),
+          benefitsStatus: document.getElementById("benefitsStatus"),
         };
 
         const state = {
           member: null,
           referralPayload: null,
+          benefitsPayload: null,
+          benefitsBusy: false,
         };
 
         const money = (value) => {
@@ -1176,7 +1284,9 @@
           String(value || "")
             .split(/[\s_-]+/)
             .filter(Boolean)
-            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .map(
+              (part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+            )
             .join(" ");
 
         const formatDate = (value) => {
@@ -1192,6 +1302,15 @@
             year: "numeric",
           }).format(date);
         };
+
+        function readableError(error, fallback = "Request failed.") {
+          if (!error) return fallback;
+          if (typeof error === "string") return error;
+          if (error.message) return error.message;
+          if (error.payload?.message) return error.payload.message;
+          if (error.payload?.error) return error.payload.error;
+          return fallback;
+        }
 
         async function fetchJson(url, options = {}) {
           const response = await fetch(url, {
@@ -1299,7 +1418,9 @@
             normalizeText(member?.email).split("@")[0] ||
             "member";
 
-          return `https://cardleorewards.com/signup?ref=${encodeURIComponent(code)}`;
+          return `https://cardleorewards.com/signup?ref=${encodeURIComponent(
+            code
+          )}`;
         }
 
         function setTowerStatus(message, type = "info") {
@@ -1315,21 +1436,37 @@
           els.towerStatus.hidden = false;
           els.towerStatus.className = "status-box";
 
-          if (type === "success") {
-            els.towerStatus.classList.add("success");
-          }
-
-          if (type === "error") {
-            els.towerStatus.classList.add("error");
-          }
+          if (type === "success") els.towerStatus.classList.add("success");
+          if (type === "error") els.towerStatus.classList.add("error");
 
           els.towerStatus.textContent = message;
+        }
+
+        function setBenefitsStatus(message, type = "info") {
+          if (!els.benefitsStatus) return;
+
+          els.benefitsStatus.className = "benefits-status";
+
+          if (type === "success") els.benefitsStatus.classList.add("success");
+          if (type === "error") els.benefitsStatus.classList.add("error");
+
+          els.benefitsStatus.textContent = message;
+        }
+
+        function setBenefitsBusy(isBusy) {
+          state.benefitsBusy = isBusy;
+
+          if (!els.openBenefitsButton) return;
+
+          els.openBenefitsButton.disabled = isBusy;
+          els.openBenefitsButton.textContent = isBusy
+            ? "Opening Benefits..."
+            : "Open My Benefits";
         }
 
         function renderMember(member) {
           state.member = member;
 
-          const fullName = getFullName(member);
           const firstName = getFirstName(member);
           const tier = getTier(member);
 
@@ -1344,6 +1481,44 @@
               "error"
             );
           }
+        }
+
+        function renderBenefits(payload = {}) {
+          state.benefitsPayload = payload;
+
+          const card = payload.benefits_card || {};
+          const access = payload.access || {};
+
+          els.benefitsTitle.textContent =
+            card.title || "Card Leo Lifestyle Benefits";
+
+          els.benefitsSubtitle.textContent =
+            card.subtitle ||
+            "Access restaurants, travel, shopping, entertainment, fitness, and local savings.";
+
+          els.openBenefitsButton.textContent =
+            card.button_text || (access.enrolled ? "Open My Benefits" : "Activate My Benefits");
+
+          if (!access.enabled) {
+            setBenefitsStatus(
+              "Your membership must be active before benefits unlock.",
+              "error"
+            );
+            return;
+          }
+
+          if (access.enrolled) {
+            setBenefitsStatus(
+              card.status_label || "Benefits Active",
+              "success"
+            );
+            return;
+          }
+
+          setBenefitsStatus(
+            "Benefits are ready to activate. Click the button to enroll.",
+            "info"
+          );
         }
 
         function renderStats(summary = {}) {
@@ -1477,7 +1652,10 @@
             safeRows
               .map((referral) => {
                 const name = referral.name || referral.full_name || "New Member";
-                const statusRaw = normalizeText(referral.statusLabel || referral.status, "Pending");
+                const statusRaw = normalizeText(
+                  referral.statusLabel || referral.status,
+                  "Pending"
+                );
                 const status = statusRaw.toLowerCase().includes("approved")
                   ? "approved"
                   : "pending";
@@ -1495,7 +1673,13 @@
                         ${escapeHtml(titleCase(statusRaw))}
                       </span>
                     </span>
-                    <span>${escapeHtml(formatDate(referral.created_at || referral.createdAt || referral.joined_at))}</span>
+                    <span>${escapeHtml(
+                      formatDate(
+                        referral.created_at ||
+                          referral.createdAt ||
+                          referral.joined_at
+                      )
+                    )}</span>
                     <span class="${approved ? "green-money" : ""}">
                       ${approved ? "+ " + escapeHtml(money(amount || 7)) : "Pending"}
                     </span>
@@ -1548,7 +1732,84 @@
               renderMember({ ...(state.member || {}), ...member });
             }
           } catch {
-            // Overview is optional. Dashboard can still load.
+            // Overview is optional.
+          }
+        }
+
+        async function loadBenefits() {
+          try {
+            const payload = await fetchJson(API.benefits);
+            if (!payload) return;
+
+            renderBenefits(payload);
+          } catch (error) {
+            setBenefitsStatus(
+              readableError(error, "Unable to load benefits access right now."),
+              "error"
+            );
+          }
+        }
+
+        async function openBenefits() {
+          if (state.benefitsBusy) return;
+
+          setBenefitsBusy(true);
+          setBenefitsStatus("Checking your benefits access...");
+
+          try {
+            let benefits = state.benefitsPayload;
+
+            if (!benefits) {
+              benefits = await fetchJson(API.benefits);
+              renderBenefits(benefits);
+            }
+
+            if (benefits?.access?.needs_enrollment || !benefits?.access?.enrolled) {
+              setBenefitsStatus("Activating your benefits...");
+              await fetchJson(API.enrollBenefits, {
+                method: "POST",
+                body: JSON.stringify({ source: "portal-dashboard" }),
+              });
+            }
+
+            setBenefitsStatus("Creating your secure Access Perks link...");
+            const sso = await fetchJson(API.ssoBenefits, {
+              method: "POST",
+              body: JSON.stringify({ source: "portal-dashboard" }),
+            });
+
+            const url =
+              sso?.url ||
+              sso?.sso_url ||
+              sso?.access_sso_url ||
+              sso?.fallback_url ||
+              sso?.access_perks_url;
+
+            if (!url) {
+              throw new Error("No benefits link was returned.");
+            }
+
+            setBenefitsStatus("Opening your Card Leo Lifestyle Benefits...", "success");
+            window.location.href = url;
+          } catch (error) {
+            const payload = error?.payload || {};
+            const fallbackUrl = payload.fallback_url || payload.access_perks_url;
+
+            if (fallbackUrl) {
+              setBenefitsStatus(
+                "Access SSO failed, opening the Access Perks portal instead.",
+                "error"
+              );
+              window.location.href = fallbackUrl;
+              return;
+            }
+
+            setBenefitsStatus(
+              readableError(error, "Unable to open benefits right now."),
+              "error"
+            );
+          } finally {
+            setBenefitsBusy(false);
           }
         }
 
@@ -1649,6 +1910,7 @@
         els.copyReferralButton?.addEventListener("click", copyReferralLink);
         els.billingPortalButton?.addEventListener("click", openBillingPortal);
         els.logoutButton?.addEventListener("click", logout);
+        els.openBenefitsButton?.addEventListener("click", openBenefits);
 
         window.addEventListener("cardleo:auth-ready", async (event) => {
           const member = event?.detail?.member;
@@ -1667,7 +1929,11 @@
         (async () => {
           try {
             await loadSession();
-            await Promise.allSettled([loadOverview(), loadReferralTower()]);
+            await Promise.allSettled([
+              loadOverview(),
+              loadReferralTower(),
+              loadBenefits(),
+            ]);
           } catch (error) {
             console.error("Portal dashboard error:", error);
             window.location.href =

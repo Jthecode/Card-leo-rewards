@@ -2,9 +2,13 @@
 import Stripe from "stripe";
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2024-06-20",
-});
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
+
+const stripe = STRIPE_SECRET_KEY
+  ? new Stripe(STRIPE_SECRET_KEY, {
+      apiVersion: "2024-06-20",
+    })
+  : null;
 
 const DEFAULT_SUCCESS_URL =
   process.env.CARDLEO_SUCCESS_URL ||
@@ -16,6 +20,10 @@ const DEFAULT_CANCEL_URL =
 
 const ACTIVATION_PRICE_ID = process.env.CARDLEO_ACTIVATION_PRICE_ID || "";
 const MONTHLY_PRICE_ID = process.env.CARDLEO_MONTHLY_PRICE_ID || "";
+
+const ACTIVATION_FEE_AMOUNT = 25;
+const MONTHLY_FEE_AMOUNT = 20;
+const BILLING_DAY = 10;
 
 function normalizeString(value) {
   return String(value ?? "").trim();
@@ -56,7 +64,7 @@ async function readJsonBody(req) {
   const chunks = [];
 
   for await (const chunk of req) {
-    chunks.push(chunk);
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
   }
 
   const rawBody = Buffer.concat(chunks).toString("utf8");
@@ -91,7 +99,10 @@ function getFullName(payload) {
 
   if (fullName) return fullName;
 
-  return [payload.firstName || payload.first_name, payload.lastName || payload.last_name]
+  return [
+    payload.firstName || payload.first_name,
+    payload.lastName || payload.last_name,
+  ]
     .map(normalizeString)
     .filter(Boolean)
     .join(" ");
@@ -145,6 +156,35 @@ function isMissingOptionalColumn(error) {
   );
 }
 
+function getNextBillingDayUnixTimestamp(dayOfMonth = BILLING_DAY) {
+  const now = new Date();
+
+  const billingDate = new Date(
+    Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      dayOfMonth,
+      14,
+      0,
+      0
+    )
+  );
+
+  if (billingDate.getTime() <= now.getTime()) {
+    billingDate.setUTCMonth(billingDate.getUTCMonth() + 1);
+  }
+
+  return Math.floor(billingDate.getTime() / 1000);
+}
+
+function formatDateFromUnix(unixTimestamp) {
+  const date = new Date(unixTimestamp * 1000);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toISOString().slice(0, 10);
+}
+
 async function findSignup({ signupId, email }) {
   if (signupId) {
     const byId = await supabaseAdmin
@@ -196,9 +236,9 @@ async function createSignupIfMissing(payload) {
     status: "payment_pending",
     payment_status: "unpaid",
     membership_status: "payment_pending",
-    activation_fee_amount: 25,
-    monthly_fee_amount: 20,
-    billing_day: 10,
+    activation_fee_amount: ACTIVATION_FEE_AMOUNT,
+    monthly_fee_amount: MONTHLY_FEE_AMOUNT,
+    billing_day: BILLING_DAY,
     portal_login_url: "/login.html",
     source: "stripe-checkout",
     signup_page: "stripe-checkout",
@@ -251,6 +291,7 @@ async function findOrCreateStripeCustomer({ email, fullName, phone, signupId }) 
     const customer = existingCustomers.data[0];
 
     await stripe.customers.update(customer.id, {
+      email,
       name: fullName || customer.name || undefined,
       phone: phone || customer.phone || undefined,
       metadata: {
@@ -288,9 +329,9 @@ async function updateSignupBeforeCheckout({
     status: "payment_pending",
     payment_status: "unpaid",
     membership_status: "payment_pending",
-    activation_fee_amount: 25,
-    monthly_fee_amount: 20,
-    billing_day: 10,
+    activation_fee_amount: ACTIVATION_FEE_AMOUNT,
+    monthly_fee_amount: MONTHLY_FEE_AMOUNT,
+    billing_day: BILLING_DAY,
     portal_login_url: "/login.html",
     stripe_customer_id: stripeCustomerId,
     stripe_checkout_session_id: stripeSessionId,
@@ -331,6 +372,7 @@ async function updateSignupBeforeCheckout({
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
+
     return sendJson(res, 405, {
       success: false,
       ok: false,
@@ -339,11 +381,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    if (!process.env.STRIPE_SECRET_KEY) {
+    if (!stripe) {
       return sendJson(res, 500, {
         success: false,
         ok: false,
-        message: "Missing STRIPE_SECRET_KEY.",
+        message:
+          "Missing STRIPE_SECRET_KEY. Add it in Vercel Environment Variables and redeploy.",
       });
     }
 
@@ -409,6 +452,9 @@ export default async function handler(req, res) {
       signupId,
     });
 
+    const firstMonthlyChargeUnix = getNextBillingDayUnixTimestamp(BILLING_DAY);
+    const firstMonthlyChargeDate = formatDateFromUnix(firstMonthlyChargeUnix);
+
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: stripeCustomerId,
@@ -416,6 +462,12 @@ export default async function handler(req, res) {
 
       payment_method_types: ["card"],
 
+      /*
+        Checkout billing:
+        - Activation one-time price charges today.
+        - Monthly recurring price is attached to the subscription.
+        - trial_end delays the first $20 monthly charge until the next 10th.
+      */
       line_items: [
         {
           price: MONTHLY_PRICE_ID,
@@ -436,13 +488,21 @@ export default async function handler(req, res) {
       allow_promotion_codes: false,
 
       subscription_data: {
+        trial_end: firstMonthlyChargeUnix,
+        trial_settings: {
+          end_behavior: {
+            missing_payment_method: "cancel",
+          },
+        },
         metadata: {
           signup_id: signupId || "",
           email,
           source: "card-leo-rewards",
-          activation_fee_amount: "25",
-          monthly_fee_amount: "20",
-          billing_day: "10",
+          activation_fee_amount: String(ACTIVATION_FEE_AMOUNT),
+          monthly_fee_amount: String(MONTHLY_FEE_AMOUNT),
+          billing_day: String(BILLING_DAY),
+          first_monthly_charge_date: firstMonthlyChargeDate,
+          first_monthly_charge_day: String(BILLING_DAY),
         },
       },
 
@@ -455,9 +515,10 @@ export default async function handler(req, res) {
         phone,
         referral_name: referralName,
         source: "card-leo-rewards",
-        activation_fee_amount: "25",
-        monthly_fee_amount: "20",
-        billing_day: "10",
+        activation_fee_amount: String(ACTIVATION_FEE_AMOUNT),
+        monthly_fee_amount: String(MONTHLY_FEE_AMOUNT),
+        billing_day: String(BILLING_DAY),
+        first_monthly_charge_date: firstMonthlyChargeDate,
       },
     });
 
@@ -479,6 +540,12 @@ export default async function handler(req, res) {
       sessionId: session.id,
       stripe_customer_id: stripeCustomerId,
       signup_id: signupId || "",
+      activation_fee_amount: ACTIVATION_FEE_AMOUNT,
+      monthly_fee_amount: MONTHLY_FEE_AMOUNT,
+      billing_day: BILLING_DAY,
+      first_monthly_charge_date: firstMonthlyChargeDate,
+      billing_note:
+        "Member pays $25 today. The $20 monthly membership starts on the next 10th.",
     });
   } catch (error) {
     console.error("Card Leo create checkout session error:", error);

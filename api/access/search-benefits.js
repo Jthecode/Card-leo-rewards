@@ -10,6 +10,7 @@ import { supabaseAdmin } from "../../lib/supabase-admin.js";
  * ACCESS_ACCOUNT_NUMBER=498273585881
  * ACCESS_PROGRAM_ID=200783
  * ACCESS_API_TOKEN=your_access_token
+ * ACCESS_ANONYMOUS_MEMBER_KEY=anonymous
  *
  * Optional:
  * ACCESS_DEFAULT_POSTAL_CODE=34956
@@ -22,6 +23,9 @@ const ACCESS_API_BASE_URL =
 const ACCESS_ACCOUNT_NUMBER = process.env.ACCESS_ACCOUNT_NUMBER || "";
 const ACCESS_PROGRAM_ID = process.env.ACCESS_PROGRAM_ID || "";
 const ACCESS_API_TOKEN = process.env.ACCESS_API_TOKEN || "";
+
+const ACCESS_ANONYMOUS_MEMBER_KEY =
+  process.env.ACCESS_ANONYMOUS_MEMBER_KEY || "anonymous";
 
 const ACCESS_SEARCH_BENEFITS_ENDPOINT =
   process.env.ACCESS_SEARCH_BENEFITS_ENDPOINT || "/v1/offers.json";
@@ -139,8 +143,7 @@ const DEFAULT_BENEFITS = [
     categoryName: "Financial Wellness",
     categoryIcon: "💳",
     discount: "Member access",
-    description:
-      "Explore financial wellness resources and member benefits.",
+    description: "Explore financial wellness resources and member benefits.",
     locationType: "online",
     redemptionType: "View offer details",
     imageUrl: "",
@@ -235,8 +238,7 @@ const DEFAULT_BENEFITS = [
     categoryName: "Local Deals",
     categoryIcon: "📍",
     discount: "Nearby offers",
-    description:
-      "Find local deals and participating businesses near your area.",
+    description: "Find local deals and participating businesses near your area.",
     locationType: "local",
     redemptionType: "View offer details",
     imageUrl: "",
@@ -521,6 +523,8 @@ function getSelectFields({ extended = true } = {}) {
     "stripe_customer_id",
     "stripe_subscription_id",
     "access_member_id",
+    "access_member_key",
+    "member_key",
     "access_enrollment_status",
     "access_enrolled_at",
     "access_last_sync_at",
@@ -627,8 +631,10 @@ function makeExternalMemberId(member) {
 
 function getAccessMemberKey(member) {
   return (
+    normalizeString(member?.access_member_key) ||
+    normalizeString(member?.member_key) ||
     normalizeString(member?.access_member_id) ||
-    normalizeString(member?.portal_user_id) ||
+    ACCESS_ANONYMOUS_MEMBER_KEY ||
     makeExternalMemberId(member)
   );
 }
@@ -814,6 +820,7 @@ function getSearchParams(req) {
 
   const category = slugify(
     url.searchParams.get("category") ||
+      url.searchParams.get("category_key") ||
       url.searchParams.get("category_slug") ||
       url.searchParams.get("categorySlug") ||
       ""
@@ -1163,6 +1170,7 @@ function getTotalFromAccess(accessResult, fallbackCount) {
       "meta.total",
       "meta.total_count",
       "meta.count",
+      "meta.record_count",
       "total",
       "totalCount",
       "total_count",
@@ -1187,8 +1195,8 @@ function buildSearchQueryParams(params, member) {
   const memberKey = getAccessMemberKey(member);
 
   search.set("member_key", memberKey);
-  search.set("page", String(params.page));
-  search.set("per_page", String(params.limit));
+  search.set("page", String(params.page || 1));
+  search.set("per_page", String(params.limit || 100));
 
   const postalCode =
     params.postalCode ||
@@ -1203,11 +1211,9 @@ function buildSearchQueryParams(params, member) {
 
   if (params.q) {
     search.set("search", params.q);
-    search.set("q", params.q);
   }
 
   if (params.category && params.category !== "all") {
-    search.set("category", params.category);
     search.set("category_key", params.category);
   }
 
@@ -1284,6 +1290,7 @@ async function callAccessSearchBenefits(params, member) {
       ok: false,
       status: response.status,
       message:
+        accessResult?.message ||
         "Access returned no offers for this request. Showing Card Leo default benefit examples.",
       ...fallback,
       access_result: accessResult,

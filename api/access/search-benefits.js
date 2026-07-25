@@ -37,6 +37,27 @@ const ACTIVE_MEMBERSHIP_STATUSES = new Set([
   "current",
 ]);
 
+const CATEGORY_SEARCH_MAP = {
+  restaurants: "restaurant dining food",
+  dining: "restaurant dining food",
+  travel: "travel hotel vacation rental car",
+  shopping: "shopping retail store",
+  entertainment: "entertainment movie tickets events",
+  fitness: "fitness gym studio workout",
+  wellness: "health wellness",
+  "health-and-wellness": "health wellness",
+  "grocery-coupons": "grocery coupons grocery",
+  grocery: "grocery coupons grocery",
+  "parks-and-tickets": "parks tickets attractions theme park",
+  parks: "parks tickets attractions theme park",
+  insurance: "insurance",
+  "financial-wellness": "financial finance wellness",
+  electronics: "electronics tech",
+  "local-deals": "",
+  local: "",
+  deals: "",
+};
+
 const DEFAULT_BENEFITS = [
   {
     id: "cardleo-travel-001",
@@ -718,6 +739,14 @@ function getUrl(...values) {
 function pickCategoryName(value) {
   const text = normalizeString(value).toLowerCase();
 
+  if (text.includes("outdoor") || text.includes("adventure")) {
+    return "Outdoor Adventure";
+  }
+
+  if (text.includes("senior") || text.includes("moving")) {
+    return "Senior Living";
+  }
+
   if (text.includes("hardware") || text.includes("home") || text.includes("garden")) {
     return "Home & Garden";
   }
@@ -769,6 +798,10 @@ function pickCategoryName(value) {
 
 function pickCategoryIcon(value) {
   const text = normalizeString(value).toLowerCase();
+
+  if (text.includes("outdoor") || text.includes("adventure")) return "★";
+
+  if (text.includes("senior") || text.includes("moving")) return "✈️";
 
   if (text.includes("home") || text.includes("garden") || text.includes("hardware")) {
     return "🏠";
@@ -963,15 +996,7 @@ function unwrapJsonApiResource(resource) {
     : {};
 
   return {
-    /*
-      This keeps Access top-level fields.
-      Without this, cards can show Access Offer 1 / 2 / 3.
-    */
     ...resource,
-
-    /*
-      Also support JSON:API and nested raw responses.
-    */
     ...raw,
     ...attributes,
 
@@ -1287,6 +1312,57 @@ function normalizeBenefit(rawOffer, index = 0) {
   };
 }
 
+function getOfferDedupeKey(benefit) {
+  const raw = isObject(benefit?.raw) ? benefit.raw : {};
+  const offer = isObject(raw.offer) ? raw.offer : {};
+  const store = isObject(raw.offer_store) ? raw.offer_store : {};
+
+  const offerGroup =
+    normalizeString(raw.offer_group_key) ||
+    normalizeString(raw.offer_key) ||
+    normalizeString(raw.id) ||
+    normalizeString(benefit.id);
+
+  const merchant =
+    normalizeString(benefit.merchantName) ||
+    normalizeString(store.name) ||
+    normalizeString(offer.name);
+
+  const title =
+    normalizeString(benefit.title) ||
+    normalizeString(raw.title);
+
+  const address =
+    normalizeString(benefit.address) ||
+    normalizeString(store.street_address);
+
+  const zip =
+    normalizeString(benefit.zip) ||
+    normalizeString(store.postal_code);
+
+  return [offerGroup, merchant, title, address, zip]
+    .join("|")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function dedupeBenefits(benefits) {
+  const seen = new Set();
+  const unique = [];
+
+  for (const benefit of benefits || []) {
+    const key = getOfferDedupeKey(benefit);
+
+    if (!key || seen.has(key)) continue;
+
+    seen.add(key);
+    unique.push(benefit);
+  }
+
+  return unique;
+}
+
 function normalizeAccessBenefits(accessResult) {
   const offers = readNestedArray(accessResult, [
     "data",
@@ -1303,9 +1379,11 @@ function normalizeAccessBenefits(accessResult) {
 
   if (!offers.length) return [];
 
-  return offers
-    .map((offer, index) => normalizeBenefit(offer, index))
-    .filter((benefit) => benefit.id && benefit.title);
+  return dedupeBenefits(
+    offers
+      .map((offer, index) => normalizeBenefit(offer, index))
+      .filter((benefit) => benefit.id && benefit.title)
+  );
 }
 
 function getTotalFromAccess(accessResult, fallbackCount) {
@@ -1353,11 +1431,24 @@ function buildSearchQueryParams(params, member) {
   if (postalCode) search.set("postal_code", postalCode);
   if (distance) search.set("distance", distance);
 
-  if (params.q) {
-    search.set("search", params.q);
+  const category = slugify(params.category);
+  const categorySearch = CATEGORY_SEARCH_MAP[category] || "";
+
+  const finalSearch = [params.q, categorySearch]
+    .map(normalizeString)
+    .filter(Boolean)
+    .join(" ");
+
+  if (finalSearch) {
+    search.set("search", finalSearch);
   }
 
-  if (params.category && params.category !== "all") {
+  /*
+    Access category_key values are not Card Leo slugs like:
+    travel, restaurants, fitness, shopping.
+    Only send category_key if Access gives us a real numeric/category key.
+  */
+  if (params.category && /^\d+$/.test(String(params.category))) {
     search.set("category_key", params.category);
   }
 
@@ -1447,7 +1538,7 @@ async function callAccessSearchBenefits(params, member) {
     status: response.status,
     message: "Benefits loaded from Access Offers API.",
     benefits,
-    total: getTotalFromAccess(accessResult, benefits.length),
+    total: benefits.length,
     page: params.page,
     limit: params.limit,
     hasMore: benefits.length >= params.limit,

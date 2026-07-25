@@ -1106,6 +1106,27 @@
     </div>
 
     <script>
+      const CATEGORY_QUERY_MAP = {
+        restaurants: "restaurant dining food pizza burger cafe",
+        dining: "restaurant dining food pizza burger cafe",
+        travel: "travel hotel vacation rental car flights",
+        shopping: "shopping retail store clothing shoes",
+        entertainment: "entertainment movie tickets events attractions",
+        fitness: "fitness gym studio workout",
+        wellness: "health wellness spa care",
+        "health-and-wellness": "health wellness spa care",
+        "grocery-coupons": "grocery coupons grocery market",
+        grocery: "grocery coupons grocery market",
+        "parks-and-tickets": "parks tickets attractions theme park",
+        parks: "parks tickets attractions theme park",
+        insurance: "insurance",
+        "financial-wellness": "financial finance wellness credit money",
+        electronics: "electronics tech phone computer",
+        "local-deals": "",
+        local: "",
+        deals: "",
+      };
+
       const state = {
         member: null,
         categories: [],
@@ -1113,6 +1134,7 @@
         selectedCategory: "",
         query: "",
         loading: false,
+        source: "card-leo",
       };
 
       const API = {
@@ -1171,11 +1193,17 @@
         return text && text !== "[object Object]" ? text : fallback;
       }
 
+      function slugify(value) {
+        return normalizeText(value)
+          .toLowerCase()
+          .replace(/&/g, "and")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      }
+
       function unwrap(payload) {
         if (!payload || typeof payload !== "object") return {};
-        return payload.data && typeof payload.data === "object"
-          ? payload.data
-          : payload;
+        return payload.data && typeof payload.data === "object" ? payload.data : payload;
       }
 
       function isObject(value) {
@@ -1211,18 +1239,13 @@
         for (const value of values) {
           if (typeof value === "string") {
             const text = normalizeText(value);
-            if (text.startsWith("http://") || text.startsWith("https://")) {
-              return text;
-            }
+            if (text.startsWith("http://") || text.startsWith("https://")) return text;
           }
 
           if (isObject(value)) {
             const nested = value.url || value.href || value.link;
             const text = normalizeText(nested);
-
-            if (text.startsWith("http://") || text.startsWith("https://")) {
-              return text;
-            }
+            if (text.startsWith("http://") || text.startsWith("https://")) return text;
           }
         }
 
@@ -1238,17 +1261,9 @@
       }
 
       function getInitials(name) {
-        const parts = String(name || "")
-          .trim()
-          .split(/\s+/)
-          .filter(Boolean);
-
+        const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
         if (!parts.length) return "CL";
-
-        return parts
-          .slice(0, 2)
-          .map((part) => part.charAt(0).toUpperCase())
-          .join("");
+        return parts.slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join("");
       }
 
       function getBenefitRaw(benefit) {
@@ -1257,29 +1272,23 @@
 
       function getBenefitLinks(benefit) {
         const raw = getBenefitRaw(benefit);
-        return isObject(benefit?.links)
-          ? benefit.links
-          : isObject(raw.links)
-            ? raw.links
-            : {};
+        if (isObject(benefit?.links)) return benefit.links;
+        if (isObject(raw.links)) return raw.links;
+        return {};
       }
 
       function getBenefitOffer(benefit) {
         const raw = getBenefitRaw(benefit);
-        return isObject(benefit?.offer)
-          ? benefit.offer
-          : isObject(raw.offer)
-            ? raw.offer
-            : {};
+        if (isObject(benefit?.offer)) return benefit.offer;
+        if (isObject(raw.offer)) return raw.offer;
+        return {};
       }
 
       function getBenefitStore(benefit) {
         const raw = getBenefitRaw(benefit);
-        return isObject(benefit?.offer_store)
-          ? benefit.offer_store
-          : isObject(raw.offer_store)
-            ? raw.offer_store
-            : {};
+        if (isObject(benefit?.offer_store)) return benefit.offer_store;
+        if (isObject(raw.offer_store)) return raw.offer_store;
+        return {};
       }
 
       function cleanDescription(value) {
@@ -1383,9 +1392,7 @@
           links.instore_print,
           raw.links?.redeem_offer,
           raw.links?.instore,
-          raw.links?.instore_print,
-          benefit?.detailsUrl,
-          raw.links?.show_offer
+          raw.links?.instore_print
         );
       }
 
@@ -1485,6 +1492,45 @@
         );
       }
 
+      function getFrontendDedupeKey(benefit) {
+        const raw = getBenefitRaw(benefit);
+        const store = getBenefitStore(benefit);
+        const offer = getBenefitOffer(benefit);
+
+        const merchant =
+          getDisplayMerchant(benefit) ||
+          normalizeText(store.name) ||
+          normalizeText(offer.name);
+
+        const title = getDisplayTitle(benefit) || normalizeText(raw.title);
+
+        const offerGroup =
+          normalizeText(raw.offer_group_key) ||
+          normalizeText(raw.offer_key) ||
+          normalizeText(raw.location_key) ||
+          normalizeText(benefit.id);
+
+        return [merchant, title, offerGroup]
+          .join("|")
+          .toLowerCase()
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function dedupeFrontendBenefits(benefits) {
+        const seen = new Set();
+        const unique = [];
+
+        for (const benefit of benefits || []) {
+          const key = getFrontendDedupeKey(benefit);
+          if (!key || seen.has(key)) continue;
+          seen.add(key);
+          unique.push(benefit);
+        }
+
+        return unique;
+      }
+
       function showBanner(message, type = "") {
         if (!message) {
           els.statusBanner.className = "status-banner";
@@ -1511,15 +1557,12 @@
 
         if (response.status === 401) {
           window.location.href =
-            "../login.html?next=" +
-            encodeURIComponent("/portal/benefits.html");
+            "../login.html?next=" + encodeURIComponent("/portal/benefits.html");
           return null;
         }
 
         if (!response.ok || payload?.success === false || payload?.ok === false) {
-          const error = new Error(
-            payload?.message || payload?.error || "Request failed."
-          );
+          const error = new Error(payload?.message || payload?.error || "Request failed.");
           error.status = response.status;
           error.payload = payload;
           throw error;
@@ -1592,7 +1635,13 @@
 
       function renderStats() {
         const count = state.benefits.length;
-        const categoryCount = state.categories.length;
+        const categoryCount =
+          state.categories.length ||
+          new Set(
+            state.benefits
+              .map((benefit) => benefit.categoryName || benefit.category)
+              .filter(Boolean)
+          ).size;
 
         els.heroTotalBenefits.textContent = String(count);
         els.heroCategoryCount.textContent = String(categoryCount);
@@ -1609,13 +1658,14 @@
         els.categorySelect.innerHTML =
           `<option value="">All Categories</option>` +
           state.categories
-            .map(
-              (category) => `
-                <option value="${escapeHtml(category.slug || category.id)}">
+            .map((category) => {
+              const value = category.slug || category.id || slugify(category.name);
+              return `
+                <option value="${escapeHtml(value)}">
                   ${escapeHtml(category.name)}
                 </option>
-              `
-            )
+              `;
+            })
             .join("");
 
         if (!state.categories.length) {
@@ -1628,37 +1678,40 @@
         }
 
         els.categoryGrid.innerHTML = state.categories
-          .map(
-            (category) => `
+          .map((category) => {
+            const value = category.slug || category.id || slugify(category.name);
+
+            return `
               <article class="panel category-card">
-                <button type="button" data-category="${escapeHtml(
-                  category.slug || category.id
-                )}">
+                <button type="button" data-category="${escapeHtml(value)}">
                   <div class="category-icon">${escapeHtml(category.icon || "★")}</div>
                   <h3 class="category-title">${escapeHtml(category.name)}</h3>
                   <p class="category-copy">${escapeHtml(
-                    category.description ||
-                      `Browse ${category.name} savings and member offers.`
+                    category.description || `Browse ${category.name} savings and member offers.`
                   )}</p>
                 </button>
               </article>
-            `
-          )
+            `;
+          })
           .join("");
 
         els.categoryGrid.querySelectorAll("[data-category]").forEach((button) => {
           button.addEventListener("click", () => {
             state.selectedCategory = button.getAttribute("data-category") || "";
             els.categorySelect.value = state.selectedCategory;
+            els.searchInput.value = "";
             loadBenefits();
           });
         });
       }
 
       function renderBenefits(benefits, source = "card-leo") {
-        state.benefits = Array.isArray(benefits) ? benefits : [];
+        state.source = source;
+        state.benefits = dedupeFrontendBenefits(Array.isArray(benefits) ? benefits : []);
+
         els.memberSource.textContent =
           source === "access-development" ? "Access API" : "Card Leo";
+
         renderStats();
 
         if (!state.benefits.length) {
@@ -1677,18 +1730,16 @@
             const description = getDisplayDescription(benefit);
             const discount = getDisplayDiscount(benefit);
             const location = getDisplayLocation(benefit);
+            const redeemUrl = getDisplayRedeemUrl(benefit);
 
             return `
               <article class="panel benefit-card">
                 <div class="benefit-top">
-                  <div class="benefit-icon">${escapeHtml(
-                    benefit.categoryIcon || "★"
-                  )}</div>
+                  <div class="benefit-icon">${escapeHtml(benefit.categoryIcon || "★")}</div>
                   <span class="pill is-gold">${escapeHtml(discount)}</span>
                 </div>
 
                 <h3 class="benefit-title">${escapeHtml(title)}</h3>
-
                 <p class="merchant-name">${escapeHtml(merchant)}</p>
 
                 ${
@@ -1703,9 +1754,9 @@
                   <span class="pill is-green">${escapeHtml(
                     benefit.categoryName || titleCase(benefit.category || "Benefit")
                   )}</span>
-                  <span class="pill">${escapeHtml(
-                    benefit.locationType || "member"
-                  )}</span>
+
+                  <span class="pill">${escapeHtml(benefit.locationType || "member")}</span>
+
                   <button
                     class="button button-primary"
                     type="button"
@@ -1713,6 +1764,21 @@
                   >
                     View Details
                   </button>
+
+                  ${
+                    redeemUrl
+                      ? `
+                        <a
+                          class="button button-ghost"
+                          href="${escapeHtml(redeemUrl)}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Claim
+                        </a>
+                      `
+                      : ""
+                  }
                 </div>
               </article>
             `;
@@ -1729,7 +1795,6 @@
       async function loadSession() {
         const payload = await fetchJson(API.me);
         if (!payload) return;
-
         renderMember(getMemberFromPayload(payload));
       }
 
@@ -1737,7 +1802,6 @@
         try {
           const payload = await fetchJson(API.categories);
           if (!payload) return;
-
           renderCategories(payload.categories || []);
         } catch (error) {
           console.error("[benefits] categories error:", error);
@@ -1756,14 +1820,19 @@
         state.selectedCategory = normalizeText(els.categorySelect.value);
 
         const params = new URLSearchParams();
+        const selectedSlug = slugify(state.selectedCategory);
+        const categoryQuery = CATEGORY_QUERY_MAP[selectedSlug] || "";
 
-        if (state.query) params.set("q", state.query);
-        if (state.selectedCategory) params.set("category", state.selectedCategory);
+        if (state.query) {
+          params.set("q", state.query);
+        } else if (categoryQuery) {
+          params.set("q", categoryQuery);
+        }
 
-        /*
-          Access API max per_page is 100.
-          This fixes the old 24 visible limit.
-        */
+        if (state.selectedCategory) {
+          params.set("category", state.selectedCategory);
+        }
+
         params.set("limit", "100");
 
         try {
@@ -1771,6 +1840,7 @@
           if (!payload) return;
 
           renderBenefits(payload.benefits || [], payload.source);
+
           els.benefitsSubtitle.textContent =
             payload.source === "access-development"
               ? "Live benefits loaded inside Card Leo Rewards."
@@ -1782,10 +1852,7 @@
         } catch (error) {
           console.error("[benefits] search error:", error);
           renderBenefits([], "card-leo");
-          showBanner(
-            error?.message || "Unable to load benefits right now.",
-            "error"
-          );
+          showBanner(error?.message || "Unable to load benefits right now.", "error");
         }
       }
 
@@ -1799,8 +1866,34 @@
         els.modal.setAttribute("aria-hidden", "true");
       }
 
-      function renderClaimBox(redeemUrl) {
-        if (!redeemUrl) return "";
+      function renderClaimBox(redeemUrl, detailsUrl = "") {
+        if (!redeemUrl) {
+          return `
+            <div class="detail-box">
+              <div class="detail-label">Claim This Benefit</div>
+              <div class="detail-value">
+                ${
+                  detailsUrl
+                    ? `
+                      This offer does not include a direct claim URL in the search response.
+                      Open the offer page below to view available redemption options.
+                      <div style="margin-top:12px;">
+                        <a
+                          class="button button-primary"
+                          href="${escapeHtml(detailsUrl)}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Open Offer Page
+                        </a>
+                      </div>
+                    `
+                    : "This offer does not include a direct claim link yet. Use the redemption instructions shown here."
+                }
+              </div>
+            </div>
+          `;
+        }
 
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
           redeemUrl
@@ -1889,7 +1982,7 @@
               )}</div>
             </div>
 
-            ${renderClaimBox(redeemUrl)}
+            ${renderClaimBox(redeemUrl, detailsUrl)}
 
             ${
               promoCode
@@ -1971,53 +2064,36 @@
         showModal();
 
         if (localBenefit) {
-          /*
-            Render local search result first.
-            This prevents generic placeholder detail routes from hiding
-            the real Access redeem URL, QR code, merchant, and title.
-          */
           renderDetailModal(localBenefit);
-        } else {
-          els.modalCategory.textContent = "Loading";
-          els.modalTitle.textContent = "Benefit Details";
-          els.modalBody.innerHTML = `<div class="status-state">Loading benefit details...</div>`;
+          return;
         }
 
+        els.modalCategory.textContent = "Loading";
+        els.modalTitle.textContent = "Benefit Details";
+        els.modalBody.innerHTML = `<div class="status-state">Loading benefit details...</div>`;
+
         try {
-          const payload = await fetchJson(
-            `${API.details}?id=${encodeURIComponent(id)}`
-          );
-
+          const payload = await fetchJson(`${API.details}?id=${encodeURIComponent(id)}`);
           const remoteBenefit = payload?.benefit;
-
-          if (remoteBenefit && localBenefit) {
-            renderDetailModal({
-              ...localBenefit,
-              ...remoteBenefit,
-              raw: {
-                ...(localBenefit.raw || {}),
-                ...(remoteBenefit.raw || {}),
-              },
-            });
-            return;
-          }
 
           if (remoteBenefit) {
             renderDetailModal(remoteBenefit);
             return;
           }
+
+          els.modalBody.innerHTML = `
+            <div class="empty-state">
+              Unable to load this benefit right now.
+            </div>
+          `;
         } catch (error) {
           console.warn("[benefits] details route skipped/fallback:", error);
 
-          if (!localBenefit) {
-            els.modalBody.innerHTML = `
-              <div class="empty-state">
-                ${escapeHtml(
-                  error?.message || "Unable to load this benefit right now."
-                )}
-              </div>
-            `;
-          }
+          els.modalBody.innerHTML = `
+            <div class="empty-state">
+              ${escapeHtml(error?.message || "Unable to load this benefit right now.")}
+            </div>
+          `;
         }
       }
 
@@ -2046,13 +2122,16 @@
       els.logoutButton.addEventListener("click", handleLogout);
       els.searchButton.addEventListener("click", loadBenefits);
       els.categorySelect.addEventListener("change", loadBenefits);
+
       els.searchInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
           event.preventDefault();
           loadBenefits();
         }
       });
+
       els.modalCloseButton.addEventListener("click", closeModal);
+
       els.modal.addEventListener("click", (event) => {
         if (event.target === els.modal) closeModal();
       });
@@ -2067,10 +2146,7 @@
           await Promise.allSettled([loadCategories(), loadBenefits()]);
         } catch (error) {
           console.error("[benefits] init error:", error);
-          showBanner(
-            error?.message || "Unable to load your benefits portal.",
-            "error"
-          );
+          showBanner(error?.message || "Unable to load your benefits portal.", "error");
         }
       })();
     </script>

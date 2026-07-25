@@ -5,10 +5,8 @@ import { supabaseAdmin } from "../../lib/supabase-admin.js";
 /**
  * Vercel Environment Variables Needed:
  *
- * ACCESS_API_BASE_URL=https://offer-stage.adcrws.com
+ * ACCESS_API_BASE_URL=https://offer.adcrws.com
  * ACCESS_SEARCH_BENEFITS_ENDPOINT=/v1/offers.json
- * ACCESS_ACCOUNT_NUMBER=498273585881
- * ACCESS_PROGRAM_ID=200783
  * ACCESS_API_TOKEN=your_access_token
  * ACCESS_ANONYMOUS_MEMBER_KEY=anonymous
  *
@@ -18,10 +16,8 @@ import { supabaseAdmin } from "../../lib/supabase-admin.js";
  */
 
 const ACCESS_API_BASE_URL =
-  process.env.ACCESS_API_BASE_URL || "https://offer-stage.adcrws.com";
+  process.env.ACCESS_API_BASE_URL || "https://offer.adcrws.com";
 
-const ACCESS_ACCOUNT_NUMBER = process.env.ACCESS_ACCOUNT_NUMBER || "";
-const ACCESS_PROGRAM_ID = process.env.ACCESS_PROGRAM_ID || "";
 const ACCESS_API_TOKEN = process.env.ACCESS_API_TOKEN || "";
 
 const ACCESS_ANONYMOUS_MEMBER_KEY =
@@ -69,6 +65,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View offer details",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=travel",
+    redeemUrl: "",
     featured: true,
   },
   {
@@ -85,6 +82,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View offer details",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=parks-and-tickets",
+    redeemUrl: "",
     featured: true,
   },
   {
@@ -101,6 +99,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View offer details",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=deals",
+    redeemUrl: "",
     featured: true,
   },
   {
@@ -117,6 +116,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View offer details",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=insurance",
+    redeemUrl: "",
     featured: true,
   },
   {
@@ -133,6 +133,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View coupons",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=grocery-coupons",
+    redeemUrl: "",
     featured: true,
   },
   {
@@ -148,6 +149,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View offer details",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=financial-wellness",
+    redeemUrl: "",
     featured: true,
   },
   {
@@ -164,6 +166,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View offer details",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=health-and-wellness",
+    redeemUrl: "",
     featured: true,
   },
   {
@@ -180,6 +183,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "Show deal in portal",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=restaurants",
+    redeemUrl: "",
     featured: true,
   },
   {
@@ -196,6 +200,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View offer details",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=shopping",
+    redeemUrl: "",
     featured: true,
   },
   {
@@ -212,6 +217,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View offer details",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=fitness",
+    redeemUrl: "",
     featured: true,
   },
   {
@@ -228,6 +234,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View offer details",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=electronics",
+    redeemUrl: "",
     featured: false,
   },
   {
@@ -243,6 +250,7 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View offer details",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=local-deals",
+    redeemUrl: "",
     featured: false,
   },
 ];
@@ -686,6 +694,10 @@ function slugify(value) {
 function pickCategoryName(value) {
   const text = normalizeString(value).toLowerCase();
 
+  if (text.includes("hardware") || text.includes("home") || text.includes("garden")) {
+    return "Home & Garden";
+  }
+
   if (text.includes("park") || text.includes("ticket") || text.includes("attraction")) {
     return "Parks & Tickets";
   }
@@ -718,7 +730,7 @@ function pickCategoryName(value) {
     return "Entertainment";
   }
 
-  if (text.includes("fitness") || text.includes("gym")) {
+  if (text.includes("fitness") || text.includes("gym") || text.includes("studio")) {
     return "Fitness";
   }
 
@@ -738,11 +750,15 @@ function pickCategoryName(value) {
     return "Deals";
   }
 
-  return "Lifestyle Benefits";
+  return value ? normalizeString(value) : "Lifestyle Benefits";
 }
 
 function pickCategoryIcon(value) {
   const text = normalizeString(value).toLowerCase();
+
+  if (text.includes("home") || text.includes("garden") || text.includes("hardware")) {
+    return "🏠";
+  }
 
   if (text.includes("park") || text.includes("ticket") || text.includes("attraction")) {
     return "🎟️";
@@ -776,7 +792,7 @@ function pickCategoryIcon(value) {
     return "🎬";
   }
 
-  if (text.includes("fitness") || text.includes("gym")) {
+  if (text.includes("fitness") || text.includes("gym") || text.includes("studio")) {
     return "💪";
   }
 
@@ -956,22 +972,24 @@ function unwrapJsonApiResource(resource) {
 }
 
 function normalizeCategoryFromOffer(offer) {
-  const categoryCandidates = [
-    offer.category,
-    offer.category_name,
-    offer.categoryName,
-    offer.category_key,
-    offer.categoryKey,
-    offer.categories?.[0]?.name,
-    offer.categories?.[0]?.title,
-    offer.categories?.[0]?.key,
-    offer.type,
-    offer.vertical,
-    offer.department,
-  ];
+  const categories = Array.isArray(offer.categories) ? offer.categories : [];
+  const firstCategory = categories[0] || {};
 
-  const categoryRaw =
-    categoryCandidates.map(normalizeString).find(Boolean) || "Deals";
+  const categoryRaw = normalizeString(
+    firstCategory.category_name ||
+      firstCategory.name ||
+      firstCategory.title ||
+      firstCategory.category_key ||
+      offer.category_name ||
+      offer.categoryName ||
+      offer.category ||
+      offer.category_key ||
+      offer.categoryKey ||
+      offer.type ||
+      offer.vertical ||
+      offer.department ||
+      "Deals"
+  );
 
   const categoryName = pickCategoryName(categoryRaw);
   const category = slugify(categoryRaw || categoryName);
@@ -983,28 +1001,67 @@ function normalizeCategoryFromOffer(offer) {
   };
 }
 
+function cleanDescription(value) {
+  return normalizeString(value)
+    .replace(/\s+/g, " ")
+    .replace(/<[^>]*>/g, "")
+    .trim();
+}
+
+function formatDiscountFromOffer(offer) {
+  const savingsAmount = normalizeString(offer.savings_amount);
+  const offerValue = normalizeString(offer.offer_value);
+  const discountValue = normalizeString(offer.discount_value);
+  const discountType = normalizeString(offer.discount_type).toLowerCase();
+  const title = normalizeString(offer.title);
+
+  if (title) return title;
+
+  if (savingsAmount && savingsAmount !== "0.0" && savingsAmount !== "0") {
+    return savingsAmount.startsWith("$") ? `Save ${savingsAmount}` : `Save $${savingsAmount}`;
+  }
+
+  if (discountValue && discountType === "amount") {
+    return discountValue.startsWith("$") ? `${discountValue} off` : `$${discountValue} off`;
+  }
+
+  if (discountValue && ["percentage", "percent"].includes(discountType)) {
+    return `${discountValue}% off`;
+  }
+
+  if (offerValue && offerValue !== "0" && offerValue !== "0.0") {
+    return offerValue.startsWith("$") ? `Value ${offerValue}` : `Value $${offerValue}`;
+  }
+
+  return "Member savings";
+}
+
 function normalizeBenefit(rawOffer, index = 0) {
   const offer = unwrapJsonApiResource(rawOffer);
 
-  const merchant = isObject(offer.merchant) ? offer.merchant : {};
-  const store = isObject(offer.store) ? offer.store : {};
-  const location = isObject(offer.location) ? offer.location : {};
+  const accessOffer = isObject(offer.offer) ? offer.offer : {};
+  const offerStore = isObject(offer.offer_store) ? offer.offer_store : {};
+  const physicalLocation = isObject(offer.physical_location)
+    ? offer.physical_location
+    : {};
+  const links = isObject(offer.links) ? offer.links : {};
+
+  const categoryInfo = normalizeCategoryFromOffer(offer);
 
   const merchantName = normalizeString(
-    offer.merchantName ||
+    offerStore.name ||
+      offerStore.location_name ||
+      accessOffer.name ||
+      accessOffer.title ||
+      offer.merchantName ||
       offer.merchant_name ||
       offer.merchant ||
       offer.vendor ||
-      offer.store ||
       offer.company ||
       offer.businessName ||
       offer.business_name ||
       offer.name ||
-      merchant.name ||
-      merchant.title ||
-      store.name ||
-      store.title ||
-      `Benefit ${index + 1}`
+      `Access Offer ${index + 1}`
   );
 
   const title = normalizeString(
@@ -1012,114 +1069,159 @@ function normalizeBenefit(rawOffer, index = 0) {
       offer.offerTitle ||
       offer.offer_title ||
       offer.headline ||
-      offer.name ||
-      offer.label ||
-      merchantName
+      accessOffer.title ||
+      accessOffer.name ||
+      merchantName ||
+      `Access Offer ${index + 1}`
   );
-
-  const categoryInfo = normalizeCategoryFromOffer(offer);
 
   const id = normalizeString(
     offer.id ||
-      offer.offerId ||
-      offer.offer_id ||
-      offer.dealId ||
-      offer.deal_id ||
-      offer.merchantId ||
-      offer.merchant_id ||
+      offer.offer_key ||
+      offer.offerKey ||
+      offer.offer_group_key ||
+      offer.offerGroupKey ||
+      offer.location_key ||
+      offer.locationKey ||
+      offerStore.store_key ||
+      offerStore.storeKey ||
+      accessOffer.offer_key ||
       `${slugify(merchantName || title)}-${index + 1}`
   );
 
-  const discount = normalizeString(
-    offer.discount ||
-      offer.discountText ||
-      offer.discount_text ||
-      offer.savings ||
-      offer.offer ||
-      offer.shortDescription ||
-      offer.short_description ||
-      offer.value ||
-      offer.description ||
-      "Member savings"
-  );
+  const discount = formatDiscountFromOffer(offer);
 
-  const description = normalizeString(
-    offer.description ||
+  const description = cleanDescription(
+    accessOffer.description ||
+      offer.description ||
       offer.longDescription ||
       offer.long_description ||
       offer.summary ||
-      offer.terms ||
       offer.details ||
       offer.restrictions ||
-      `Save with ${merchantName || title} through Card Leo Rewards.`
+      `Save with ${merchantName} through Card Leo Rewards.`
+  );
+
+  const terms = cleanDescription(
+    offer.terms_of_use ||
+      offer.terms ||
+      offer.termsAndConditions ||
+      offer.terms_and_conditions ||
+      accessOffer.terms ||
+      ""
   );
 
   const imageUrl = normalizeString(
-    offer.imageUrl ||
+    offer.logo_url ||
+      offer.offer_photo_url ||
+      offer.imageUrl ||
       offer.image_url ||
       offer.logoUrl ||
-      offer.logo_url ||
       offer.logo ||
       offer.thumbnail ||
       offer.thumbnailUrl ||
-      offer.thumbnail_url ||
-      offer.links?.image ||
-      offer.links?.logo ||
+      links.image ||
+      links.logo ||
       ""
   );
 
   const detailsUrl = normalizeString(
-    offer.detailsUrl ||
+    links.show_offer ||
+      links.show_store ||
+      links.show_location ||
+      offer.detailsUrl ||
       offer.details_url ||
       offer.url ||
       offer.offerUrl ||
       offer.offer_url ||
       offer.redemptionUrl ||
       offer.redemption_url ||
-      offer.links?.self ||
       ""
   );
 
-  const locationType = normalizeString(
-    offer.locationType ||
-      offer.location_type ||
-      offer.channel ||
-      offer.offerType ||
-      offer.offer_type ||
-      (detailsUrl ? "online" : "local")
-  );
-
-  const redemptionType = normalizeString(
-    offer.redemptionType ||
-      offer.redemption_type ||
-      offer.redeemType ||
-      offer.redeem_type ||
-      offer.instructions ||
-      "View details"
+  const redeemUrl = normalizeString(
+    links.redeem_offer ||
+      links.instore ||
+      links.instore_print ||
+      offer.redeemUrl ||
+      offer.redeem_url ||
+      offer.redemptionUrl ||
+      offer.redemption_url ||
+      ""
   );
 
   const address = normalizeString(
-    offer.address ||
+    offerStore.street_address ||
+      offerStore.address ||
+      physicalLocation.street_address ||
+      physicalLocation.address ||
+      offer.address ||
       offer.streetAddress ||
       offer.street_address ||
-      location.address ||
-      location.street ||
       ""
   );
 
-  const city = normalizeString(offer.city || location.city || "");
-  const state = normalizeString(offer.state || location.state || "");
+  const city = normalizeString(
+    offerStore.city_locality ||
+      offerStore.city ||
+      physicalLocation.city_locality ||
+      physicalLocation.city ||
+      offer.city ||
+      ""
+  );
+
+  const state = normalizeString(
+    offerStore.state_region ||
+      offerStore.state ||
+      physicalLocation.state_region ||
+      physicalLocation.state ||
+      offer.state ||
+      ""
+  );
 
   const zip = normalizeString(
-    offer.zip ||
-      offer.zipCode ||
-      offer.zip_code ||
-      offer.postalCode ||
+    offerStore.postal_code ||
+      offerStore.zip ||
+      physicalLocation.postal_code ||
+      physicalLocation.zip ||
       offer.postal_code ||
-      location.zip ||
-      location.postal_code ||
+      offer.zip ||
+      offer.zipCode ||
       ""
   );
+
+  const phone = normalizeString(
+    offerStore.phone_number ||
+      offerStore.phone ||
+      physicalLocation.phone_number ||
+      offer.phone ||
+      ""
+  );
+
+  const website = normalizeString(
+    offerStore.web_address ||
+      offerStore.website ||
+      accessOffer.web_address ||
+      accessOffer.website ||
+      ""
+  );
+
+  const isOnlineExclusive =
+    offer.online_exclusive === true ||
+    normalizeString(offer.online_exclusive).toLowerCase() === "true";
+
+  const locationType = isOnlineExclusive ? "online" : "local";
+
+  const redemptionMethods = Array.isArray(offer.redemption_methods)
+    ? offer.redemption_methods
+    : [];
+
+  const redemptionType =
+    redemptionMethods.length > 0
+      ? redemptionMethods.join(", ")
+      : redeemUrl
+        ? "Redeem offer"
+        : "View details";
 
   return {
     id,
@@ -1130,10 +1232,18 @@ function normalizeBenefit(rawOffer, index = 0) {
     categoryIcon: categoryInfo.categoryIcon,
     discount,
     description,
+    terms,
+    instructions:
+      redemptionType === "View details"
+        ? "Open this offer to view redemption instructions."
+        : `Redeem using: ${redemptionType}.`,
     locationType,
     redemptionType,
     imageUrl,
     detailsUrl,
+    redeemUrl,
+    website,
+    phone,
     address,
     city,
     state,

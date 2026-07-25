@@ -946,7 +946,7 @@
                 <input
                   class="ref-input"
                   id="referralLink"
-                  value="https://cardleorewards.com/signup?ref=member"
+                  value="https://www.cardleorewards.com/signup.html?ref=member"
                   readonly
                   aria-label="Your referral link"
                 />
@@ -1403,23 +1403,111 @@
           );
         }
 
+        function getPreferredBaseUrl() {
+          return "https://www.cardleorewards.com";
+        }
+
+        function cleanReferralCode(value) {
+          const raw = String(value || "").trim();
+
+          if (!raw) return "";
+
+          try {
+            const parsed = new URL(raw);
+            const fromUrl =
+              parsed.searchParams.get("ref") ||
+              parsed.searchParams.get("referral") ||
+              parsed.searchParams.get("sponsor") ||
+              "";
+
+            if (fromUrl) {
+              return cleanReferralCode(fromUrl);
+            }
+          } catch {
+            // Not a full URL. Continue cleaning as a code.
+          }
+
+          return raw
+            .replace(/^https?:\/\/[^?]+\/signup(?:\.html)?\?ref=/i, "")
+            .replace(/^https?:\/\/[^?]+\/join(?:\.html)?\?ref=/i, "")
+            .replace(/^ref=/i, "")
+            .replace(/^referral=/i, "")
+            .replace(/^sponsor=/i, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9._-]/g, "");
+        }
+
+        function normalizeReferralUrl(value) {
+          const raw = normalizeText(value);
+
+          if (!raw) return "";
+
+          try {
+            const parsed = new URL(raw);
+            const ref =
+              parsed.searchParams.get("ref") ||
+              parsed.searchParams.get("referral") ||
+              parsed.searchParams.get("sponsor") ||
+              "";
+
+            if (ref) {
+              const cleanRef = cleanReferralCode(ref);
+
+              if (cleanRef) {
+                return `${getPreferredBaseUrl()}/signup.html?ref=${encodeURIComponent(
+                  cleanRef
+                )}`;
+              }
+            }
+          } catch {
+            // Not a full URL. Try regex below.
+          }
+
+          const refMatch = raw.match(/[?&](ref|referral|sponsor)=([^&]+)/i);
+
+          if (refMatch?.[2]) {
+            const cleanRef = cleanReferralCode(
+              decodeURIComponent(refMatch[2])
+            );
+
+            if (cleanRef) {
+              return `${getPreferredBaseUrl()}/signup.html?ref=${encodeURIComponent(
+                cleanRef
+              )}`;
+            }
+          }
+
+          const cleanRef = cleanReferralCode(raw);
+
+          if (!cleanRef) return "";
+
+          return `${getPreferredBaseUrl()}/signup.html?ref=${encodeURIComponent(
+            cleanRef
+          )}`;
+        }
+
+        function getReferralCode(member) {
+          return (
+            cleanReferralCode(member?.referral_code) ||
+            cleanReferralCode(member?.referralCode) ||
+            cleanReferralCode(member?.username) ||
+            cleanReferralCode(normalizeText(member?.email).split("@")[0]) ||
+            "member"
+          );
+        }
+
         function getReferralLink(member) {
           const existing =
             normalizeText(member?.referral_link) ||
             normalizeText(member?.referralLink) ||
             normalizeText(member?.portal_referral_link);
 
-          if (existing) return existing;
+          const fixedExisting = normalizeReferralUrl(existing);
 
-          const code =
-            normalizeText(member?.referral_code) ||
-            normalizeText(member?.referralCode) ||
-            normalizeText(member?.username) ||
-            normalizeText(member?.email).split("@")[0] ||
-            "member";
+          if (fixedExisting) return fixedExisting;
 
-          return `https://cardleorewards.com/signup?ref=${encodeURIComponent(
-            code
+          return `${getPreferredBaseUrl()}/signup.html?ref=${encodeURIComponent(
+            getReferralCode(member)
           )}`;
         }
 
@@ -1497,7 +1585,8 @@
             "Access restaurants, travel, shopping, entertainment, fitness, and local savings.";
 
           els.openBenefitsButton.textContent =
-            card.button_text || (access.enrolled ? "Open My Benefits" : "Activate My Benefits");
+            card.button_text ||
+            (access.enrolled ? "Open My Benefits" : "Activate My Benefits");
 
           if (!access.enabled) {
             setBenefitsStatus(
@@ -1698,8 +1787,12 @@
           renderLeaderboard(payload.leaderboard || []);
           renderRecentReferrals(payload.referrals || payload.recentReferrals || []);
 
-          if (payload.member?.referralLink) {
-            els.referralLink.value = payload.member.referralLink;
+          if (payload.member?.referralLink || payload.member?.referral_link) {
+            els.referralLink.value = getReferralLink({
+              ...(state.member || {}),
+              referralLink: payload.member.referralLink,
+              referral_link: payload.member.referral_link,
+            });
           }
 
           setTowerStatus("Referral tower updated.", "success");

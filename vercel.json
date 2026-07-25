@@ -1,4 +1,55 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2
+  "version": 2,
+  "redirects": [
+    {
+      "source": "/signup",
+      "destination": "/signup.html",
+      "permanent": false
+    },
+    {
+      "source": "/join",
+      "destination": "/signup.html",
+      "permanent": false
+    },
+    {
+      "source": "/member-login",
+      "destination": "/login.html",
+      "permanent": false
+    },
+    {
+      "source": "/portal",
+      "destination": "/portal/index.html",
+      "permanent": false
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/portal/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    }
+  ]
 }

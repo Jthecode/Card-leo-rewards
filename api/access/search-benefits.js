@@ -288,7 +288,6 @@ function safeJsonParse(value, fallback = null) {
 
 function decodeCookieValue(value) {
   const raw = String(value || "");
-
   if (!raw) return "";
 
   try {
@@ -334,7 +333,6 @@ function safeBase64JsonParse(value) {
 
 function parseSessionValue(rawValue) {
   const decoded = decodeCookieValue(rawValue);
-
   if (!decoded) return null;
 
   const parsedJson = safeJsonParse(decoded, null);
@@ -407,24 +405,20 @@ function getSessionIdentity(sessionCookie) {
     value.memberId,
     value.member_id,
     value.id,
-
     member.id,
     member.signupId,
     member.signup_id,
     member.memberId,
     member.member_id,
-
     profile.id,
     profile.signupId,
     profile.signup_id,
     profile.memberId,
     profile.member_id,
-
     userMetadata.signupId,
     userMetadata.signup_id,
     userMetadata.memberId,
     userMetadata.member_id,
-
     user.id,
   ]
     .map(normalizeString)
@@ -433,16 +427,12 @@ function getSessionIdentity(sessionCookie) {
   const portalUserIds = [
     value.portalUserId,
     value.portal_user_id,
-
     member.portalUserId,
     member.portal_user_id,
-
     profile.portalUserId,
     profile.portal_user_id,
-
     user.portalUserId,
     user.portal_user_id,
-
     userMetadata.portalUserId,
     userMetadata.portal_user_id,
   ]
@@ -633,7 +623,6 @@ async function findMemberFromSession(sessionCookie) {
 
 function makeExternalMemberId(member) {
   const raw = `${member?.id || ""}:${member?.email || ""}:card-leo-rewards`;
-
   return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 24);
 }
 
@@ -689,6 +678,54 @@ function slugify(value) {
     .replace(/&/g, "and")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function getString(...values) {
+  for (const value of values) {
+    if (typeof value === "string" || typeof value === "number") {
+      const text = normalizeString(value);
+      if (text && text !== "[object Object]") return text;
+    }
+
+    if (isObject(value)) {
+      const nested =
+        value.url ||
+        value.href ||
+        value.link ||
+        value.value ||
+        value.name ||
+        value.title ||
+        value.text;
+
+      const text = normalizeString(nested);
+      if (text && text !== "[object Object]") return text;
+    }
+  }
+
+  return "";
+}
+
+function getUrl(...values) {
+  for (const value of values) {
+    if (typeof value === "string") {
+      const text = normalizeString(value);
+
+      if (text.startsWith("http://") || text.startsWith("https://")) {
+        return text;
+      }
+    }
+
+    if (isObject(value)) {
+      const nested = value.url || value.href || value.link;
+      const text = normalizeString(nested);
+
+      if (text.startsWith("http://") || text.startsWith("https://")) {
+        return text;
+      }
+    }
+  }
+
+  return "";
 }
 
 function pickCategoryName(value) {
@@ -960,13 +997,15 @@ function unwrapJsonApiResource(resource) {
   const relationships = isObject(resource.relationships)
     ? resource.relationships
     : {};
+  const raw = isObject(resource.raw) ? resource.raw : {};
 
   return {
-    id: resource.id,
-    type: resource.type,
+    ...raw,
+    id: resource.id || raw.id,
+    type: resource.type || raw.type,
     ...attributes,
     relationships,
-    links: resource.links || attributes.links || {},
+    links: resource.links || attributes.links || raw.links || {},
     raw_json_api: resource,
   };
 }
@@ -975,20 +1014,24 @@ function normalizeCategoryFromOffer(offer) {
   const categories = Array.isArray(offer.categories) ? offer.categories : [];
   const firstCategory = categories[0] || {};
 
-  const categoryRaw = normalizeString(
-    firstCategory.category_name ||
-      firstCategory.name ||
-      firstCategory.title ||
-      firstCategory.category_key ||
-      offer.category_name ||
-      offer.categoryName ||
-      offer.category ||
-      offer.category_key ||
-      offer.categoryKey ||
-      offer.type ||
-      offer.vertical ||
-      offer.department ||
-      "Deals"
+  const categoryRaw = getString(
+    firstCategory.category_name,
+    firstCategory.categoryName,
+    firstCategory.name,
+    firstCategory.title,
+    firstCategory.category_key,
+    firstCategory.categoryKey,
+    offer.category_name,
+    offer.categoryName,
+    offer.category,
+    offer.category_key,
+    offer.categoryKey,
+    offer.category_parent_name,
+    offer.category_type,
+    offer.type,
+    offer.vertical,
+    offer.department,
+    "Deals"
   );
 
   const categoryName = pickCategoryName(categoryRaw);
@@ -1003,26 +1046,43 @@ function normalizeCategoryFromOffer(offer) {
 
 function cleanDescription(value) {
   return normalizeString(value)
-    .replace(/\s+/g, " ")
     .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
+function formatDollar(value) {
+  const text = normalizeString(value);
+
+  if (!text || text === "0" || text === "0.0" || text === "0.00") return "";
+
+  if (text.startsWith("$")) return text;
+
+  const number = Number(text);
+
+  if (Number.isFinite(number)) {
+    return `$${number.toFixed(number % 1 === 0 ? 0 : 2)}`;
+  }
+
+  return text;
+}
+
 function formatDiscountFromOffer(offer) {
-  const savingsAmount = normalizeString(offer.savings_amount);
-  const offerValue = normalizeString(offer.offer_value);
-  const discountValue = normalizeString(offer.discount_value);
-  const discountType = normalizeString(offer.discount_type).toLowerCase();
-  const title = normalizeString(offer.title);
+  const title = getString(offer.title);
 
   if (title) return title;
 
-  if (savingsAmount && savingsAmount !== "0.0" && savingsAmount !== "0") {
-    return savingsAmount.startsWith("$") ? `Save ${savingsAmount}` : `Save $${savingsAmount}`;
+  const savingsAmount = getString(offer.savings_amount);
+  const offerValue = getString(offer.offer_value);
+  const discountValue = getString(offer.discount_value);
+  const discountType = getString(offer.discount_type).toLowerCase();
+
+  if (savingsAmount && savingsAmount !== "0.0" && savingsAmount !== "0.00") {
+    return `Save ${formatDollar(savingsAmount)}`;
   }
 
   if (discountValue && discountType === "amount") {
-    return discountValue.startsWith("$") ? `${discountValue} off` : `$${discountValue} off`;
+    return `${formatDollar(discountValue)} off`;
   }
 
   if (discountValue && ["percentage", "percent"].includes(discountType)) {
@@ -1030,7 +1090,7 @@ function formatDiscountFromOffer(offer) {
   }
 
   if (offerValue && offerValue !== "0" && offerValue !== "0.0") {
-    return offerValue.startsWith("$") ? `Value ${offerValue}` : `Value $${offerValue}`;
+    return `Value ${formatDollar(offerValue)}`;
   }
 
   return "Member savings";
@@ -1048,162 +1108,159 @@ function normalizeBenefit(rawOffer, index = 0) {
 
   const categoryInfo = normalizeCategoryFromOffer(offer);
 
-  const merchantName = normalizeString(
-    offerStore.name ||
-      offerStore.location_name ||
-      accessOffer.name ||
-      accessOffer.title ||
-      offer.merchantName ||
-      offer.merchant_name ||
-      offer.merchant ||
-      offer.vendor ||
-      offer.company ||
-      offer.businessName ||
-      offer.business_name ||
-      offer.name ||
-      `Access Offer ${index + 1}`
+  const merchantName = getString(
+    offerStore.name,
+    offerStore.location_name,
+    accessOffer.name,
+    accessOffer.title,
+    offer.merchantName,
+    offer.merchant_name,
+    offer.merchant,
+    offer.vendor,
+    offer.company,
+    offer.businessName,
+    offer.business_name,
+    offer.store_name,
+    offer.name,
+    `Access Offer ${index + 1}`
   );
 
-  const title = normalizeString(
-    offer.title ||
-      offer.offerTitle ||
-      offer.offer_title ||
-      offer.headline ||
-      accessOffer.title ||
-      accessOffer.name ||
-      merchantName ||
-      `Access Offer ${index + 1}`
+  const title = getString(
+    offer.title,
+    offer.offerTitle,
+    offer.offer_title,
+    offer.headline,
+    accessOffer.title,
+    accessOffer.name,
+    merchantName,
+    `Access Offer ${index + 1}`
   );
 
-  const id = normalizeString(
-    offer.id ||
-      offer.offer_key ||
-      offer.offerKey ||
-      offer.offer_group_key ||
-      offer.offerGroupKey ||
-      offer.location_key ||
-      offer.locationKey ||
-      offerStore.store_key ||
-      offerStore.storeKey ||
-      accessOffer.offer_key ||
-      `${slugify(merchantName || title)}-${index + 1}`
+  const id = getString(
+    offer.id,
+    offer.offer_key,
+    offer.offerKey,
+    offer.offer_group_key,
+    offer.offerGroupKey,
+    offer.location_key,
+    offer.locationKey,
+    offerStore.store_key,
+    offerStore.storeKey,
+    accessOffer.offer_key,
+    `${slugify(merchantName || title)}-${index + 1}`
   );
 
   const discount = formatDiscountFromOffer(offer);
 
   const description = cleanDescription(
-    accessOffer.description ||
-      offer.description ||
-      offer.longDescription ||
-      offer.long_description ||
-      offer.summary ||
-      offer.details ||
-      offer.restrictions ||
+    getString(
+      accessOffer.description,
+      offer.offer_description,
+      offer.description,
+      offer.longDescription,
+      offer.long_description,
+      offer.summary,
+      offer.details,
+      offer.restrictions,
       `Save with ${merchantName} through Card Leo Rewards.`
+    )
   );
 
   const terms = cleanDescription(
-    offer.terms_of_use ||
-      offer.terms ||
-      offer.termsAndConditions ||
-      offer.terms_and_conditions ||
-      accessOffer.terms ||
+    getString(
+      offer.terms_of_use,
+      offer.terms,
+      offer.termsAndConditions,
+      offer.terms_and_conditions,
+      accessOffer.terms,
       ""
+    )
   );
 
-  const imageUrl = normalizeString(
-    offer.logo_url ||
-      offer.offer_photo_url ||
-      offer.imageUrl ||
-      offer.image_url ||
-      offer.logoUrl ||
-      offer.logo ||
-      offer.thumbnail ||
-      offer.thumbnailUrl ||
-      links.image ||
-      links.logo ||
-      ""
+  const imageUrl = getUrl(
+    offer.logo_url,
+    offer.offer_photo_url,
+    offer.imageUrl,
+    offer.image_url,
+    offer.logoUrl,
+    offer.logo,
+    offer.thumbnail,
+    offer.thumbnailUrl,
+    links.image,
+    links.logo
   );
 
-  const detailsUrl = normalizeString(
-    links.show_offer ||
-      links.show_store ||
-      links.show_location ||
-      offer.detailsUrl ||
-      offer.details_url ||
-      offer.url ||
-      offer.offerUrl ||
-      offer.offer_url ||
-      offer.redemptionUrl ||
-      offer.redemption_url ||
-      ""
+  const detailsUrl = getUrl(
+    links.show_offer,
+    links.show_store,
+    links.show_location,
+    offer.detailsUrl,
+    offer.details_url,
+    offer.url,
+    offer.offerUrl,
+    offer.offer_url,
+    offer.redemptionUrl,
+    offer.redemption_url
   );
 
-  const redeemUrl = normalizeString(
-    links.redeem_offer ||
-      links.instore ||
-      links.instore_print ||
-      offer.redeemUrl ||
-      offer.redeem_url ||
-      offer.redemptionUrl ||
-      offer.redemption_url ||
-      ""
+  const redeemUrl = getUrl(
+    links.redeem_offer,
+    links.instore,
+    links.instore_print,
+    offer.redeemUrl,
+    offer.redeem_url,
+    offer.redemptionUrl,
+    offer.redemption_url
   );
 
-  const address = normalizeString(
-    offerStore.street_address ||
-      offerStore.address ||
-      physicalLocation.street_address ||
-      physicalLocation.address ||
-      offer.address ||
-      offer.streetAddress ||
-      offer.street_address ||
-      ""
+  const address = getString(
+    offerStore.street_address,
+    offerStore.address,
+    physicalLocation.street_address,
+    physicalLocation.address,
+    offer.address,
+    offer.streetAddress,
+    offer.street_address
   );
 
-  const city = normalizeString(
-    offerStore.city_locality ||
-      offerStore.city ||
-      physicalLocation.city_locality ||
-      physicalLocation.city ||
-      offer.city ||
-      ""
+  const city = getString(
+    offerStore.city_locality,
+    offerStore.city,
+    physicalLocation.city_locality,
+    physicalLocation.city,
+    offer.city
   );
 
-  const state = normalizeString(
-    offerStore.state_region ||
-      offerStore.state ||
-      physicalLocation.state_region ||
-      physicalLocation.state ||
-      offer.state ||
-      ""
+  const state = getString(
+    offerStore.state_region,
+    offerStore.state,
+    physicalLocation.state_region,
+    physicalLocation.state,
+    offer.state
   );
 
-  const zip = normalizeString(
-    offerStore.postal_code ||
-      offerStore.zip ||
-      physicalLocation.postal_code ||
-      physicalLocation.zip ||
-      offer.postal_code ||
-      offer.zip ||
-      offer.zipCode ||
-      ""
+  const zip = getString(
+    offerStore.postal_code,
+    offerStore.zip,
+    physicalLocation.postal_code,
+    physicalLocation.zip,
+    offer.postal_code,
+    offer.zip,
+    offer.zipCode
   );
 
-  const phone = normalizeString(
-    offerStore.phone_number ||
-      offerStore.phone ||
-      physicalLocation.phone_number ||
-      offer.phone ||
-      ""
+  const phone = getString(
+    offerStore.phone_number,
+    offerStore.phone,
+    physicalLocation.phone_number,
+    offer.phone
   );
 
-  const website = normalizeString(
-    offerStore.web_address ||
-      offerStore.website ||
-      accessOffer.web_address ||
-      accessOffer.website ||
-      ""
+  const website = getUrl(
+    offerStore.web_address,
+    offerStore.website,
+    accessOffer.web_address,
+    accessOffer.website
   );
 
   const isOnlineExclusive =

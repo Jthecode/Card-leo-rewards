@@ -1,21 +1,35 @@
 // api/access/search-benefits.js
+import crypto from "crypto";
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 
-const ACCESS_API_BASE_URL = process.env.ACCESS_API_BASE_URL || "";
+/**
+ * Vercel Environment Variables Needed:
+ *
+ * ACCESS_API_BASE_URL=https://offer-stage.adcrws.com
+ * ACCESS_SEARCH_BENEFITS_ENDPOINT=/v1/offers.json
+ * ACCESS_ACCOUNT_NUMBER=498273585881
+ * ACCESS_PROGRAM_ID=200783
+ * ACCESS_API_TOKEN=your_access_token
+ *
+ * Optional:
+ * ACCESS_DEFAULT_POSTAL_CODE=34956
+ * ACCESS_DEFAULT_DISTANCE=50mi
+ */
+
+const ACCESS_API_BASE_URL =
+  process.env.ACCESS_API_BASE_URL || "https://offer-stage.adcrws.com";
+
 const ACCESS_ACCOUNT_NUMBER = process.env.ACCESS_ACCOUNT_NUMBER || "";
 const ACCESS_PROGRAM_ID = process.env.ACCESS_PROGRAM_ID || "";
 const ACCESS_API_TOKEN = process.env.ACCESS_API_TOKEN || "";
-const ACCESS_API_USERNAME = process.env.ACCESS_API_USERNAME || "";
-const ACCESS_API_PASSWORD = process.env.ACCESS_API_PASSWORD || "";
 
-/**
- * Add this later in Vercel once Access Development gives the real endpoint.
- *
- * Example:
- * ACCESS_SEARCH_BENEFITS_ENDPOINT=/v1/offers/search
- */
 const ACCESS_SEARCH_BENEFITS_ENDPOINT =
-  process.env.ACCESS_SEARCH_BENEFITS_ENDPOINT || "/api/offers/search";
+  process.env.ACCESS_SEARCH_BENEFITS_ENDPOINT || "/v1/offers.json";
+
+const ACCESS_DEFAULT_POSTAL_CODE =
+  process.env.ACCESS_DEFAULT_POSTAL_CODE || "34956";
+
+const ACCESS_DEFAULT_DISTANCE = process.env.ACCESS_DEFAULT_DISTANCE || "50mi";
 
 const ACTIVE_STATUSES = new Set(["active", "approved", "paid", "current"]);
 
@@ -38,26 +52,12 @@ const ACTIVE_MEMBERSHIP_STATUSES = new Set([
 
 const DEFAULT_BENEFITS = [
   {
-    id: "cardleo-dining-001",
-    merchantName: "Local Dining Savings",
-    title: "Dining Deals",
-    category: "restaurants",
-    categoryName: "Restaurants",
-    discount: "Up to 30% off",
-    description:
-      "Save at participating restaurants, casual dining spots, cafes, and local food partners.",
-    locationType: "local",
-    redemptionType: "Show deal in portal",
-    imageUrl: "",
-    detailsUrl: "/portal/benefits.html?category=restaurants",
-    featured: true,
-  },
-  {
     id: "cardleo-travel-001",
     merchantName: "Travel Savings",
-    title: "Hotel & Travel Offers",
+    title: "Travel Deals",
     category: "travel",
     categoryName: "Travel",
+    categoryIcon: "✈️",
     discount: "Exclusive member rates",
     description:
       "Access travel savings for hotels, rental cars, attractions, and member-only vacation deals.",
@@ -68,11 +68,124 @@ const DEFAULT_BENEFITS = [
     featured: true,
   },
   {
+    id: "cardleo-parks-001",
+    merchantName: "Parks & Tickets",
+    title: "Theme Park Deals",
+    category: "parks-and-tickets",
+    categoryName: "Parks & Tickets",
+    categoryIcon: "🎟️",
+    discount: "Special member pricing",
+    description:
+      "Find savings on attractions, theme parks, movie tickets, events, and entertainment experiences.",
+    locationType: "online",
+    redemptionType: "View offer details",
+    imageUrl: "",
+    detailsUrl: "/portal/benefits.html?category=parks-and-tickets",
+    featured: true,
+  },
+  {
+    id: "cardleo-deals-001",
+    merchantName: "Member Deals",
+    title: "Everyday Deals",
+    category: "deals",
+    categoryName: "Deals",
+    categoryIcon: "🔥",
+    discount: "Member-only savings",
+    description:
+      "Browse featured discounts, online offers, local savings, and everyday member deals.",
+    locationType: "online",
+    redemptionType: "View offer details",
+    imageUrl: "",
+    detailsUrl: "/portal/benefits.html?category=deals",
+    featured: true,
+  },
+  {
+    id: "cardleo-insurance-001",
+    merchantName: "Insurance Savings",
+    title: "Insurance Benefits",
+    category: "insurance",
+    categoryName: "Insurance",
+    categoryIcon: "🛡️",
+    discount: "Member access",
+    description:
+      "Explore insurance-related benefits and member savings opportunities.",
+    locationType: "online",
+    redemptionType: "View offer details",
+    imageUrl: "",
+    detailsUrl: "/portal/benefits.html?category=insurance",
+    featured: true,
+  },
+  {
+    id: "cardleo-grocery-001",
+    merchantName: "Grocery Coupons",
+    title: "Grocery Savings",
+    category: "grocery-coupons",
+    categoryName: "Grocery Coupons",
+    categoryIcon: "🛒",
+    discount: "Coupons available",
+    description:
+      "Access grocery coupons and household savings through Card Leo Rewards.",
+    locationType: "online",
+    redemptionType: "View coupons",
+    imageUrl: "",
+    detailsUrl: "/portal/benefits.html?category=grocery-coupons",
+    featured: true,
+  },
+  {
+    id: "cardleo-financial-001",
+    merchantName: "Financial Wellness",
+    title: "Financial Wellness",
+    category: "financial-wellness",
+    categoryName: "Financial Wellness",
+    categoryIcon: "💳",
+    discount: "Member access",
+    description:
+      "Explore financial wellness resources and member benefits.",
+    locationType: "online",
+    redemptionType: "View offer details",
+    imageUrl: "",
+    detailsUrl: "/portal/benefits.html?category=financial-wellness",
+    featured: true,
+  },
+  {
+    id: "cardleo-health-001",
+    merchantName: "Health & Wellness",
+    title: "Health & Wellness",
+    category: "health-and-wellness",
+    categoryName: "Health & Wellness",
+    categoryIcon: "♡",
+    discount: "Member savings",
+    description:
+      "Browse wellness, personal care, health-related savings, and lifestyle support offers.",
+    locationType: "online",
+    redemptionType: "View offer details",
+    imageUrl: "",
+    detailsUrl: "/portal/benefits.html?category=health-and-wellness",
+    featured: true,
+  },
+  {
+    id: "cardleo-dining-001",
+    merchantName: "Local Dining Savings",
+    title: "Dining Deals",
+    category: "restaurants",
+    categoryName: "Restaurants",
+    categoryIcon: "🍽️",
+    discount: "Up to 30% off",
+    description:
+      "Save at participating restaurants, casual dining spots, cafes, and local food partners.",
+    locationType: "local",
+    redemptionType: "Show deal in portal",
+    imageUrl: "",
+    detailsUrl: "/portal/benefits.html?category=restaurants",
+    featured: true,
+  },
+  {
     id: "cardleo-shopping-001",
     merchantName: "Retail Rewards",
     title: "Shopping Discounts",
     category: "shopping",
     categoryName: "Shopping",
+    categoryIcon: "🛍️",
     discount: "Member-only savings",
     description:
       "Browse online and retail shopping offers across clothing, accessories, home, and everyday purchases.",
@@ -83,26 +196,12 @@ const DEFAULT_BENEFITS = [
     featured: true,
   },
   {
-    id: "cardleo-entertainment-001",
-    merchantName: "Entertainment Access",
-    title: "Events & Attractions",
-    category: "entertainment",
-    categoryName: "Entertainment",
-    discount: "Special member pricing",
-    description:
-      "Find savings for movies, events, activities, attractions, and entertainment experiences.",
-    locationType: "online",
-    redemptionType: "View offer details",
-    imageUrl: "",
-    detailsUrl: "/portal/benefits.html?category=entertainment",
-    featured: true,
-  },
-  {
     id: "cardleo-fitness-001",
     merchantName: "Fitness & Wellness",
     title: "Fitness Benefits",
     category: "fitness",
     categoryName: "Fitness",
+    categoryIcon: "💪",
     discount: "Member savings",
     description:
       "Explore gyms, active lifestyle deals, wellness services, and fitness-related discounts.",
@@ -118,6 +217,7 @@ const DEFAULT_BENEFITS = [
     title: "Tech & Electronics",
     category: "electronics",
     categoryName: "Electronics",
+    categoryIcon: "📱",
     discount: "Exclusive offers",
     description:
       "Save on electronics, devices, accessories, and technology-related member offers.",
@@ -125,6 +225,22 @@ const DEFAULT_BENEFITS = [
     redemptionType: "View offer details",
     imageUrl: "",
     detailsUrl: "/portal/benefits.html?category=electronics",
+    featured: false,
+  },
+  {
+    id: "cardleo-local-001",
+    merchantName: "Local Deals",
+    title: "Local Member Savings",
+    category: "local-deals",
+    categoryName: "Local Deals",
+    categoryIcon: "📍",
+    discount: "Nearby offers",
+    description:
+      "Find local deals and participating businesses near your area.",
+    locationType: "local",
+    redemptionType: "View offer details",
+    imageUrl: "",
+    detailsUrl: "/portal/benefits.html?category=local-deals",
     featured: false,
   },
 ];
@@ -503,39 +619,28 @@ async function findMemberFromSession(sessionCookie) {
   };
 }
 
-function hasRealAccessPassword() {
-  const password = normalizeString(ACCESS_API_PASSWORD).toLowerCase();
+function makeExternalMemberId(member) {
+  const raw = `${member?.id || ""}:${member?.email || ""}:card-leo-rewards`;
 
-  if (!password) return false;
-  if (password.includes("your_access_password")) return false;
-  if (password.includes("your_access_passwor")) return false;
+  return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 24);
+}
 
-  return true;
+function getAccessMemberKey(member) {
+  return (
+    normalizeString(member?.access_member_id) ||
+    normalizeString(member?.portal_user_id) ||
+    makeExternalMemberId(member)
+  );
 }
 
 function buildAccessHeaders() {
   const headers = {
     Accept: "application/json",
     "Content-Type": "application/json",
-    "X-Account-Number": ACCESS_ACCOUNT_NUMBER,
-    "X-Program-ID": ACCESS_PROGRAM_ID,
-    "X-Program-Id": ACCESS_PROGRAM_ID,
   };
 
   if (ACCESS_API_TOKEN) {
-    headers.Authorization = `Bearer ${ACCESS_API_TOKEN}`;
-    headers["X-Access-Token"] = ACCESS_API_TOKEN;
-    headers["X-API-Token"] = ACCESS_API_TOKEN;
-    headers.Token = ACCESS_API_TOKEN;
-  }
-
-  if (ACCESS_API_USERNAME && hasRealAccessPassword()) {
-    const basic = Buffer.from(
-      `${ACCESS_API_USERNAME}:${ACCESS_API_PASSWORD}`
-    ).toString("base64");
-
-    headers.Authorization = headers.Authorization || `Basic ${basic}`;
-    headers["X-Access-Username"] = ACCESS_API_USERNAME;
+    headers["Access-Token"] = ACCESS_API_TOKEN;
   }
 
   return headers;
@@ -575,12 +680,28 @@ function slugify(value) {
 function pickCategoryName(value) {
   const text = normalizeString(value).toLowerCase();
 
+  if (text.includes("park") || text.includes("ticket") || text.includes("attraction")) {
+    return "Parks & Tickets";
+  }
+
   if (text.includes("restaurant") || text.includes("dining") || text.includes("food")) {
     return "Restaurants";
   }
 
   if (text.includes("travel") || text.includes("hotel") || text.includes("car")) {
     return "Travel";
+  }
+
+  if (text.includes("grocery") || text.includes("coupon")) {
+    return "Grocery Coupons";
+  }
+
+  if (text.includes("insurance")) {
+    return "Insurance";
+  }
+
+  if (text.includes("financial") || text.includes("finance")) {
+    return "Financial Wellness";
   }
 
   if (text.includes("shopping") || text.includes("retail")) {
@@ -607,11 +728,19 @@ function pickCategoryName(value) {
     return "Local Deals";
   }
 
+  if (text.includes("deal") || text.includes("offer")) {
+    return "Deals";
+  }
+
   return "Lifestyle Benefits";
 }
 
 function pickCategoryIcon(value) {
   const text = normalizeString(value).toLowerCase();
+
+  if (text.includes("park") || text.includes("ticket") || text.includes("attraction")) {
+    return "🎟️";
+  }
 
   if (text.includes("restaurant") || text.includes("dining") || text.includes("food")) {
     return "🍽️";
@@ -621,12 +750,24 @@ function pickCategoryIcon(value) {
     return "✈️";
   }
 
+  if (text.includes("grocery") || text.includes("coupon")) {
+    return "🛒";
+  }
+
+  if (text.includes("insurance")) {
+    return "🛡️";
+  }
+
+  if (text.includes("financial") || text.includes("finance")) {
+    return "💳";
+  }
+
   if (text.includes("shopping") || text.includes("retail")) {
     return "🛍️";
   }
 
   if (text.includes("entertainment") || text.includes("movie") || text.includes("event")) {
-    return "🎟️";
+    return "🎬";
   }
 
   if (text.includes("fitness") || text.includes("gym")) {
@@ -680,11 +821,22 @@ function getSearchParams(req) {
 
   const city = normalizeString(url.searchParams.get("city") || "");
   const state = normalizeString(url.searchParams.get("state") || "");
-  const zip = normalizeString(url.searchParams.get("zip") || "");
+
+  const postalCode = normalizeString(
+    url.searchParams.get("postal_code") ||
+      url.searchParams.get("postalCode") ||
+      url.searchParams.get("zip") ||
+      url.searchParams.get("zipcode") ||
+      ""
+  );
+
+  const distance = normalizeString(url.searchParams.get("distance") || "");
+
   const page = Math.max(1, Number(url.searchParams.get("page") || 1) || 1);
+
   const limit = Math.min(
-    50,
-    Math.max(1, Number(url.searchParams.get("limit") || 12) || 12)
+    100,
+    Math.max(1, Number(url.searchParams.get("limit") || 100) || 100)
   );
 
   return {
@@ -692,7 +844,8 @@ function getSearchParams(req) {
     category,
     city,
     state,
-    zip,
+    postalCode,
+    distance,
     page,
     limit,
   };
@@ -705,7 +858,12 @@ function filterDefaultBenefits(params) {
   let benefits = [...DEFAULT_BENEFITS];
 
   if (category && category !== "all") {
-    benefits = benefits.filter((benefit) => slugify(benefit.category) === category);
+    benefits = benefits.filter((benefit) => {
+      return (
+        slugify(benefit.category) === category ||
+        slugify(benefit.categoryName) === category
+      );
+    });
   }
 
   if (query) {
@@ -772,7 +930,59 @@ function readNestedValue(object, paths) {
   return "";
 }
 
-function normalizeBenefit(offer, index = 0) {
+function unwrapJsonApiResource(resource) {
+  if (!isObject(resource)) return resource;
+
+  const attributes = isObject(resource.attributes) ? resource.attributes : {};
+  const relationships = isObject(resource.relationships)
+    ? resource.relationships
+    : {};
+
+  return {
+    id: resource.id,
+    type: resource.type,
+    ...attributes,
+    relationships,
+    links: resource.links || attributes.links || {},
+    raw_json_api: resource,
+  };
+}
+
+function normalizeCategoryFromOffer(offer) {
+  const categoryCandidates = [
+    offer.category,
+    offer.category_name,
+    offer.categoryName,
+    offer.category_key,
+    offer.categoryKey,
+    offer.categories?.[0]?.name,
+    offer.categories?.[0]?.title,
+    offer.categories?.[0]?.key,
+    offer.type,
+    offer.vertical,
+    offer.department,
+  ];
+
+  const categoryRaw =
+    categoryCandidates.map(normalizeString).find(Boolean) || "Deals";
+
+  const categoryName = pickCategoryName(categoryRaw);
+  const category = slugify(categoryRaw || categoryName);
+
+  return {
+    category,
+    categoryName,
+    categoryIcon: pickCategoryIcon(categoryName),
+  };
+}
+
+function normalizeBenefit(rawOffer, index = 0) {
+  const offer = unwrapJsonApiResource(rawOffer);
+
+  const merchant = isObject(offer.merchant) ? offer.merchant : {};
+  const store = isObject(offer.store) ? offer.store : {};
+  const location = isObject(offer.location) ? offer.location : {};
+
   const merchantName = normalizeString(
     offer.merchantName ||
       offer.merchant_name ||
@@ -783,6 +993,10 @@ function normalizeBenefit(offer, index = 0) {
       offer.businessName ||
       offer.business_name ||
       offer.name ||
+      merchant.name ||
+      merchant.title ||
+      store.name ||
+      store.title ||
       `Benefit ${index + 1}`
   );
 
@@ -792,21 +1006,11 @@ function normalizeBenefit(offer, index = 0) {
       offer.offer_title ||
       offer.headline ||
       offer.name ||
+      offer.label ||
       merchantName
   );
 
-  const categoryRaw = normalizeString(
-    offer.category ||
-      offer.categoryName ||
-      offer.category_name ||
-      offer.type ||
-      offer.vertical ||
-      offer.department ||
-      ""
-  );
-
-  const categoryName = pickCategoryName(categoryRaw || title || merchantName);
-  const category = slugify(categoryRaw || categoryName);
+  const categoryInfo = normalizeCategoryFromOffer(offer);
 
   const id = normalizeString(
     offer.id ||
@@ -827,6 +1031,8 @@ function normalizeBenefit(offer, index = 0) {
       offer.offer ||
       offer.shortDescription ||
       offer.short_description ||
+      offer.value ||
+      offer.description ||
       "Member savings"
   );
 
@@ -837,6 +1043,7 @@ function normalizeBenefit(offer, index = 0) {
       offer.summary ||
       offer.terms ||
       offer.details ||
+      offer.restrictions ||
       `Save with ${merchantName || title} through Card Leo Rewards.`
   );
 
@@ -845,9 +1052,12 @@ function normalizeBenefit(offer, index = 0) {
       offer.image_url ||
       offer.logoUrl ||
       offer.logo_url ||
+      offer.logo ||
       offer.thumbnail ||
       offer.thumbnailUrl ||
       offer.thumbnail_url ||
+      offer.links?.image ||
+      offer.links?.logo ||
       ""
   );
 
@@ -859,6 +1069,7 @@ function normalizeBenefit(offer, index = 0) {
       offer.offer_url ||
       offer.redemptionUrl ||
       offer.redemption_url ||
+      offer.links?.self ||
       ""
   );
 
@@ -884,19 +1095,22 @@ function normalizeBenefit(offer, index = 0) {
     offer.address ||
       offer.streetAddress ||
       offer.street_address ||
-      offer.location?.address ||
+      location.address ||
+      location.street ||
       ""
   );
 
-  const city = normalizeString(offer.city || offer.location?.city || "");
-  const state = normalizeString(offer.state || offer.location?.state || "");
+  const city = normalizeString(offer.city || location.city || "");
+  const state = normalizeString(offer.state || location.state || "");
+
   const zip = normalizeString(
     offer.zip ||
       offer.zipCode ||
       offer.zip_code ||
       offer.postalCode ||
       offer.postal_code ||
-      offer.location?.zip ||
+      location.zip ||
+      location.postal_code ||
       ""
   );
 
@@ -904,9 +1118,9 @@ function normalizeBenefit(offer, index = 0) {
     id,
     merchantName,
     title,
-    category,
-    categoryName,
-    categoryIcon: pickCategoryIcon(categoryName),
+    category: categoryInfo.category,
+    categoryName: categoryInfo.categoryName,
+    categoryIcon: categoryInfo.categoryIcon,
     discount,
     description,
     locationType,
@@ -918,24 +1132,20 @@ function normalizeBenefit(offer, index = 0) {
     state,
     zip,
     featured: Boolean(offer.featured || index < 6),
-    raw: offer,
+    raw: rawOffer,
   };
 }
 
 function normalizeAccessBenefits(accessResult) {
   const offers = readNestedArray(accessResult, [
+    "data",
     "offers",
     "benefits",
     "deals",
     "items",
     "results",
-    "data.offers",
-    "data.benefits",
-    "data.deals",
-    "data.items",
-    "data.results",
-    "data",
     "response.offers",
+    "response.data",
     "response.data.offers",
     "response.results",
   ]);
@@ -950,6 +1160,9 @@ function normalizeAccessBenefits(accessResult) {
 function getTotalFromAccess(accessResult, fallbackCount) {
   const value = Number(
     readNestedValue(accessResult, [
+      "meta.total",
+      "meta.total_count",
+      "meta.count",
       "total",
       "totalCount",
       "total_count",
@@ -971,81 +1184,45 @@ function getTotalFromAccess(accessResult, fallbackCount) {
 function buildSearchQueryParams(params, member) {
   const search = new URLSearchParams();
 
-  search.set("accountNumber", ACCESS_ACCOUNT_NUMBER);
-  search.set("programId", ACCESS_PROGRAM_ID);
-  search.set("account_number", ACCESS_ACCOUNT_NUMBER);
-  search.set("program_id", ACCESS_PROGRAM_ID);
+  const memberKey = getAccessMemberKey(member);
 
-  if (params.q) search.set("q", params.q);
-  if (params.q) search.set("query", params.q);
-  if (params.category && params.category !== "all") {
-    search.set("category", params.category);
-    search.set("category_slug", params.category);
+  search.set("member_key", memberKey);
+  search.set("page", String(params.page));
+  search.set("per_page", String(params.limit));
+
+  const postalCode =
+    params.postalCode ||
+    normalizeString(member?.zip) ||
+    normalizeString(member?.postal_code) ||
+    ACCESS_DEFAULT_POSTAL_CODE;
+
+  const distance = params.distance || ACCESS_DEFAULT_DISTANCE;
+
+  if (postalCode) search.set("postal_code", postalCode);
+  if (distance) search.set("distance", distance);
+
+  if (params.q) {
+    search.set("search", params.q);
+    search.set("q", params.q);
   }
 
-  if (params.city || member?.city) search.set("city", params.city || member.city);
-  if (params.state || member?.state) search.set("state", params.state || member.state);
-  if (params.zip) search.set("zip", params.zip);
-
-  search.set("page", String(params.page));
-  search.set("limit", String(params.limit));
+  if (params.category && params.category !== "all") {
+    search.set("category", params.category);
+    search.set("category_key", params.category);
+  }
 
   return search;
 }
 
-function buildSearchPayload(params, member) {
-  return {
-    accountNumber: ACCESS_ACCOUNT_NUMBER,
-    account_number: ACCESS_ACCOUNT_NUMBER,
-    programId: ACCESS_PROGRAM_ID,
-    program_id: ACCESS_PROGRAM_ID,
-
-    q: params.q,
-    query: params.q,
-    search: params.q,
-
-    category: params.category,
-    category_slug: params.category,
-
-    city: params.city || member?.city || "",
-    state: params.state || member?.state || "",
-    zip: params.zip || "",
-
-    page: params.page,
-    limit: params.limit,
-
-    member: {
-      id: member?.id || "",
-      email: member?.email || "",
-      firstName: member?.first_name || "",
-      lastName: member?.last_name || "",
-      accessMemberId: member?.access_member_id || "",
-    },
-  };
-}
-
 async function callAccessSearchBenefits(params, member) {
-  if (!ACCESS_API_BASE_URL || !ACCESS_ACCOUNT_NUMBER || !ACCESS_PROGRAM_ID) {
+  if (!ACCESS_API_BASE_URL || !ACCESS_API_TOKEN) {
     const fallback = filterDefaultBenefits(params);
 
     return {
       ok: false,
       status: 500,
       message:
-        "Access API is not fully configured. Showing Card Leo default benefit examples.",
-      ...fallback,
-      access_result: null,
-    };
-  }
-
-  if (!ACCESS_API_TOKEN && (!ACCESS_API_USERNAME || !hasRealAccessPassword())) {
-    const fallback = filterDefaultBenefits(params);
-
-    return {
-      ok: false,
-      status: 500,
-      message:
-        "Access API authentication is missing. Showing Card Leo default benefit examples.",
+        "Access Offers API is not fully configured. Showing Card Leo default benefit examples.",
       ...fallback,
       access_result: null,
     };
@@ -1073,7 +1250,7 @@ async function callAccessSearchBenefits(params, member) {
       status: 502,
       message:
         error?.message ||
-        "Unable to connect to Access Development search API. Showing Card Leo default benefit examples.",
+        "Unable to connect to Access Offers API. Showing Card Leo default benefit examples.",
       ...fallback,
       access_result: null,
       access_url: url,
@@ -1083,64 +1260,19 @@ async function callAccessSearchBenefits(params, member) {
   if (!response.ok) {
     const fallback = filterDefaultBenefits(params);
 
-    /**
-     * Some Access APIs use POST instead of GET for search.
-     * If GET fails, try POST once before falling back.
-     */
-    try {
-      const postResponse = await fetch(baseUrl, {
-        method: "POST",
-        headers: buildAccessHeaders(),
-        body: JSON.stringify(buildSearchPayload(params, member)),
-      });
-
-      const postResult = await parseAccessResponse(postResponse);
-
-      if (postResponse.ok) {
-        const postBenefits = normalizeAccessBenefits(postResult);
-
-        if (postBenefits.length) {
-          return {
-            ok: true,
-            status: postResponse.status,
-            message: "Benefits loaded.",
-            benefits: postBenefits,
-            total: getTotalFromAccess(postResult, postBenefits.length),
-            page: params.page,
-            limit: params.limit,
-            hasMore: postBenefits.length >= params.limit,
-            access_result: postResult,
-            access_url: baseUrl,
-          };
-        }
-      }
-
-      return {
-        ok: false,
-        status: postResponse.status,
-        message:
-          postResult?.message ||
-          postResult?.error ||
-          accessResult?.message ||
-          accessResult?.error ||
-          `Access benefits search failed with status ${response.status}. Showing Card Leo default benefit examples.`,
-        ...fallback,
-        access_result: postResult,
-        access_url: baseUrl,
-      };
-    } catch {
-      return {
-        ok: false,
-        status: response.status,
-        message:
-          accessResult?.message ||
-          accessResult?.error ||
-          `Access benefits search failed with status ${response.status}. Showing Card Leo default benefit examples.`,
-        ...fallback,
-        access_result: accessResult,
-        access_url: url,
-      };
-    }
+    return {
+      ok: false,
+      status: response.status,
+      message:
+        accessResult?.errors?.[0]?.detail ||
+        accessResult?.errors?.[0]?.title ||
+        accessResult?.message ||
+        accessResult?.error ||
+        `Access benefits search failed with status ${response.status}. Showing Card Leo default benefit examples.`,
+      ...fallback,
+      access_result: accessResult,
+      access_url: url,
+    };
   }
 
   const benefits = normalizeAccessBenefits(accessResult);
@@ -1152,7 +1284,7 @@ async function callAccessSearchBenefits(params, member) {
       ok: false,
       status: response.status,
       message:
-        "Access benefits response did not include usable offers. Showing Card Leo default benefit examples.",
+        "Access returned no offers for this request. Showing Card Leo default benefit examples.",
       ...fallback,
       access_result: accessResult,
       access_url: url,
@@ -1162,7 +1294,7 @@ async function callAccessSearchBenefits(params, member) {
   return {
     ok: true,
     status: response.status,
-    message: "Benefits loaded.",
+    message: "Benefits loaded from Access Offers API.",
     benefits,
     total: getTotalFromAccess(accessResult, benefits.length),
     page: params.page,

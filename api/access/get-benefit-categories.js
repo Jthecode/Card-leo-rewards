@@ -1,14 +1,21 @@
-// api/access/get-member-benefits.js
-import crypto from "crypto";
+// api/access/get-benefit-categories.js
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 
-const ACCESS_PERKS_URL = process.env.ACCESS_PERKS_URL || "";
+const ACCESS_API_BASE_URL = process.env.ACCESS_API_BASE_URL || "";
 const ACCESS_ACCOUNT_NUMBER = process.env.ACCESS_ACCOUNT_NUMBER || "";
 const ACCESS_PROGRAM_ID = process.env.ACCESS_PROGRAM_ID || "";
-const ACCESS_CUSTOMER_SERVICE_PHONE =
-  process.env.ACCESS_CUSTOMER_SERVICE_PHONE || "";
+const ACCESS_API_TOKEN = process.env.ACCESS_API_TOKEN || "";
+const ACCESS_API_USERNAME = process.env.ACCESS_API_USERNAME || "";
+const ACCESS_API_PASSWORD = process.env.ACCESS_API_PASSWORD || "";
 
-const INTERNAL_BENEFITS_URL = "/portal/benefits.html";
+/**
+ * Add this later in Vercel once Access Development gives the real endpoint.
+ *
+ * Example:
+ * ACCESS_CATEGORIES_ENDPOINT=/v1/categories
+ */
+const ACCESS_CATEGORIES_ENDPOINT =
+  process.env.ACCESS_CATEGORIES_ENDPOINT || "/api/categories";
 
 const ACTIVE_STATUSES = new Set(["active", "approved", "paid", "current"]);
 
@@ -28,6 +35,73 @@ const ACTIVE_MEMBERSHIP_STATUSES = new Set([
   "approved",
   "current",
 ]);
+
+const DEFAULT_CATEGORIES = [
+  {
+    id: "restaurants",
+    name: "Restaurants",
+    slug: "restaurants",
+    description: "Dining deals, local restaurants, fast casual, and national food savings.",
+    icon: "🍽️",
+    featured: true,
+  },
+  {
+    id: "travel",
+    name: "Travel",
+    slug: "travel",
+    description: "Hotels, rental cars, vacation savings, and travel-related discounts.",
+    icon: "✈️",
+    featured: true,
+  },
+  {
+    id: "shopping",
+    name: "Shopping",
+    slug: "shopping",
+    description: "Retail savings, online shopping deals, clothing, and everyday purchases.",
+    icon: "🛍️",
+    featured: true,
+  },
+  {
+    id: "entertainment",
+    name: "Entertainment",
+    slug: "entertainment",
+    description: "Movies, attractions, events, activities, and entertainment offers.",
+    icon: "🎟️",
+    featured: true,
+  },
+  {
+    id: "fitness",
+    name: "Fitness",
+    slug: "fitness",
+    description: "Gyms, wellness, fitness services, and active lifestyle savings.",
+    icon: "💪",
+    featured: true,
+  },
+  {
+    id: "health-wellness",
+    name: "Health & Wellness",
+    slug: "health-wellness",
+    description: "Wellness, personal care, health-related savings, and lifestyle support.",
+    icon: "♡",
+    featured: false,
+  },
+  {
+    id: "electronics",
+    name: "Electronics",
+    slug: "electronics",
+    description: "Technology, devices, accessories, and electronics savings.",
+    icon: "📱",
+    featured: false,
+  },
+  {
+    id: "local-deals",
+    name: "Local Deals",
+    slug: "local-deals",
+    description: "Nearby offers based on member location and local savings.",
+    icon: "📍",
+    featured: false,
+  },
+];
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
@@ -253,25 +327,6 @@ function hasPortalAccessForMember(member) {
   );
 }
 
-function getFullName(member) {
-  const fullName = normalizeString(member?.full_name);
-
-  if (fullName) return fullName;
-
-  return (
-    [member?.first_name, member?.last_name]
-      .map(normalizeString)
-      .filter(Boolean)
-      .join(" ") || "Card Leo Member"
-  );
-}
-
-function makeExternalMemberId(member) {
-  const raw = `${member.id}:${member.email}:card-leo-rewards`;
-
-  return crypto.createHash("sha256").update(raw).digest("hex").slice(0, 24);
-}
-
 function isMissingOptionalColumn(error) {
   const code = String(error?.code || "");
   const message = String(error?.message || "").toLowerCase();
@@ -422,108 +477,284 @@ async function findMemberFromSession(sessionCookie) {
   };
 }
 
-function getEnrollmentStatus(member) {
-  if (member?.access_member_id) {
-    return normalizeStatus(member.access_enrollment_status || "enrolled");
-  }
+function hasRealAccessPassword() {
+  const password = normalizeString(ACCESS_API_PASSWORD).toLowerCase();
 
-  return normalizeStatus(member?.access_enrollment_status || "not_enrolled");
+  if (!password) return false;
+  if (password.includes("your_access_password")) return false;
+  if (password.includes("your_access_passwor")) return false;
+
+  return true;
 }
 
-function sanitizeMember(member) {
-  const accessMemberId =
-    normalizeString(member.access_member_id) || makeExternalMemberId(member);
+function buildAccessHeaders() {
+  const headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "X-Account-Number": ACCESS_ACCOUNT_NUMBER,
+    "X-Program-ID": ACCESS_PROGRAM_ID,
+    "X-Program-Id": ACCESS_PROGRAM_ID,
+  };
+
+  if (ACCESS_API_TOKEN) {
+    headers.Authorization = `Bearer ${ACCESS_API_TOKEN}`;
+    headers["X-Access-Token"] = ACCESS_API_TOKEN;
+    headers["X-API-Token"] = ACCESS_API_TOKEN;
+    headers.Token = ACCESS_API_TOKEN;
+  }
+
+  if (ACCESS_API_USERNAME && hasRealAccessPassword()) {
+    const basic = Buffer.from(
+      `${ACCESS_API_USERNAME}:${ACCESS_API_PASSWORD}`
+    ).toString("base64");
+
+    headers.Authorization = headers.Authorization || `Basic ${basic}`;
+    headers["X-Access-Username"] = ACCESS_API_USERNAME;
+  }
+
+  return headers;
+}
+
+function buildAccessApiUrl(path) {
+  const base = normalizeString(ACCESS_API_BASE_URL).replace(/\/+$/, "");
+  const cleanPath = normalizeString(path).startsWith("/")
+    ? normalizeString(path)
+    : `/${normalizeString(path)}`;
+
+  return `${base}${cleanPath}`;
+}
+
+async function parseAccessResponse(response) {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return response.json().catch(() => ({}));
+  }
+
+  const text = await response.text().catch(() => "");
 
   return {
-    id: member.id,
-    email: member.email,
-    firstName: member.first_name || "",
-    lastName: member.last_name || "",
-    fullName: getFullName(member),
-    phone: member.phone || "",
-    city: member.city || "",
-    state: member.state || "",
-    tier: member.tier || "core",
-    referralCode: member.referral_code || "",
-    status: normalizeStatus(member.status),
-    paymentStatus: normalizeStatus(member.payment_status),
-    membershipStatus: normalizeStatus(member.membership_status),
-    portalAccess: hasPortalAccessForMember(member),
-    accessMemberId,
-    accessEnrollmentStatus: getEnrollmentStatus(member),
-    accessEnrolledAt: member.access_enrolled_at || null,
-    accessLastSyncAt: member.access_last_sync_at || null,
+    raw: text,
   };
 }
 
-function buildBenefitsPayload(member) {
-  const portalAccess = hasPortalAccessForMember(member);
-  const enrollmentStatus = getEnrollmentStatus(member);
-  const accessMemberId =
-    normalizeString(member.access_member_id) || makeExternalMemberId(member);
+function slugify(value) {
+  return normalizeString(value)
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function pickCategoryIcon(nameOrSlug) {
+  const value = normalizeString(nameOrSlug).toLowerCase();
+
+  if (value.includes("restaurant") || value.includes("dining") || value.includes("food")) {
+    return "🍽️";
+  }
+
+  if (value.includes("travel") || value.includes("hotel") || value.includes("car")) {
+    return "✈️";
+  }
+
+  if (value.includes("shopping") || value.includes("retail")) {
+    return "🛍️";
+  }
+
+  if (value.includes("entertainment") || value.includes("movie") || value.includes("event")) {
+    return "🎟️";
+  }
+
+  if (value.includes("fitness") || value.includes("gym")) {
+    return "💪";
+  }
+
+  if (value.includes("health") || value.includes("wellness")) {
+    return "♡";
+  }
+
+  if (value.includes("electronic") || value.includes("tech")) {
+    return "📱";
+  }
+
+  if (value.includes("local") || value.includes("nearby")) {
+    return "📍";
+  }
+
+  return "★";
+}
+
+function readNestedArray(object, paths) {
+  for (const path of paths) {
+    const parts = path.split(".");
+    let current = object;
+
+    for (const part of parts) {
+      current = current?.[part];
+    }
+
+    if (Array.isArray(current)) return current;
+  }
+
+  return [];
+}
+
+function normalizeAccessCategory(category, index = 0) {
+  const name = normalizeString(
+    category.name ||
+      category.categoryName ||
+      category.category_name ||
+      category.title ||
+      category.label ||
+      category.description ||
+      `Category ${index + 1}`
+  );
+
+  const id = normalizeString(
+    category.id ||
+      category.categoryId ||
+      category.category_id ||
+      category.code ||
+      category.value ||
+      slugify(name)
+  );
+
+  const slug = slugify(
+    category.slug ||
+      category.categorySlug ||
+      category.category_slug ||
+      name ||
+      id
+  );
 
   return {
-    success: true,
+    id: id || slug || `category-${index + 1}`,
+    name: name || `Category ${index + 1}`,
+    slug: slug || `category-${index + 1}`,
+    description: normalizeString(
+      category.shortDescription ||
+        category.short_description ||
+        category.description ||
+        category.summary ||
+        `Browse ${name || "member"} savings and discounts.`
+    ),
+    icon: normalizeString(category.icon) || pickCategoryIcon(name || slug),
+    featured: Boolean(category.featured || index < 5),
+    raw: category,
+  };
+}
+
+function normalizeAccessCategories(accessResult) {
+  const categories = readNestedArray(accessResult, [
+    "categories",
+    "data.categories",
+    "data",
+    "items",
+    "results",
+    "response.categories",
+    "response.data.categories",
+  ]);
+
+  if (!categories.length) return [];
+
+  return categories
+    .map((category, index) => normalizeAccessCategory(category, index))
+    .filter((category) => category.name && category.slug);
+}
+
+async function callAccessCategories() {
+  if (!ACCESS_API_BASE_URL || !ACCESS_ACCOUNT_NUMBER || !ACCESS_PROGRAM_ID) {
+    return {
+      ok: false,
+      status: 500,
+      message:
+        "Access API is not fully configured. Using Card Leo default categories.",
+      categories: DEFAULT_CATEGORIES,
+      access_result: null,
+    };
+  }
+
+  if (!ACCESS_API_TOKEN && (!ACCESS_API_USERNAME || !hasRealAccessPassword())) {
+    return {
+      ok: false,
+      status: 500,
+      message:
+        "Access API authentication is missing. Using Card Leo default categories.",
+      categories: DEFAULT_CATEGORIES,
+      access_result: null,
+    };
+  }
+
+  const url = buildAccessApiUrl(ACCESS_CATEGORIES_ENDPOINT);
+
+  let response;
+
+  try {
+    response = await fetch(url, {
+      method: "GET",
+      headers: buildAccessHeaders(),
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      status: 502,
+      message:
+        error?.message ||
+        "Unable to connect to Access Development categories API. Using Card Leo default categories.",
+      categories: DEFAULT_CATEGORIES,
+      access_result: null,
+      access_url: url,
+    };
+  }
+
+  const accessResult = await parseAccessResponse(response);
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      message:
+        accessResult?.message ||
+        accessResult?.error ||
+        `Access categories failed with status ${response.status}. Using Card Leo default categories.`,
+      categories: DEFAULT_CATEGORIES,
+      access_result: accessResult,
+      access_url: url,
+    };
+  }
+
+  const categories = normalizeAccessCategories(accessResult);
+
+  if (!categories.length) {
+    return {
+      ok: false,
+      status: response.status,
+      message:
+        "Access categories response did not include usable categories. Using Card Leo default categories.",
+      categories: DEFAULT_CATEGORIES,
+      access_result: accessResult,
+      access_url: url,
+    };
+  }
+
+  return {
     ok: true,
-    authenticated: true,
+    status: response.status,
+    message: "Benefit categories loaded.",
+    categories,
+    access_result: accessResult,
+    access_url: url,
+  };
+}
 
-    member: sanitizeMember(member),
+function getSafeDebugPayload(accessResponse) {
+  if (!accessResponse || !isObject(accessResponse)) return null;
 
-    access: {
-      enabled: portalAccess,
-
-      /*
-        Benefits now live on cardleorewards.com.
-        This route no longer forces members to Access Perks.
-      */
-      internal: true,
-      internal_portal: true,
-      cardleo_hosted: true,
-
-      enrolled: Boolean(member.access_member_id),
-      needs_enrollment: portalAccess && !member.access_member_id,
-      enrollment_status: enrollmentStatus,
-
-      access_member_id: accessMemberId,
-      access_enrolled_at: member.access_enrolled_at || null,
-      access_last_sync_at: member.access_last_sync_at || null,
-
-      benefits_url: INTERNAL_BENEFITS_URL,
-      internal_benefits_url: INTERNAL_BENEFITS_URL,
-      portal_benefits_url: INTERNAL_BENEFITS_URL,
-
-      /*
-        Kept only as backend/debug reference.
-        Do not use this on the portal dashboard button.
-      */
-      access_perks_url: ACCESS_PERKS_URL,
-      customer_service_phone: ACCESS_CUSTOMER_SERVICE_PHONE,
-
-      program_id: ACCESS_PROGRAM_ID,
-      account_number: ACCESS_ACCOUNT_NUMBER,
-    },
-
-    benefits_card: {
-      title: "Card Leo Lifestyle Benefits",
-      subtitle:
-        "Search restaurants, travel, shopping, entertainment, fitness, and local savings inside Card Leo Rewards.",
-      button_text: "Open My Benefits",
-      status_label: "Benefits Active",
-      support_text: ACCESS_CUSTOMER_SERVICE_PHONE
-        ? `Need help? Call ${ACCESS_CUSTOMER_SERVICE_PHONE}.`
-        : "Need help? Contact Card Leo Rewards support.",
-    },
-
-    actions: {
-      benefits_page: INTERNAL_BENEFITS_URL,
-      categories_endpoint: "/api/access/get-benefit-categories",
-      search_endpoint: "/api/access/search-benefits",
-      details_endpoint: "/api/access/get-benefit-details",
-      enroll_endpoint: "/api/access/enroll-member",
-    },
-
-    message:
-      "Benefits are available inside the Card Leo Rewards member portal.",
+  return {
+    ok: accessResponse.ok,
+    status: accessResponse.status,
+    message: accessResponse.message,
+    access_url: accessResponse.access_url || "",
   };
 }
 
@@ -564,7 +795,7 @@ export default async function handler(req, res) {
     const { member, error } = await findMemberFromSession(sessionCookie);
 
     if (error) {
-      console.error("Get member benefits lookup error:", error);
+      console.error("Benefit categories member lookup error:", error);
 
       return sendJson(res, 500, {
         success: false,
@@ -595,16 +826,27 @@ export default async function handler(req, res) {
       });
     }
 
-    return sendJson(res, 200, buildBenefitsPayload(member));
+    const accessResponse = await callAccessCategories();
+
+    return sendJson(res, 200, {
+      success: true,
+      ok: true,
+      authenticated: true,
+      source: accessResponse.ok ? "access-development" : "card-leo-defaults",
+      message: accessResponse.message,
+      categories: accessResponse.categories,
+      count: accessResponse.categories.length,
+      debug: getSafeDebugPayload(accessResponse),
+    });
   } catch (error) {
-    console.error("Card Leo get member benefits error:", error);
+    console.error("Card Leo get benefit categories error:", error);
 
     return sendJson(res, 500, {
       success: false,
       ok: false,
       message:
         error?.message ||
-        "Something went wrong while loading your Card Leo benefits.",
+        "Something went wrong while loading benefit categories.",
     });
   }
 }

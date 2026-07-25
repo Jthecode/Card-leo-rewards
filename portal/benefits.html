@@ -24,8 +24,6 @@
         --portal-bg: #030303;
         --portal-bg-2: #080808;
         --panel: rgba(12, 12, 12, 0.9);
-        --panel-strong: rgba(6, 6, 6, 0.96);
-        --panel-soft: rgba(255, 255, 255, 0.04);
         --line: rgba(231, 182, 79, 0.2);
         --line-strong: rgba(231, 182, 79, 0.34);
         --text: #f8f3e7;
@@ -127,10 +125,6 @@
         box-shadow:
           inset 0 1px 0 rgba(255, 255, 255, 0.45),
           0 10px 30px rgba(231, 182, 79, 0.2);
-      }
-
-      .portal-brand-copy {
-        min-width: 0;
       }
 
       .portal-eyebrow {
@@ -327,14 +321,18 @@
         margin-top: 22px;
       }
 
-      .hero-stat {
+      .hero-stat,
+      .member-item {
         padding: 16px;
         border-radius: var(--radius-md);
         border: 1px solid var(--line);
         background: rgba(255, 255, 255, 0.035);
       }
 
-      .hero-stat-label {
+      .hero-stat-label,
+      .member-item-label,
+      .summary-label,
+      .detail-label {
         color: var(--muted-2);
         font-size: 0.76rem;
         text-transform: uppercase;
@@ -385,21 +383,6 @@
         margin-top: 18px;
       }
 
-      .member-item {
-        padding: 14px;
-        border-radius: var(--radius-md);
-        border: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.035);
-      }
-
-      .member-item-label {
-        color: var(--muted-2);
-        font-size: 0.76rem;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        font-weight: 900;
-      }
-
       .member-item-value {
         margin-top: 8px;
         font-weight: 900;
@@ -437,14 +420,13 @@
 
       .summary-card {
         border-radius: var(--radius-lg);
+        text-align: left;
+        color: var(--text);
       }
 
-      .summary-label {
-        color: var(--muted-2);
-        font-size: 0.76rem;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        font-weight: 900;
+      button.summary-card {
+        width: 100%;
+        border: 1px solid var(--line);
       }
 
       .summary-value {
@@ -740,14 +722,6 @@
         background: rgba(255, 255, 255, 0.035);
       }
 
-      .detail-label {
-        color: var(--muted-2);
-        font-size: 0.76rem;
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        font-weight: 900;
-      }
-
       .detail-value {
         margin-top: 8px;
         color: var(--text);
@@ -862,7 +836,7 @@
         <header class="portal-topbar">
           <div class="portal-brand">
             <div class="portal-brand-mark">CL</div>
-            <div class="portal-brand-copy">
+            <div>
               <p class="portal-eyebrow">Member Portal</p>
               <h1 class="portal-brand-title">Card Leo Rewards</h1>
               <p class="portal-brand-subtitle">
@@ -957,29 +931,29 @@
 
         <section class="section">
           <div class="summary-grid">
-            <article class="panel summary-card">
+            <button class="panel summary-card" type="button" data-quick-category="restaurants">
               <div class="summary-label">Restaurants</div>
               <div class="summary-value">Dining</div>
               <div class="summary-note">Food, local dining, and casual restaurant savings.</div>
-            </article>
+            </button>
 
-            <article class="panel summary-card">
+            <button class="panel summary-card" type="button" data-quick-category="travel">
               <div class="summary-label">Travel</div>
               <div class="summary-value">Trips</div>
               <div class="summary-note">Hotels, rental cars, attractions, and travel deals.</div>
-            </article>
+            </button>
 
-            <article class="panel summary-card">
+            <button class="panel summary-card" type="button" data-quick-category="shopping">
               <div class="summary-label">Shopping</div>
               <div class="summary-value">Retail</div>
               <div class="summary-note">Online stores, lifestyle purchases, and member offers.</div>
-            </article>
+            </button>
 
-            <article class="panel summary-card">
+            <button class="panel summary-card" type="button" data-quick-category="local-deals">
               <div class="summary-label">Local Deals</div>
               <div class="summary-value">Nearby</div>
               <div class="summary-note">Offers based on your area and available partners.</div>
-            </article>
+            </button>
           </div>
         </section>
 
@@ -1071,8 +1045,7 @@
             <article class="panel side-card">
               <h3 class="info-title">Need Help?</h3>
               <p class="info-copy">
-                If a benefit does not load yet, refresh the page and try the search
-                again.
+                If a benefit does not load yet, refresh the page and try the search again.
               </p>
               <ul class="info-list">
                 <li>Restaurant, travel, shopping, entertainment, and local deals.</li>
@@ -1106,26 +1079,233 @@
     </div>
 
     <script>
-      const CATEGORY_QUERY_MAP = {
-        restaurants: "restaurant dining food pizza burger cafe",
-        dining: "restaurant dining food pizza burger cafe",
-        travel: "travel hotel vacation rental car flights",
-        shopping: "shopping retail store clothing shoes",
-        entertainment: "entertainment movie tickets events attractions",
-        fitness: "fitness gym studio workout",
-        wellness: "health wellness spa care",
-        "health-and-wellness": "health wellness spa care",
-        "grocery-coupons": "grocery coupons grocery market",
-        grocery: "grocery coupons grocery market",
-        "parks-and-tickets": "parks tickets attractions theme park",
-        parks: "parks tickets attractions theme park",
-        insurance: "insurance",
-        "financial-wellness": "financial finance wellness credit money",
-        electronics: "electronics tech phone computer",
-        "local-deals": "",
-        local: "",
-        deals: "",
+      const CATEGORY_RULES = {
+        restaurants: {
+          q: "restaurant dining food pizza burger cafe coffee grill kitchen taco bbq",
+          terms: [
+            "restaurant",
+            "dining",
+            "food",
+            "pizza",
+            "burger",
+            "cafe",
+            "coffee",
+            "grill",
+            "kitchen",
+            "taco",
+            "barbecue",
+            "bbq",
+            "sandwich",
+            "subs",
+            "donut",
+            "bakery",
+          ],
+        },
+        dining: {
+          q: "restaurant dining food pizza burger cafe coffee grill kitchen taco bbq",
+          terms: [
+            "restaurant",
+            "dining",
+            "food",
+            "pizza",
+            "burger",
+            "cafe",
+            "coffee",
+            "grill",
+            "kitchen",
+            "taco",
+            "barbecue",
+            "bbq",
+            "sandwich",
+            "subs",
+            "donut",
+            "bakery",
+          ],
+        },
+        travel: {
+          q: "travel hotel vacation rental car flights lodging cruise resort airport",
+          terms: [
+            "travel",
+            "hotel",
+            "vacation",
+            "rental car",
+            "flight",
+            "airport",
+            "resort",
+            "lodging",
+            "motel",
+            "cruise",
+            "airline",
+            "trip",
+          ],
+        },
+        shopping: {
+          q: "shopping retail store clothing shoes apparel fashion outlet boutique",
+          terms: [
+            "shopping",
+            "retail",
+            "store",
+            "clothing",
+            "shoes",
+            "apparel",
+            "fashion",
+            "boutique",
+            "shop",
+            "outlet",
+            "mall",
+            "department",
+          ],
+        },
+        entertainment: {
+          q: "entertainment movie tickets events attractions theater cinema",
+          terms: [
+            "entertainment",
+            "movie",
+            "ticket",
+            "event",
+            "attraction",
+            "theater",
+            "cinema",
+            "show",
+            "museum",
+            "zoo",
+            "aquarium",
+          ],
+        },
+        fitness: {
+          q: "fitness gym studio workout yoga pilates training",
+          terms: [
+            "fitness",
+            "gym",
+            "studio",
+            "workout",
+            "training",
+            "yoga",
+            "pilates",
+          ],
+        },
+        wellness: {
+          q: "health wellness spa care massage dental vision",
+          terms: [
+            "health",
+            "wellness",
+            "spa",
+            "care",
+            "medical",
+            "dental",
+            "vision",
+            "massage",
+          ],
+        },
+        "health-and-wellness": {
+          q: "health wellness spa care massage dental vision",
+          terms: [
+            "health",
+            "wellness",
+            "spa",
+            "care",
+            "medical",
+            "dental",
+            "vision",
+            "massage",
+          ],
+        },
+        "grocery-coupons": {
+          q: "grocery coupons market supermarket food",
+          terms: ["grocery", "coupon", "market", "supermarket", "food"],
+        },
+        grocery: {
+          q: "grocery coupons market supermarket food",
+          terms: ["grocery", "coupon", "market", "supermarket", "food"],
+        },
+        "parks-and-tickets": {
+          q: "parks tickets attractions theme park zoo museum aquarium",
+          terms: [
+            "park",
+            "ticket",
+            "attraction",
+            "theme park",
+            "zoo",
+            "museum",
+            "aquarium",
+          ],
+        },
+        insurance: {
+          q: "insurance",
+          terms: ["insurance"],
+        },
+        "financial-wellness": {
+          q: "financial finance wellness credit money loan bank",
+          terms: ["financial", "finance", "credit", "money", "loan", "bank"],
+        },
+        electronics: {
+          q: "electronics tech phone computer device wireless",
+          terms: ["electronics", "tech", "phone", "computer", "device", "wireless"],
+        },
+        "local-deals": {
+          q: "",
+          terms: [],
+        },
+        local: {
+          q: "",
+          terms: [],
+        },
+        deals: {
+          q: "",
+          terms: [],
+        },
       };
+
+      const FALLBACK_CATEGORIES = [
+        {
+          slug: "restaurants",
+          name: "Restaurants",
+          icon: "🍽️",
+          description: "Dining, food, coffee, pizza, and local restaurant savings.",
+        },
+        {
+          slug: "travel",
+          name: "Travel",
+          icon: "✈️",
+          description: "Hotels, trips, rental cars, vacations, and travel deals.",
+        },
+        {
+          slug: "shopping",
+          name: "Shopping",
+          icon: "🛍️",
+          description: "Retail, clothing, shoes, online stores, and shopping discounts.",
+        },
+        {
+          slug: "entertainment",
+          name: "Entertainment",
+          icon: "🎬",
+          description: "Movies, tickets, attractions, events, and experiences.",
+        },
+        {
+          slug: "fitness",
+          name: "Fitness",
+          icon: "💪",
+          description: "Gyms, studios, workouts, yoga, pilates, and training.",
+        },
+        {
+          slug: "health-and-wellness",
+          name: "Health & Wellness",
+          icon: "♡",
+          description: "Spa, wellness, care, massage, dental, and vision offers.",
+        },
+        {
+          slug: "grocery-coupons",
+          name: "Grocery Coupons",
+          icon: "🛒",
+          description: "Grocery, coupons, markets, and household savings.",
+        },
+        {
+          slug: "local-deals",
+          name: "Local Deals",
+          icon: "📍",
+          description: "Nearby offers based on your location.",
+        },
+      ];
 
       const state = {
         member: null,
@@ -1148,15 +1328,12 @@
       const els = {
         statusBanner: document.getElementById("statusBanner"),
         logoutButton: document.getElementById("logoutButton"),
-
         heroAccessBadge: document.getElementById("heroAccessBadge"),
         heroStatusBadge: document.getElementById("heroStatusBadge"),
         heroBenefitCountBadge: document.getElementById("heroBenefitCountBadge"),
-        heroCopy: document.getElementById("heroCopy"),
         heroTotalBenefits: document.getElementById("heroTotalBenefits"),
         heroCategoryCount: document.getElementById("heroCategoryCount"),
         heroPortalStatus: document.getElementById("heroPortalStatus"),
-
         memberAvatar: document.getElementById("memberAvatar"),
         memberName: document.getElementById("memberName"),
         memberEmail: document.getElementById("memberEmail"),
@@ -1164,14 +1341,12 @@
         memberBenefitTier: document.getElementById("memberBenefitTier"),
         memberSource: document.getElementById("memberSource"),
         memberId: document.getElementById("memberId"),
-
         searchInput: document.getElementById("searchInput"),
         categorySelect: document.getElementById("categorySelect"),
         searchButton: document.getElementById("searchButton"),
         categoryGrid: document.getElementById("categoryGrid"),
         benefitsGrid: document.getElementById("benefitsGrid"),
         benefitsSubtitle: document.getElementById("benefitsSubtitle"),
-
         modal: document.getElementById("benefitModal"),
         modalCloseButton: document.getElementById("modalCloseButton"),
         modalCategory: document.getElementById("modalCategory"),
@@ -1201,13 +1376,21 @@
           .replace(/^-+|-+$/g, "");
       }
 
-      function unwrap(payload) {
-        if (!payload || typeof payload !== "object") return {};
-        return payload.data && typeof payload.data === "object" ? payload.data : payload;
+      function titleCase(value) {
+        return String(value || "")
+          .replace(/[_-]+/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .replace(/\b\w/g, (char) => char.toUpperCase());
       }
 
       function isObject(value) {
         return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+      }
+
+      function unwrap(payload) {
+        if (!payload || typeof payload !== "object") return {};
+        return payload.data && typeof payload.data === "object" ? payload.data : payload;
       }
 
       function getString(...values) {
@@ -1239,56 +1422,23 @@
         for (const value of values) {
           if (typeof value === "string") {
             const text = normalizeText(value);
-            if (text.startsWith("http://") || text.startsWith("https://")) return text;
+
+            if (text.startsWith("http://") || text.startsWith("https://")) {
+              return text;
+            }
           }
 
           if (isObject(value)) {
             const nested = value.url || value.href || value.link;
             const text = normalizeText(nested);
-            if (text.startsWith("http://") || text.startsWith("https://")) return text;
+
+            if (text.startsWith("http://") || text.startsWith("https://")) {
+              return text;
+            }
           }
         }
 
         return "";
-      }
-
-      function titleCase(value) {
-        return String(value || "")
-          .replace(/[_-]+/g, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .replace(/\b\w/g, (char) => char.toUpperCase());
-      }
-
-      function getInitials(name) {
-        const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
-        if (!parts.length) return "CL";
-        return parts.slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join("");
-      }
-
-      function getBenefitRaw(benefit) {
-        return isObject(benefit?.raw) ? benefit.raw : {};
-      }
-
-      function getBenefitLinks(benefit) {
-        const raw = getBenefitRaw(benefit);
-        if (isObject(benefit?.links)) return benefit.links;
-        if (isObject(raw.links)) return raw.links;
-        return {};
-      }
-
-      function getBenefitOffer(benefit) {
-        const raw = getBenefitRaw(benefit);
-        if (isObject(benefit?.offer)) return benefit.offer;
-        if (isObject(raw.offer)) return raw.offer;
-        return {};
-      }
-
-      function getBenefitStore(benefit) {
-        const raw = getBenefitRaw(benefit);
-        if (isObject(benefit?.offer_store)) return benefit.offer_store;
-        if (isObject(raw.offer_store)) return raw.offer_store;
-        return {};
       }
 
       function cleanDescription(value) {
@@ -1298,9 +1448,52 @@
           .trim();
       }
 
+      function getInitials(name) {
+        const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+
+        if (!parts.length) return "CL";
+
+        return parts
+          .slice(0, 2)
+          .map((part) => part.charAt(0).toUpperCase())
+          .join("");
+      }
+
+      function getBenefitRaw(benefit) {
+        return isObject(benefit?.raw) ? benefit.raw : {};
+      }
+
+      function getBenefitLinks(benefit) {
+        const raw = getBenefitRaw(benefit);
+
+        if (isObject(benefit?.links)) return benefit.links;
+        if (isObject(raw.links)) return raw.links;
+
+        return {};
+      }
+
+      function getBenefitOffer(benefit) {
+        const raw = getBenefitRaw(benefit);
+
+        if (isObject(benefit?.offer)) return benefit.offer;
+        if (isObject(raw.offer)) return raw.offer;
+
+        return {};
+      }
+
+      function getBenefitStore(benefit) {
+        const raw = getBenefitRaw(benefit);
+
+        if (isObject(benefit?.offer_store)) return benefit.offer_store;
+        if (isObject(raw.offer_store)) return raw.offer_store;
+
+        return {};
+      }
+
       function getDisplayTitle(benefit) {
         const raw = getBenefitRaw(benefit);
         const offer = getBenefitOffer(benefit);
+        const store = getBenefitStore(benefit);
 
         return getString(
           benefit?.title,
@@ -1309,8 +1502,8 @@
           raw.headline,
           offer.title,
           offer.name,
+          store.name,
           benefit?.merchantName,
-          raw.offer_store?.name,
           "Member Benefit"
         );
       }
@@ -1412,6 +1605,10 @@
         );
       }
 
+      function getBestClaimUrl(benefit) {
+        return getDisplayRedeemUrl(benefit) || getDisplayDetailsUrl(benefit);
+      }
+
       function getDisplayWebsite(benefit) {
         const raw = getBenefitRaw(benefit);
         const offer = getBenefitOffer(benefit);
@@ -1492,6 +1689,50 @@
         );
       }
 
+      function getSearchText(benefit) {
+        const raw = getBenefitRaw(benefit);
+        const store = getBenefitStore(benefit);
+        const offer = getBenefitOffer(benefit);
+
+        return [
+          getDisplayTitle(benefit),
+          getDisplayMerchant(benefit),
+          getDisplayDescription(benefit),
+          getDisplayDiscount(benefit),
+          benefit?.category,
+          benefit?.categoryName,
+          raw.title,
+          raw.description,
+          raw.offer_description,
+          raw.category_name,
+          raw.category,
+          store.name,
+          store.location_name,
+          offer.name,
+          offer.description,
+        ]
+          .join(" ")
+          .toLowerCase();
+      }
+
+      function shouldKeepForCategory(benefit, selectedCategory) {
+        const slug = slugify(selectedCategory);
+
+        if (!slug || slug === "all" || slug === "deals" || slug === "local-deals") {
+          return true;
+        }
+
+        const rule = CATEGORY_RULES[slug];
+
+        if (!rule || !Array.isArray(rule.terms) || !rule.terms.length) {
+          return true;
+        }
+
+        const text = getSearchText(benefit);
+
+        return rule.terms.some((term) => text.includes(term.toLowerCase()));
+      }
+
       function getFrontendDedupeKey(benefit) {
         const raw = getBenefitRaw(benefit);
         const store = getBenefitStore(benefit);
@@ -1523,12 +1764,42 @@
 
         for (const benefit of benefits || []) {
           const key = getFrontendDedupeKey(benefit);
+
           if (!key || seen.has(key)) continue;
+
           seen.add(key);
           unique.push(benefit);
         }
 
         return unique;
+      }
+
+      function mergeCategories(apiCategories) {
+        const seen = new Set();
+        const merged = [];
+
+        for (const category of FALLBACK_CATEGORIES) {
+          seen.add(category.slug);
+          merged.push(category);
+        }
+
+        for (const category of apiCategories || []) {
+          const slug = category.slug || category.id || slugify(category.name);
+          if (!slug || seen.has(slug)) continue;
+
+          seen.add(slug);
+          merged.push({
+            slug,
+            id: category.id || slug,
+            name: category.name || titleCase(slug),
+            icon: category.icon || "★",
+            description:
+              category.description ||
+              `Browse ${category.name || titleCase(slug)} savings and member offers.`,
+          });
+        }
+
+        return merged;
       }
 
       function showBanner(message, type = "") {
@@ -1652,8 +1923,15 @@
         els.heroPortalStatus.textContent = "Active";
       }
 
+      function selectCategory(category) {
+        state.selectedCategory = category || "";
+        els.categorySelect.value = state.selectedCategory;
+        els.searchInput.value = "";
+        loadBenefits();
+      }
+
       function renderCategories(categories) {
-        state.categories = Array.isArray(categories) ? categories : [];
+        state.categories = mergeCategories(categories);
 
         els.categorySelect.innerHTML =
           `<option value="">All Categories</option>` +
@@ -1668,15 +1946,6 @@
             })
             .join("");
 
-        if (!state.categories.length) {
-          els.categoryGrid.innerHTML = `
-            <div class="empty-state">
-              Benefit categories are being connected. You can still search available benefits.
-            </div>
-          `;
-          return;
-        }
-
         els.categoryGrid.innerHTML = state.categories
           .map((category) => {
             const value = category.slug || category.id || slugify(category.name);
@@ -1687,7 +1956,8 @@
                   <div class="category-icon">${escapeHtml(category.icon || "★")}</div>
                   <h3 class="category-title">${escapeHtml(category.name)}</h3>
                   <p class="category-copy">${escapeHtml(
-                    category.description || `Browse ${category.name} savings and member offers.`
+                    category.description ||
+                      `Browse ${category.name} savings and member offers.`
                   )}</p>
                 </button>
               </article>
@@ -1697,17 +1967,28 @@
 
         els.categoryGrid.querySelectorAll("[data-category]").forEach((button) => {
           button.addEventListener("click", () => {
-            state.selectedCategory = button.getAttribute("data-category") || "";
-            els.categorySelect.value = state.selectedCategory;
-            els.searchInput.value = "";
-            loadBenefits();
+            selectCategory(button.getAttribute("data-category") || "");
           });
         });
+
+        document.querySelectorAll("[data-quick-category]").forEach((button) => {
+          button.addEventListener("click", () => {
+            selectCategory(button.getAttribute("data-quick-category") || "");
+          });
+        });
+
+        renderStats();
       }
 
       function renderBenefits(benefits, source = "card-leo") {
         state.source = source;
-        state.benefits = dedupeFrontendBenefits(Array.isArray(benefits) ? benefits : []);
+
+        const deduped = dedupeFrontendBenefits(Array.isArray(benefits) ? benefits : []);
+        const filtered = deduped.filter((benefit) =>
+          shouldKeepForCategory(benefit, state.selectedCategory)
+        );
+
+        state.benefits = filtered;
 
         els.memberSource.textContent =
           source === "access-development" ? "Access API" : "Card Leo";
@@ -1717,7 +1998,7 @@
         if (!state.benefits.length) {
           els.benefitsGrid.innerHTML = `
             <div class="empty-state">
-              No benefits matched your search yet. Try another category or search term.
+              No benefits matched this category yet. Try using the search box with a keyword like restaurant, hotel, shopping, fitness, or entertainment.
             </div>
           `;
           return;
@@ -1730,7 +2011,7 @@
             const description = getDisplayDescription(benefit);
             const discount = getDisplayDiscount(benefit);
             const location = getDisplayLocation(benefit);
-            const redeemUrl = getDisplayRedeemUrl(benefit);
+            const claimUrl = getBestClaimUrl(benefit);
 
             return `
               <article class="panel benefit-card">
@@ -1766,11 +2047,11 @@
                   </button>
 
                   ${
-                    redeemUrl
+                    claimUrl
                       ? `
                         <a
                           class="button button-ghost"
-                          href="${escapeHtml(redeemUrl)}"
+                          href="${escapeHtml(claimUrl)}"
                           target="_blank"
                           rel="noopener noreferrer"
                         >
@@ -1795,6 +2076,7 @@
       async function loadSession() {
         const payload = await fetchJson(API.me);
         if (!payload) return;
+
         renderMember(getMemberFromPayload(payload));
       }
 
@@ -1802,12 +2084,13 @@
         try {
           const payload = await fetchJson(API.categories);
           if (!payload) return;
+
           renderCategories(payload.categories || []);
         } catch (error) {
           console.error("[benefits] categories error:", error);
           renderCategories([]);
           showBanner(
-            "Benefit categories are using the default Card Leo layout while the API connects.",
+            "Using Card Leo category filters while live category data connects.",
             "error"
           );
         }
@@ -1821,7 +2104,8 @@
 
         const params = new URLSearchParams();
         const selectedSlug = slugify(state.selectedCategory);
-        const categoryQuery = CATEGORY_QUERY_MAP[selectedSlug] || "";
+        const categoryRule = CATEGORY_RULES[selectedSlug];
+        const categoryQuery = categoryRule?.q || "";
 
         if (state.query) {
           params.set("q", state.query);
@@ -1866,37 +2150,20 @@
         els.modal.setAttribute("aria-hidden", "true");
       }
 
-      function renderClaimBox(redeemUrl, detailsUrl = "") {
-        if (!redeemUrl) {
+      function renderClaimBox(claimUrl) {
+        if (!claimUrl) {
           return `
             <div class="detail-box">
               <div class="detail-label">Claim This Benefit</div>
               <div class="detail-value">
-                ${
-                  detailsUrl
-                    ? `
-                      This offer does not include a direct claim URL in the search response.
-                      Open the offer page below to view available redemption options.
-                      <div style="margin-top:12px;">
-                        <a
-                          class="button button-primary"
-                          href="${escapeHtml(detailsUrl)}"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Open Offer Page
-                        </a>
-                      </div>
-                    `
-                    : "This offer does not include a direct claim link yet. Use the redemption instructions shown here."
-                }
+                This offer does not include a claim link yet. Use the redemption instructions shown here.
               </div>
             </div>
           `;
         }
 
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-          redeemUrl
+          claimUrl
         )}`;
 
         return `
@@ -1917,7 +2184,7 @@
                 <div class="claim-actions">
                   <a
                     class="button button-primary"
-                    href="${escapeHtml(redeemUrl)}"
+                    href="${escapeHtml(claimUrl)}"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -1926,11 +2193,11 @@
 
                   <a
                     class="claim-link"
-                    href="${escapeHtml(redeemUrl)}"
+                    href="${escapeHtml(claimUrl)}"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    ${escapeHtml(redeemUrl)}
+                    ${escapeHtml(claimUrl)}
                   </a>
                 </div>
               </div>
@@ -1945,7 +2212,7 @@
         const description = getDisplayDescription(benefit);
         const terms = getDisplayTerms(benefit);
         const discount = getDisplayDiscount(benefit);
-        const redeemUrl = getDisplayRedeemUrl(benefit);
+        const claimUrl = getBestClaimUrl(benefit);
         const detailsUrl = getDisplayDetailsUrl(benefit);
         const website = getDisplayWebsite(benefit);
         const location = getDisplayLocation(benefit);
@@ -1978,11 +2245,11 @@
               <div class="detail-value">${escapeHtml(
                 benefit.instructions ||
                   benefit.redemptionType ||
-                  "Open the claim link or scan the QR code to follow the Access redemption instructions."
+                  "Open the claim link or scan the QR code to follow the redemption instructions."
               )}</div>
             </div>
 
-            ${renderClaimBox(redeemUrl, detailsUrl)}
+            ${renderClaimBox(claimUrl)}
 
             ${
               promoCode

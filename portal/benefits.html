@@ -582,6 +582,13 @@
         line-height: 1.65;
       }
 
+      .benefit-location {
+        margin: 8px 0 0;
+        color: var(--muted-2);
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
       .benefit-footer {
         display: flex;
         flex-wrap: wrap;
@@ -683,8 +690,8 @@
       }
 
       .modal {
-        width: min(760px, 100%);
-        max-height: min(760px, 92vh);
+        width: min(820px, 100%);
+        max-height: min(820px, 92vh);
         overflow: auto;
         border-radius: 26px;
         border: 1px solid var(--line-strong);
@@ -745,6 +752,35 @@
         margin-top: 8px;
         color: var(--text);
         line-height: 1.6;
+      }
+
+      .claim-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        align-items: center;
+        margin-top: 12px;
+      }
+
+      .claim-qr {
+        width: 160px;
+        height: 160px;
+        border-radius: 18px;
+        background: #fff;
+        padding: 10px;
+        object-fit: contain;
+      }
+
+      .claim-actions {
+        display: grid;
+        gap: 10px;
+        min-width: 220px;
+      }
+
+      .claim-link {
+        color: var(--gold-2);
+        word-break: break-all;
+        font-size: 0.88rem;
       }
 
       .footer-note {
@@ -810,6 +846,10 @@
         }
 
         .button {
+          width: 100%;
+        }
+
+        .claim-actions {
           width: 100%;
         }
       }
@@ -1031,8 +1071,8 @@
             <article class="panel side-card">
               <h3 class="info-title">Need Help?</h3>
               <p class="info-copy">
-                If a benefit does not load yet, the API endpoint may need the exact
-                Access Development production path.
+                If a benefit does not load yet, refresh the page and try the search
+                again.
               </p>
               <ul class="info-list">
                 <li>Restaurant, travel, shopping, entertainment, and local deals.</li>
@@ -1128,7 +1168,7 @@
 
       function normalizeText(value, fallback = "") {
         const text = String(value ?? "").trim();
-        return text || fallback;
+        return text && text !== "[object Object]" ? text : fallback;
       }
 
       function unwrap(payload) {
@@ -1136,6 +1176,57 @@
         return payload.data && typeof payload.data === "object"
           ? payload.data
           : payload;
+      }
+
+      function isObject(value) {
+        return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+      }
+
+      function getString(...values) {
+        for (const value of values) {
+          if (typeof value === "string" || typeof value === "number") {
+            const text = normalizeText(value);
+            if (text) return text;
+          }
+
+          if (isObject(value)) {
+            const nested =
+              value.url ||
+              value.href ||
+              value.link ||
+              value.value ||
+              value.name ||
+              value.title ||
+              value.text;
+
+            const text = normalizeText(nested);
+            if (text) return text;
+          }
+        }
+
+        return "";
+      }
+
+      function getUrl(...values) {
+        for (const value of values) {
+          if (typeof value === "string") {
+            const text = normalizeText(value);
+            if (text.startsWith("http://") || text.startsWith("https://")) {
+              return text;
+            }
+          }
+
+          if (isObject(value)) {
+            const nested = value.url || value.href || value.link;
+            const text = normalizeText(nested);
+
+            if (text.startsWith("http://") || text.startsWith("https://")) {
+              return text;
+            }
+          }
+        }
+
+        return "";
       }
 
       function titleCase(value) {
@@ -1158,6 +1249,240 @@
           .slice(0, 2)
           .map((part) => part.charAt(0).toUpperCase())
           .join("");
+      }
+
+      function getBenefitRaw(benefit) {
+        return isObject(benefit?.raw) ? benefit.raw : {};
+      }
+
+      function getBenefitLinks(benefit) {
+        const raw = getBenefitRaw(benefit);
+        return isObject(benefit?.links)
+          ? benefit.links
+          : isObject(raw.links)
+            ? raw.links
+            : {};
+      }
+
+      function getBenefitOffer(benefit) {
+        const raw = getBenefitRaw(benefit);
+        return isObject(benefit?.offer)
+          ? benefit.offer
+          : isObject(raw.offer)
+            ? raw.offer
+            : {};
+      }
+
+      function getBenefitStore(benefit) {
+        const raw = getBenefitRaw(benefit);
+        return isObject(benefit?.offer_store)
+          ? benefit.offer_store
+          : isObject(raw.offer_store)
+            ? raw.offer_store
+            : {};
+      }
+
+      function cleanDescription(value) {
+        return normalizeText(value)
+          .replace(/<[^>]*>/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function getDisplayTitle(benefit) {
+        const raw = getBenefitRaw(benefit);
+        const offer = getBenefitOffer(benefit);
+
+        return getString(
+          benefit?.title,
+          raw.title,
+          raw.offer_title,
+          raw.headline,
+          offer.title,
+          offer.name,
+          benefit?.merchantName,
+          raw.offer_store?.name,
+          "Member Benefit"
+        );
+      }
+
+      function getDisplayMerchant(benefit) {
+        const raw = getBenefitRaw(benefit);
+        const offer = getBenefitOffer(benefit);
+        const store = getBenefitStore(benefit);
+
+        return getString(
+          benefit?.merchantName,
+          store.name,
+          store.location_name,
+          store.store_name,
+          offer.name,
+          offer.title,
+          raw.merchantName,
+          raw.merchant_name,
+          raw.store_name,
+          raw.location_name,
+          "Card Leo Rewards"
+        );
+      }
+
+      function getDisplayDescription(benefit) {
+        const raw = getBenefitRaw(benefit);
+        const offer = getBenefitOffer(benefit);
+
+        return cleanDescription(
+          getString(
+            benefit?.description,
+            offer.description,
+            raw.offer_description,
+            raw.description,
+            raw.long_description,
+            raw.summary,
+            `Save with ${getDisplayMerchant(benefit)} through Card Leo Rewards.`
+          )
+        );
+      }
+
+      function getDisplayTerms(benefit) {
+        const raw = getBenefitRaw(benefit);
+        const offer = getBenefitOffer(benefit);
+
+        return cleanDescription(
+          getString(
+            benefit?.terms,
+            raw.terms_of_use,
+            raw.terms,
+            raw.terms_and_conditions,
+            offer.terms,
+            "Offer availability, participating locations, and restrictions may vary."
+          )
+        );
+      }
+
+      function getDisplayDiscount(benefit) {
+        const raw = getBenefitRaw(benefit);
+
+        return getString(
+          benefit?.discount,
+          raw.title,
+          raw.savings_amount ? `Save ${raw.savings_amount}` : "",
+          raw.discount_value ? `${raw.discount_value} off` : "",
+          "Member savings"
+        );
+      }
+
+      function getDisplayRedeemUrl(benefit) {
+        const raw = getBenefitRaw(benefit);
+        const links = getBenefitLinks(benefit);
+
+        return getUrl(
+          benefit?.redeemUrl,
+          benefit?.redeem_url,
+          links.redeem_offer,
+          links.instore,
+          links.instore_print,
+          raw.links?.redeem_offer,
+          raw.links?.instore,
+          raw.links?.instore_print,
+          benefit?.detailsUrl,
+          raw.links?.show_offer
+        );
+      }
+
+      function getDisplayDetailsUrl(benefit) {
+        const raw = getBenefitRaw(benefit);
+        const links = getBenefitLinks(benefit);
+
+        return getUrl(
+          benefit?.detailsUrl,
+          benefit?.details_url,
+          links.show_offer,
+          links.show_store,
+          links.show_location,
+          raw.links?.show_offer,
+          raw.links?.show_store,
+          raw.links?.show_location
+        );
+      }
+
+      function getDisplayWebsite(benefit) {
+        const raw = getBenefitRaw(benefit);
+        const offer = getBenefitOffer(benefit);
+        const store = getBenefitStore(benefit);
+
+        return getUrl(
+          benefit?.website,
+          store.web_address,
+          store.website,
+          offer.web_address,
+          offer.website,
+          raw.web_address,
+          raw.website
+        );
+      }
+
+      function getDisplayLocation(benefit) {
+        const raw = getBenefitRaw(benefit);
+        const store = getBenefitStore(benefit);
+        const physical = isObject(raw.physical_location) ? raw.physical_location : {};
+
+        const address = getString(
+          benefit?.address,
+          store.street_address,
+          store.address,
+          physical.street_address,
+          physical.address,
+          raw.street_address,
+          raw.address
+        );
+
+        const city = getString(
+          benefit?.city,
+          store.city_locality,
+          store.city,
+          physical.city_locality,
+          physical.city,
+          raw.city_locality,
+          raw.city
+        );
+
+        const state = getString(
+          benefit?.state,
+          store.state_region,
+          store.state,
+          physical.state_region,
+          physical.state,
+          raw.state_region,
+          raw.state
+        );
+
+        const zip = getString(
+          benefit?.zip,
+          store.postal_code,
+          store.zip,
+          physical.postal_code,
+          physical.zip,
+          raw.postal_code,
+          raw.zip
+        );
+
+        return [address, city, state, zip].filter(Boolean).join(", ");
+      }
+
+      function getDisplayPhone(benefit) {
+        const raw = getBenefitRaw(benefit);
+        const store = getBenefitStore(benefit);
+        const physical = isObject(raw.physical_location) ? raw.physical_location : {};
+
+        return getString(
+          benefit?.phone,
+          store.phone_number,
+          store.phone,
+          physical.phone_number,
+          physical.phone,
+          raw.phone_number,
+          raw.phone
+        );
       }
 
       function showBanner(message, type = "") {
@@ -1346,30 +1671,33 @@
         }
 
         els.benefitsGrid.innerHTML = state.benefits
-          .map(
-            (benefit) => `
+          .map((benefit) => {
+            const title = getDisplayTitle(benefit);
+            const merchant = getDisplayMerchant(benefit);
+            const description = getDisplayDescription(benefit);
+            const discount = getDisplayDiscount(benefit);
+            const location = getDisplayLocation(benefit);
+
+            return `
               <article class="panel benefit-card">
                 <div class="benefit-top">
                   <div class="benefit-icon">${escapeHtml(
                     benefit.categoryIcon || "★"
                   )}</div>
-                  <span class="pill is-gold">${escapeHtml(
-                    benefit.discount || "Member savings"
-                  )}</span>
+                  <span class="pill is-gold">${escapeHtml(discount)}</span>
                 </div>
 
-                <h3 class="benefit-title">${escapeHtml(
-                  benefit.title || "Member Benefit"
-                )}</h3>
+                <h3 class="benefit-title">${escapeHtml(title)}</h3>
 
-                <p class="merchant-name">${escapeHtml(
-                  benefit.merchantName || "Card Leo Rewards"
-                )}</p>
+                <p class="merchant-name">${escapeHtml(merchant)}</p>
 
-                <p class="benefit-copy">${escapeHtml(
-                  benefit.description ||
-                    "Open this benefit to view details and redemption instructions."
-                )}</p>
+                ${
+                  location
+                    ? `<p class="benefit-location">${escapeHtml(location)}</p>`
+                    : ""
+                }
+
+                <p class="benefit-copy">${escapeHtml(description)}</p>
 
                 <div class="benefit-footer">
                   <span class="pill is-green">${escapeHtml(
@@ -1387,8 +1715,8 @@
                   </button>
                 </div>
               </article>
-            `
-          )
+            `;
+          })
           .join("");
 
         els.benefitsGrid.querySelectorAll("[data-benefit-id]").forEach((button) => {
@@ -1431,7 +1759,12 @@
 
         if (state.query) params.set("q", state.query);
         if (state.selectedCategory) params.set("category", state.selectedCategory);
-        params.set("limit", "24");
+
+        /*
+          Access API max per_page is 100.
+          This fixes the old 24 visible limit.
+        */
+        params.set("limit", "100");
 
         try {
           const payload = await fetchJson(`${API.search}?${params.toString()}`);
@@ -1466,52 +1799,97 @@
         els.modal.setAttribute("aria-hidden", "true");
       }
 
+      function renderClaimBox(redeemUrl) {
+        if (!redeemUrl) return "";
+
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+          redeemUrl
+        )}`;
+
+        return `
+          <div class="detail-box">
+            <div class="detail-label">Claim This Benefit</div>
+            <div class="detail-value">
+              <p style="margin:0;color:var(--muted);">
+                Scan the QR code or open the claim link to redeem this Access benefit.
+              </p>
+
+              <div class="claim-wrap">
+                <img
+                  class="claim-qr"
+                  src="${escapeHtml(qrUrl)}"
+                  alt="Benefit claim QR code"
+                />
+
+                <div class="claim-actions">
+                  <a
+                    class="button button-primary"
+                    href="${escapeHtml(redeemUrl)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Claim Benefit
+                  </a>
+
+                  <a
+                    class="claim-link"
+                    href="${escapeHtml(redeemUrl)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    ${escapeHtml(redeemUrl)}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
       function renderDetailModal(benefit) {
+        const title = getDisplayTitle(benefit);
+        const merchant = getDisplayMerchant(benefit);
+        const description = getDisplayDescription(benefit);
+        const terms = getDisplayTerms(benefit);
+        const discount = getDisplayDiscount(benefit);
+        const redeemUrl = getDisplayRedeemUrl(benefit);
+        const detailsUrl = getDisplayDetailsUrl(benefit);
+        const website = getDisplayWebsite(benefit);
+        const location = getDisplayLocation(benefit);
+        const phone = getDisplayPhone(benefit);
+        const promoCode = normalizeText(benefit.promoCode || benefit.promo_code);
+
         els.modalCategory.textContent =
           benefit.categoryName || titleCase(benefit.category || "Benefit");
-        els.modalTitle.textContent = benefit.title || "Benefit Details";
-
-        const redeemUrl = normalizeText(benefit.redeemUrl || benefit.detailsUrl);
-        const website = normalizeText(benefit.website);
-        const promoCode = normalizeText(benefit.promoCode);
+        els.modalTitle.textContent = title;
 
         els.modalBody.innerHTML = `
           <div class="detail-grid">
             <div class="detail-box">
               <div class="detail-label">Merchant</div>
-              <div class="detail-value">${escapeHtml(
-                benefit.merchantName || "Card Leo Rewards"
-              )}</div>
+              <div class="detail-value">${escapeHtml(merchant)}</div>
             </div>
 
             <div class="detail-box">
               <div class="detail-label">Savings</div>
-              <div class="detail-value">${escapeHtml(
-                benefit.discount || "Member savings"
-              )}</div>
+              <div class="detail-value">${escapeHtml(discount)}</div>
             </div>
 
             <div class="detail-box">
               <div class="detail-label">Description</div>
-              <div class="detail-value">${escapeHtml(
-                benefit.description || "Benefit details are being prepared."
-              )}</div>
+              <div class="detail-value">${escapeHtml(description)}</div>
             </div>
 
             <div class="detail-box">
               <div class="detail-label">How To Redeem</div>
               <div class="detail-value">${escapeHtml(
-                benefit.instructions || benefit.redemptionType || "View details and follow the redemption instructions."
+                benefit.instructions ||
+                  benefit.redemptionType ||
+                  "Open the claim link or scan the QR code to follow the Access redemption instructions."
               )}</div>
             </div>
 
-            <div class="detail-box">
-              <div class="detail-label">Terms</div>
-              <div class="detail-value">${escapeHtml(
-                benefit.terms ||
-                  "Offer availability, rules, participating locations, and restrictions may vary."
-              )}</div>
-            </div>
+            ${renderClaimBox(redeemUrl)}
 
             ${
               promoCode
@@ -1525,35 +1903,55 @@
             }
 
             ${
-              benefit.address || benefit.city || benefit.state || benefit.zip
+              location
                 ? `
                   <div class="detail-box">
                     <div class="detail-label">Location</div>
-                    <div class="detail-value">${escapeHtml(
-                      [benefit.address, benefit.city, benefit.state, benefit.zip]
-                        .filter(Boolean)
-                        .join(", ")
-                    )}</div>
+                    <div class="detail-value">${escapeHtml(location)}</div>
                   </div>
                 `
                 : ""
             }
 
             ${
-              website || redeemUrl
+              phone
                 ? `
                   <div class="detail-box">
-                    <div class="detail-label">Action</div>
+                    <div class="detail-label">Phone</div>
+                    <div class="detail-value">${escapeHtml(phone)}</div>
+                  </div>
+                `
+                : ""
+            }
+
+            <div class="detail-box">
+              <div class="detail-label">Terms</div>
+              <div class="detail-value">${escapeHtml(terms)}</div>
+            </div>
+
+            ${
+              website || detailsUrl
+                ? `
+                  <div class="detail-box">
+                    <div class="detail-label">More Information</div>
                     <div class="detail-value">
-                      ${
-                        redeemUrl
-                          ? `<a class="button button-primary" href="${escapeHtml(
-                              redeemUrl
-                            )}" target="_blank" rel="noopener noreferrer">Open Redemption Link</a>`
-                          : `<a class="button button-ghost" href="${escapeHtml(
-                              website
-                            )}" target="_blank" rel="noopener noreferrer">Open Website</a>`
-                      }
+                      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                        ${
+                          detailsUrl
+                            ? `<a class="button button-ghost" href="${escapeHtml(
+                                detailsUrl
+                              )}" target="_blank" rel="noopener noreferrer">View Offer Page</a>`
+                            : ""
+                        }
+
+                        ${
+                          website
+                            ? `<a class="button button-ghost" href="${escapeHtml(
+                                website
+                              )}" target="_blank" rel="noopener noreferrer">Merchant Website</a>`
+                            : ""
+                        }
+                      </div>
                     </div>
                   </div>
                 `
@@ -1566,46 +1964,60 @@
       async function openBenefitDetails(id) {
         if (!id) return;
 
+        const localBenefit = state.benefits.find(
+          (benefit) => String(benefit.id) === String(id)
+        );
+
         showModal();
-        els.modalCategory.textContent = "Loading";
-        els.modalTitle.textContent = "Benefit Details";
-        els.modalBody.innerHTML = `<div class="status-state">Loading benefit details...</div>`;
+
+        if (localBenefit) {
+          /*
+            Render local search result first.
+            This prevents generic placeholder detail routes from hiding
+            the real Access redeem URL, QR code, merchant, and title.
+          */
+          renderDetailModal(localBenefit);
+        } else {
+          els.modalCategory.textContent = "Loading";
+          els.modalTitle.textContent = "Benefit Details";
+          els.modalBody.innerHTML = `<div class="status-state">Loading benefit details...</div>`;
+        }
 
         try {
           const payload = await fetchJson(
             `${API.details}?id=${encodeURIComponent(id)}`
           );
 
-          if (!payload?.benefit) {
-            throw new Error("Benefit details could not be loaded.");
-          }
+          const remoteBenefit = payload?.benefit;
 
-          renderDetailModal(payload.benefit);
-        } catch (error) {
-          console.error("[benefits] details error:", error);
-
-          const fallback = state.benefits.find(
-            (benefit) => String(benefit.id) === String(id)
-          );
-
-          if (fallback) {
+          if (remoteBenefit && localBenefit) {
             renderDetailModal({
-              ...fallback,
-              instructions:
-                "Review this benefit inside the Card Leo Rewards portal. Exact redemption instructions will appear once the Access endpoint is fully connected.",
-              terms:
-                "Offer availability, participating locations, and restrictions may vary.",
+              ...localBenefit,
+              ...remoteBenefit,
+              raw: {
+                ...(localBenefit.raw || {}),
+                ...(remoteBenefit.raw || {}),
+              },
             });
             return;
           }
 
-          els.modalBody.innerHTML = `
-            <div class="empty-state">
-              ${escapeHtml(
-                error?.message || "Unable to load this benefit right now."
-              )}
-            </div>
-          `;
+          if (remoteBenefit) {
+            renderDetailModal(remoteBenefit);
+            return;
+          }
+        } catch (error) {
+          console.warn("[benefits] details route skipped/fallback:", error);
+
+          if (!localBenefit) {
+            els.modalBody.innerHTML = `
+              <div class="empty-state">
+                ${escapeHtml(
+                  error?.message || "Unable to load this benefit right now."
+                )}
+              </div>
+            `;
+          }
         }
       }
 

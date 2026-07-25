@@ -2,19 +2,6 @@
 import crypto from "crypto";
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 
-/**
- * Vercel Environment Variables Needed:
- *
- * ACCESS_API_BASE_URL=https://offer.adcrws.com
- * ACCESS_SEARCH_BENEFITS_ENDPOINT=/v1/offers.json
- * ACCESS_API_TOKEN=your_access_token
- * ACCESS_ANONYMOUS_MEMBER_KEY=anonymous
- *
- * Optional:
- * ACCESS_DEFAULT_POSTAL_CODE=34956
- * ACCESS_DEFAULT_DISTANCE=50mi
- */
-
 const ACCESS_API_BASE_URL =
   process.env.ACCESS_API_BASE_URL || "https://offer.adcrws.com";
 
@@ -288,6 +275,7 @@ function safeJsonParse(value, fallback = null) {
 
 function decodeCookieValue(value) {
   const raw = String(value || "");
+
   if (!raw) return "";
 
   try {
@@ -333,6 +321,7 @@ function safeBase64JsonParse(value) {
 
 function parseSessionValue(rawValue) {
   const decoded = decodeCookieValue(rawValue);
+
   if (!decoded) return null;
 
   const parsedJson = safeJsonParse(decoded, null);
@@ -505,9 +494,7 @@ function getSelectFields({ extended = true } = {}) {
     "updated_at",
   ];
 
-  if (!extended) {
-    return base.join(", ");
-  }
+  if (!extended) return base.join(", ");
 
   return [
     ...base,
@@ -751,17 +738,13 @@ function pickCategoryName(value) {
     return "Grocery Coupons";
   }
 
-  if (text.includes("insurance")) {
-    return "Insurance";
-  }
+  if (text.includes("insurance")) return "Insurance";
 
   if (text.includes("financial") || text.includes("finance")) {
     return "Financial Wellness";
   }
 
-  if (text.includes("shopping") || text.includes("retail")) {
-    return "Shopping";
-  }
+  if (text.includes("shopping") || text.includes("retail")) return "Shopping";
 
   if (text.includes("entertainment") || text.includes("movie") || text.includes("event")) {
     return "Entertainment";
@@ -775,17 +758,11 @@ function pickCategoryName(value) {
     return "Health & Wellness";
   }
 
-  if (text.includes("electronic") || text.includes("tech")) {
-    return "Electronics";
-  }
+  if (text.includes("electronic") || text.includes("tech")) return "Electronics";
 
-  if (text.includes("local") || text.includes("nearby")) {
-    return "Local Deals";
-  }
+  if (text.includes("local") || text.includes("nearby")) return "Local Deals";
 
-  if (text.includes("deal") || text.includes("offer")) {
-    return "Deals";
-  }
+  if (text.includes("deal") || text.includes("offer")) return "Deals";
 
   return value ? normalizeString(value) : "Lifestyle Benefits";
 }
@@ -809,21 +786,13 @@ function pickCategoryIcon(value) {
     return "✈️";
   }
 
-  if (text.includes("grocery") || text.includes("coupon")) {
-    return "🛒";
-  }
+  if (text.includes("grocery") || text.includes("coupon")) return "🛒";
 
-  if (text.includes("insurance")) {
-    return "🛡️";
-  }
+  if (text.includes("insurance")) return "🛡️";
 
-  if (text.includes("financial") || text.includes("finance")) {
-    return "💳";
-  }
+  if (text.includes("financial") || text.includes("finance")) return "💳";
 
-  if (text.includes("shopping") || text.includes("retail")) {
-    return "🛍️";
-  }
+  if (text.includes("shopping") || text.includes("retail")) return "🛍️";
 
   if (text.includes("entertainment") || text.includes("movie") || text.includes("event")) {
     return "🎬";
@@ -833,17 +802,11 @@ function pickCategoryIcon(value) {
     return "💪";
   }
 
-  if (text.includes("health") || text.includes("wellness")) {
-    return "♡";
-  }
+  if (text.includes("health") || text.includes("wellness")) return "♡";
 
-  if (text.includes("electronic") || text.includes("tech")) {
-    return "📱";
-  }
+  if (text.includes("electronic") || text.includes("tech")) return "📱";
 
-  if (text.includes("local") || text.includes("nearby")) {
-    return "📍";
-  }
+  if (text.includes("local") || text.includes("nearby")) return "📍";
 
   return "★";
 }
@@ -993,19 +956,31 @@ function readNestedValue(object, paths) {
 function unwrapJsonApiResource(resource) {
   if (!isObject(resource)) return resource;
 
+  const raw = isObject(resource.raw) ? resource.raw : {};
   const attributes = isObject(resource.attributes) ? resource.attributes : {};
   const relationships = isObject(resource.relationships)
     ? resource.relationships
     : {};
-  const raw = isObject(resource.raw) ? resource.raw : {};
 
   return {
+    /*
+      This keeps Access top-level fields.
+      Without this, cards can show Access Offer 1 / 2 / 3.
+    */
+    ...resource,
+
+    /*
+      Also support JSON:API and nested raw responses.
+    */
     ...raw,
-    id: resource.id || raw.id,
-    type: resource.type || raw.type,
     ...attributes,
+
+    id: resource.id || raw.id || attributes.id,
+    type: resource.type || raw.type || attributes.type,
+
     relationships,
     links: resource.links || attributes.links || raw.links || {},
+
     raw_json_api: resource,
   };
 }
@@ -1111,6 +1086,7 @@ function normalizeBenefit(rawOffer, index = 0) {
   const merchantName = getString(
     offerStore.name,
     offerStore.location_name,
+    offerStore.store_name,
     accessOffer.name,
     accessOffer.title,
     offer.merchantName,
@@ -1121,6 +1097,7 @@ function normalizeBenefit(rawOffer, index = 0) {
     offer.businessName,
     offer.business_name,
     offer.store_name,
+    offer.location_name,
     offer.name,
     `Access Offer ${index + 1}`
   );

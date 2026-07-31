@@ -2,7 +2,6 @@
 import { ok, methodNotAllowed, setNoStore } from "../../lib/responses.js";
 import {
   clearAuthCookies,
-  safeJsonParse,
   getSessionCookieName,
 } from "../../lib/cookies.js";
 import {
@@ -16,10 +15,23 @@ const REDIRECT_PATH = "/login.html";
 
 const POSSIBLE_AUTH_COOKIE_NAMES = [
   "cardleo_session",
+  "cardleo_session_token",
+  "cardleo_auth",
+  "cardleo_member",
+  "cardleo_member_id",
+  "cardleo_portal_session",
+
   "card_leo_session",
   "member_session",
   "portal_session",
+
   "session",
+  "session_token",
+  "auth_token",
+  "login_token",
+  "portal_token",
+  "token",
+
   "access_token",
   "refresh_token",
   "sb-access-token",
@@ -30,14 +42,25 @@ function normalizeString(value) {
   return String(value ?? "").trim();
 }
 
+function normalizeEmail(value) {
+  return normalizeString(value).toLowerCase();
+}
+
 function getClientIp(req) {
-  const forwardedFor = req.headers?.["x-forwarded-for"];
+  const forwardedFor =
+    req.headers?.["x-forwarded-for"] ||
+    req.headers?.["x-real-ip"] ||
+    req.headers?.["cf-connecting-ip"];
 
   if (typeof forwardedFor === "string" && forwardedFor.trim()) {
     return forwardedFor.split(",")[0].trim();
   }
 
   return req.socket?.remoteAddress || null;
+}
+
+function isObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function parseCookieHeader(req) {
@@ -75,9 +98,56 @@ function decodeCookieValue(value) {
   }
 }
 
+function safeJsonParse(value) {
+  try {
+    const parsed = JSON.parse(value);
+    return isObject(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeBase64JsonParse(value) {
+  const raw = String(value || "");
+
+  if (!raw) return null;
+
+  const attempts = [raw, raw.replace(/-/g, "+").replace(/_/g, "/")];
+
+  for (const attempt of attempts) {
+    try {
+      const padded = attempt.padEnd(Math.ceil(attempt.length / 4) * 4, "=");
+      const decoded = Buffer.from(padded, "base64").toString("utf8");
+      const parsed = JSON.parse(decoded);
+
+      if (isObject(parsed)) return parsed;
+    } catch {
+      // Try next decode style.
+    }
+  }
+
+  return null;
+}
+
+function parseSessionValue(rawValue) {
+  const decoded = decodeCookieValue(rawValue);
+
+  if (!decoded) return null;
+
+  const parsedJson = safeJsonParse(decoded);
+  if (isObject(parsedJson)) return parsedJson;
+
+  const parsedBase64 = safeBase64JsonParse(decoded);
+  if (isObject(parsedBase64)) return parsedBase64;
+
+  return null;
+}
+
 function readSessionCookie(req) {
   const cookies = parseCookieHeader(req);
-  const configuredName = getSessionCookieName?.();
+
+  const configuredName =
+    typeof getSessionCookieName === "function" ? getSessionCookieName() : "";
 
   const names = Array.from(
     new Set(
@@ -90,12 +160,12 @@ function readSessionCookie(req) {
   for (const name of names) {
     if (!cookies[name]) continue;
 
-    const decoded = decodeCookieValue(cookies[name]);
-    const parsed = safeJsonParse(decoded, null);
+    const parsed = parseSessionValue(cookies[name]);
 
-    if (parsed && typeof parsed === "object") {
+    if (isObject(parsed)) {
       return {
         name,
+        raw: cookies[name],
         value: parsed,
       };
     }
@@ -106,23 +176,39 @@ function readSessionCookie(req) {
 
 function getSessionSummary(sessionCookie) {
   const value = sessionCookie?.value || {};
+  const member = isObject(value.member) ? value.member : {};
+  const profile = isObject(value.profile) ? value.profile : {};
+  const user = isObject(value.user) ? value.user : {};
+  const userMetadata = isObject(user.user_metadata) ? user.user_metadata : {};
 
   return {
     cookieName: sessionCookie?.name || null,
     memberId:
-      value.member?.id ||
-      value.profile?.id ||
-      value.user?.id ||
-      value.id ||
+      value.member_id ||
+      value.memberId ||
+      value.signup_id ||
+      value.signupId ||
+      member.id ||
+      member.signupId ||
+      member.signup_id ||
+      profile.id ||
+      profile.signupId ||
+      profile.signup_id ||
+      userMetadata.member_id ||
+      userMetadata.signup_id ||
+      user.id ||
       null,
-    email:
-      value.member?.email ||
-      value.profile?.email ||
-      value.user?.email ||
+    email: normalizeEmail(
       value.email ||
-      null,
+        member.email ||
+        profile.email ||
+        user.email ||
+        userMetadata.email ||
+        ""
+    ),
     provider: value.provider || null,
     authenticated: value.authenticated === true,
+    token: value.token || value.session_token || value.auth_token || null,
   };
 }
 
@@ -142,13 +228,13 @@ function appendSetCookie(res, cookieValue) {
   res.setHeader("Set-Cookie", [existing, cookieValue]);
 }
 
-function buildExpiredCookie(name, { httpOnly = true } = {}) {
+function buildExpiredCookie(name, { httpOnly = true, sameSite = "Lax" } = {}) {
   const parts = [
     `${name}=`,
     "Path=/",
     "Max-Age=0",
     "Expires=Thu, 01 Jan 1970 00:00:00 GMT",
-    "SameSite=Lax",
+    `SameSite=${sameSite}`,
   ];
 
   if (httpOnly) {
@@ -163,7 +249,8 @@ function buildExpiredCookie(name, { httpOnly = true } = {}) {
 }
 
 function clearCookieAliases(res) {
-  const configuredName = getSessionCookieName?.();
+  const configuredName =
+    typeof getSessionCookieName === "function" ? getSessionCookieName() : "";
 
   const names = Array.from(
     new Set(
@@ -174,15 +261,38 @@ function clearCookieAliases(res) {
   );
 
   for (const name of names) {
+    // Clear HttpOnly version.
     appendSetCookie(res, buildExpiredCookie(name, { httpOnly: true }));
 
-    // Also clear a non-HttpOnly copy in case older frontend code created one.
+    // Clear possible frontend-created non-HttpOnly version.
     appendSetCookie(res, buildExpiredCookie(name, { httpOnly: false }));
+
+    // Clear possible older Strict cookie version.
+    appendSetCookie(
+      res,
+      buildExpiredCookie(name, {
+        httpOnly: true,
+        sameSite: "Strict",
+      })
+    );
+
+    appendSetCookie(
+      res,
+      buildExpiredCookie(name, {
+        httpOnly: false,
+        sameSite: "Strict",
+      })
+    );
   }
 }
 
 function clearEveryAuthCookie(res) {
-  clearAuthCookies(res);
+  try {
+    clearAuthCookies(res);
+  } catch {
+    // Continue clearing aliases below.
+  }
+
   clearCookieAliases(res);
 }
 
@@ -216,7 +326,10 @@ export default async function handler(req, res) {
     return ok(
       res,
       {
+        success: true,
+        ok: true,
         signedOut: true,
+        authenticated: false,
         redirectTo: REDIRECT_PATH,
       },
       "You have been signed out successfully.",
@@ -236,7 +349,10 @@ export default async function handler(req, res) {
     return ok(
       res,
       {
+        success: true,
+        ok: true,
         signedOut: true,
+        authenticated: false,
         redirectTo: REDIRECT_PATH,
         warning:
           error?.message ||

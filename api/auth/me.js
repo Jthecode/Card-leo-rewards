@@ -1,13 +1,7 @@
 // api/auth/me.js
-import crypto from "crypto";
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 import { ok, methodNotAllowed, serverError } from "../../lib/responses.js";
-import {
-  setSessionCookie,
-  clearAuthCookies,
-  safeJsonParse,
-  getSessionCookieName,
-} from "../../lib/cookies.js";
+import { clearAuthCookies, getSessionCookieName } from "../../lib/cookies.js";
 import {
   logRequestStart,
   logRequestSuccess,
@@ -19,7 +13,19 @@ const DEFAULT_REDIRECT = "/portal/index.html";
 const LOGIN_REDIRECT = "/login.html";
 const SIGNUP_REDIRECT = "/signup.html?status=payment_required";
 
-const ACTIVE_STATUSES = new Set(["active", "approved", "invited", "paid"]);
+const SESSION_COOKIE_NAME = "cardleo_session";
+const SESSION_TOKEN_COOKIE_NAME = "cardleo_session_token";
+
+const ACTIVE_STATUSES = new Set([
+  "active",
+  "approved",
+  "invited",
+  "paid",
+  "current",
+  "complete",
+  "completed",
+]);
+
 const PAID_PAYMENT_STATUSES = new Set([
   "paid",
   "active",
@@ -28,6 +34,7 @@ const PAID_PAYMENT_STATUSES = new Set([
   "complete",
   "completed",
 ]);
+
 const ACTIVE_MEMBERSHIP_STATUSES = new Set([
   "active",
   "activated",
@@ -35,6 +42,7 @@ const ACTIVE_MEMBERSHIP_STATUSES = new Set([
   "approved",
   "current",
 ]);
+
 const PAYMENT_REQUIRED_STATUSES = new Set([
   "unpaid",
   "payment_pending",
@@ -44,26 +52,44 @@ const PAYMENT_REQUIRED_STATUSES = new Set([
   "past_due",
   "pending",
   "inactive",
+  "",
 ]);
 
+const AUTH_COOKIE_ALIASES = [
+  SESSION_COOKIE_NAME,
+  SESSION_TOKEN_COOKIE_NAME,
+  "cardleo_auth",
+  "cardleo_member",
+  "cardleo_member_id",
+  "cardleo_portal_session",
+  "card_leo_session",
+  "member_session",
+  "portal_session",
+  "session",
+  "token",
+  "access_token",
+  "refresh_token",
+  "sb-access-token",
+  "sb-refresh-token",
+];
+
 const POSSIBLE_SESSION_COOKIE_NAMES = [
-  "cardleo_session",
+  SESSION_COOKIE_NAME,
+  "cardleo_auth",
+  "cardleo_portal_session",
   "card_leo_session",
   "member_session",
   "portal_session",
   "session",
 ];
 
-const AUTH_COOKIE_ALIASES = [
-  "cardleo_session",
-  "card_leo_session",
-  "member_session",
-  "portal_session",
-  "session",
-  "access_token",
-  "refresh_token",
-  "sb-access-token",
-  "sb-refresh-token",
+const POSSIBLE_TOKEN_COOKIE_NAMES = [
+  SESSION_TOKEN_COOKIE_NAME,
+  "session_token",
+  "auth_token",
+  "login_token",
+  "portal_token",
+  "token",
 ];
 
 function isObject(value) {
@@ -149,7 +175,8 @@ function buildExpiredCookie(name, { httpOnly = true } = {}) {
 }
 
 function clearCookieAliases(res) {
-  const configuredName = getSessionCookieName?.();
+  const configuredName =
+    typeof getSessionCookieName === "function" ? getSessionCookieName() : "";
 
   const names = Array.from(
     new Set(
@@ -166,7 +193,12 @@ function clearCookieAliases(res) {
 }
 
 function clearEveryAuthCookie(res) {
-  clearAuthCookies(res);
+  try {
+    clearAuthCookies(res);
+  } catch {
+    // Continue clearing aliases below.
+  }
+
   clearCookieAliases(res);
 }
 
@@ -204,16 +236,42 @@ function decodeCookieValue(value) {
   }
 }
 
-function safeBase64JsonParse(value) {
-  if (!value || typeof value !== "string") return null;
-
+function safeJsonParse(value) {
   try {
-    const decoded = Buffer.from(value, "base64").toString("utf8");
-    const parsed = JSON.parse(decoded);
+    const parsed = JSON.parse(value);
     return isObject(parsed) ? parsed : null;
   } catch {
     return null;
   }
+}
+
+function safeBase64JsonParse(value) {
+  const raw = String(value || "");
+
+  if (!raw) return null;
+
+  const attempts = [
+    raw,
+    raw.replace(/-/g, "+").replace(/_/g, "/"),
+  ];
+
+  for (const attempt of attempts) {
+    try {
+      const padded = attempt.padEnd(
+        Math.ceil(attempt.length / 4) * 4,
+        "="
+      );
+
+      const decoded = Buffer.from(padded, "base64").toString("utf8");
+      const parsed = JSON.parse(decoded);
+
+      if (isObject(parsed)) return parsed;
+    } catch {
+      // Try the next format.
+    }
+  }
+
+  return null;
 }
 
 function parseSessionValue(rawValue) {
@@ -221,12 +279,10 @@ function parseSessionValue(rawValue) {
 
   if (!decoded) return null;
 
-  const parsedJson = safeJsonParse(decoded, null);
-
+  const parsedJson = safeJsonParse(decoded);
   if (isObject(parsedJson)) return parsedJson;
 
   const parsedBase64 = safeBase64JsonParse(decoded);
-
   if (isObject(parsedBase64)) return parsedBase64;
 
   return null;
@@ -234,7 +290,8 @@ function parseSessionValue(rawValue) {
 
 function readSessionCookie(req) {
   const cookies = parseCookieHeader(req);
-  const configuredName = getSessionCookieName?.();
+  const configuredName =
+    typeof getSessionCookieName === "function" ? getSessionCookieName() : "";
 
   const names = Array.from(
     new Set(
@@ -261,6 +318,27 @@ function readSessionCookie(req) {
   return null;
 }
 
+function readSessionTokenCookie(req) {
+  const cookies = parseCookieHeader(req);
+
+  for (const name of POSSIBLE_TOKEN_COOKIE_NAMES) {
+    const raw = cookies[name];
+
+    if (!raw) continue;
+
+    const token = normalizeString(decodeCookieValue(raw));
+
+    if (token) {
+      return {
+        name,
+        token,
+      };
+    }
+  }
+
+  return null;
+}
+
 function getSessionExpiresAt(sessionCookie) {
   const value = sessionCookie?.value || sessionCookie || {};
 
@@ -273,10 +351,10 @@ function getSessionExpiresAt(sessionCookie) {
   ];
 
   for (const candidate of candidates) {
-    const num = Number(candidate);
+    const number = Number(candidate);
 
-    if (Number.isFinite(num) && num > 0) {
-      return num;
+    if (Number.isFinite(number) && number > 0) {
+      return number;
     }
   }
 
@@ -357,15 +435,30 @@ function getSessionIdentity(sessionCookie) {
       userMetadata.email
   );
 
+  const token = normalizeString(
+    value.token ||
+      value.sessionToken ||
+      value.session_token ||
+      value.authToken ||
+      value.auth_token ||
+      value.loginToken ||
+      value.login_token ||
+      value.portalToken ||
+      value.portal_token ||
+      value.session?.token ||
+      value.session?.access_token
+  );
+
   return {
     ids: Array.from(new Set(ids)),
     portalUserIds: Array.from(new Set(portalUserIds)),
     email,
+    token,
   };
 }
 
 function getDisplayName(member) {
-  const fullName = normalizeString(member?.full_name);
+  const fullName = normalizeString(member?.full_name || member?.fullName);
 
   if (fullName) return fullName;
 
@@ -383,17 +476,18 @@ function hasPortalAccessForMember(member) {
   const status = normalizeStatus(member.status);
   const paymentStatus = normalizeStatus(member.payment_status);
   const membershipStatus = normalizeStatus(member.membership_status);
+  const approvalStatus = normalizeStatus(member.approval_status);
 
   return (
     ACTIVE_STATUSES.has(status) ||
     PAID_PAYMENT_STATUSES.has(paymentStatus) ||
-    ACTIVE_MEMBERSHIP_STATUSES.has(membershipStatus)
+    ACTIVE_MEMBERSHIP_STATUSES.has(membershipStatus) ||
+    ACTIVE_STATUSES.has(approvalStatus)
   );
 }
 
 function doesMemberRequirePayment(member) {
   if (!member) return true;
-
   if (hasPortalAccessForMember(member)) return false;
 
   const status = normalizeStatus(member.status);
@@ -409,14 +503,15 @@ function doesMemberRequirePayment(member) {
 
 function normalizeMemberStatus(member) {
   if (!member) return "pending";
-
   if (hasPortalAccessForMember(member)) return "active";
 
   const status = normalizeStatus(member.status);
 
   if (["pending", "reviewing"].includes(status)) return "pending";
   if (["disabled", "suspended", "paused"].includes(status)) return "suspended";
-  if (["denied", "closed"].includes(status)) return status;
+  if (["denied", "closed", "cancelled", "canceled"].includes(status)) {
+    return status;
+  }
 
   return status || "pending";
 }
@@ -438,6 +533,8 @@ function sanitizeMember(member) {
   const status = normalizeStatus(member.status || "pending");
   const paymentStatus = normalizeStatus(member.payment_status || "");
   const membershipStatus = normalizeStatus(member.membership_status || "");
+  const approvalStatus = normalizeStatus(member.approval_status || status);
+
   const portalAccess = hasPortalAccessForMember(member);
   const requiresPayment = doesMemberRequirePayment(member);
 
@@ -447,9 +544,15 @@ function sanitizeMember(member) {
     portalUserId: member.portal_user_id || null,
 
     email: member.email || null,
+
     firstName: member.first_name || "",
+    first_name: member.first_name || "",
+
     lastName: member.last_name || "",
+    last_name: member.last_name || "",
+
     fullName: getDisplayName(member),
+    full_name: getDisplayName(member),
     name: getDisplayName(member),
 
     phone: member.phone || "",
@@ -457,18 +560,27 @@ function sanitizeMember(member) {
     state: member.state || "",
     interest: member.interest || "",
     goals: member.goals || "",
+
     referralName: member.referral_name || "",
+    referral_name: member.referral_name || "",
+
+    referralEmail: member.referral_email || "",
+    referral_email: member.referral_email || "",
+
+    referralCode: member.referral_code || "",
+    referral_code: member.referral_code || "",
 
     status,
     payment_status: paymentStatus,
     membership_status: membershipStatus,
-    approval_status: portalAccess ? "approved" : status,
+    approval_status: portalAccess ? "approved" : approvalStatus,
 
     paymentStatus,
     membershipStatus,
-    approvalStatus: portalAccess ? "approved" : status,
+    approvalStatus: portalAccess ? "approved" : approvalStatus,
 
     memberStatus: normalizeMemberStatus(member),
+
     requires_payment: requiresPayment,
     requiresPayment,
     payment_required: requiresPayment,
@@ -484,11 +596,14 @@ function sanitizeMember(member) {
 
     tier,
     tierLabel: titleCase(tier),
-    referralCode: member.referral_code || "",
 
     portalLoginUrl: resolvePortalLoginUrl(member),
     portalAccess,
     accessLevel: "member",
+
+    stripeCustomerId: member.stripe_customer_id || "",
+    stripeSubscriptionId: member.stripe_subscription_id || "",
+    stripeCheckoutSessionId: member.stripe_checkout_session_id || "",
 
     emailVerified: Boolean(member.email_verified),
     emailVerifiedAt: member.email_verified_at || null,
@@ -547,8 +662,9 @@ function buildProfile(member) {
     interest: safeMember.interest,
     goals: safeMember.goals,
     referral_name: safeMember.referralName,
-    tier: safeMember.tier,
+    referral_email: safeMember.referralEmail,
     referral_code: safeMember.referralCode,
+    tier: safeMember.tier,
     role: "member",
     status: safeMember.status,
     payment_status: safeMember.paymentStatus,
@@ -563,90 +679,6 @@ function buildProfile(member) {
     created_at: safeMember.createdAt,
     updated_at: safeMember.updatedAt,
   };
-}
-
-function buildSessionId(member, oldValue = {}) {
-  const existing = normalizeString(
-    oldValue.sessionId ||
-      oldValue.session_id ||
-      oldValue.sid ||
-      oldValue.jti ||
-      oldValue.tokenId
-  );
-
-  if (existing) return existing;
-
-  return crypto
-    .createHash("sha256")
-    .update(
-      [
-        member?.id,
-        member?.email,
-        oldValue.created_at,
-        oldValue.expires_at,
-        Date.now(),
-      ]
-        .filter(Boolean)
-        .join("|")
-    )
-    .digest("hex")
-    .slice(0, 24);
-}
-
-function buildSessionCookieValue(member, oldSessionCookie) {
-  const oldValue = oldSessionCookie?.value || {};
-  const remember = Boolean(oldValue.remember);
-
-  const now = getUnixNow();
-  const maxAge = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
-
-  let expiresAt = Number(
-    oldValue.expires_at ||
-      oldValue.expiresAt ||
-      oldValue.session?.expires_at ||
-      0
-  );
-
-  if (!Number.isFinite(expiresAt) || expiresAt <= now) {
-    expiresAt = now + maxAge;
-  }
-
-  const sessionId = buildSessionId(member, oldValue);
-
-  const safeMember = sanitizeMember(member);
-  const user = buildUser(member);
-  const profile = buildProfile(member);
-
-  return {
-    authenticated: true,
-    provider: "cardleo-signups",
-    type: "member",
-    remember,
-    sessionId,
-    session_id: sessionId,
-    created_at: Number(oldValue.created_at || now),
-    checked_at: now,
-    expires_at: expiresAt,
-    redirectTo: safeMember?.portalLoginUrl || DEFAULT_REDIRECT,
-    role: "member",
-    member: safeMember,
-    user,
-    profile,
-    session: {
-      access_token: null,
-      refresh_token: null,
-      expires_at: expiresAt,
-      expires_in: Math.max(0, expiresAt - now),
-      token_type: "custom",
-    },
-  };
-}
-
-function getSessionMaxAge(sessionCookie) {
-  const value = sessionCookie?.value || {};
-  const remember = Boolean(value.remember);
-
-  return remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
 }
 
 function isMissingOptionalTableOrColumn(error) {
@@ -695,17 +727,26 @@ function getSelectFields({ extended = true } = {}) {
     "full_name",
     "goals",
     "referral_name",
-    "tier",
+    "referral_email",
     "referral_code",
+    "tier",
     "email_verified",
     "email_verified_at",
     "payment_status",
     "membership_status",
+    "approval_status",
     "activation_fee_amount",
     "monthly_fee_amount",
     "billing_day",
-    "portal_settings",
-    "portal_sessions",
+    "stripe_customer_id",
+    "stripe_subscription_id",
+    "stripe_checkout_session_id",
+    "session_token",
+    "auth_token",
+    "login_token",
+    "portal_token",
+    "session_expires_at",
+    "last_login_at",
   ].join(", ");
 }
 
@@ -724,8 +765,100 @@ async function queryMemberBy({ column, value, extended = true }) {
     .maybeSingle();
 }
 
-async function findMemberFromSession(sessionCookie) {
+async function queryMemberByIlikeEmail(email, extended = true) {
+  if (!email) {
+    return {
+      data: null,
+      error: null,
+    };
+  }
+
+  return supabaseAdmin
+    .from("signups")
+    .select(getSelectFields({ extended }))
+    .ilike("email", email)
+    .maybeSingle();
+}
+
+async function queryMemberByToken(token, extended = true) {
+  if (!token) {
+    return {
+      data: null,
+      error: null,
+    };
+  }
+
+  return supabaseAdmin
+    .from("signups")
+    .select(getSelectFields({ extended }))
+    .or(
+      [
+        `session_token.eq.${token}`,
+        `auth_token.eq.${token}`,
+        `login_token.eq.${token}`,
+        `portal_token.eq.${token}`,
+      ].join(",")
+    )
+    .maybeSingle();
+}
+
+function hydrateMember(row) {
+  if (!row?.id) return null;
+
+  return {
+    full_name:
+      row.full_name ||
+      [row.first_name, row.last_name]
+        .map(normalizeString)
+        .filter(Boolean)
+        .join(" "),
+    goals: row.goals || "",
+    referral_name: row.referral_name || "",
+    referral_email: row.referral_email || "",
+    referral_code: row.referral_code || "",
+    tier: row.tier || "core",
+    email_verified: Boolean(row.email_verified),
+    email_verified_at: row.email_verified_at || null,
+    payment_status: row.payment_status || "",
+    membership_status: row.membership_status || "",
+    approval_status: row.approval_status || "",
+    activation_fee_amount: row.activation_fee_amount || 25,
+    monthly_fee_amount: row.monthly_fee_amount || 20,
+    billing_day: row.billing_day || 10,
+    ...row,
+  };
+}
+
+async function findMemberFromSession(req, sessionCookie) {
+  const tokenCookie = readSessionTokenCookie(req);
   const identity = getSessionIdentity(sessionCookie);
+  const sessionToken = normalizeString(tokenCookie?.token || identity.token);
+
+  if (sessionToken) {
+    let result = await queryMemberByToken(sessionToken, true);
+
+    if (result.error && isMissingOptionalTableOrColumn(result.error)) {
+      result = await queryMemberByToken(sessionToken, false);
+    }
+
+    if (!result.error && result.data?.id) {
+      return {
+        member: hydrateMember(result.data),
+        error: null,
+        identity,
+        matchedBy: "session_token",
+      };
+    }
+
+    if (result.error && !isMissingOptionalTableOrColumn(result.error)) {
+      return {
+        member: null,
+        error: result.error,
+        identity,
+        matchedBy: "session_token",
+      };
+    }
+  }
 
   const attempts = [];
 
@@ -743,13 +876,6 @@ async function findMemberFromSession(sessionCookie) {
     });
   }
 
-  if (identity.email) {
-    attempts.push({
-      column: "email",
-      value: identity.email,
-    });
-  }
-
   const uniqueAttempts = [];
   const seen = new Set();
 
@@ -760,14 +886,6 @@ async function findMemberFromSession(sessionCookie) {
 
     seen.add(key);
     uniqueAttempts.push(attempt);
-  }
-
-  if (!uniqueAttempts.length) {
-    return {
-      member: null,
-      error: null,
-      identity,
-    };
   }
 
   let lastError = null;
@@ -794,35 +912,31 @@ async function findMemberFromSession(sessionCookie) {
 
     if (result.data?.id) {
       return {
-        member: {
-          full_name:
-            result.data.full_name ||
-            [result.data.first_name, result.data.last_name]
-              .map(normalizeString)
-              .filter(Boolean)
-              .join(" "),
-          goals: result.data.goals || "",
-          referral_name: result.data.referral_name || "",
-          tier: result.data.tier || "core",
-          referral_code: result.data.referral_code || "",
-          email_verified: Boolean(result.data.email_verified),
-          email_verified_at: result.data.email_verified_at || null,
-          payment_status: result.data.payment_status || "",
-          membership_status: result.data.membership_status || "",
-          activation_fee_amount: result.data.activation_fee_amount || 25,
-          monthly_fee_amount: result.data.monthly_fee_amount || 20,
-          billing_day: result.data.billing_day || 10,
-          portal_settings: isObject(result.data.portal_settings)
-            ? result.data.portal_settings
-            : {},
-          portal_sessions: Array.isArray(result.data.portal_sessions)
-            ? result.data.portal_sessions
-            : [],
-          ...result.data,
-        },
+        member: hydrateMember(result.data),
         error: null,
         identity,
         matchedBy: attempt.column,
+      };
+    }
+  }
+
+  if (identity.email) {
+    let result = await queryMemberByIlikeEmail(identity.email, true);
+
+    if (result.error && isMissingOptionalTableOrColumn(result.error)) {
+      result = await queryMemberByIlikeEmail(identity.email, false);
+    }
+
+    if (result.error) {
+      lastError = result.error;
+    }
+
+    if (result.data?.id) {
+      return {
+        member: hydrateMember(result.data),
+        error: null,
+        identity,
+        matchedBy: "email",
       };
     }
   }
@@ -831,6 +945,7 @@ async function findMemberFromSession(sessionCookie) {
     member: null,
     error: lastError,
     identity,
+    matchedBy: "",
   };
 }
 
@@ -851,7 +966,11 @@ function unauthenticatedResponse(res, message = "No active session.", extra = {}
   );
 }
 
-function paymentRequiredResponse(res, member, message = "Membership payment is required.") {
+function paymentRequiredResponse(
+  res,
+  member,
+  message = "Membership payment is required."
+) {
   const safeMember = sanitizeMember(member);
 
   return ok(
@@ -868,7 +987,9 @@ function paymentRequiredResponse(res, member, message = "Membership payment is r
       membership_status: safeMember?.membershipStatus || "",
       approval_status: safeMember?.approvalStatus || "",
       requires_payment: true,
+      requiresPayment: true,
       payment_required: true,
+      paymentRequired: true,
       redirectTo: SIGNUP_REDIRECT,
     },
     message,
@@ -879,30 +1000,38 @@ function paymentRequiredResponse(res, member, message = "Membership payment is r
 }
 
 function activeSessionResponse(res, member, sessionCookie) {
-  const sessionPayload = buildSessionCookieValue(member, sessionCookie);
-  const maxAge = getSessionMaxAge(sessionCookie);
-  const redirectTo = sessionPayload.member?.portalLoginUrl || DEFAULT_REDIRECT;
+  const safeMember = sanitizeMember(member);
+  const user = buildUser(member);
+  const profile = buildProfile(member);
 
-  setSessionCookie(res, JSON.stringify(sessionPayload), {
-    httpOnly: true,
-    maxAge,
-  });
+  const value = sessionCookie?.value || {};
+  const now = getUnixNow();
+  const expiresAt = getSessionExpiresAt(sessionCookie);
+  const redirectTo = safeMember?.portalLoginUrl || DEFAULT_REDIRECT;
 
   return ok(
     res,
     {
       authenticated: true,
-      user: sessionPayload.user,
-      profile: sessionPayload.profile,
-      member: sessionPayload.member,
+      user,
+      profile,
+      member: safeMember,
       role: "member",
-      status: sessionPayload.member?.status || "",
-      payment_status: sessionPayload.member?.paymentStatus || "",
-      membership_status: sessionPayload.member?.membershipStatus || "",
-      approval_status: sessionPayload.member?.approvalStatus || "",
+      status: safeMember?.status || "",
+      payment_status: safeMember?.paymentStatus || "",
+      membership_status: safeMember?.membershipStatus || "",
+      approval_status: safeMember?.approvalStatus || "",
       requires_payment: false,
+      requiresPayment: false,
       payment_required: false,
-      session: sessionPayload.session,
+      paymentRequired: false,
+      session: {
+        provider: "cardleo-signups",
+        token_type: "custom",
+        remember: Boolean(value.remember),
+        expires_at: expiresAt || null,
+        expires_in: expiresAt ? Math.max(0, expiresAt - now) : 0,
+      },
       redirectTo,
     },
     "Session active.",
@@ -959,7 +1088,7 @@ export default async function handler(req, res) {
       error: memberLookupError,
       identity,
       matchedBy,
-    } = await findMemberFromSession(sessionCookie);
+    } = await findMemberFromSession(req, sessionCookie);
 
     if (memberLookupError) {
       logRequestError(req, memberLookupError, {

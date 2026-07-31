@@ -10,7 +10,7 @@ import {
   serverError,
 } from "../../lib/responses.js";
 import { validateLoginInput } from "../../lib/validation.js";
-import { setSessionCookie, clearAuthCookies } from "../../lib/cookies.js";
+import { clearAuthCookies } from "../../lib/cookies.js";
 import { loginRateLimit } from "../../lib/rate-limit.js";
 import {
   logRequestStart,
@@ -23,7 +23,19 @@ const DEFAULT_REDIRECT = "/portal/index.html";
 const LOGIN_PATH = "/login.html";
 const PAYMENT_REQUIRED_REDIRECT = "/signup.html?status=payment_required";
 
-const ACTIVE_STATUSES = new Set(["active", "approved", "invited", "paid"]);
+const SESSION_COOKIE_NAME = "cardleo_session";
+const SESSION_TOKEN_COOKIE_NAME = "cardleo_session_token";
+
+const ACTIVE_STATUSES = new Set([
+  "active",
+  "approved",
+  "invited",
+  "paid",
+  "current",
+  "complete",
+  "completed",
+]);
+
 const PAID_PAYMENT_STATUSES = new Set([
   "paid",
   "active",
@@ -32,6 +44,7 @@ const PAID_PAYMENT_STATUSES = new Set([
   "complete",
   "completed",
 ]);
+
 const ACTIVE_MEMBERSHIP_STATUSES = new Set([
   "active",
   "activated",
@@ -39,6 +52,7 @@ const ACTIVE_MEMBERSHIP_STATUSES = new Set([
   "approved",
   "current",
 ]);
+
 const PAYMENT_REQUIRED_STATUSES = new Set([
   "unpaid",
   "payment_pending",
@@ -62,9 +76,7 @@ function getRequestBody(req) {
     }
   }
 
-  if (typeof req.body === "object") {
-    return req.body;
-  }
+  if (typeof req.body === "object") return req.body;
 
   return {};
 }
@@ -138,7 +150,7 @@ function safeCompareHash(inputHash, storedHash) {
 }
 
 function getDisplayName(member) {
-  const fullName = normalizeString(member?.full_name);
+  const fullName = normalizeString(member?.full_name || member?.fullName);
 
   if (fullName) return fullName;
 
@@ -174,17 +186,18 @@ function hasPortalAccessForMember(member) {
   const status = normalizeStatus(member.status);
   const paymentStatus = normalizeStatus(member.payment_status);
   const membershipStatus = normalizeStatus(member.membership_status);
+  const approvalStatus = normalizeStatus(member.approval_status);
 
   return (
     ACTIVE_STATUSES.has(status) ||
     PAID_PAYMENT_STATUSES.has(paymentStatus) ||
-    ACTIVE_MEMBERSHIP_STATUSES.has(membershipStatus)
+    ACTIVE_MEMBERSHIP_STATUSES.has(membershipStatus) ||
+    ACTIVE_STATUSES.has(approvalStatus)
   );
 }
 
 function doesMemberRequirePayment(member) {
   if (!member) return true;
-
   if (hasPortalAccessForMember(member)) return false;
 
   const status = normalizeStatus(member.status);
@@ -200,14 +213,15 @@ function doesMemberRequirePayment(member) {
 
 function normalizeMemberStatus(member) {
   if (!member) return "pending";
-
   if (hasPortalAccessForMember(member)) return "active";
 
   const status = normalizeStatus(member.status);
 
   if (["pending", "reviewing"].includes(status)) return "pending";
   if (["disabled", "suspended", "paused"].includes(status)) return "suspended";
-  if (["denied", "closed", "cancelled", "canceled"].includes(status)) return status;
+  if (["denied", "closed", "cancelled", "canceled"].includes(status)) {
+    return status;
+  }
 
   return status || "pending";
 }
@@ -245,11 +259,14 @@ function resolvePortalLoginUrl(member) {
 function sanitizeMember(member) {
   if (!member) return null;
 
+  const portalAccess = hasPortalAccessForMember(member);
+  const requiresPayment = doesMemberRequirePayment(member);
   const status = normalizeStatus(member.status || "pending");
   const paymentStatus = normalizeStatus(member.payment_status || "");
   const membershipStatus = normalizeStatus(member.membership_status || "");
-  const portalAccess = hasPortalAccessForMember(member);
-  const requiresPayment = doesMemberRequirePayment(member);
+  const approvalStatus = portalAccess
+    ? "approved"
+    : normalizeStatus(member.approval_status || status);
   const tier = normalizeTier(member.tier || "core");
 
   return {
@@ -258,8 +275,13 @@ function sanitizeMember(member) {
     email: member.email || null,
 
     firstName: member.first_name || "",
+    first_name: member.first_name || "",
+
     lastName: member.last_name || "",
+    last_name: member.last_name || "",
+
     fullName: getDisplayName(member),
+    full_name: getDisplayName(member),
     name: getDisplayName(member),
 
     phone: member.phone || "",
@@ -267,16 +289,24 @@ function sanitizeMember(member) {
     state: member.state || "",
     interest: member.interest || "",
     goals: member.goals || "",
+
     referralName: member.referral_name || "",
+    referral_name: member.referral_name || "",
+
+    referralEmail: member.referral_email || "",
+    referral_email: member.referral_email || "",
+
+    referralCode: member.referral_code || "",
+    referral_code: member.referral_code || "",
 
     status,
     payment_status: paymentStatus,
     membership_status: membershipStatus,
-    approval_status: portalAccess ? "approved" : status,
+    approval_status: approvalStatus,
 
     paymentStatus,
     membershipStatus,
-    approvalStatus: portalAccess ? "approved" : status,
+    approvalStatus,
 
     memberStatus: normalizeMemberStatus(member),
 
@@ -295,7 +325,6 @@ function sanitizeMember(member) {
 
     tier,
     tierLabel: titleCase(tier),
-    referralCode: member.referral_code || "",
 
     portalUserId: member.portal_user_id || null,
     portalLoginUrl: resolvePortalLoginUrl(member),
@@ -359,8 +388,9 @@ function buildProfile(member) {
     interest: safeMember.interest,
     goals: safeMember.goals,
     referral_name: safeMember.referralName,
-    tier: safeMember.tier,
+    referral_email: safeMember.referralEmail,
     referral_code: safeMember.referralCode,
+    tier: safeMember.tier,
     role: "member",
     status: safeMember.status,
     payment_status: safeMember.paymentStatus,
@@ -374,35 +404,6 @@ function buildProfile(member) {
     created_at: safeMember.createdAt,
     updated_at: safeMember.updatedAt,
   };
-}
-
-function buildCustomSessionCookieValue(member, remember = false) {
-  const now = Math.floor(Date.now() / 1000);
-  const maxAge = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
-  const expiresAt = now + maxAge;
-  const safeMember = sanitizeMember(member);
-
-  return JSON.stringify({
-    authenticated: true,
-    provider: "cardleo-signups",
-    type: "member",
-    remember: Boolean(remember),
-    created_at: now,
-    checked_at: now,
-    expires_at: expiresAt,
-    member: safeMember,
-    user: buildUser(member),
-    profile: buildProfile(member),
-    role: "member",
-    redirectTo: safeMember?.portalLoginUrl || DEFAULT_REDIRECT,
-    session: {
-      access_token: null,
-      refresh_token: null,
-      expires_at: expiresAt,
-      expires_in: maxAge,
-      token_type: "custom",
-    },
-  });
 }
 
 function isMissingOptionalColumn(error) {
@@ -451,16 +452,24 @@ function getSelectFields({ extended = true } = {}) {
     "full_name",
     "goals",
     "referral_name",
-    "tier",
+    "referral_email",
     "referral_code",
+    "tier",
     "payment_status",
     "membership_status",
+    "approval_status",
     "activation_fee_amount",
     "monthly_fee_amount",
     "billing_day",
     "stripe_customer_id",
     "stripe_subscription_id",
     "stripe_checkout_session_id",
+    "session_token",
+    "auth_token",
+    "login_token",
+    "portal_token",
+    "session_expires_at",
+    "last_login_at",
   ].join(", ");
 }
 
@@ -482,17 +491,183 @@ async function findMemberByEmail(email) {
   return result;
 }
 
-async function touchLastLogin(memberId) {
+function makeSessionToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function encodeSessionCookiePayload(payload) {
+  return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+}
+
+function decodeSessionCookiePayload(value) {
   try {
-    await supabaseAdmin
-      .from("signups")
-      .update({
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", memberId);
+    const raw = Buffer.from(String(value || ""), "base64url").toString("utf8");
+    return JSON.parse(raw);
   } catch {
-    // Do not block login if this update fails.
+    return null;
   }
+}
+
+function buildSmallSessionPayload(member, remember, sessionToken, maxAge) {
+  const now = Math.floor(Date.now() / 1000);
+  const expiresAt = now + maxAge;
+  const safeMember = sanitizeMember(member);
+
+  return {
+    authenticated: true,
+    provider: "cardleo-signups",
+    type: "member",
+    role: "member",
+    token: sessionToken,
+    member_id: safeMember?.id || member.id,
+    signup_id: safeMember?.id || member.id,
+    email: safeMember?.email || member.email,
+    remember: Boolean(remember),
+    created_at: now,
+    checked_at: now,
+    expires_at: expiresAt,
+    redirectTo: safeMember?.portalLoginUrl || DEFAULT_REDIRECT,
+  };
+}
+
+function getCookieOptions({ maxAge = 86400, httpOnly = true } = {}) {
+  const parts = [
+    "Path=/",
+    `Max-Age=${Math.max(0, Number(maxAge || 0))}`,
+    "SameSite=Lax",
+  ];
+
+  if (httpOnly) parts.push("HttpOnly");
+
+  if (process.env.NODE_ENV === "production") {
+    parts.push("Secure");
+  }
+
+  return parts.join("; ");
+}
+
+function appendSetCookie(res, cookie) {
+  const current = res.getHeader("Set-Cookie");
+
+  if (!current) {
+    res.setHeader("Set-Cookie", cookie);
+    return;
+  }
+
+  if (Array.isArray(current)) {
+    res.setHeader("Set-Cookie", [...current, cookie]);
+    return;
+  }
+
+  res.setHeader("Set-Cookie", [current, cookie]);
+}
+
+function setCookie(res, name, value, options = {}) {
+  const encodedValue = encodeURIComponent(String(value || ""));
+  appendSetCookie(
+    res,
+    `${name}=${encodedValue}; ${getCookieOptions(options)}`
+  );
+}
+
+function expireCookie(res, name) {
+  appendSetCookie(
+    res,
+    `${name}=; Path=/; Max-Age=0; SameSite=Lax; HttpOnly${
+      process.env.NODE_ENV === "production" ? "; Secure" : ""
+    }`
+  );
+}
+
+function clearAllAuthCookies(res) {
+  try {
+    clearAuthCookies(res);
+  } catch {
+    // Keep clearing the known cookies below.
+  }
+
+  [
+    SESSION_COOKIE_NAME,
+    SESSION_TOKEN_COOKIE_NAME,
+    "cardleo_auth",
+    "cardleo_member",
+    "cardleo_member_id",
+    "cardleo_portal_session",
+    "session",
+    "token",
+  ].forEach((name) => expireCookie(res, name));
+}
+
+async function saveSessionToken(memberId, sessionToken, expiresAtIso) {
+  const fullPayload = {
+    session_token: sessionToken,
+    auth_token: sessionToken,
+    login_token: sessionToken,
+    portal_token: sessionToken,
+    session_expires_at: expiresAtIso,
+    last_login_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  let result = await supabaseAdmin
+    .from("signups")
+    .update(fullPayload)
+    .eq("id", memberId);
+
+  if (!result.error) return;
+
+  if (!isMissingOptionalColumn(result.error)) {
+    console.error("Session token save failed:", result.error);
+    return;
+  }
+
+  const fallbackPayload = {
+    updated_at: new Date().toISOString(),
+  };
+
+  result = await supabaseAdmin
+    .from("signups")
+    .update(fallbackPayload)
+    .eq("id", memberId);
+
+  if (result.error) {
+    console.error("Fallback last login update failed:", result.error);
+  }
+}
+
+function setAuthCookies(res, member, remember) {
+  const maxAge = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
+  const sessionToken = makeSessionToken();
+  const sessionPayload = buildSmallSessionPayload(
+    member,
+    remember,
+    sessionToken,
+    maxAge
+  );
+  const encodedSession = encodeSessionCookiePayload(sessionPayload);
+
+  setCookie(res, SESSION_COOKIE_NAME, encodedSession, {
+    httpOnly: true,
+    maxAge,
+  });
+
+  setCookie(res, SESSION_TOKEN_COOKIE_NAME, sessionToken, {
+    httpOnly: true,
+    maxAge,
+  });
+
+  setCookie(res, "cardleo_auth", encodedSession, {
+    httpOnly: true,
+    maxAge,
+  });
+
+  return {
+    sessionToken,
+    encodedSession,
+    sessionPayload,
+    maxAge,
+    expiresAtIso: new Date(sessionPayload.expires_at * 1000).toISOString(),
+  };
 }
 
 function getOrigin(req) {
@@ -536,8 +711,7 @@ async function createCheckoutForUnpaidMember(req, member) {
           activation_fee_amount: 25,
           monthly_fee_amount: 20,
           billing_day: 10,
-          success_url:
-            "/thank-you.html?payment=success&membership=activated",
+          success_url: "/thank-you.html?payment=success&membership=activated",
           cancel_url: "/login.html?payment=cancelled",
         }),
       }
@@ -608,7 +782,7 @@ export default async function handler(req, res) {
     const rateLimit = loginRateLimit(req, res);
 
     if (rateLimit && !rateLimit.allowed) {
-      clearAuthCookies(res);
+      clearAllAuthCookies(res);
 
       return badRequest(
         res,
@@ -627,7 +801,7 @@ export default async function handler(req, res) {
     const validation = validateLoginInput(body);
 
     if (!validation?.valid) {
-      clearAuthCookies(res);
+      clearAllAuthCookies(res);
 
       return badRequest(
         res,
@@ -645,7 +819,7 @@ export default async function handler(req, res) {
     );
 
     if (lookupError) {
-      clearAuthCookies(res);
+      clearAllAuthCookies(res);
 
       logRequestError(req, lookupError, {
         scope: "auth_login_lookup",
@@ -656,7 +830,7 @@ export default async function handler(req, res) {
     }
 
     if (!member?.id) {
-      clearAuthCookies(res);
+      clearAllAuthCookies(res);
 
       logAuthEvent("Login failed.", {
         email: safeEmail,
@@ -668,7 +842,7 @@ export default async function handler(req, res) {
     }
 
     if (!member.password_hash) {
-      clearAuthCookies(res);
+      clearAllAuthCookies(res);
 
       logAuthEvent("Login blocked because password is missing.", {
         email: safeEmail,
@@ -686,7 +860,7 @@ export default async function handler(req, res) {
     const passwordMatches = safeCompareHash(inputHash, member.password_hash);
 
     if (!passwordMatches) {
-      clearAuthCookies(res);
+      clearAllAuthCookies(res);
 
       logAuthEvent("Login failed.", {
         email: safeEmail,
@@ -699,7 +873,7 @@ export default async function handler(req, res) {
     }
 
     if (!hasPortalAccessForMember(member)) {
-      clearAuthCookies(res);
+      clearAllAuthCookies(res);
 
       const requiresPayment = doesMemberRequirePayment(member);
 
@@ -750,17 +924,18 @@ export default async function handler(req, res) {
       );
     }
 
-    const sessionCookieValue = buildCustomSessionCookieValue(member, remember);
-    const sessionMaxAge = remember ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
     const safeMember = sanitizeMember(member);
     const redirectTo = safeMember.portalLoginUrl || DEFAULT_REDIRECT;
 
-    setSessionCookie(res, sessionCookieValue, {
-      httpOnly: true,
-      maxAge: sessionMaxAge,
-    });
+    const sessionInfo = setAuthCookies(res, member, remember);
 
-    await touchLastLogin(member.id);
+    await saveSessionToken(
+      member.id,
+      sessionInfo.sessionToken,
+      sessionInfo.expiresAtIso
+    );
+
+    const decodedSession = decodeSessionCookiePayload(sessionInfo.encodedSession);
 
     logAuthEvent("Login successful.", {
       email: safeEmail,
@@ -790,13 +965,16 @@ export default async function handler(req, res) {
         membership_status: safeMember.membershipStatus,
         approval_status: safeMember.approvalStatus,
         requires_payment: false,
+        requiresPayment: false,
         payment_required: false,
+        paymentRequired: false,
         redirectTo,
         session: {
           provider: "cardleo-signups",
           token_type: "custom",
           remember,
-          expires_in: sessionMaxAge,
+          expires_in: sessionInfo.maxAge,
+          expires_at: decodedSession?.expires_at || null,
         },
       },
       "Login successful.",
@@ -805,7 +983,7 @@ export default async function handler(req, res) {
       }
     );
   } catch (error) {
-    clearAuthCookies(res);
+    clearAllAuthCookies(res);
 
     logRequestError(req, error, {
       scope: "auth_login_unexpected",

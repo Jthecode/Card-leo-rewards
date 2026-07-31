@@ -5,17 +5,46 @@
     logoutEndpoint: "/api/auth/logout",
     loginPage: "/login.html",
     unauthorizedPage: "/unauthorized.html",
+    paymentRequiredPage: "/signup.html?status=payment_required",
     redirectOnFail: true,
     requirePortalAccess: true,
     showLoader: true,
     autoBindLogout: true,
     debug: false,
+    maxRetries: 2,
+    retryDelayMs: 450,
   };
 
-  const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
+  const ACTIVE_STATUSES = new Set([
+    "active",
+    "approved",
+    "invited",
+    "paid",
+    "current",
+    "complete",
+    "completed",
+  ]);
+
+  const PAID_PAYMENT_STATUSES = new Set([
+    "paid",
+    "active",
+    "current",
+    "succeeded",
+    "complete",
+    "completed",
+  ]);
+
+  const ACTIVE_MEMBERSHIP_STATUSES = new Set([
+    "active",
+    "activated",
+    "paid",
+    "approved",
+    "current",
+  ]);
 
   let currentAuthState = null;
   let isRunning = false;
+  let hasRedirected = false;
 
   function normalizeText(value) {
     return String(value ?? "").trim();
@@ -29,6 +58,10 @@
     return Boolean(value) && typeof value === "object" && !Array.isArray(value);
   }
 
+  function sleep(ms) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+  }
+
   function logDebug(enabled, ...args) {
     if (enabled) {
       console.log("[CardLeoAuthGuard]", ...args);
@@ -37,6 +70,10 @@
 
   function getCurrentPath() {
     return `${window.location.pathname}${window.location.search || ""}${window.location.hash || ""}`;
+  }
+
+  function isLoginPage(config) {
+    return window.location.pathname === new URL(config.loginPage, window.location.origin).pathname;
   }
 
   function buildRedirectUrl(target, nextPath) {
@@ -54,6 +91,34 @@
         ? `${target}${separator}next=${encodeURIComponent(nextPath)}`
         : target;
     }
+  }
+
+  function safeRedirect(targetUrl) {
+    if (hasRedirected) return;
+
+    hasRedirected = true;
+
+    window.setTimeout(() => {
+      window.location.replace(targetUrl);
+    }, 50);
+  }
+
+  function redirectToLogin(config) {
+    if (isLoginPage(config)) return;
+
+    const url = buildRedirectUrl(config.loginPage, getCurrentPath());
+    safeRedirect(url);
+  }
+
+  function redirectToUnauthorized(config) {
+    const url = buildRedirectUrl(config.unauthorizedPage, getCurrentPath());
+    safeRedirect(url);
+  }
+
+  function redirectToPaymentRequired(config, redirectTo) {
+    const target = normalizeText(redirectTo) || config.paymentRequiredPage;
+    const url = buildRedirectUrl(target, getCurrentPath());
+    safeRedirect(url);
   }
 
   function createLoader() {
@@ -171,7 +236,11 @@
       root: payload,
       data,
       message: normalizeText(payload.message || data.message),
-      success: payload.success === true || data.success === true,
+      success:
+        payload.success === true ||
+        data.success === true ||
+        payload.ok === true ||
+        data.ok === true,
     };
   }
 
@@ -188,7 +257,6 @@
 
     if (isObject(data.member)) return data.member;
     if (isObject(data.profile)) return data.profile;
-    if (isObject(data.user)) return data.user;
 
     return null;
   }
@@ -308,6 +376,30 @@
     ).toLowerCase();
   }
 
+  function getPaymentStatus({ member, profile, data }) {
+    return normalizeText(
+      data?.payment_status ||
+        data?.paymentStatus ||
+        member?.payment_status ||
+        member?.paymentStatus ||
+        profile?.payment_status ||
+        profile?.paymentStatus ||
+        ""
+    ).toLowerCase();
+  }
+
+  function getMembershipStatus({ member, profile, data }) {
+    return normalizeText(
+      data?.membership_status ||
+        data?.membershipStatus ||
+        member?.membership_status ||
+        member?.membershipStatus ||
+        profile?.membership_status ||
+        profile?.membershipStatus ||
+        ""
+    ).toLowerCase();
+  }
+
   function getTier({ member, profile }) {
     return normalizeText(
       member?.tier ||
@@ -318,16 +410,38 @@
     ).toLowerCase();
   }
 
-  function getPortalAccess({ member, data, authenticated }) {
+  function isPaymentRequired(data) {
+    return (
+      data?.requires_payment === true ||
+      data?.requiresPayment === true ||
+      data?.payment_required === true ||
+      data?.paymentRequired === true
+    );
+  }
+
+  function getPortalAccess({ member, profile, data, authenticated }) {
     if (typeof data?.portalAccess === "boolean") return data.portalAccess;
     if (typeof data?.portal_access === "boolean") return data.portal_access;
     if (typeof member?.portalAccess === "boolean") return member.portalAccess;
     if (typeof member?.portal_access === "boolean") return member.portal_access;
 
-    const status = getStatus({ member, profile: null, data });
+    const status = getStatus({ member, profile, data });
+    const paymentStatus = getPaymentStatus({ member, profile, data });
+    const membershipStatus = getMembershipStatus({ member, profile, data });
 
-    if (ACTIVE_STATUSES.has(status)) return true;
-    if (["pending", "reviewing", "disabled", "suspended", "denied", "closed"].includes(status)) {
+    if (
+      ACTIVE_STATUSES.has(status) ||
+      PAID_PAYMENT_STATUSES.has(paymentStatus) ||
+      ACTIVE_MEMBERSHIP_STATUSES.has(membershipStatus)
+    ) {
+      return true;
+    }
+
+    if (
+      ["pending", "reviewing", "disabled", "suspended", "denied", "closed"].includes(
+        status
+      )
+    ) {
       return false;
     }
 
@@ -343,11 +457,17 @@
 
     const authenticated = data.authenticated === true;
     const status = getStatus({ member, profile, data });
+    const paymentStatus = getPaymentStatus({ member, profile, data });
+    const membershipStatus = getMembershipStatus({ member, profile, data });
 
     const normalizedMember = {
       ...(isObject(member) ? member : {}),
       id: getMemberId({ member, profile, user, data }),
-      signupId: normalizeText(member?.signupId || member?.signup_id || getMemberId({ member, profile, user, data })),
+      signupId: normalizeText(
+        member?.signupId ||
+          member?.signup_id ||
+          getMemberId({ member, profile, user, data })
+      ),
       portalUserId: getPortalUserId({ member, profile, user }),
       email: getEmail({ member, profile, user, data }),
       fullName: getDisplayName({ member, profile, user }),
@@ -355,9 +475,20 @@
       role: getRole({ member, profile, user, data }),
       status,
       memberStatus: status,
+      payment_status: paymentStatus,
+      paymentStatus,
+      membership_status: membershipStatus,
+      membershipStatus,
       tier: getTier({ member, profile }),
-      portalAccess: getPortalAccess({ member, data, authenticated }),
+      portalAccess: getPortalAccess({ member, profile, data, authenticated }),
     };
+
+    const redirectTo =
+      normalizeText(data.redirectTo) ||
+      normalizeText(payload?.redirectTo) ||
+      normalizeText(member?.portalLoginUrl) ||
+      normalizeText(member?.portal_login_url) ||
+      "/portal/index.html";
 
     return {
       ok: response?.ok === true,
@@ -369,15 +500,16 @@
       profile: authenticated ? profile : null,
       session: isObject(data.session) ? data.session : null,
       portalAccess: authenticated
-        ? getPortalAccess({ member: normalizedMember, data, authenticated })
+        ? getPortalAccess({
+            member: normalizedMember,
+            profile,
+            data,
+            authenticated,
+          })
         : false,
+      paymentRequired: isPaymentRequired(data),
       message: unwrapped.message,
-      redirectTo:
-        normalizeText(data.redirectTo) ||
-        normalizeText(payload?.redirectTo) ||
-        normalizeText(member?.portalLoginUrl) ||
-        normalizeText(member?.portal_login_url) ||
-        "/portal/index.html",
+      redirectTo,
       data,
       raw: payload,
     };
@@ -386,8 +518,10 @@
   async function safeFetchJson(url, options = {}) {
     const response = await fetch(url, {
       credentials: "include",
+      cache: "no-store",
       headers: {
         Accept: "application/json",
+        "Cache-Control": "no-cache",
         ...(options.headers || {}),
       },
       ...options,
@@ -408,18 +542,53 @@
   }
 
   async function getAuthState(config) {
-    const meResult = await safeFetchJson(config.meEndpoint, {
-      method: "GET",
-    });
+    let lastResult = null;
 
-    logDebug(config.debug, "me endpoint result:", meResult);
+    for (let attempt = 0; attempt <= config.maxRetries; attempt += 1) {
+      const meResult = await safeFetchJson(config.meEndpoint, {
+        method: "GET",
+      });
 
-    const state = extractAuthState(meResult.data, meResult.response);
+      lastResult = meResult;
+
+      logDebug(config.debug, "me endpoint result:", {
+        attempt,
+        meResult,
+      });
+
+      const state = extractAuthState(meResult.data, meResult.response);
+
+      if (state.authenticated || state.paymentRequired) {
+        return {
+          source: "me",
+          response: meResult.response,
+          ...state,
+        };
+      }
+
+      const shouldRetry =
+        attempt < config.maxRetries &&
+        (meResult.response.status === 0 ||
+          meResult.response.status >= 500 ||
+          state.message.toLowerCase().includes("no active session"));
+
+      if (!shouldRetry) {
+        return {
+          source: "me",
+          response: meResult.response,
+          ...state,
+        };
+      }
+
+      await sleep(config.retryDelayMs);
+    }
+
+    const fallbackState = extractAuthState(lastResult?.data, lastResult?.response);
 
     return {
       source: "me",
-      response: meResult.response,
-      ...state,
+      response: lastResult?.response || null,
+      ...fallbackState,
     };
   }
 
@@ -446,7 +615,10 @@
   function applyMemberBindings(member) {
     if (!isObject(member)) return;
 
-    const fullName = normalizeText(member.fullName || member.full_name || member.name) || "Card Leo Member";
+    const fullName =
+      normalizeText(member.fullName || member.full_name || member.name) ||
+      "Card Leo Member";
+
     const firstName =
       normalizeText(member.firstName || member.first_name) ||
       fullName.split(/\s+/)[0] ||
@@ -454,10 +626,14 @@
 
     const lastName = normalizeText(member.lastName || member.last_name);
     const email = normalizeText(member.email);
-    const status = normalizeText(member.memberStatus || member.member_status || member.status || "active");
+    const status = normalizeText(
+      member.memberStatus || member.member_status || member.status || "active"
+    );
     const tier = normalizeText(member.tier || "core");
     const role = normalizeText(member.role || "member");
-    const accessLevel = normalizeText(member.accessLevel || member.access_level || tier || role);
+    const accessLevel = normalizeText(
+      member.accessLevel || member.access_level || tier || role
+    );
     const memberId = normalizeText(member.id || member.signupId || member.signup_id);
     const portalUserId = normalizeText(member.portalUserId || member.portal_user_id);
 
@@ -508,23 +684,15 @@
     });
   }
 
-  function redirectToLogin(config) {
-    const url = buildRedirectUrl(config.loginPage, getCurrentPath());
-    window.location.href = url;
-  }
-
-  function redirectToUnauthorized(config) {
-    const url = buildRedirectUrl(config.unauthorizedPage, getCurrentPath());
-    window.location.href = url;
-  }
-
   async function logoutMember(config = DEFAULTS) {
     try {
       await fetch(config.logoutEndpoint || DEFAULTS.logoutEndpoint, {
         method: "POST",
         credentials: "include",
+        cache: "no-store",
         headers: {
           Accept: "application/json",
+          "Cache-Control": "no-cache",
         },
       });
     } catch {
@@ -536,44 +704,47 @@
   }
 
   function bindLogoutButtons(config) {
-    document.querySelectorAll("[data-logout], [data-member-logout]").forEach((button) => {
-      if (button.dataset.authGuardLogoutBound === "true") return;
+    document
+      .querySelectorAll("[data-logout], [data-member-logout]")
+      .forEach((button) => {
+        if (button.dataset.authGuardLogoutBound === "true") return;
 
-      button.dataset.authGuardLogoutBound = "true";
+        button.dataset.authGuardLogoutBound = "true";
 
-      button.addEventListener("click", async (event) => {
-        event.preventDefault();
+        button.addEventListener("click", async (event) => {
+          event.preventDefault();
 
-        const originalText = "value" in button ? button.value : button.textContent;
-        const canDisable = "disabled" in button;
+          const originalText =
+            "value" in button ? button.value : button.textContent;
+          const canDisable = "disabled" in button;
 
-        try {
-          if ("value" in button) {
-            button.value = "Signing out...";
-          } else {
-            button.textContent = "Signing out...";
+          try {
+            if ("value" in button) {
+              button.value = "Signing out...";
+            } else {
+              button.textContent = "Signing out...";
+            }
+
+            if (canDisable) {
+              button.disabled = true;
+            }
+
+            await logoutMember(config);
+          } catch (error) {
+            if ("value" in button) {
+              button.value = originalText;
+            } else {
+              button.textContent = originalText;
+            }
+
+            if (canDisable) {
+              button.disabled = false;
+            }
+
+            alert(error?.message || "Unable to sign out right now.");
           }
-
-          if (canDisable) {
-            button.disabled = true;
-          }
-
-          await logoutMember(config);
-        } catch (error) {
-          if ("value" in button) {
-            button.value = originalText;
-          } else {
-            button.textContent = originalText;
-          }
-
-          if (canDisable) {
-            button.disabled = false;
-          }
-
-          alert(error?.message || "Unable to sign out right now.");
-        }
+        });
       });
-    });
   }
 
   function dispatchReadyEvent(state) {
@@ -610,6 +781,7 @@
     }
 
     isRunning = true;
+    hasRedirected = false;
 
     const config = {
       ...DEFAULTS,
@@ -627,9 +799,33 @@
 
       logDebug(config.debug, "final auth state:", state);
 
+      if (state.paymentRequired) {
+        document.body.dataset.authGuard = "payment-required";
+        setVisibilityForAuthState(false);
+
+        dispatchFailureEvent({
+          ok: false,
+          status: state.httpStatus || 402,
+          reason: "payment_required",
+          ...state,
+        });
+
+        if (config.redirectOnFail) {
+          redirectToPaymentRequired(config, state.redirectTo);
+        }
+
+        return {
+          ok: false,
+          status: state.httpStatus || 402,
+          reason: "payment_required",
+          ...state,
+        };
+      }
+
       if (!state.authenticated) {
         document.body.dataset.authGuard = "unauthenticated";
         setVisibilityForAuthState(false);
+
         dispatchFailureEvent({
           ok: false,
           status: state.httpStatus || 401,
@@ -652,6 +848,7 @@
       if (config.requirePortalAccess && state.portalAccess === false) {
         document.body.dataset.authGuard = "unauthorized";
         setVisibilityForAuthState(false);
+
         dispatchFailureEvent({
           ok: false,
           status: state.httpStatus || 403,
@@ -690,6 +887,7 @@
       };
     } catch (error) {
       document.body.dataset.authGuard = "error";
+
       logDebug(config.debug, "auth guard error:", error);
 
       const failedState = {

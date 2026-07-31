@@ -12,11 +12,7 @@
 
     <meta
       name="description"
-      content="View your Card Leo Rewards member rewards, referral rewards, benefit access, payout status, tier level, and membership rewards dashboard."
-    />
-    <meta
-      name="keywords"
-      content="Card Leo Rewards, member rewards, referral rewards, rewards dashboard, monthly rewards, payout status, premium membership"
+      content="View your Card Leo Rewards allowance rewards, direct referral earnings, team referral earnings, growth pool credit, payout status, and membership rewards dashboard."
     />
     <meta name="theme-color" content="#030303" />
     <meta name="robots" content="noindex, nofollow" />
@@ -39,12 +35,8 @@
     <style>
       :root {
         --leo-black: #030303;
-        --leo-black-2: #080808;
-        --leo-black-3: #111111;
         --leo-panel: rgba(9, 9, 9, 0.92);
-        --leo-panel-2: rgba(18, 18, 18, 0.9);
         --leo-line: rgba(231, 182, 79, 0.22);
-        --leo-line-soft: rgba(255, 255, 255, 0.08);
         --leo-gold: #e7b64f;
         --leo-gold-2: #f7d98b;
         --leo-gold-3: #a66f10;
@@ -52,12 +44,10 @@
         --leo-muted: rgba(248, 243, 231, 0.68);
         --leo-muted-2: rgba(248, 243, 231, 0.5);
         --leo-green: #48f06b;
+        --leo-blue: #7ec8ff;
         --leo-red: #ff7676;
         --leo-yellow: #ffd166;
         --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
-        --radius-xl: 30px;
-        --radius-lg: 22px;
-        --radius-md: 16px;
         --sidebar-width: 290px;
       }
 
@@ -72,8 +62,8 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
-          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
         color: var(--leo-white);
         background:
           radial-gradient(circle at 84% 9%, rgba(231, 182, 79, 0.13), transparent 26%),
@@ -91,6 +81,10 @@
       textarea,
       select {
         font: inherit;
+      }
+
+      button {
+        cursor: pointer;
       }
 
       .portal-shell {
@@ -212,7 +206,7 @@
         line-height: 1.55;
       }
 
-      .mini-black-card {
+      .mini-allowance-card {
         height: 96px;
         border-radius: 16px;
         background:
@@ -299,6 +293,10 @@
         line-height: 1.75;
       }
 
+      .hero-text strong {
+        color: var(--leo-gold-2);
+      }
+
       .hero-actions {
         display: flex;
         flex-wrap: wrap;
@@ -334,26 +332,10 @@
           inset 0 1px 0 rgba(255, 255, 255, 0.45);
       }
 
-      .btn-primary:hover {
-        transform: translateY(-1px);
-        box-shadow:
-          0 22px 48px rgba(216, 154, 34, 0.34),
-          inset 0 1px 0 rgba(255, 255, 255, 0.45);
-      }
-
       .btn-secondary {
         background: rgba(255, 255, 255, 0.045);
         border-color: rgba(231, 182, 79, 0.22);
         color: var(--leo-white);
-      }
-
-      .btn-secondary:hover {
-        background: rgba(255, 255, 255, 0.08);
-      }
-
-      .btn:disabled {
-        opacity: 0.7;
-        cursor: not-allowed;
       }
 
       .status-pill {
@@ -388,7 +370,7 @@
         font-weight: 900;
       }
 
-      .black-card-preview {
+      .allowance-card-preview {
         min-height: 255px;
         border-radius: 24px;
         overflow: hidden;
@@ -402,15 +384,15 @@
           inset 0 0 0 1px rgba(255, 255, 255, 0.045);
       }
 
-      .black-card-top,
-      .black-card-bottom {
+      .allowance-card-top,
+      .allowance-card-bottom {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 1rem;
       }
 
-      .black-card-logo {
+      .allowance-card-logo {
         display: grid;
         place-items: center;
         width: 64px;
@@ -423,33 +405,31 @@
         letter-spacing: 0.08em;
       }
 
-      .black-card-chip {
+      .allowance-card-chip {
         width: 54px;
         height: 38px;
         border-radius: 12px;
-        background:
-          linear-gradient(135deg, #f7d98b, #a66f10),
-          #d89a22;
+        background: linear-gradient(135deg, #f7d98b, #a66f10), #d89a22;
         box-shadow: 0 12px 28px rgba(216, 154, 34, 0.28);
       }
 
-      .black-card-middle {
+      .allowance-card-middle {
         margin-top: 2.4rem;
       }
 
-      .black-card-middle h2 {
+      .allowance-card-middle h2 {
         margin: 0;
         color: var(--leo-white);
         font-size: clamp(1.5rem, 3vw, 2.1rem);
         letter-spacing: -0.04em;
       }
 
-      .black-card-middle p {
+      .allowance-card-middle p {
         margin: 0.4rem 0 0;
         color: var(--leo-muted);
       }
 
-      .black-card-bottom {
+      .allowance-card-bottom {
         margin-top: 2rem;
         color: var(--leo-gold);
         font-size: 0.78rem;
@@ -528,38 +508,37 @@
       }
 
       .reward-list,
-      .notice-list {
+      .notice-list,
+      .activity-list {
         display: grid;
         gap: 14px;
       }
 
       .reward-card,
       .notice-card,
-      .summary-row {
+      .summary-row,
+      .activity-card {
         border-radius: 18px;
         border: 1px solid rgba(231, 182, 79, 0.14);
         background: rgba(255, 255, 255, 0.035);
       }
 
-      .reward-card {
+      .reward-card,
+      .notice-card,
+      .activity-card {
         padding: 18px;
-        transition: 0.2s ease;
       }
 
-      .reward-card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(231, 182, 79, 0.3);
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .reward-top {
+      .reward-top,
+      .activity-top {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
         gap: 14px;
       }
 
-      .reward-title {
+      .reward-title,
+      .activity-title {
         margin: 0;
         color: var(--leo-white);
         font-size: 1.06rem;
@@ -567,13 +546,15 @@
         letter-spacing: -0.02em;
       }
 
-      .reward-description {
+      .reward-description,
+      .activity-description {
         margin: 10px 0 0;
         color: var(--leo-muted);
         line-height: 1.65;
       }
 
-      .reward-meta {
+      .reward-meta,
+      .activity-meta {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
@@ -604,6 +585,12 @@
         color: #06120a;
         border-color: transparent;
         background: linear-gradient(135deg, #a6ffd0, #48f06b);
+      }
+
+      .pill.blue {
+        color: #06111d;
+        border-color: transparent;
+        background: linear-gradient(135deg, #bde7ff, #7ec8ff);
       }
 
       .pill.yellow {
@@ -637,10 +624,6 @@
       .summary-row strong {
         color: var(--leo-gold-2);
         text-align: right;
-      }
-
-      .notice-card {
-        padding: 16px;
       }
 
       .notice-card h3 {
@@ -690,12 +673,6 @@
         color: #ffd2d8;
         border-color: rgba(255, 118, 118, 0.24);
         background: rgba(255, 118, 118, 0.1);
-      }
-
-      .status-banner.warning {
-        color: #ffeaa6;
-        border-color: rgba(255, 209, 102, 0.24);
-        background: rgba(255, 209, 102, 0.1);
       }
 
       .footer-note {
@@ -753,8 +730,9 @@
 
         .section-title-row,
         .reward-top,
+        .activity-top,
         .summary-row,
-        .black-card-bottom {
+        .allowance-card-bottom {
           flex-direction: column;
         }
 
@@ -810,11 +788,6 @@
             <span>Benefits</span>
           </a>
 
-          <a class="side-link" href="/portal/billing.html">
-            <span class="side-icon">▱</span>
-            <span>Billing</span>
-          </a>
-
           <a class="side-link" href="/portal/support.html">
             <span class="side-icon">☏</span>
             <span>Support</span>
@@ -832,9 +805,11 @@
         </nav>
 
         <div class="earn-card">
-          <h2>Earn More Rewards</h2>
-          <p>Track referral earnings, tier benefits, and monthly payout status.</p>
-          <div class="mini-black-card">Rewards</div>
+          <h2>Allowance Rewards</h2>
+          <p>
+            Track direct rewards, team rewards, growth pool credits, and payout timing.
+          </p>
+          <div class="mini-allowance-card">Allowance Card</div>
         </div>
       </aside>
 
@@ -847,12 +822,14 @@
               <div class="eyebrow">Member Rewards</div>
 
               <h1 class="hero-title">
-                Your <span>rewards dashboard.</span>
+                Your <span>allowance rewards.</span>
               </h1>
 
               <p class="hero-text" id="heroCopy">
-                View your active rewards, referral earnings, payout status,
-                benefit access, and monthly reward opportunities.
+                View your direct referral earnings, team referral earnings,
+                growth pool credit, payout status, benefit access, and monthly
+                reward opportunities. <strong>Member A referred Member B = $7.</strong>
+                <strong>Member B referred Member C = $1 for Member A.</strong>
               </p>
 
               <div class="hero-actions">
@@ -862,27 +839,27 @@
                 <a class="btn btn-secondary" href="/portal/benefits.html">
                   View Benefits
                 </a>
-                <a class="btn btn-secondary" href="/portal/billing.html">
-                  Billing
+                <a class="btn btn-secondary" href="/portal/index.html">
+                  Dashboard
                 </a>
               </div>
             </div>
           </article>
 
-          <aside class="black-card-preview">
-            <div class="black-card-top">
-              <div class="black-card-logo">CL</div>
-              <div class="black-card-chip"></div>
+          <aside class="allowance-card-preview">
+            <div class="allowance-card-top">
+              <div class="allowance-card-logo">CL</div>
+              <div class="allowance-card-chip"></div>
             </div>
 
-            <div class="black-card-middle">
+            <div class="allowance-card-middle">
               <h2 id="cardMemberName">Card Leo Member</h2>
-              <p id="cardMemberTier">VIP Member</p>
+              <p id="cardMemberTier">Allowance Card</p>
             </div>
 
-            <div class="black-card-bottom">
+            <div class="allowance-card-bottom">
               <span id="cardMemberStatus">Rewards Loading</span>
-              <span id="cardRewardSnapshot">Monthly Rewards</span>
+              <span id="cardRewardSnapshot">$0.00 Earned</span>
             </div>
           </aside>
         </section>
@@ -891,33 +868,33 @@
           <section class="stat-grid">
             <article class="panel stat-card">
               <div class="panel-inner">
-                <div class="stat-label">Total Rewards</div>
-                <div class="stat-number" id="totalRewards">—</div>
-                <div class="stat-note">All visible rewards on your account.</div>
+                <div class="stat-label">Direct Earnings</div>
+                <div class="stat-number" id="directEarnings">$0</div>
+                <div class="stat-note">Member A referred Member B = $7.</div>
               </div>
             </article>
 
             <article class="panel stat-card">
               <div class="panel-inner">
-                <div class="stat-label">Active Rewards</div>
-                <div class="stat-number" id="activeRewards">—</div>
-                <div class="stat-note">Rewards available now.</div>
+                <div class="stat-label">Team Earnings</div>
+                <div class="stat-number" id="teamEarnings">$0</div>
+                <div class="stat-note">Member B referred Member C = $1.</div>
               </div>
             </article>
 
             <article class="panel stat-card">
               <div class="panel-inner">
-                <div class="stat-label">Pending Rewards</div>
-                <div class="stat-number" id="pendingRewards">—</div>
-                <div class="stat-note">Rewards being processed.</div>
+                <div class="stat-label">Growth Pool</div>
+                <div class="stat-number" id="growthPoolCredit">$0</div>
+                <div class="stat-note">$2 growth pool credit tracked separately.</div>
               </div>
             </article>
 
             <article class="panel stat-card">
               <div class="panel-inner">
-                <div class="stat-label">Estimated Earnings</div>
-                <div class="stat-number" id="estimatedEarnings">$0</div>
-                <div class="stat-note">Referral and reward estimate.</div>
+                <div class="stat-label">Total Allowance</div>
+                <div class="stat-number" id="totalAllowance">$0</div>
+                <div class="stat-note">Direct + team rewards.</div>
               </div>
             </article>
           </section>
@@ -927,10 +904,11 @@
               <div class="panel-inner">
                 <div class="section-title-row">
                   <div>
-                    <h2>Reward Inventory</h2>
+                    <h2>Allowance Reward Inventory</h2>
                     <p>
-                      Rewards, benefits, referral payouts, and opportunities tied
-                      to your Card Leo Rewards membership.
+                      Your reward cards are calculated from your live referral
+                      data. The leaderboard total includes direct earnings and
+                      team earnings. Growth pool credit is shown separately.
                     </p>
                   </div>
 
@@ -953,7 +931,8 @@
                   <div>
                     <h3>Rewards Summary</h3>
                     <p>
-                      Your member standing, billing, and payout details.
+                      Your member standing, payout timing, and referral allowance
+                      details.
                     </p>
                   </div>
                 </div>
@@ -970,8 +949,8 @@
                   </div>
 
                   <div class="summary-row">
-                    <span>Tier</span>
-                    <strong id="memberTier">VIP Member</strong>
+                    <span>Card</span>
+                    <strong>Allowance Card</strong>
                   </div>
 
                   <div class="summary-row">
@@ -985,18 +964,13 @@
                   </div>
 
                   <div class="summary-row">
-                    <span>Activation Fee</span>
-                    <strong>$25 one time</strong>
+                    <span>Direct Referrals</span>
+                    <strong id="directReferralCount">0</strong>
                   </div>
 
                   <div class="summary-row">
-                    <span>Monthly Membership</span>
-                    <strong>$20/month</strong>
-                  </div>
-
-                  <div class="summary-row">
-                    <span>Billing Date</span>
-                    <strong>10th monthly</strong>
+                    <span>Team Referrals</span>
+                    <strong id="teamReferralCount">0</strong>
                   </div>
 
                   <div class="summary-row">
@@ -1006,8 +980,8 @@
                 </div>
 
                 <div style="margin-top: 18px;">
-                  <a class="btn btn-primary" href="/portal/billing.html">
-                    Manage Billing
+                  <a class="btn btn-primary" href="/portal/leaderboard.html">
+                    Open Referral Tower
                   </a>
                 </div>
               </div>
@@ -1019,7 +993,27 @@
               <div class="panel-inner">
                 <div class="section-title-row">
                   <div>
-                    <h2>Monthly Reward Notices</h2>
+                    <h2>Referral Reward Activity</h2>
+                    <p>
+                      This shows the people counted toward your $7 direct rewards
+                      and $1 team rewards.
+                    </p>
+                  </div>
+                </div>
+
+                <div id="activityList" class="activity-list">
+                  <div class="status-box">
+                    Loading referral reward activity...
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h3>Monthly Reward Notices</h3>
                     <p>
                       Important updates about referral rewards, benefit access,
                       and payout processing.
@@ -1029,50 +1023,10 @@
 
                 <div id="noticesList" class="notice-list">
                   <article class="notice-card">
-                    <h3>Preparing your reward notices...</h3>
+                    <h3>Preparing reward notices...</h3>
                     <p>
                       We’re loading your reward notices and account-specific
                       information now.
-                    </p>
-                  </article>
-                </div>
-              </div>
-            </article>
-
-            <aside class="panel">
-              <div class="panel-inner">
-                <div class="section-title-row">
-                  <div>
-                    <h3>Next Best Steps</h3>
-                    <p>
-                      Keep your rewards moving by keeping membership active and
-                      referring new members.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="notice-list">
-                  <article class="notice-card">
-                    <h3>Keep membership active</h3>
-                    <p>
-                      Active paid members keep access to rewards, benefits,
-                      referral tracking, and the portal.
-                    </p>
-                  </article>
-
-                  <article class="notice-card">
-                    <h3>Refer more members</h3>
-                    <p>
-                      Approved referrals can add rewards to your balance and
-                      move you up the monthly leaderboard.
-                    </p>
-                  </article>
-
-                  <article class="notice-card">
-                    <h3>Watch payout timing</h3>
-                    <p>
-                      Monthly reward payouts are prepared between the 1st and 3rd
-                      of each month.
                     </p>
                   </article>
                 </div>
@@ -1082,17 +1036,19 @@
         </section>
 
         <div class="footer-note">
-          Card Leo Rewards Member Portal · Rewards Dashboard
+          Card Leo Rewards Member Portal · Allowance Rewards Dashboard
         </div>
       </main>
     </div>
 
     <script src="/assets/js/auth-guard.js"></script>
+
     <script>
       (() => {
         const API = {
           me: "/api/auth/me",
           rewards: "/api/portal/rewards",
+          referrals: "/api/referrals/me",
           logout: "/api/auth/logout",
         };
 
@@ -1108,65 +1064,74 @@
           heroCopy: document.getElementById("heroCopy"),
           rewardStatusBadge: document.getElementById("rewardStatusBadge"),
 
-          totalRewards: document.getElementById("totalRewards"),
-          activeRewards: document.getElementById("activeRewards"),
-          pendingRewards: document.getElementById("pendingRewards"),
-          estimatedEarnings: document.getElementById("estimatedEarnings"),
+          directEarnings: document.getElementById("directEarnings"),
+          teamEarnings: document.getElementById("teamEarnings"),
+          growthPoolCredit: document.getElementById("growthPoolCredit"),
+          totalAllowance: document.getElementById("totalAllowance"),
 
           rewardsList: document.getElementById("rewardsList"),
+          activityList: document.getElementById("activityList"),
           noticesList: document.getElementById("noticesList"),
 
           memberName: document.getElementById("memberName"),
           memberEmail: document.getElementById("memberEmail"),
-          memberTier: document.getElementById("memberTier"),
           membershipStatus: document.getElementById("membershipStatus"),
           paymentStatus: document.getElementById("paymentStatus"),
+          directReferralCount: document.getElementById("directReferralCount"),
+          teamReferralCount: document.getElementById("teamReferralCount"),
         };
 
         let currentMember = null;
 
-        const money = (value) => {
+        function money(value) {
           const number = Number(value || 0);
 
           return new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
           }).format(Number.isFinite(number) ? number : 0);
-        };
+        }
 
-        const escapeHtml = (value) =>
-          String(value ?? "")
+        function escapeHtml(value) {
+          return String(value ?? "")
             .replaceAll("&", "&amp;")
             .replaceAll("<", "&lt;")
             .replaceAll(">", "&gt;")
             .replaceAll('"', "&quot;")
             .replaceAll("'", "&#39;");
+        }
 
-        const isObject = (value) =>
-          Boolean(value) && typeof value === "object" && !Array.isArray(value);
+        function isObject(value) {
+          return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+        }
 
-        const unwrap = (payload) => {
+        function unwrap(payload) {
           if (!isObject(payload)) return {};
           return isObject(payload.data) ? payload.data : payload;
-        };
+        }
 
-        const normalizeText = (value, fallback = "") => {
+        function normalizeText(value, fallback = "") {
           const text = String(value ?? "").trim();
           return text || fallback;
-        };
+        }
 
-        const titleCase = (value) =>
-          String(value || "")
+        function normalizeEmail(value) {
+          return normalizeText(value).toLowerCase();
+        }
+
+        function titleCase(value) {
+          return String(value || "")
             .replace(/[_-]+/g, " ")
             .split(/\s+/)
             .filter(Boolean)
             .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
             .join(" ");
+        }
 
-        const safeNumber = (value, fallback = 0) => {
+        function safeNumber(value, fallback = 0) {
           const number = Number(value);
           return Number.isFinite(number) ? number : fallback;
-        };
+        }
 
         async function fetchJson(url, options = {}) {
           const response = await fetch(url, {
@@ -1226,17 +1191,6 @@
           return [first, last].filter(Boolean).join(" ") || "Card Leo Member";
         }
 
-        function getTier(member) {
-          return normalizeText(
-            member?.tier_name ||
-              member?.tierName ||
-              member?.membership_tier ||
-              member?.membershipTier ||
-              member?.tier ||
-              "VIP Member"
-          );
-        }
-
         function getStatus(member) {
           return normalizeText(
             member?.membership_status ||
@@ -1277,8 +1231,8 @@
           const paymentStatus = getPaymentStatus(member);
 
           return (
-            ["active", "approved", "auto_approved", "paid"].includes(status) ||
-            ["paid", "active", "current", "succeeded"].includes(paymentStatus)
+            ["active", "approved", "auto_approved", "paid", "current"].includes(status) ||
+            ["paid", "active", "current", "succeeded", "complete"].includes(paymentStatus)
           );
         }
 
@@ -1306,8 +1260,13 @@
           return "status-pill";
         }
 
-        function rewardPillClass(status) {
+        function rewardPillClass(status, type = "") {
           const value = normalizeText(status).toLowerCase();
+          const kind = normalizeText(type).toLowerCase();
+
+          if (kind === "team") return "pill blue";
+          if (kind === "direct") return "pill green";
+          if (kind === "growth") return "pill gold";
 
           if (value === "active" || value === "approved" || value === "earned") {
             return "pill green";
@@ -1317,10 +1276,6 @@
             return "pill yellow";
           }
 
-          if (value === "locked" || value === "inactive") {
-            return "pill";
-          }
-
           if (value === "denied" || value === "cancelled" || value === "canceled") {
             return "pill red";
           }
@@ -1328,219 +1283,219 @@
           return "pill gold";
         }
 
-        function normalizeReward(item, index) {
-          const raw = isObject(item) ? item : {};
+        function getSummaryNumber(summary, keys, fallback = 0) {
+          for (const key of keys) {
+            const value = summary?.[key];
 
-          const title = normalizeText(
-            raw.title || raw.name || raw.label,
-            `Reward ${index + 1}`
+            if (value !== undefined && value !== null && value !== "") {
+              const number = Number(value);
+              return Number.isFinite(number) ? number : fallback;
+            }
+          }
+
+          return fallback;
+        }
+
+        function normalizeReferralSummary(referralsPayload = {}) {
+          const summary = referralsPayload.summary || referralsPayload.stats || {};
+
+          const directReferrals = getSummaryNumber(summary, [
+            "approvedDirectReferrals",
+            "approved_direct_referrals",
+            "directReferrals",
+            "direct_referrals",
+          ]);
+
+          const teamReferrals = getSummaryNumber(summary, [
+            "approvedTeamReferrals",
+            "approved_team_referrals",
+            "teamReferrals",
+            "team_referrals",
+          ]);
+
+          const directEarnings = getSummaryNumber(
+            summary,
+            ["directEarnings", "direct_earnings"],
+            directReferrals * 7
           );
 
-          const description = normalizeText(
-            raw.description || raw.details || raw.summary,
-            "Exclusive Card Leo Rewards member reward available through your account."
+          const teamEarnings = getSummaryNumber(
+            summary,
+            ["teamEarnings", "team_earnings"],
+            teamReferrals * 1
           );
 
-          const status = normalizeText(
-            raw.status || raw.state || raw.rewardStatus,
-            "active"
-          ).toLowerCase();
-
-          const category = normalizeText(
-            raw.category || raw.type || raw.rewardType,
-            "Member Reward"
+          const growthPoolCredit = getSummaryNumber(
+            summary,
+            ["growthPoolCredit", "growth_pool_credit"],
+            teamReferrals * 2
           );
 
-          const amount = safeNumber(
-            raw.amount || raw.value || raw.reward_amount || raw.rewardAmount,
-            0
+          const totalEarned = getSummaryNumber(
+            summary,
+            [
+              "totalEarned",
+              "total_earned",
+              "allowanceBalance",
+              "allowance_balance",
+              "rewardBalance",
+              "reward_balance",
+            ],
+            directEarnings + teamEarnings
           );
 
-          const code = normalizeText(raw.code || raw.rewardCode || raw.reference);
-          const expiresAt = normalizeText(raw.expiresAt || raw.validUntil || raw.expiration);
+          const pendingReferrals = getSummaryNumber(summary, [
+            "pendingReferrals",
+            "pending_referrals",
+          ]);
+
+          const totalReferrals = getSummaryNumber(
+            summary,
+            ["totalReferrals", "total_referrals"],
+            directReferrals + teamReferrals + pendingReferrals
+          );
 
           return {
-            id: normalizeText(raw.id || raw.rewardId, `reward-${index + 1}`),
-            title,
-            description,
-            status,
-            statusLabel: titleCase(status),
-            category: titleCase(category),
-            amount,
-            code,
-            expiresAt,
+            directReferrals,
+            teamReferrals,
+            pendingReferrals,
+            totalReferrals,
+            directEarnings,
+            teamEarnings,
+            growthPoolCredit,
+            totalEarned,
           };
         }
 
-        function defaultRewards(member) {
+        function normalizeReferralRows(referralsPayload = {}) {
+          const rows =
+            referralsPayload.referrals ||
+            referralsPayload.recentReferrals ||
+            referralsPayload.recent_referrals ||
+            [];
+
+          return Array.isArray(rows) ? rows : [];
+        }
+
+        function buildRewardCards(summary, member) {
           const paid = isPaidActive(member);
 
           return [
             {
-              id: "referral-reward",
-              title: "Approved Referral Reward",
+              id: "direct-referral-earnings",
+              title: "Direct Referral Earnings",
               description:
-                "Earn reward credit for approved members who join through your referral link.",
+                "Member A referred Member B earns $7 after Member B is active and approved.",
               status: paid ? "active" : "pending",
               statusLabel: paid ? "Active" : "Pending",
-              category: "Referral Reward",
-              amount: 7,
+              category: "Direct Referral",
+              type: "direct",
+              amount: summary.directEarnings,
+              meta: `${summary.directReferrals} direct approved referral${
+                summary.directReferrals === 1 ? "" : "s"
+              }`,
             },
             {
-              id: "monthly-leaderboard",
-              title: "Monthly Leaderboard Rewards",
+              id: "team-referral-earnings",
+              title: "Team Referral Earnings",
               description:
-                "Compete with other members each month and climb the referral leaderboard.",
+                "When Member B referred Member C and Member C is approved, Member A can receive a $1 team reward.",
               status: paid ? "active" : "pending",
               statusLabel: paid ? "Active" : "Pending",
-              category: "Leaderboard",
-              amount: 0,
+              category: "Team Referral",
+              type: "team",
+              amount: summary.teamEarnings,
+              meta: `${summary.teamReferrals} team approved referral${
+                summary.teamReferrals === 1 ? "" : "s"
+              }`,
             },
             {
-              id: "lifestyle-benefits",
-              title: "Lifestyle Benefit Access",
+              id: "growth-pool-credit",
+              title: "Growth Pool Credit",
               description:
-                "Access member-focused benefits across dining, travel, shopping, entertainment, and everyday value.",
-              status: paid ? "active" : "locked",
-              statusLabel: paid ? "Active" : "Locked",
-              category: "Benefits",
-              amount: 0,
+                "Growth pool credit is tracked separately from personal leaderboard earnings.",
+              status: "tracking",
+              statusLabel: "Tracking",
+              category: "Growth Pool",
+              type: "growth",
+              amount: summary.growthPoolCredit,
+              meta: "$2 growth pool credit per approved team referral",
             },
             {
-              id: "monthly-payout-window",
+              id: "total-allowance",
+              title: "Total Allowance",
+              description:
+                "Your leaderboard allowance total is direct referral earnings plus team referral earnings.",
+              status: "active",
+              statusLabel: "Active",
+              category: "Allowance",
+              type: "direct",
+              amount: summary.totalEarned,
+              meta: "Direct + team rewards",
+            },
+            {
+              id: "payout-window",
               title: "Monthly Payout Window",
               description:
-                "Eligible monthly reward payouts are prepared between the 1st and 3rd of each month.",
+                "Eligible allowances are dispersed on the 1st and 3rd of every month.",
               status: "processing",
               statusLabel: "Processing",
-              category: "Payouts",
+              category: "Payout Timing",
+              type: "timing",
               amount: 0,
+              meta: "1st–3rd monthly",
             },
           ];
         }
 
-        function defaultNotices(member) {
+        function buildNotices(summary, member) {
           const paid = isPaidActive(member);
 
           return [
             {
-              title: "Rewards require active membership",
+              title: "Allowance payout timing",
+              body:
+                "Eligible allowances are dispersed on the 1st and 3rd of every month after rewards are reviewed.",
+            },
+            {
+              title: "Direct referral rule",
+              body:
+                "Member A referred Member B earns $7 after Member B is active, paid, and approved.",
+            },
+            {
+              title: "Team referral rule",
+              body:
+                "Member B referred Member C can create a $1 team reward for Member A after Member C is active and approved.",
+            },
+            {
+              title: "Growth pool tracking",
+              body:
+                "The $2 growth pool credit is tracked separately and should not be added into personal leaderboard earnings unless you choose to display it that way.",
+            },
+            {
+              title: paid ? "Membership active" : "Payment required",
               body: paid
-                ? "Your membership is active, so your reward tools and benefits can remain unlocked."
-                : "Complete your activation payment to unlock full rewards access.",
-            },
-            {
-              title: "Referral rewards",
-              body:
-                "Every approved referral can add $7 to your rewards account and help you rise on the leaderboard.",
-            },
-            {
-              title: "Payout timing",
-              body:
-                "Monthly reward payouts are prepared between the 1st and 3rd after monthly rewards are reviewed.",
+                ? "Your membership is active, so your reward tools and benefit access can remain unlocked."
+                : "Complete your membership payment to unlock full rewards access.",
             },
           ];
-        }
-
-        function normalizePayload(payload, memberFallback = null) {
-          const root = isObject(payload) ? payload : {};
-          const data = unwrap(root);
-
-          const member =
-            data.member ||
-            data.profile ||
-            data.user ||
-            root.member ||
-            root.profile ||
-            root.user ||
-            memberFallback ||
-            {};
-
-          const summary = data.summary || root.summary || {};
-          const rawRewards = Array.isArray(data.rewards)
-            ? data.rewards
-            : Array.isArray(root.rewards)
-              ? root.rewards
-              : [];
-
-          const rewards = rawRewards.length
-            ? rawRewards.map(normalizeReward)
-            : defaultRewards(member);
-
-          const approvedReferrals = safeNumber(
-            summary.approvedReferrals || summary.approved_referrals,
-            0
-          );
-
-          const estimatedEarnings = safeNumber(
-            summary.estimatedEarnings ||
-              summary.estimated_earnings ||
-              summary.earnedAmount ||
-              summary.earned_amount,
-            approvedReferrals * 7
-          );
-
-          const totalRewards = safeNumber(summary.totalRewards, rewards.length);
-          const activeRewards = safeNumber(
-            summary.activeRewards,
-            rewards.filter((reward) =>
-              ["active", "approved", "earned"].includes(reward.status)
-            ).length
-          );
-          const pendingRewards = safeNumber(
-            summary.pendingRewards,
-            rewards.filter((reward) =>
-              ["pending", "processing"].includes(reward.status)
-            ).length
-          );
-
-          const rawNotices = Array.isArray(data.notices)
-            ? data.notices
-            : Array.isArray(root.notices)
-              ? root.notices
-              : [];
-
-          const notices = rawNotices.length
-            ? rawNotices.map((notice, index) => ({
-                title: normalizeText(notice.title || notice.name, `Notice ${index + 1}`),
-                body: normalizeText(
-                  notice.body || notice.message || notice.description,
-                  "Important rewards information is available for your review."
-                ),
-              }))
-            : defaultNotices(member);
-
-          return {
-            member,
-            rewards,
-            notices,
-            summary: {
-              totalRewards,
-              activeRewards,
-              pendingRewards,
-              estimatedEarnings,
-              approvedReferrals,
-            },
-          };
         }
 
         function renderMember(member) {
           currentMember = member;
 
           const fullName = getFullName(member);
-          const tier = getTier(member);
-          const email = normalizeText(member.email, "Member account");
+          const email = normalizeText(member?.email, "Member account");
           const statusLabel = getStatusLabel(member);
           const paymentLabel = getPaymentLabel(member);
           const paid = isPaidActive(member);
 
           els.cardMemberName.textContent = fullName;
-          els.cardMemberTier.textContent = tier;
+          els.cardMemberTier.textContent = "Allowance Card";
           els.cardMemberStatus.textContent = paid ? "Rewards Active" : "Payment Required";
 
           els.memberName.textContent = fullName;
           els.memberEmail.textContent = email;
-          els.memberTier.textContent = tier;
           els.membershipStatus.textContent = statusLabel;
           els.paymentStatus.textContent = paymentLabel;
 
@@ -1549,22 +1504,25 @@
             paid ? "Rewards Active" : "Payment Required"
           );
 
-          els.heroCopy.textContent = paid
-            ? "Your Card Leo Rewards membership is active. View your available rewards, referral earnings, payout timing, and benefit access."
-            : "Your rewards are limited until membership payment is complete. Activate your account to unlock full reward access.";
+          els.heroCopy.innerHTML = paid
+            ? 'Your Card Leo Rewards membership is active. View your direct referral earnings, team referral earnings, growth pool credit, payout timing, and benefit access. <strong>Member A referred Member B = $7.</strong> <strong>Member B referred Member C = $1 for Member A.</strong>'
+            : 'Your rewards are limited until membership payment is complete. Activate your account to unlock full reward access.';
         }
 
-        function renderStats(model) {
-          els.totalRewards.textContent = String(model.summary.totalRewards);
-          els.activeRewards.textContent = String(model.summary.activeRewards);
-          els.pendingRewards.textContent = String(model.summary.pendingRewards);
-          els.estimatedEarnings.textContent = money(model.summary.estimatedEarnings);
+        function renderStats(summary) {
+          els.directEarnings.textContent = money(summary.directEarnings);
+          els.teamEarnings.textContent = money(summary.teamEarnings);
+          els.growthPoolCredit.textContent = money(summary.growthPoolCredit);
+          els.totalAllowance.textContent = money(summary.totalEarned);
 
-          els.cardRewardSnapshot.textContent = `${model.summary.activeRewards} Active`;
+          els.directReferralCount.textContent = String(summary.directReferrals);
+          els.teamReferralCount.textContent = String(summary.teamReferrals);
+
+          els.cardRewardSnapshot.textContent = `${money(summary.totalEarned)} Earned`;
         }
 
-        function renderRewards(model) {
-          if (!model.rewards.length) {
+        function renderRewards(rewards) {
+          if (!rewards.length) {
             els.rewardsList.innerHTML = `
               <div class="empty-box">
                 No rewards are currently visible on this account. As your membership
@@ -1574,19 +1532,17 @@
             return;
           }
 
-          els.rewardsList.innerHTML = model.rewards
+          els.rewardsList.innerHTML = rewards
             .map((reward) => {
               const amountPill =
                 reward.amount > 0
-                  ? `<span class="pill green">${escapeHtml(money(reward.amount))}</span>`
+                  ? `<span class="pill ${reward.type === "team" ? "blue" : "green"}">${escapeHtml(
+                      money(reward.amount)
+                    )}</span>`
                   : "";
 
-              const codePill = reward.code
-                ? `<span class="pill">Code: ${escapeHtml(reward.code)}</span>`
-                : "";
-
-              const expiresPill = reward.expiresAt
-                ? `<span class="pill">Valid Until: ${escapeHtml(reward.expiresAt)}</span>`
+              const metaPill = reward.meta
+                ? `<span class="pill">${escapeHtml(reward.meta)}</span>`
                 : "";
 
               return `
@@ -1596,7 +1552,7 @@
                       <h3 class="reward-title">${escapeHtml(reward.title)}</h3>
                       <p class="reward-description">${escapeHtml(reward.description)}</p>
                     </div>
-                    <span class="${rewardPillClass(reward.status)}">
+                    <span class="${rewardPillClass(reward.status, reward.type)}">
                       ${escapeHtml(reward.statusLabel)}
                     </span>
                   </div>
@@ -1604,8 +1560,7 @@
                   <div class="reward-meta">
                     <span class="pill gold">${escapeHtml(reward.category)}</span>
                     ${amountPill}
-                    ${codePill}
-                    ${expiresPill}
+                    ${metaPill}
                   </div>
                 </article>
               `;
@@ -1613,8 +1568,61 @@
             .join("");
         }
 
-        function renderNotices(model) {
-          els.noticesList.innerHTML = model.notices
+        function renderActivity(rows) {
+          if (!rows.length) {
+            els.activityList.innerHTML = `
+              <div class="empty-box">
+                No referral reward activity yet. Share your referral link to begin
+                building direct and team rewards.
+              </div>
+            `;
+            return;
+          }
+
+          els.activityList.innerHTML = rows
+            .slice(0, 20)
+            .map((row) => {
+              const type = normalizeText(row.level || row.type || "direct").toLowerCase();
+              const isTeam = type === "team";
+              const label = isTeam ? "Member B referred Member C" : "Member A referred Member B";
+              const name = normalizeText(row.name || row.full_name || row.email, "Referral Member");
+              const email = normalizeEmail(row.email);
+              const status = normalizeText(row.statusLabel || row.status, "Pending");
+              const amount = safeNumber(row.amount || row.reward_amount || row.earned, 0);
+              const note = normalizeText(row.note || row.referred_through_email || "");
+
+              return `
+                <article class="activity-card">
+                  <div class="activity-top">
+                    <div>
+                      <h3 class="activity-title">${escapeHtml(label)}</h3>
+                      <p class="activity-description">
+                        ${escapeHtml(name)}
+                        ${email ? ` · ${escapeHtml(email)}` : ""}
+                        ${note ? `<br />${escapeHtml(note)}` : ""}
+                      </p>
+                    </div>
+                    <span class="${rewardPillClass(status, type)}">
+                      ${escapeHtml(titleCase(status))}
+                    </span>
+                  </div>
+
+                  <div class="activity-meta">
+                    <span class="pill ${isTeam ? "blue" : "green"}">
+                      ${escapeHtml(isTeam ? "Team Reward" : "Direct Reward")}
+                    </span>
+                    <span class="pill ${isTeam ? "blue" : "green"}">
+                      ${escapeHtml(amount > 0 ? money(amount) : "Pending")}
+                    </span>
+                  </div>
+                </article>
+              `;
+            })
+            .join("");
+        }
+
+        function renderNotices(notices) {
+          els.noticesList.innerHTML = notices
             .map(
               (notice) => `
                 <article class="notice-card">
@@ -1627,21 +1635,17 @@
         }
 
         async function loadSession() {
-          try {
-            const data = await fetchJson(API.me);
-            if (!data) return null;
+          const data = await fetchJson(API.me);
+          if (!data) return null;
 
-            if (data.authenticated === false) {
-              window.location.href =
-                "/login.html?next=" +
-                encodeURIComponent(window.location.pathname + window.location.search);
-              return null;
-            }
-
-            return data.member || data.profile || data.user || null;
-          } catch {
+          if (data.authenticated === false) {
+            window.location.href =
+              "/login.html?next=" +
+              encodeURIComponent(window.location.pathname + window.location.search);
             return null;
           }
+
+          return data.member || data.profile || data.user || null;
         }
 
         async function loadRewards() {
@@ -1654,27 +1658,64 @@
               renderMember(authMember);
             }
 
-            const data = await fetchJson(API.rewards);
-            if (!data) return;
+            const [referralsResult, rewardsResult] = await Promise.allSettled([
+              fetchJson(API.referrals),
+              fetchJson(API.rewards),
+            ]);
 
-            const model = normalizePayload(data, authMember);
+            const referralsData =
+              referralsResult.status === "fulfilled" && referralsResult.value
+                ? referralsResult.value
+                : {};
 
-            renderMember(model.member);
-            renderStats(model);
-            renderRewards(model);
-            renderNotices(model);
+            const rewardsData =
+              rewardsResult.status === "fulfilled" && rewardsResult.value
+                ? rewardsResult.value
+                : {};
 
-            showBanner("Your rewards have been loaded successfully.", "success");
+            const member =
+              referralsData.member ||
+              rewardsData.member ||
+              rewardsData.profile ||
+              rewardsData.user ||
+              authMember ||
+              {};
+
+            const summary = normalizeReferralSummary(referralsData);
+            const rows = normalizeReferralRows(referralsData);
+            const rewards = buildRewardCards(summary, member);
+            const notices = buildNotices(summary, member);
+
+            renderMember(member);
+            renderStats(summary);
+            renderRewards(rewards);
+            renderActivity(rows);
+            renderNotices(notices);
+
+            showBanner("Your allowance rewards have been loaded successfully.", "success");
           } catch (error) {
             console.error("[portal/rewards] load error:", error);
 
-            const model = normalizePayload({}, currentMember || {});
-            renderStats(model);
-            renderRewards(model);
-            renderNotices(model);
+            const member = currentMember || {};
+            const fallbackSummary = {
+              directReferrals: 0,
+              teamReferrals: 0,
+              pendingReferrals: 0,
+              totalReferrals: 0,
+              directEarnings: 0,
+              teamEarnings: 0,
+              growthPoolCredit: 0,
+              totalEarned: 0,
+            };
+
+            renderMember(member);
+            renderStats(fallbackSummary);
+            renderRewards(buildRewardCards(fallbackSummary, member));
+            renderActivity([]);
+            renderNotices(buildNotices(fallbackSummary, member));
 
             showBanner(
-              error?.message || "Unable to load your rewards right now.",
+              error?.message || "Unable to load your allowance rewards right now.",
               "error"
             );
           }

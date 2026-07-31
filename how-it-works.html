@@ -11,11 +11,11 @@
 
     <meta
       name="description"
-      content="Learn how Card Leo Rewards works, including membership activation, monthly billing, referral tower rewards, lifestyle benefits, payouts, and member Q&A."
+      content="Learn how Card Leo Rewards works, including recurring membership, automatic approval after payment, referral tower rewards, allowance payouts, lifestyle benefits, and member Q&A."
     />
     <meta
       name="keywords"
-      content="Card Leo Rewards how it works, referral tower, lifestyle benefits, rewards membership, black card, member portal"
+      content="Card Leo Rewards how it works, referral tower, lifestyle benefits, rewards membership, allowance card, member portal"
     />
     <meta name="theme-color" content="#030303" />
     <meta name="robots" content="index, follow" />
@@ -30,7 +30,7 @@
     <meta property="og:title" content="How Card Leo Rewards Works" />
     <meta
       property="og:description"
-      content="See how membership activation, referral rewards, lifestyle benefits, and payouts work inside Card Leo Rewards."
+      content="See how recurring membership, referral tower rewards, lifestyle benefits, automatic approval, and allowance payouts work inside Card Leo Rewards."
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Card Leo Rewards" />
@@ -47,7 +47,7 @@
     <meta name="twitter:title" content="How Card Leo Rewards Works" />
     <meta
       name="twitter:description"
-      content="Membership activation, referral tower rewards, lifestyle benefits, payouts, and Q&A."
+      content="Recurring membership, referral tower rewards, lifestyle benefits, payouts, and Q&A."
     />
     <meta
       name="twitter:image"
@@ -258,12 +258,12 @@
         border-radius: 999px;
         border: 0;
         font-weight: 900;
-        transition: 0.22s ease;
+        transition: none !important;
         cursor: pointer;
       }
 
       .btn:hover {
-        transform: translateY(-2px);
+        transform: none !important;
       }
 
       .btn-primary {
@@ -280,15 +280,32 @@
         color: var(--leo-white);
       }
 
+      .top-join-stack {
+        display: inline-grid;
+        gap: 0.65rem;
+        margin-top: 1.5rem;
+      }
+
+      .top-login-link {
+        text-align: center;
+        color: var(--leo-gold-2);
+        font-weight: 900;
+        font-size: 0.95rem;
+      }
+
       .hero {
-        padding: 58px 0 90px;
+        padding: 58px 0 80px;
       }
 
       .hero-grid {
         display: grid;
-        grid-template-columns: 0.95fr 1.05fr;
+        grid-template-columns: 1fr;
         gap: 2rem;
         align-items: center;
+      }
+
+      .hero-copy {
+        max-width: 900px;
       }
 
       .eyebrow {
@@ -346,22 +363,120 @@
       }
 
       .hero-text {
-        max-width: 62ch;
+        max-width: 72ch;
         margin: 1rem 0 0;
         font-size: 1.08rem;
       }
 
-      .hero-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.85rem;
-        margin-top: 1.5rem;
+      .membership-bubble {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-top: 1.25rem;
+        padding: 0.7rem 1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(231, 182, 79, 0.28);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.12), transparent 38%),
+          rgba(255, 255, 255, 0.04);
+        color: var(--leo-gold-2);
+        font-weight: 900;
+      }
+
+      .section {
+        padding: 92px 0;
+      }
+
+      .section-dark {
+        border-top: 1px solid rgba(231, 182, 79, 0.11);
+        border-bottom: 1px solid rgba(231, 182, 79, 0.11);
+        background:
+          radial-gradient(circle at 80% 20%, rgba(231, 182, 79, 0.08), transparent 32%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.015));
+      }
+
+      .section-heading {
+        max-width: 820px;
+        margin: 0 auto 2.8rem;
+        text-align: center;
+      }
+
+      .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+      }
+
+      .info-card,
+      .step-card,
+      .benefit-card,
+      .tower-floor,
+      .qa-item,
+      .video-card,
+      .cta-panel {
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 34%),
+          rgba(255, 255, 255, 0.035);
+        box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32);
+        transition: none !important;
+        transform: none !important;
+        cursor: default;
+      }
+
+      .info-card:hover,
+      .step-card:hover,
+      .benefit-card:hover,
+      .tower-floor:hover,
+      .qa-item:hover,
+      .video-card:hover,
+      .cta-panel:hover {
+        border-color: rgba(231, 182, 79, 0.18) !important;
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 34%),
+          rgba(255, 255, 255, 0.035) !important;
+        box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32) !important;
+        transform: none !important;
+        filter: none !important;
+      }
+
+      .step-card {
+        padding: 1.2rem;
+        border-radius: 22px;
+      }
+
+      .step-card span {
+        display: inline-flex;
+        color: var(--leo-gold);
+        font-size: 0.76rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .step-card h3 {
+        margin: 0.7rem 0 0.65rem;
+      }
+
+      .step-card ul {
+        margin: 0;
+        padding-left: 1.15rem;
+        color: var(--leo-muted);
+        line-height: 1.65;
+      }
+
+      .step-card li {
+        margin: 0.45rem 0;
+      }
+
+      .step-video-wrap {
+        max-width: 980px;
+        margin: 1.2rem auto 0;
       }
 
       .video-card {
         border-radius: 34px;
         overflow: hidden;
-        border: 1px solid rgba(231, 182, 79, 0.26);
         background:
           radial-gradient(circle at top right, rgba(231, 182, 79, 0.14), transparent 34%),
           #050505;
@@ -432,83 +547,6 @@
         color: var(--leo-muted);
       }
 
-      .section {
-        padding: 92px 0;
-      }
-
-      .section-dark {
-        border-top: 1px solid rgba(231, 182, 79, 0.11);
-        border-bottom: 1px solid rgba(231, 182, 79, 0.11);
-        background:
-          radial-gradient(circle at 80% 20%, rgba(231, 182, 79, 0.08), transparent 32%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.015));
-      }
-
-      .section-heading {
-        max-width: 790px;
-        margin: 0 auto 2.8rem;
-        text-align: center;
-      }
-
-      .steps-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1rem;
-      }
-
-      .info-card,
-      .step-card,
-      .benefit-card,
-      .tower-floor,
-      .qa-item {
-        border: 1px solid rgba(231, 182, 79, 0.18);
-        background:
-          radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 34%),
-          rgba(255, 255, 255, 0.035);
-        box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32);
-        transition: none !important;
-        transform: none !important;
-        cursor: default;
-      }
-
-      .info-card:hover,
-      .step-card:hover,
-      .benefit-card:hover,
-      .tower-floor:hover,
-      .qa-item:hover {
-        border-color: rgba(231, 182, 79, 0.18) !important;
-        background:
-          radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 34%),
-          rgba(255, 255, 255, 0.035) !important;
-        box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32) !important;
-        transform: none !important;
-        filter: none !important;
-      }
-
-      .step-card {
-        padding: 1.2rem;
-        border-radius: 22px;
-      }
-
-      .step-card span {
-        display: inline-flex;
-        color: var(--leo-gold);
-        font-size: 0.76rem;
-        font-weight: 900;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      .step-card h3 {
-        margin: 0.7rem 0 0.45rem;
-      }
-
-      .step-card p {
-        margin: 0;
-        color: var(--leo-muted);
-        line-height: 1.6;
-      }
-
       .tower-grid {
         display: grid;
         grid-template-columns: 0.95fr 1.05fr;
@@ -565,12 +603,6 @@
           rgba(255, 255, 255, 0.04);
       }
 
-      .tower-floor.pending {
-        background:
-          linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)),
-          rgba(255, 255, 255, 0.04);
-      }
-
       .tower-floor.team {
         border-color: rgba(126, 200, 255, 0.26);
         background:
@@ -578,11 +610,11 @@
           rgba(255, 255, 255, 0.04);
       }
 
-      .tower-floor.team:hover {
-        border-color: rgba(126, 200, 255, 0.26) !important;
+      .tower-floor.growth {
+        border-color: rgba(72, 240, 107, 0.28);
         background:
-          linear-gradient(135deg, rgba(126, 200, 255, 0.18), rgba(231, 182, 79, 0.08)),
-          rgba(255, 255, 255, 0.04) !important;
+          linear-gradient(135deg, rgba(72, 240, 107, 0.18), rgba(231, 182, 79, 0.1)),
+          rgba(255, 255, 255, 0.04);
       }
 
       .floor-num {
@@ -598,11 +630,6 @@
 
       .floor-name {
         font-weight: 800;
-      }
-
-      .floor-status {
-        color: var(--leo-muted);
-        font-size: 0.9rem;
       }
 
       .floor-money {
@@ -633,6 +660,18 @@
         margin: 0;
         color: var(--leo-muted);
         line-height: 1.65;
+      }
+
+      .calculation-card {
+        border-color: rgba(72, 240, 107, 0.26);
+      }
+
+      .calculation-total {
+        margin-top: 0.9rem;
+        font-size: clamp(2rem, 5vw, 3rem);
+        color: var(--leo-green);
+        font-weight: 900;
+        line-height: 1;
       }
 
       .benefits-grid {
@@ -742,7 +781,6 @@
         padding: clamp(1.7rem, 4vw, 3rem);
         border-radius: 32px;
         text-align: center;
-        border: 1px solid rgba(231, 182, 79, 0.22);
         background:
           radial-gradient(circle at top right, rgba(231, 182, 79, 0.16), transparent 34%),
           linear-gradient(180deg, rgba(19, 19, 19, 0.92), rgba(4, 4, 4, 0.95));
@@ -754,7 +792,6 @@
         justify-content: center;
         flex-wrap: wrap;
         gap: 0.85rem;
-        margin-top: 1.4rem;
       }
 
       .site-footer {
@@ -776,7 +813,6 @@
       }
 
       @media (max-width: 1100px) {
-        .hero-grid,
         .tower-grid,
         .rules-grid {
           grid-template-columns: 1fr;
@@ -850,12 +886,15 @@
           grid-template-columns: 1fr;
         }
 
-        .hero-actions,
         .cta-actions {
           flex-direction: column;
         }
 
         .btn {
+          width: 100%;
+        }
+
+        .top-join-stack {
           width: 100%;
         }
 
@@ -930,42 +969,18 @@
 
               <p class="hero-text">
                 Card Leo Rewards is built to be simple. Create your account,
-                activate your membership, use the Discount Mobile App, and track
-                referral rewards inside your private member portal.
+                activate your recurring membership, access mobile discounts, and
+                track direct referral rewards, team rewards, and allowance progress
+                inside your private member portal.
               </p>
 
-              <div class="hero-actions">
+              <div class="membership-bubble">
+                • Luxury Discount Mobile App Monthly Rewards Membership
+              </div>
+
+              <div class="top-join-stack">
                 <a href="/signup.html" class="btn btn-primary">Join Now</a>
-                <a href="#qa" class="btn btn-secondary">View Q&A</a>
-              </div>
-            </div>
-
-            <div class="video-card">
-              <div class="video-top">
-                <strong>Card Leo Rewards Explainer</strong>
-                <span>Video Overview</span>
-              </div>
-
-              <div class="video-frame">
-                <video
-                  controls
-                  playsinline
-                  preload="metadata"
-                  poster="/assets/cardleo-cover.jpg"
-                >
-                  <source
-                    src="/assets/videos/cardleo-how-it-works.mp4"
-                    type="video/mp4"
-                  />
-                </video>
-
-                <noscript>
-                  <div class="video-placeholder">
-                    <div class="play-icon">▶</div>
-                    <h2>How Card Leo Rewards Works</h2>
-                    <p>Enable JavaScript to view the video player.</p>
-                  </div>
-                </noscript>
+                <a href="/login.html" class="top-login-link">Member Login</a>
               </div>
             </div>
           </div>
@@ -975,10 +990,10 @@
           <div class="container">
             <div class="section-heading">
               <p class="eyebrow">Simple Process</p>
-              <h2>Four Steps To Start Using Card Leo Rewards</h2>
+              <h2>Three Steps To Start Using Card Leo Rewards</h2>
               <p>
-                Start with your account, activate your membership, unlock your
-                benefits, then refer and track your rewards.
+                Start with your account, activate your recurring membership, then
+                refer and track your allowance rewards.
               </p>
             </div>
 
@@ -986,38 +1001,64 @@
               <article class="step-card">
                 <span>Step 01</span>
                 <h3>Create Your Account</h3>
-                <p>
-                  Fill out the signup form with your name, email, phone number,
-                  password, and referral details so your member profile can be created.
-                </p>
+                <ul>
+                  <li>Create your Card Leo Rewards member account.</li>
+                  <li>Enter your name, email, phone number, and password.</li>
+                  <li>Add your referral details if another member invited you.</li>
+                </ul>
               </article>
 
               <article class="step-card">
                 <span>Step 02</span>
-                <h3>Activate Membership</h3>
-                <p>
-                  Pay the $25 one-time activation fee and start your $20 monthly
-                  membership. Once payment is confirmed, your account can be approved.
-                </p>
+                <h3>Activate Monthly Membership</h3>
+                <ul>
+                  <li>Your membership is a recurring membership charged $20 per month.</li>
+                  <li>Automatic approval after payment is confirmed. Your account is approved automatically.</li>
+                  <li>Existing tiers allowances are released after Member A recruits 4 new active team members.</li>
+                  <li>Tiers stay the same or increase with active members.</li>
+                </ul>
               </article>
 
               <article class="step-card">
                 <span>Step 03</span>
-                <h3>Download Discount Mobile App</h3>
-                <p>
-                  Use the Discount Mobile App to access savings, deals, perks,
-                  and lifestyle benefits included with your membership.
-                </p>
+                <h3>Refer And Track Allowances</h3>
+                <ul>
+                  <li>Member A referred Member B earns +$7.00 after Member B is active and approved.</li>
+                  <li>Member B referred Member C creates a +$1.00 team reward example for Member A.</li>
+                  <li>Allowances dispersed on the 1st and 3rd of every month.</li>
+                </ul>
               </article>
+            </div>
 
-              <article class="step-card">
-                <span>Step 04</span>
-                <h3>Refer And Track Rewards</h3>
-                <p>
-                  Share your referral link, track your referral tower, and view
-                  direct rewards, team-building rewards, and allowance progress.
-                </p>
-              </article>
+            <div class="step-video-wrap">
+              <div class="video-card">
+                <div class="video-top">
+                  <strong>Card Leo Rewards Explainer</strong>
+                  <span>Video Overview</span>
+                </div>
+
+                <div class="video-frame">
+                  <video
+                    controls
+                    playsinline
+                    preload="metadata"
+                    poster="/assets/cardleo-cover.jpg"
+                  >
+                    <source
+                      src="/assets/videos/cardleo-how-it-works.mp4"
+                      type="video/mp4"
+                    />
+                  </video>
+
+                  <noscript>
+                    <div class="video-placeholder">
+                      <div class="play-icon">▶</div>
+                      <h2>How Card Leo Rewards Works</h2>
+                      <p>Enable JavaScript to view the video player.</p>
+                    </div>
+                  </noscript>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -1027,79 +1068,79 @@
             <div class="tower-visual">
               <div class="tower-header">
                 <h3>Referral Tower Example</h3>
-                <span>$7 Direct / $1 Team</span>
+                <span>$171.00 Example</span>
               </div>
 
               <div class="tower-stack">
-                <div class="tower-floor team">
+                <div class="tower-floor growth">
                   <span class="floor-num">12</span>
-                  <span class="floor-name">Member A Approved for Company Growth Allowance 10 new members</span>
+                  <span class="floor-name">Company Growth Allowance</span>
                   <span class="floor-money">+$100.00</span>
                 </div>
 
                 <div class="tower-floor team">
                   <span class="floor-num">11</span>
-                  <span class="floor-name">Member B Refers Member C</span>
+                  <span class="floor-name">Member B referred Member C</span>
                   <span class="floor-money">+$1.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">10</span>
-                  <span class="floor-name">Approved Direct Referral #10</span>
+                  <span class="floor-name">Member A referred Member B</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">09</span>
-                  <span class="floor-name">Approved Direct Referral</span>
+                  <span class="floor-name">Member A referred Member B</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">08</span>
-                  <span class="floor-name">Approved Direct Referral</span>
+                  <span class="floor-name">Member A referred Member B</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">07</span>
-                  <span class="floor-name">Approved Direct Referral</span>
+                  <span class="floor-name">Member A referred Member B</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">06</span>
-                  <span class="floor-name">Approved Direct Referral</span>
+                  <span class="floor-name">Member A referred Member B</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">05</span>
-                  <span class="floor-name">Approved Direct Referral</span>
+                  <span class="floor-name">Member A referred Member B</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">04</span>
-                  <span class="floor-name">Approved Direct Referral</span>
+                  <span class="floor-name">Member A referred Member B</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">03</span>
-                  <span class="floor-name">Member A Refers Member C</span>
+                  <span class="floor-name">Member A referred Member B</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">02</span>
-                  <span class="floor-name">Approved Direct Referral</span>
+                  <span class="floor-name">Member A referred Member B</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
 
                 <div class="tower-floor approved">
                   <span class="floor-num">01</span>
-                  <span class="floor-name">Member A Refers Member B</span>
+                  <span class="floor-name">Member A referred Member B</span>
                   <span class="floor-money">+$7.00</span>
                 </div>
               </div>
@@ -1110,32 +1151,44 @@
                 <p class="eyebrow">Referral Rewards</p>
                 <h2>Every Approved Referral Adds To Your Tower.</h2>
                 <p>
-                  Members get their own referral link. When someone joins,
-                  pays, and becomes approved, that referral can count toward
-                  rewards and leaderboard placement.
+                  Members get their own referral link. When someone joins, pays,
+                  and becomes approved, that referral can count toward rewards and
+                  leaderboard placement.
                 </p>
               </div>
 
               <article class="info-card">
                 <h3>$7 Direct Referral Reward</h3>
                 <p>
-                  Member A earns $7 when Member A directly refers an approved
-                  paid Member B, Member B referring Member C and member A also recieving $1 for Member C. For example $7 x 10 members = $70. For a 2nd example $1 x 1 = $1 for a total of $71.
+                  Member A earns $7 when Member A directly refers an approved and
+                  paid Member B. Every tower slot should read Member A referred
+                  Member B +$7.00.
                 </p>
               </article>
 
               <article class="info-card">
-                <h3>Company Growth Allowance:</h3>
+                <h3>$1 Team Referral Reward</h3>
                 <p>
-                  When Member A refers 100 new approved members, Member A may qualify to receive a portion of the Company Growth Allowance. This allowance pays a minimum of $2 per approved referral, or 10% of the eligible company growth amount, whichever applies based on the reward structure.
+                  When Member B refers Member C and Member C becomes approved,
+                  Member A can receive a $1 team-building reward example.
                 </p>
               </article>
 
-              <article class="info-card">
-                <h3>10 Approved Referrals</h3>
+              <article class="info-card calculation-card">
+                <h3>$171.00 Tower Calculation</h3>
                 <p>
-                  Once Member A reaches 10 approved direct referrals, Member A
-                  will qualify for the $100 allowance.
+                  Example: 10 approved direct referrals at $7.00 equals $70.00,
+                  plus $1.00 from Member B referred Member C, plus $100.00
+                  company growth allowance.
+                </p>
+                <div class="calculation-total">$171.00</div>
+              </article>
+
+              <article class="info-card">
+                <h3>Allowance Card</h3>
+                <p>
+                  Card Leo Rewards will use the Allowance Card language for the
+                  member allowance experience.
                 </p>
               </article>
             </div>
@@ -1146,10 +1199,10 @@
           <div class="container">
             <div class="section-heading">
               <p class="eyebrow">Lifestyle Benefits</p>
-              <h2>Member Savings And Perks In One Place</h2>
+              <h2>Mobile Savings And Perks In One Place</h2>
               <p>
-                Card Leo Rewards is not just referrals. Members also get access
-                to lifestyle savings and member benefits.
+                Card Leo Rewards members can access lifestyle savings, mobile
+                discounts, member benefits, and referral tracking.
               </p>
             </div>
 
@@ -1201,8 +1254,8 @@
                 <div class="benefit-icon">📱</div>
                 <h3>Discount Mobile App</h3>
                 <p>
-                  Members can use the Discount Mobile App to access savings,
-                  deals, perks, and lifestyle benefits.
+                  Members can use the Discount Mobile App or mobile-friendly
+                  perks access on their phone.
                 </p>
               </article>
             </div>
@@ -1213,7 +1266,7 @@
           <div class="container rules-grid">
             <div class="section-copy">
               <p class="eyebrow">Membership Rules</p>
-              <h2>Clear Pricing. Clear Approval. Clear Payouts.</h2>
+              <h2>Clear Membership. Clear Approval. Clear Payouts.</h2>
               <p>
                 These rules keep the member experience direct and easy to
                 understand.
@@ -1222,15 +1275,14 @@
 
             <div class="info-card">
               <ul class="rules-list">
-                <li><strong>$25</strong> one-time activation fee.</li>
-                <li><strong>$20/month</strong> recurring membership.</li>
+                <li>Your membership is a <strong>recurring $20 monthly membership</strong>.</li>
                 <li>Recurring billing happens on the <strong>10th</strong>.</li>
-                <li>Approval happens <strong>automatically after payment</strong>.</li>
-                <li>Earn <strong>$7</strong> per approved direct referral.</li>
-                <li>Team-building example: <strong>Member B → Member C = $1 for Member A</strong>.</li>
-                <li><strong>10 approved referrals</strong> will qualify for a <strong>$100 allowance</strong>.</li>
-                <li>Payouts are sent between the <strong>1st and 3rd</strong>.</li>
-                <li>Existing member tiers stay the same. Member B and Member C become Member A in their own personal tower</li>
+                <li>Approval happens <strong>automatically after payment is confirmed</strong>.</li>
+                <li>Earn <strong>$7</strong> when Member A referred Member B and Member B becomes active.</li>
+                <li>Team-building example: <strong>Member B referred Member C = $1 for Member A</strong>.</li>
+                <li><strong>Allowances are dispersed on the 1st and 3rd</strong> of every month.</li>
+                <li>Existing tier allowances are released after Member A recruits <strong>4 new active team members</strong>.</li>
+                <li>Tiers stay the same or increase with active members.</li>
                 <li>Denied, cancelled, or unpaid members should not count as approved.</li>
               </ul>
             </div>
@@ -1254,8 +1306,8 @@
                   <span>+</span>
                 </button>
                 <div class="qa-answer">
-                  It is a $25 one-time activation fee, then $20 per month.
-                  Monthly billing happens on the 10th.
+                  Card Leo Rewards is a recurring monthly rewards membership
+                  charged $20 per month.
                 </div>
               </article>
 
@@ -1265,8 +1317,8 @@
                   <span>+</span>
                 </button>
                 <div class="qa-answer">
-                  Your account can be automatically approved after your payment
-                  is successfully confirmed.
+                  Your account is approved automatically after payment is
+                  confirmed.
                 </div>
               </article>
 
@@ -1276,66 +1328,67 @@
                   <span>+</span>
                 </button>
                 <div class="qa-answer">
-                  You share your referral link. When someone joins, pays, and
-                  becomes an approved member, you can earn $7 for that approved
-                  direct referral.
+                  Member A shares a referral link. When Member B joins, pays,
+                  and becomes an approved member, Member A earns $7.
                 </div>
               </article>
 
               <article class="qa-item">
                 <button class="qa-question" type="button">
-                  How does Member B referring Member C work?
+                  How does Member B referred Member C work?
                   <span>+</span>
                 </button>
                 <div class="qa-answer">
                   When Member B refers Member C and Member C becomes approved,
-                  it can count as a $1 team-building reward example.
+                  it can count as a $1 team-building reward example for Member A.
                 </div>
               </article>
 
               <article class="qa-item">
                 <button class="qa-question" type="button">
-                  What happens at 10 approved referrals?
+                  What does the $171.00 tower example mean?
                   <span>+</span>
                 </button>
                 <div class="qa-answer">
-                  10 approved direct referrals will qualify the member for a
-                  $100 allowance.
+                  The example shows 10 approved direct referrals at $7.00 each
+                  for $70.00, plus $1.00 from Member B referred Member C, plus
+                  a $100.00 company growth allowance, totaling $171.00.
                 </div>
               </article>
 
               <article class="qa-item">
                 <button class="qa-question" type="button">
-                  When are payouts sent?
+                  When are allowances dispersed?
                   <span>+</span>
                 </button>
                 <div class="qa-answer">
-                  Eligible reward payouts are sent between the 1st and 3rd of
-                  every month.
+                  Eligible allowances are dispersed on the 1st and 3rd of every
+                  month.
                 </div>
               </article>
 
               <article class="qa-item">
                 <button class="qa-question" type="button">
-                  Are we changing the tiers?
+                  Do members need to download the Access Perks app?
                   <span>+</span>
                 </button>
                 <div class="qa-answer">
-                  No. The existing member tiers stay the same. The rewards,
-                  billing, and portal pages should continue using the current
-                  tier names.
+                  Members can access available perks on their phone. If Access
+                  provides app access, members may also use the Discount Mobile
+                  App. Card Leo can also display eligible perks inside the member
+                  portal when connected through the Access API.
                 </div>
               </article>
 
               <article class="qa-item">
                 <button class="qa-question" type="button">
-                  What do members get access to?
+                  How will allowance money be transferred?
                   <span>+</span>
                 </button>
                 <div class="qa-answer">
-                  Members can access lifestyle benefits, referral tracking,
-                  rewards information, billing tools, the Discount Mobile App,
-                  and their private member portal.
+                  Allowance transfer setup will require a connected payout method
+                  or card payout setup. This will be handled separately from the
+                  public signup page.
                 </div>
               </article>
 
@@ -1345,8 +1398,8 @@
                   <span>+</span>
                 </button>
                 <div class="qa-answer">
-                  Approved and pending referrals can be tracked inside the
-                  member portal, including the referral tower and leaderboard.
+                  Approved and pending referrals can be tracked inside the member
+                  portal, including the referral tower and leaderboard.
                 </div>
               </article>
             </div>
@@ -1356,16 +1409,8 @@
         <section class="section">
           <div class="container">
             <div class="cta-panel">
-              <p class="eyebrow">Ready To Start?</p>
-              <h2>Join Card Leo Rewards Today.</h2>
-              <p>
-                Activate your membership, unlock your portal, and start building
-                your referral rewards.
-              </p>
-
               <div class="cta-actions">
                 <a href="/signup.html" class="btn btn-primary">Join Now</a>
-                <a href="/login.html" class="btn btn-secondary">Member Login</a>
               </div>
             </div>
           </div>

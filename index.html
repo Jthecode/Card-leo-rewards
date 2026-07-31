@@ -7,15 +7,15 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
 
-    <title>Card Leo Rewards | Luxury Rewards & Referral Membership</title>
+    <title>Card Leo Rewards | Discount Mobile App & Monthly Rewards Membership</title>
 
     <meta
       name="description"
-      content="Card Leo Rewards gives members lifestyle savings, referral rewards, monthly leaderboard rewards, black card membership access, and a private member portal."
+      content="Card Leo Rewards gives members mobile lifestyle discounts, referral rewards, allowance tracking, monthly rewards, and a private member portal."
     />
     <meta
       name="keywords"
-      content="Card Leo Rewards, rewards membership, referral rewards, black card, monthly rewards, member portal, lifestyle savings"
+      content="Card Leo Rewards, discount mobile app, monthly rewards membership, referral rewards, allowance card, lifestyle savings, member portal"
     />
     <meta name="theme-color" content="#030303" />
     <meta name="robots" content="index, follow" />
@@ -27,7 +27,7 @@
     <meta property="og:title" content="Card Leo Rewards" />
     <meta
       property="og:description"
-      content="Luxury rewards, referral earnings, lifestyle savings, and premium member access."
+      content="Mobile discounts, referral rewards, allowance tracking, monthly rewards, and private member access."
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Card Leo Rewards" />
@@ -41,7 +41,7 @@
     <meta name="twitter:title" content="Card Leo Rewards" />
     <meta
       name="twitter:description"
-      content="Luxury rewards, referral earnings, lifestyle savings, and premium member access."
+      content="Mobile discounts, referral rewards, allowance tracking, monthly rewards, and private member access."
     />
     <meta
       name="twitter:image"
@@ -99,6 +99,10 @@
       img {
         max-width: 100%;
         display: block;
+      }
+
+      button {
+        font: inherit;
       }
 
       .site-shell {
@@ -227,6 +231,7 @@
         justify-content: center;
         flex-direction: column;
         gap: 0.25rem;
+        cursor: pointer;
       }
 
       .menu-toggle span {
@@ -244,11 +249,11 @@
         padding: 0.95rem 1.35rem;
         border-radius: 999px;
         font-weight: 900;
-        transition: 0.22s ease;
+        transition: none !important;
       }
 
       .btn:hover {
-        transform: translateY(-2px);
+        transform: none !important;
       }
 
       .btn-primary {
@@ -386,6 +391,19 @@
         margin-top: 1.5rem;
       }
 
+      .top-join-stack {
+        display: inline-grid;
+        gap: 0.65rem;
+        margin-top: 1.5rem;
+      }
+
+      .top-login-link {
+        text-align: center;
+        color: var(--leo-gold-2);
+        font-weight: 900;
+        font-size: 0.95rem;
+      }
+
       .info-bulletins {
         display: grid;
         gap: 0.85rem;
@@ -403,6 +421,13 @@
           radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 38%),
           rgba(255, 255, 255, 0.035);
         box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32);
+        transition: none !important;
+        transform: none !important;
+      }
+
+      .bulletin-card:hover {
+        transform: none !important;
+        filter: none !important;
       }
 
       .bulletin-dot {
@@ -436,7 +461,7 @@
         line-height: 1.55;
       }
 
-      .black-card-preview {
+      .allowance-card-preview {
         position: relative;
         min-height: 290px;
         border-radius: 30px;
@@ -451,8 +476,8 @@
           inset 0 0 0 1px rgba(255, 255, 255, 0.045);
       }
 
-      .black-card-top,
-      .black-card-bottom {
+      .allowance-card-top,
+      .allowance-card-bottom {
         position: relative;
         z-index: 1;
         display: flex;
@@ -461,7 +486,7 @@
         gap: 1rem;
       }
 
-      .black-card-logo {
+      .allowance-card-logo {
         display: grid;
         place-items: center;
         width: 66px;
@@ -474,7 +499,7 @@
         letter-spacing: 0.08em;
       }
 
-      .black-card-chip {
+      .allowance-card-chip {
         width: 56px;
         height: 39px;
         border-radius: 12px;
@@ -482,25 +507,25 @@
         box-shadow: 0 12px 28px rgba(216, 154, 34, 0.28);
       }
 
-      .black-card-middle {
+      .allowance-card-middle {
         position: relative;
         z-index: 1;
         margin-top: 2.8rem;
       }
 
-      .black-card-middle h2 {
+      .allowance-card-middle h2 {
         margin: 0;
         color: var(--leo-white);
         font-size: clamp(1.7rem, 3vw, 2.35rem);
         letter-spacing: -0.04em;
       }
 
-      .black-card-middle p {
+      .allowance-card-middle p {
         margin: 0.5rem 0 0;
         color: var(--leo-muted);
       }
 
-      .black-card-bottom {
+      .allowance-card-bottom {
         margin-top: 2.4rem;
         color: var(--leo-gold);
         font-size: 0.82rem;
@@ -553,6 +578,7 @@
       .section-copy p,
       .cta-panel p {
         color: var(--leo-muted);
+        line-height: 1.7;
       }
 
       .how-grid {
@@ -568,6 +594,13 @@
         background:
           radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 34%),
           rgba(255, 255, 255, 0.035);
+        transition: none !important;
+        transform: none !important;
+      }
+
+      .step-card:hover {
+        transform: none !important;
+        filter: none !important;
       }
 
       .step-card span {
@@ -590,6 +623,7 @@
         margin: 0.65rem 0 0;
         padding-left: 1.2rem;
         color: var(--leo-muted);
+        line-height: 1.65;
       }
 
       .step-card li,
@@ -623,6 +657,8 @@
           radial-gradient(circle at top right, rgba(231, 182, 79, 0.16), transparent 34%),
           linear-gradient(180deg, rgba(19, 19, 19, 0.92), rgba(4, 4, 4, 0.95));
         box-shadow: var(--leo-shadow);
+        transition: none !important;
+        transform: none !important;
       }
 
       .cta-actions {
@@ -630,7 +666,6 @@
         justify-content: center;
         flex-wrap: wrap;
         gap: 0.85rem;
-        margin-top: 1.4rem;
       }
 
       .site-footer {
@@ -731,7 +766,11 @@
           width: 100%;
         }
 
-        .black-card-bottom,
+        .top-join-stack {
+          width: 100%;
+        }
+
+        .allowance-card-bottom,
         .footer-bottom {
           flex-direction: column;
           align-items: flex-start;
@@ -814,7 +853,9 @@
 
             <div class="hero-grid">
               <div class="hero-copy">
-                <div class="luxury-badge">Luxury Rewards Membership</div>
+                <div class="luxury-badge">
+                  Luxury Discount Mobile App Monthly Rewards Membership
+                </div>
 
                 <h1>
                   Save More.
@@ -823,59 +864,65 @@
                 </h1>
 
                 <p class="hero-text">
-                  Card Leo Rewards gives members lifestyle savings, black card access,
-                  referral rewards, monthly leaderboard rewards, and a private member portal.
+                  Card Leo Rewards gives members mobile lifestyle discounts,
+                  referral rewards, allowance tracking, monthly rewards, and a
+                  private member portal.
                 </p>
 
-                <div class="hero-actions">
+                <div class="top-join-stack">
                   <a href="/signup.html" class="btn btn-primary">Join Now</a>
-                  <a
-                    href="/how-it-works.html"
-                    class="btn btn-secondary"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    See How It Works
-                  </a>
+                  <a href="/login.html" class="top-login-link">Member Login</a>
                 </div>
               </div>
 
-              <div class="info-bulletins" aria-label="Card Leo Rewards membership details">
+              <div class="info-bulletins" aria-label="Card Leo Rewards highlights">
                 <article class="bulletin-card">
                   <div class="bulletin-dot"></div>
                   <div>
-                    <span>Activation</span>
-                    <strong>$25 One-Time Fee</strong>
-                    <p>Pay once to activate your Card Leo Rewards membership.</p>
+                    <span>Discount Mobile App</span>
+                    <strong>Perks Available On Your Phone</strong>
+                    <p>
+                      Members can access eligible savings, deals, and lifestyle
+                      perks from a mobile-friendly member experience.
+                    </p>
                   </div>
                 </article>
 
                 <article class="bulletin-card">
                   <div class="bulletin-dot"></div>
                   <div>
-                    <span>Monthly</span>
-                    <strong>$20 On The 10th</strong>
-                    <p>Your recurring membership is billed on the 10th of every month.</p>
+                    <span>Referral Rewards</span>
+                    <strong>Member A Referred Member B</strong>
+                    <p>
+                      Earn $7 when your direct referral becomes active and
+                      approved.
+                    </p>
                   </div>
                 </article>
 
                 <article class="bulletin-card">
                   <div class="bulletin-dot"></div>
                   <div>
-                    <span>Approval</span>
-                    <strong>Automatic After Payment</strong>
-                    <p>Once payment is confirmed, your account is approved automatically.</p>
+                    <span>Team Rewards</span>
+                    <strong>Member B Referred Member C</strong>
+                    <p>
+                      Team-building examples can create a $1 reward for the
+                      original referring member.
+                    </p>
                   </div>
                 </article>
 
-                 <article class="bulletin-card">
+                <article class="bulletin-card">
                   <div class="bulletin-dot"></div>
                   <div>
                     <span>Allowances</span>
-                    <strong>Dispersed on the 1st and 3rd of every Month</strong>
+                    <strong>Dispersed On The 1st And 3rd</strong>
+                    <p>
+                      Eligible allowances are dispersed between the 1st and 3rd
+                      of every month.
+                    </p>
                   </div>
                 </article>
-
               </div>
             </div>
           </div>
@@ -891,78 +938,83 @@
               </p>
             </div>
 
-           <div class="how-grid no-card-animation">
-  <article class="step-card static-card">
-    <span>Step 01</span>
-    <h3>Join Card Leo Rewards</h3>
-    <ul>
-      <li>Create your member account.</li>
-      <li>Pay the $25 one-time activation fee.</li>
-      <li>Your account is approved after payment.</li>
-    </ul>
-  </article>
+            <div class="how-grid no-card-animation">
+              <article class="step-card static-card">
+                <span>Step 01</span>
+                <h3>Join Card Leo Rewards</h3>
+                <ul>
+                  <li>Create your member account.</li>
+                  <li>Enter your name, email, phone number, and password.</li>
+                  <li>Add referral details if another member invited you.</li>
+                </ul>
+              </article>
 
-  <article class="step-card static-card">
-    <span>Step 02</span>
-    <h3>Stay Active Monthly</h3>
-    <ul>
-      <li>Your membership is $20 per month.</li>
-      <li>Credit card is charged on the 10th of every month.</li>
-      <li>Existing tiers stay the same.</li>
-    </ul>
-  </article>
+              <article class="step-card static-card">
+                <span>Step 02</span>
+                <h3>Activate Monthly Membership</h3>
+                <ul>
+                  <li>Your membership is a recurring membership charged $20 per month.</li>
+                  <li>Automatic approval after payment is confirmed. Your account is approved automatically.</li>
+                  <li>Existing tiers allowances are released after Member A recruits 4 new active team members.</li>
+                  <li>Tiers stay the same or increase with active members.</li>
+                </ul>
+              </article>
 
-  <article class="step-card static-card">
-    <span>Step 03</span>
-    <h3>Refer And Earn</h3>
-    <ul>
-      <li>Share your referral link.</li>
-      <li>Earn a $7 allowance per approved referral.</li>
-      <li>Earn a $1 allowance per team member referral.</li>
-      <li>Earn a $100 allowance when you recruit 10 new approved members.</li>
-      <li>Earn a $2 allowance per 10 new members from the Company Growth Pool.</li>
-    </ul>
-  </article>
-</div>
+              <article class="step-card static-card">
+                <span>Step 03</span>
+                <h3>Refer And Track Allowances</h3>
+                <ul>
+                  <li>Member A referred Member B earns +$7.00 after Member B is active and approved.</li>
+                  <li>Member B referred Member C creates a +$1.00 team reward example for Member A.</li>
+                  <li>Allowances dispersed on the 1st and 3rd of every month.</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+        </section>
 
         <section class="section" id="membership">
           <div class="container membership-grid">
             <div class="section-copy">
               <p class="eyebrow">Membership</p>
-              <h2>Black Card Rewards With A Clean Member Portal.</h2>
+              <h2>Allowance Card.</h2>
               <p>
-                Card Leo Rewards keeps the process simple so members understand exactly
-                what they are joining, what they pay, and how referral rewards work.
+                Card Leo Rewards keeps the process simple so members understand
+                how to join, stay active, track referrals, and view eligible
+                allowance progress.
               </p>
 
               <div class="rules-panel">
                 <ul class="rules-list">
                   <li><strong>$20/month</strong> recurring membership.</li>
-                  <li><strong></strong>Recruit 4 new team members = 40% profit on your monthly investment</li>
-                  <li>Referral allowance are loaded to your Black Card between the <strong>1st and 3rd of every Month</strong>.</li>
-                  <li>Access benefits 24/7</li>
+                  <li>Recruit 4 new active team members to unlock eligible tier allowance releases.</li>
+                  <li>Referral allowances are loaded between the <strong>1st and 3rd</strong> of every month.</li>
+                  <li>Access eligible benefits and discounts from your phone.</li>
                 </ul>
               </div>
 
               <div class="hero-actions">
-                <a href="/signup.html" class="btn btn-primary">Activate Membership</a>
+                <a href="/signup.html" class="btn btn-primary">Join Now</a>
                 <a href="/login.html" class="btn btn-secondary">Member Login</a>
               </div>
             </div>
 
-            <div class="black-card-preview" aria-label="Card Leo Rewards black card preview">
-              <div class="black-card-top">
-                <div class="black-card-logo">CL</div>
-                <div class="black-card-chip"></div>
+            <div
+              class="allowance-card-preview"
+              aria-label="Card Leo Rewards allowance card preview"
+            >
+              <div class="allowance-card-top">
+                <div class="allowance-card-logo">CL</div>
+                <div class="allowance-card-chip"></div>
               </div>
 
-              <div class="black-card-middle">
-                <h2>Card Leo Rewards</h2>
-                <p>Premium Member Access</p>
+              <div class="allowance-card-middle">
+                <h2>Allowance Card</h2>
+                <p>Monthly Rewards Membership</p>
               </div>
 
-              <div class="black-card-bottom">
-                <span>Black Card</span>
+              <div class="allowance-card-bottom">
+                <span>Allowance Card</span>
                 <span>Referral Rewards</span>
               </div>
             </div>
@@ -972,15 +1024,8 @@
         <section class="section section-dark">
           <div class="container">
             <div class="cta-panel">
-              <p class="eyebrow">Ready To Join?</p>
-              <h2>Start Your Card Leo Rewards Membership Today.</h2>
-              <p>
-                Activate your account, unlock your portal, and start building your rewards.
-              </p>
-
               <div class="cta-actions">
                 <a href="/signup.html" class="btn btn-primary">Join Now</a>
-                <a href="/login.html" class="btn btn-secondary">Member Login</a>
               </div>
             </div>
           </div>

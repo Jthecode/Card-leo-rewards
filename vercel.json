@@ -21,11 +21,41 @@
       "source": "/portal",
       "destination": "/portal/index.html",
       "permanent": false
+    },
+    {
+      "source": "/leaderboard",
+      "destination": "/portal/leaderboard.html",
+      "permanent": false
+    },
+    {
+      "source": "/rewards",
+      "destination": "/portal/rewards.html",
+      "permanent": false
+    },
+    {
+      "source": "/benefits",
+      "destination": "/portal/benefits.html",
+      "permanent": false
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/nightly-new-members-email",
+      "schedule": "0 2 * * *"
     }
   ],
   "headers": [
     {
       "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/api/cron/(.*)",
       "headers": [
         {
           "key": "Cache-Control",

@@ -11,11 +11,11 @@
 
     <meta
       name="description"
-      content="Join Card Leo Rewards, activate your membership, and unlock lifestyle savings, referral rewards, and private member portal access."
+      content="Join Card Leo Rewards, activate your recurring monthly rewards membership, access mobile discounts, referral rewards, and your private member portal."
     />
     <meta
       name="keywords"
-      content="Card Leo Rewards signup, join Card Leo Rewards, rewards membership, referral rewards, lifestyle savings, member portal"
+      content="Card Leo Rewards signup, join Card Leo Rewards, discount mobile app, monthly rewards membership, referral rewards, lifestyle savings, member portal"
     />
     <meta name="theme-color" content="#030303" />
     <meta name="robots" content="index, follow" />
@@ -27,7 +27,7 @@
     <meta property="og:title" content="Join Card Leo Rewards" />
     <meta
       property="og:description"
-      content="Create your Card Leo Rewards account, activate your membership, and unlock your member portal."
+      content="Create your Card Leo Rewards account, complete secure payment, and unlock your member portal."
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Card Leo Rewards" />
@@ -41,7 +41,7 @@
     <meta name="twitter:title" content="Join Card Leo Rewards" />
     <meta
       name="twitter:description"
-      content="Create your Card Leo Rewards account, activate your membership, and unlock your member portal."
+      content="Create your Card Leo Rewards account, complete secure payment, and unlock your member portal."
     />
     <meta
       name="twitter:image"
@@ -341,6 +341,22 @@
         line-height: 1.75;
       }
 
+      .membership-bubble {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-top: 1rem;
+        padding: 0.7rem 1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(231, 182, 79, 0.28);
+        background:
+          radial-gradient(circle at top right, rgba(231, 182, 79, 0.14), transparent 38%),
+          rgba(255, 255, 255, 0.04);
+        color: var(--leo-gold-2);
+        font-size: 0.82rem;
+        font-weight: 900;
+      }
+
       .signup-points {
         display: grid;
         gap: 0.85rem;
@@ -388,6 +404,21 @@
         margin: 0.25rem 0 0;
         color: var(--leo-muted);
         line-height: 1.55;
+      }
+
+      .referral-notice {
+        display: none;
+        margin-top: 1rem;
+        padding: 0.95rem 1rem;
+        border-radius: 18px;
+        border: 1px solid rgba(72, 240, 107, 0.24);
+        background: rgba(72, 240, 107, 0.08);
+        color: #bfffe5;
+        line-height: 1.55;
+      }
+
+      .referral-notice.show {
+        display: block;
       }
 
       .signup-card {
@@ -865,36 +896,34 @@
 
               <p>
                 Create your account, complete secure payment, and unlock your
-                member portal. Simple, clean, and built for members who want
-                lifestyle savings and referral rewards.
+                member portal. Card Leo Rewards is a luxury discount mobile app
+                monthly rewards membership built for savings, referrals, and
+                allowance tracking.
               </p>
+
+              <div class="membership-bubble">
+                • Luxury Discount Mobile App Monthly Rewards Membership
+              </div>
+
+              <div id="referralNotice" class="referral-notice"></div>
 
               <div class="signup-points">
                 <article class="point-card">
                   <div class="point-dot"></div>
                   <div>
-                    <span>Today</span>
-                    <strong>$25 One-Time Activation</strong>
-                    <p>Pay once to activate your Card Leo Rewards account.</p>
+                    <span>Membership</span>
+                    <strong>$20 Monthly Recurring Membership</strong>
+                    <p>Your membership is charged monthly and keeps your account active.</p>
                   </div>
                 </article>
 
                 <article class="point-card">
                   <div class="point-dot"></div>
                   <div>
-                    <span>Monthly</span>
-                    <strong>$20 On The 10th</strong>
-                    <p>Your recurring membership bills on the 10th every month.</p>
-                  </div>
-                </article>
-
-                <article class="point-card">
-                  <div class="point-dot"></div>
-                  <div>
-                    <span>Access</span>
+                    <span>Approval</span>
                     <strong>Automatic Approval After Payment</strong>
                     <p>
-                      Once payment is confirmed, your member access can unlock
+                      After Stripe confirms payment, your account is approved
                       automatically.
                     </p>
                   </div>
@@ -903,9 +932,24 @@
                 <article class="point-card">
                   <div class="point-dot"></div>
                   <div>
-                    <span>Referrals</span>
-                    <strong>$7 Per Approved Referral</strong>
-                    <p>Track approved referrals and rewards inside your portal.</p>
+                    <span>Direct Referrals</span>
+                    <strong>Member A Referred Member B = +$7.00</strong>
+                    <p>
+                      Earn direct referral rewards after your referral becomes
+                      active and approved.
+                    </p>
+                  </div>
+                </article>
+
+                <article class="point-card">
+                  <div class="point-dot"></div>
+                  <div>
+                    <span>Team Referrals</span>
+                    <strong>Member B Referred Member C = +$1.00</strong>
+                    <p>
+                      Team-building referrals can count toward your allowance
+                      progress.
+                    </p>
                   </div>
                 </article>
               </div>
@@ -921,7 +965,7 @@
                 <h2>Create Your Account</h2>
                 <p>
                   Fill this out once. After your account is created, you will be
-                  sent to secure checkout to activate your membership.
+                  sent to secure Stripe Checkout to activate your membership.
                 </p>
               </div>
 
@@ -941,8 +985,11 @@
                   <input type="hidden" name="payment_status" value="unpaid" />
                   <input type="hidden" name="approval_status" value="payment_pending" />
                   <input type="hidden" name="portal_login_url" value="/login.html" />
+
                   <input type="hidden" id="referralCode" name="referral_code" value="" />
+                  <input type="hidden" id="referralEmail" name="referral_email" value="" />
                   <input type="hidden" id="referralSource" name="referral_source" value="" />
+                  <input type="hidden" id="referralUrl" name="referral_url" value="" />
 
                   <div class="sr-only" aria-hidden="true">
                     <label for="website">Website</label>
@@ -1063,12 +1110,12 @@
                     </div>
 
                     <div class="form-row full">
-                      <label for="referralName">Referral / Sponsor Name</label>
+                      <label for="referralName">Referral / Sponsor</label>
                       <input
                         type="text"
                         id="referralName"
                         name="referralName"
-                        placeholder="Who referred you?"
+                        placeholder="Referral email, code, or sponsor name"
                         autocomplete="off"
                       />
                     </div>
@@ -1077,6 +1124,7 @@
                       <label for="interest">Membership Interest</label>
                       <select id="interest" name="interest" required>
                         <option value="">Select an option</option>
+                        <option value="discount-mobile-app">Discount Mobile App</option>
                         <option value="savings-only">Savings Only</option>
                         <option value="savings-and-opportunity">Savings + Opportunity</option>
                         <option value="need-more-info">Need More Information</option>
@@ -1110,10 +1158,12 @@
 
                   <div class="payment-box" aria-label="Membership payment details">
                     <div class="payment-box-header">
-                      <span class="payment-box-kicker">Membership Payment</span>
-                      <h3>Activate Your Membership</h3>
+                      <span class="payment-box-kicker">Secure Membership Payment</span>
+                      <h3>Activate Your Monthly Rewards Membership</h3>
                       <p>
-                        Your account is created first, then secure checkout handles payment.
+                        Your account is created first, then secure Stripe Checkout
+                        handles payment. After payment is confirmed, your account
+                        is approved automatically.
                       </p>
                     </div>
 
@@ -1128,8 +1178,8 @@
 
                       <div class="payment-item">
                         <div>
-                          <strong>Monthly Membership</strong>
-                          <span>Recurring billing on the 10th of every month.</span>
+                          <strong>Monthly Rewards Membership</strong>
+                          <span>Recurring membership charged $20 per month.</span>
                         </div>
                         <div class="payment-price">$20.00/mo</div>
                       </div>
@@ -1138,14 +1188,14 @@
                     <div class="payment-total">
                       <div class="payment-total-row">
                         <span>Secure Checkout</span>
-                        <strong>Required</strong>
+                        <strong>$25 Today + $20 Monthly</strong>
                       </div>
                     </div>
 
                     <div class="payment-note">
                       <strong>Important:</strong> your account will stay pending
                       until Stripe payment is completed. Once payment is confirmed,
-                      your member access can unlock automatically.
+                      your account is approved automatically and member access can unlock.
                     </div>
                   </div>
 
@@ -1208,7 +1258,10 @@
         const showPasswordToggle = document.getElementById("showPasswordToggle");
         const referralNameInput = document.getElementById("referralName");
         const referralCodeInput = document.getElementById("referralCode");
+        const referralEmailInput = document.getElementById("referralEmail");
         const referralSourceInput = document.getElementById("referralSource");
+        const referralUrlInput = document.getElementById("referralUrl");
+        const referralNotice = document.getElementById("referralNotice");
 
         if (!form || !submitButton || !statusNode) return;
 
@@ -1250,12 +1303,14 @@
             const fromUrl =
               parsed.searchParams.get("ref") ||
               parsed.searchParams.get("referral") ||
+              parsed.searchParams.get("referral_code") ||
               parsed.searchParams.get("sponsor") ||
+              parsed.searchParams.get("code") ||
               "";
 
             if (fromUrl) return cleanReferralCode(fromUrl);
           } catch {
-            // Not a full URL. Continue cleaning as a code.
+            // Not a full URL.
           }
 
           return raw
@@ -1263,9 +1318,11 @@
             .replace(/^https?:\/\/[^?]+\/join(?:\.html)?\?ref=/i, "")
             .replace(/^ref=/i, "")
             .replace(/^referral=/i, "")
+            .replace(/^referral_code=/i, "")
             .replace(/^sponsor=/i, "")
+            .replace(/^code=/i, "")
             .toLowerCase()
-            .replace(/[^a-z0-9._-]/g, "");
+            .replace(/[^a-z0-9._@-]/g, "");
         }
 
         function getReferralFromUrl() {
@@ -1274,9 +1331,16 @@
           return cleanReferralCode(
             params.get("ref") ||
               params.get("referral") ||
+              params.get("referral_code") ||
               params.get("sponsor") ||
+              params.get("code") ||
               ""
           );
+        }
+
+        function getReferralEmailFromValue(value) {
+          const cleaned = cleanReferralCode(value);
+          return isValidEmail(cleaned) ? normalizeEmail(cleaned) : "";
         }
 
         function applyReferralFromUrl() {
@@ -1284,16 +1348,31 @@
 
           if (!referralCode) return;
 
+          const referralEmail = getReferralEmailFromValue(referralCode);
+
           if (referralCodeInput) {
             referralCodeInput.value = referralCode;
+          }
+
+          if (referralEmailInput) {
+            referralEmailInput.value = referralEmail;
           }
 
           if (referralSourceInput) {
             referralSourceInput.value = "referral-link";
           }
 
+          if (referralUrlInput) {
+            referralUrlInput.value = window.location.href;
+          }
+
           if (referralNameInput && !normalizeText(referralNameInput.value)) {
             referralNameInput.value = referralCode;
+          }
+
+          if (referralNotice) {
+            referralNotice.classList.add("show");
+            referralNotice.textContent = `Referral attached: ${referralCode}`;
           }
         }
 
@@ -1387,7 +1466,12 @@
           const referralCode =
             cleanReferralCode(data.get("referral_code")) ||
             cleanReferralCode(referralName);
+          const referralEmail =
+            normalizeEmail(data.get("referral_email")) ||
+            getReferralEmailFromValue(referralCode) ||
+            getReferralEmailFromValue(referralName);
           const referralSource = normalizeText(data.get("referral_source"));
+          const referralUrl = normalizeText(data.get("referral_url"));
           const interest = normalizeText(data.get("interest"));
           const goals = normalizeText(data.get("goals"));
           const source = normalizeText(data.get("source"));
@@ -1408,13 +1492,22 @@
             confirm_password: confirmPassword,
             city,
             state,
+
             referralName,
             referral_name: referralName,
             sponsor_name: referralName,
+
+            referralEmail,
+            referral_email: referralEmail,
+            sponsor_email: referralEmail,
+
             referralCode,
             referral_code: referralCode,
             sponsor_code: referralCode,
+
             referral_source: referralSource,
+            referral_url: referralUrl,
+
             interest,
             goals,
             agreed: true,
@@ -1539,12 +1632,18 @@
             fullName: payload.fullName,
             full_name: payload.full_name,
             phone: payload.phone,
+
             referralName: payload.referralName,
             referral_name: payload.referral_name,
+            referralEmail: payload.referralEmail,
+            referral_email: payload.referral_email,
             referralCode: payload.referralCode,
             referral_code: payload.referral_code,
             sponsor_code: payload.sponsor_code,
+            sponsor_email: payload.sponsor_email,
             referral_source: payload.referral_source,
+            referral_url: payload.referral_url,
+
             activation_fee_amount: 25,
             monthly_fee_amount: 20,
             billing_day: 10,
@@ -1595,6 +1694,18 @@
             confirmPasswordInput.type = type;
           });
         }
+
+        referralNameInput?.addEventListener("input", () => {
+          const referralValue = cleanReferralCode(referralNameInput.value);
+          const referralEmail = getReferralEmailFromValue(referralValue);
+
+          if (referralCodeInput) referralCodeInput.value = referralValue;
+          if (referralEmailInput) referralEmailInput.value = referralEmail;
+
+          if (referralValue && referralSourceInput && !referralSourceInput.value) {
+            referralSourceInput.value = "manual-entry";
+          }
+        });
 
         form.addEventListener("submit", async (event) => {
           event.preventDefault();

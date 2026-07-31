@@ -43,6 +43,7 @@
         --leo-muted: rgba(248, 243, 231, 0.68);
         --leo-muted-2: rgba(248, 243, 231, 0.5);
         --leo-green: #48f06b;
+        --leo-blue: #7ec8ff;
         --leo-red: #ff7676;
         --leo-yellow: #ffd166;
         --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
@@ -200,7 +201,7 @@
         line-height: 1.55;
       }
 
-      .mini-black-card {
+      .mini-allowance-card {
         height: 96px;
         border-radius: 16px;
         background:
@@ -360,6 +361,35 @@
         color: var(--leo-gold-2);
       }
 
+      .tower-breakdown {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .breakdown-box {
+        padding: 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .breakdown-box span {
+        display: block;
+        color: var(--leo-muted-2);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .breakdown-box strong {
+        display: block;
+        margin-top: 0.42rem;
+        font-size: 1.1rem;
+      }
+
       .tower-visual {
         margin-top: 18px;
         padding: 10px 0 0;
@@ -381,6 +411,10 @@
         width: 100%;
         height: auto;
         display: block;
+      }
+
+      .tower-lions span {
+        display: none;
       }
 
       .tower-spire {
@@ -409,6 +443,7 @@
         color: rgba(248, 243, 231, 0.46);
       }
 
+      .tower-floor.direct,
       .tower-floor.earned {
         color: #080808;
         background: linear-gradient(180deg, #f7d98b, #c88716);
@@ -416,6 +451,12 @@
         box-shadow:
           0 0 24px rgba(231, 182, 79, 0.2),
           inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      }
+
+      .tower-floor.team {
+        color: #05121c;
+        background: linear-gradient(180deg, #9fdcff, #5cb2f2);
+        border-color: rgba(255, 255, 255, 0.22);
       }
 
       .tower-floor.pending {
@@ -443,6 +484,12 @@
       .floor-money {
         color: var(--leo-green);
         font-weight: 900;
+      }
+
+      .tower-floor.direct .floor-money,
+      .tower-floor.earned .floor-money,
+      .tower-floor.team .floor-money {
+        color: #071007;
       }
 
       .tower-floor.pending .floor-money,
@@ -487,8 +534,8 @@
         background: var(--leo-gold);
       }
 
-      .dot.silver {
-        background: #d1d1d1;
+      .dot.blue {
+        background: var(--leo-blue);
       }
 
       .dot.dark {
@@ -624,7 +671,7 @@
 
       .table-row {
         display: grid;
-        grid-template-columns: 70px 1fr 140px 110px;
+        grid-template-columns: 70px minmax(0, 1fr) 140px 110px;
         gap: 12px;
         align-items: center;
         min-height: 54px;
@@ -684,8 +731,23 @@
         text-overflow: ellipsis;
       }
 
+      .member-email {
+        display: block;
+        margin-top: 0.1rem;
+        color: var(--leo-muted-2);
+        font-size: 0.78rem;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
       .green-money {
         color: var(--leo-green);
+        font-weight: 900;
+      }
+
+      .blue-money {
+        color: var(--leo-blue);
         font-weight: 900;
       }
 
@@ -812,7 +874,8 @@
           padding: 18px;
         }
 
-        .stat-grid {
+        .stat-grid,
+        .tower-breakdown {
           grid-template-columns: repeat(2, 1fr);
         }
 
@@ -839,7 +902,8 @@
       }
 
       @media (max-width: 560px) {
-        .stat-grid {
+        .stat-grid,
+        .tower-breakdown {
           grid-template-columns: 1fr;
         }
 
@@ -866,7 +930,7 @@
   <body data-require-auth data-cardleo-auth-guard="auto">
     <div class="mobile-topbar">
       <strong>Card Leo Rewards</strong>
-      <a href="/login.html" class="member-badge">Portal</a>
+      <a href="/portal/index.html" class="member-badge">Portal</a>
     </div>
 
     <div class="portal-shell">
@@ -903,11 +967,6 @@
             <span>Benefits</span>
           </a>
 
-          <a class="side-link" href="/portal/billing.html">
-            <span class="side-icon">▱</span>
-            <span>Billing</span>
-          </a>
-
           <a class="side-link" href="/portal/support.html">
             <span class="side-icon">☏</span>
             <span>Support</span>
@@ -925,9 +984,11 @@
         </nav>
 
         <div class="earn-card">
-          <h2>Earn More Together</h2>
-          <p>Refer more. Earn more. Build your legacy.</p>
-          <div class="mini-black-card">Card Leo</div>
+          <h2>Allowance Card</h2>
+          <p>
+            Member A referred Member B = $7. Member B referred Member C = $1 for Member A.
+          </p>
+          <div class="mini-allowance-card">Allowance Card</div>
         </div>
       </aside>
 
@@ -936,7 +997,7 @@
           <div class="welcome-block">
             <p>Welcome back,</p>
             <h2 id="memberName">Card Leo Member</h2>
-            <div class="member-badge" id="memberTierBadge">VIP Member</div>
+            <div class="member-badge" id="memberTierBadge">Allowance Card</div>
           </div>
 
           <div class="panel">
@@ -975,15 +1036,38 @@
             <div class="panel-inner">
               <h2 class="tower-title">Referral Tower</h2>
               <p class="tower-copy">
-                Every approved referral adds <strong>$7</strong> to your account.
+                <strong>Member A referred Member B +$7.00</strong><br />
+                <strong>Member B referred Member C +$1.00</strong>
               </p>
+
+              <div class="tower-breakdown">
+                <div class="breakdown-box">
+                  <span>Direct</span>
+                  <strong class="green-money" id="directEarnings">$0.00</strong>
+                </div>
+
+                <div class="breakdown-box">
+                  <span>Team</span>
+                  <strong class="blue-money" id="teamEarnings">$0.00</strong>
+                </div>
+
+                <div class="breakdown-box">
+                  <span>Growth Pool</span>
+                  <strong id="growthPoolCredit">$0.00</strong>
+                </div>
+
+                <div class="breakdown-box">
+                  <span>Total</span>
+                  <strong class="green-money" id="leaderboardTotal">$0.00</strong>
+                </div>
+              </div>
 
               <div class="tower-visual">
                 <div class="tower-lions">
                   <img
                     src="/assets/img/white-lions-logo.png"
                     alt="Card Leo Rewards White Lions Logo"
-                    onerror="this.remove();"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
                   />
                   <span aria-hidden="true">♛</span>
                 </div>
@@ -991,85 +1075,15 @@
                 <div class="tower-spire"></div>
 
                 <div class="tower-floors" id="towerFloors">
-                  <div class="tower-floor locked">
-                    <span class="floor-number">12</span>
-                    <span class="floor-name">Open Floor</span>
-                    <span class="floor-money">Locked</span>
-                  </div>
-
-                  <div class="tower-floor locked">
-                    <span class="floor-number">11</span>
-                    <span class="floor-name">Open Floor</span>
-                    <span class="floor-money">Locked</span>
-                  </div>
-
-                  <div class="tower-floor locked">
-                    <span class="floor-number">10</span>
-                    <span class="floor-name">Open Floor</span>
-                    <span class="floor-money">Locked</span>
-                  </div>
-
-                  <div class="tower-floor locked">
-                    <span class="floor-number">9</span>
-                    <span class="floor-name">Open Floor</span>
-                    <span class="floor-money">Locked</span>
-                  </div>
-
-                  <div class="tower-floor earned">
-                    <span class="floor-number">8</span>
-                    <span class="floor-name">Approved Referral</span>
-                    <span class="floor-money">+$7.00</span>
-                  </div>
-
-                  <div class="tower-floor earned">
-                    <span class="floor-number">7</span>
-                    <span class="floor-name">Approved Referral</span>
-                    <span class="floor-money">+$7.00</span>
-                  </div>
-
-                  <div class="tower-floor earned">
-                    <span class="floor-number">6</span>
-                    <span class="floor-name">Approved Referral</span>
-                    <span class="floor-money">+$7.00</span>
-                  </div>
-
-                  <div class="tower-floor earned">
-                    <span class="floor-number">5</span>
-                    <span class="floor-name">Approved Referral</span>
-                    <span class="floor-money">+$7.00</span>
-                  </div>
-
-                  <div class="tower-floor pending">
-                    <span class="floor-number">4</span>
-                    <span class="floor-name">Pending Referral</span>
-                    <span class="floor-money">Pending</span>
-                  </div>
-
-                  <div class="tower-floor pending">
-                    <span class="floor-number">3</span>
-                    <span class="floor-name">Pending Referral</span>
-                    <span class="floor-money">Pending</span>
-                  </div>
-
-                  <div class="tower-floor pending">
-                    <span class="floor-number">2</span>
-                    <span class="floor-name">Pending Referral</span>
-                    <span class="floor-money">Pending</span>
-                  </div>
-
-                  <div class="tower-floor pending">
-                    <span class="floor-number">1</span>
-                    <span class="floor-name">Pending Referral</span>
-                    <span class="floor-money">Pending</span>
-                  </div>
+                  <div class="empty-box">Loading referral tower...</div>
                 </div>
 
                 <div class="tower-base"></div>
 
                 <div class="legend">
-                  <span><i class="dot gold"></i> Approved = Earned</span>
-                  <span><i class="dot silver"></i> Pending Approval</span>
-                  <span><i class="dot dark"></i> Locked</span>
+                  <span><i class="dot gold"></i> Direct = $7</span>
+                  <span><i class="dot blue"></i> Team = $1</span>
+                  <span><i class="dot dark"></i> Pending / Locked</span>
                 </div>
 
                 <div class="status-box" id="towerStatus" hidden></div>
@@ -1097,9 +1111,9 @@
 
               <article class="panel stat-card">
                 <div class="panel-inner">
-                  <div class="stat-icon">◷</div>
-                  <div class="stat-number" id="pendingReferrals">0</div>
-                  <div class="stat-label">Pending</div>
+                  <div class="stat-icon">↳</div>
+                  <div class="stat-number" id="teamReferrals">0</div>
+                  <div class="stat-label">Team</div>
                 </div>
               </article>
 
@@ -1176,10 +1190,10 @@
 
                 <div class="table-wrap" id="recentReferralsTable">
                   <div class="table-row header">
-                    <span>Name</span>
+                    <span>Type</span>
+                    <span>Member</span>
                     <span>Status</span>
-                    <span>Joined</span>
-                    <span>Earnings</span>
+                    <span>Amount</span>
                   </div>
 
                   <div class="empty-box">Loading recent referrals...</div>
@@ -1194,8 +1208,8 @@
                 <div>
                   <h3>The more you refer, the higher you rise.</h3>
                   <p>
-                    Unlock more rewards, cash bonuses, exclusive perks, and
-                    monthly leaderboard recognition.
+                    Allowances are dispersed on the 1st and 3rd of every month.
+                    Keep your membership active and build your referral tower.
                   </p>
                 </div>
 
@@ -1214,7 +1228,8 @@
         const API = {
           me: "/api/auth/me",
           overview: "/api/portal/overview",
-          referralTower: "/api/portal/referral-tower",
+          referrals: "/api/referrals/me",
+          leaderboard: "/api/leaderboard/monthly",
           logout: "/api/auth/logout",
           billingPortal: "/api/billing/portal",
         };
@@ -1226,62 +1241,77 @@
           copyReferralButton: document.getElementById("copyReferralButton"),
           billingPortalButton: document.getElementById("billingPortalButton"),
           currentBalance: document.getElementById("currentBalance"),
+
           towerFloors: document.getElementById("towerFloors"),
           towerStatus: document.getElementById("towerStatus"),
+
           totalReferrals: document.getElementById("totalReferrals"),
           approvedReferrals: document.getElementById("approvedReferrals"),
-          pendingReferrals: document.getElementById("pendingReferrals"),
+          teamReferrals: document.getElementById("teamReferrals"),
           totalEarned: document.getElementById("totalEarned"),
+
+          directEarnings: document.getElementById("directEarnings"),
+          teamEarnings: document.getElementById("teamEarnings"),
+          growthPoolCredit: document.getElementById("growthPoolCredit"),
+          leaderboardTotal: document.getElementById("leaderboardTotal"),
+
           leaderboardTable: document.getElementById("leaderboardTable"),
           recentReferralsTable: document.getElementById("recentReferralsTable"),
+
           logoutButton: document.getElementById("logoutButton"),
           benefitsStatus: document.getElementById("benefitsStatus"),
         };
 
         const state = {
           member: null,
-          referralPayload: null,
+          referralsPayload: null,
+          leaderboardPayload: null,
         };
 
-        const money = (value) => {
+        function money(value) {
           const number = Number(value || 0);
 
           return new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
           }).format(Number.isFinite(number) ? number : 0);
-        };
+        }
 
-        const escapeHtml = (value) =>
-          String(value ?? "")
+        function escapeHtml(value) {
+          return String(value ?? "")
             .replaceAll("&", "&amp;")
             .replaceAll("<", "&lt;")
             .replaceAll(">", "&gt;")
             .replaceAll('"', "&quot;")
             .replaceAll("'", "&#39;");
+        }
 
-        const normalizeText = (value, fallback = "") => {
+        function normalizeText(value, fallback = "") {
           const text = String(value ?? "").trim();
           return text || fallback;
-        };
+        }
 
-        const unwrap = (payload) => {
+        function normalizeEmail(value) {
+          return normalizeText(value).toLowerCase();
+        }
+
+        function unwrap(payload) {
           if (!payload || typeof payload !== "object") return {};
           return payload.data && typeof payload.data === "object"
             ? payload.data
             : payload;
-        };
+        }
 
-        const titleCase = (value) =>
-          String(value || "")
-            .split(/[\s_-]+/)
+        function titleCase(value) {
+          return String(value || "")
+            .replace(/[_-]+/g, " ")
+            .split(/\s+/)
             .filter(Boolean)
-            .map(
-              (part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
-            )
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
             .join(" ");
+        }
 
-        const formatDate = (value) => {
+        function formatDate(value) {
           if (!value) return "—";
 
           const date = new Date(value);
@@ -1293,7 +1323,7 @@
             day: "numeric",
             year: "numeric",
           }).format(date);
-        };
+        }
 
         async function fetchJson(url, options = {}) {
           const response = await fetch(url, {
@@ -1338,6 +1368,7 @@
 
           const first = normalizeText(member?.firstName || member?.first_name);
           const last = normalizeText(member?.lastName || member?.last_name);
+
           return [first, last].filter(Boolean).join(" ") || "Card Leo Member";
         }
 
@@ -1365,24 +1396,13 @@
           ).toLowerCase();
         }
 
-        function getTier(member) {
-          return normalizeText(
-            member?.tier_name ||
-              member?.tierName ||
-              member?.membership_tier ||
-              member?.membershipTier ||
-              member?.tier ||
-              "VIP Member"
-          );
-        }
-
         function isPaidActive(member) {
           const status = getStatus(member);
           const paymentStatus = getPaymentStatus(member);
 
           return (
-            ["active", "approved", "auto_approved", "paid"].includes(status) ||
-            ["paid", "active", "current", "succeeded"].includes(paymentStatus)
+            ["active", "approved", "auto_approved", "paid", "current"].includes(status) ||
+            ["paid", "active", "current", "succeeded", "complete"].includes(paymentStatus)
           );
         }
 
@@ -1403,11 +1423,9 @@
               parsed.searchParams.get("sponsor") ||
               "";
 
-            if (fromUrl) {
-              return cleanReferralCode(fromUrl);
-            }
+            if (fromUrl) return cleanReferralCode(fromUrl);
           } catch {
-            // Not a full URL. Continue cleaning as a code.
+            // Not a URL.
           }
 
           return raw
@@ -1417,56 +1435,7 @@
             .replace(/^referral=/i, "")
             .replace(/^sponsor=/i, "")
             .toLowerCase()
-            .replace(/[^a-z0-9._-]/g, "");
-        }
-
-        function normalizeReferralUrl(value) {
-          const raw = normalizeText(value);
-
-          if (!raw) return "";
-
-          try {
-            const parsed = new URL(raw);
-            const ref =
-              parsed.searchParams.get("ref") ||
-              parsed.searchParams.get("referral") ||
-              parsed.searchParams.get("sponsor") ||
-              "";
-
-            if (ref) {
-              const cleanRef = cleanReferralCode(ref);
-
-              if (cleanRef) {
-                return `${getPreferredBaseUrl()}/signup.html?ref=${encodeURIComponent(
-                  cleanRef
-                )}`;
-              }
-            }
-          } catch {
-            // Not a full URL. Try regex below.
-          }
-
-          const refMatch = raw.match(/[?&](ref|referral|sponsor)=([^&]+)/i);
-
-          if (refMatch?.[2]) {
-            const cleanRef = cleanReferralCode(
-              decodeURIComponent(refMatch[2])
-            );
-
-            if (cleanRef) {
-              return `${getPreferredBaseUrl()}/signup.html?ref=${encodeURIComponent(
-                cleanRef
-              )}`;
-            }
-          }
-
-          const cleanRef = cleanReferralCode(raw);
-
-          if (!cleanRef) return "";
-
-          return `${getPreferredBaseUrl()}/signup.html?ref=${encodeURIComponent(
-            cleanRef
-          )}`;
+            .replace(/[^a-z0-9._@-]/g, "");
         }
 
         function getReferralCode(member) {
@@ -1485,9 +1454,9 @@
             normalizeText(member?.referralLink) ||
             normalizeText(member?.portal_referral_link);
 
-          const fixedExisting = normalizeReferralUrl(existing);
-
-          if (fixedExisting) return fixedExisting;
+          if (existing && existing.includes("/signup")) {
+            return existing;
+          }
 
           return `${getPreferredBaseUrl()}/signup.html?ref=${encodeURIComponent(
             getReferralCode(member)
@@ -1517,14 +1486,15 @@
           state.member = member;
 
           const firstName = getFirstName(member);
-          const tier = getTier(member);
+          const paid = isPaidActive(member);
 
           els.memberName.textContent = firstName;
-          els.memberTierBadge.textContent = `♛ ${tier}`;
+          els.memberTierBadge.textContent = paid
+            ? "♛ Allowance Card"
+            : "Payment Required";
           els.referralLink.value = getReferralLink(member);
 
-          if (!isPaidActive(member)) {
-            els.memberTierBadge.textContent = "Payment Required";
+          if (!paid) {
             setTowerStatus(
               "Membership payment is required before full portal access is unlocked.",
               "error"
@@ -1540,55 +1510,185 @@
             "Benefits are ready inside your Card Leo portal.";
         }
 
-        function renderStats(summary = {}) {
-          const total = Number(summary.totalReferrals || summary.total_referrals || 0);
-          const approved = Number(
-            summary.approvedReferrals || summary.approved_referrals || 0
-          );
-          const pending = Number(
-            summary.pendingReferrals || summary.pending_referrals || 0
-          );
-          const earned = Number(
-            summary.earnedAmount || summary.earned_amount || approved * 7
+        function getSummaryNumber(summary, keys, fallback = 0) {
+          for (const key of keys) {
+            const value = summary?.[key];
+
+            if (value !== undefined && value !== null && value !== "") {
+              const number = Number(value);
+              return Number.isFinite(number) ? number : fallback;
+            }
+          }
+
+          return fallback;
+        }
+
+        function normalizeSummary(payload = {}) {
+          const summary = payload.summary || payload.stats || {};
+
+          const directReferrals = getSummaryNumber(summary, [
+            "approvedDirectReferrals",
+            "approved_direct_referrals",
+            "directReferrals",
+            "direct_referrals",
+          ]);
+
+          const teamReferrals = getSummaryNumber(summary, [
+            "approvedTeamReferrals",
+            "approved_team_referrals",
+            "teamReferrals",
+            "team_referrals",
+          ]);
+
+          const pendingReferrals = getSummaryNumber(summary, [
+            "pendingReferrals",
+            "pending_referrals",
+          ]);
+
+          const totalReferrals = getSummaryNumber(
+            summary,
+            ["totalReferrals", "total_referrals"],
+            directReferrals + teamReferrals + pendingReferrals
           );
 
-          els.totalReferrals.textContent = String(total);
-          els.approvedReferrals.textContent = String(approved);
-          els.pendingReferrals.textContent = String(pending);
-          els.totalEarned.textContent = money(earned);
-          els.currentBalance.textContent = money(summary.currentBalance || earned);
+          const approvedReferrals = getSummaryNumber(
+            summary,
+            ["approvedReferrals", "approved_referrals"],
+            directReferrals + teamReferrals
+          );
+
+          const directEarnings = getSummaryNumber(
+            summary,
+            ["directEarnings", "direct_earnings"],
+            directReferrals * 7
+          );
+
+          const teamEarnings = getSummaryNumber(
+            summary,
+            ["teamEarnings", "team_earnings"],
+            teamReferrals
+          );
+
+          const growthPoolCredit = getSummaryNumber(
+            summary,
+            ["growthPoolCredit", "growth_pool_credit"],
+            teamReferrals * 2
+          );
+
+          const totalEarned = getSummaryNumber(
+            summary,
+            [
+              "totalEarned",
+              "total_earned",
+              "allowanceBalance",
+              "allowance_balance",
+              "rewardBalance",
+              "reward_balance",
+            ],
+            directEarnings + teamEarnings
+          );
+
+          return {
+            totalReferrals,
+            approvedReferrals,
+            directReferrals,
+            teamReferrals,
+            pendingReferrals,
+            directEarnings,
+            teamEarnings,
+            growthPoolCredit,
+            totalEarned,
+          };
+        }
+
+        function renderStats(summary = {}) {
+          els.totalReferrals.textContent = String(summary.totalReferrals);
+          els.approvedReferrals.textContent = String(summary.approvedReferrals);
+          els.teamReferrals.textContent = String(summary.teamReferrals);
+          els.totalEarned.textContent = money(summary.totalEarned);
+          els.currentBalance.textContent = money(summary.totalEarned);
+
+          els.directEarnings.textContent = money(summary.directEarnings);
+          els.teamEarnings.textContent = money(summary.teamEarnings);
+          els.growthPoolCredit.textContent = money(summary.growthPoolCredit);
+          els.leaderboardTotal.textContent = money(summary.totalEarned);
         }
 
         function floorClass(floor) {
+          const type = normalizeText(floor.type || floor.level).toLowerCase();
           const status = normalizeText(floor.status || floor.state).toLowerCase();
 
+          if (type === "team") return "tower-floor team";
+          if (type === "direct") return "tower-floor direct";
           if (status === "earned" || status === "approved") return "tower-floor earned";
           if (status === "pending") return "tower-floor pending";
-          if (status === "locked" || status === "closed") return "tower-floor locked";
+
           return "tower-floor locked";
         }
 
-        function renderFloors(payload = {}) {
+        function defaultFloors(summary = {}) {
+          const floors = [];
+          let floor = 1;
+
+          for (let i = 0; i < summary.directReferrals; i += 1) {
+            floors.push({
+              floor,
+              label: "Member A referred Member B",
+              status: "approved",
+              type: "direct",
+              amount: 7,
+            });
+            floor += 1;
+          }
+
+          for (let i = 0; i < summary.teamReferrals; i += 1) {
+            floors.push({
+              floor,
+              label: "Member B referred Member C",
+              status: "approved",
+              type: "team",
+              amount: 1,
+            });
+            floor += 1;
+          }
+
+          while (floors.length < 12) {
+            floors.push({
+              floor,
+              label: "Open Floor",
+              status: "locked",
+              type: "locked",
+              amount: 0,
+            });
+            floor += 1;
+          }
+
+          return floors.slice(0, 12);
+        }
+
+        function renderFloors(payload = {}, summary = {}) {
           const floors = Array.isArray(payload?.tower?.floors)
             ? payload.tower.floors
-            : [];
+            : defaultFloors(summary);
 
-          if (!floors.length) return;
-
-          const sorted = [...floors].sort((a, b) => Number(b.floor) - Number(a.floor));
+          const sorted = [...floors].sort(
+            (a, b) => Number(b.floor || 0) - Number(a.floor || 0)
+          );
 
           els.towerFloors.innerHTML = sorted
             .map((floor) => {
               const amount = Number(floor.amount || 0);
-              const label =
-                normalizeText(floor.label) ||
-                normalizeText(floor.name) ||
-                (floor.status === "pending" ? "Pending Referral" : "Open Floor");
+              const type = normalizeText(floor.type || floor.level).toLowerCase();
+              const status = normalizeText(floor.status || floor.state || "locked");
+
+              let label = normalizeText(floor.label) || normalizeText(floor.name);
+
+              if (!label && type === "team") label = "Member B referred Member C";
+              if (!label && type === "direct") label = "Member A referred Member B";
+              if (!label) label = status === "pending" ? "Pending Referral" : "Open Floor";
 
               const moneyText =
-                amount > 0
-                  ? `+${money(amount)}`
-                  : titleCase(floor.status || floor.state || "Locked");
+                amount > 0 ? `+${money(amount)}` : titleCase(status || "Locked");
 
               return `
                 <div class="${floorClass(floor)}">
@@ -1601,7 +1701,30 @@
             .join("");
         }
 
-        function renderLeaderboard(rows = []) {
+        function getInitials(value) {
+          const text = normalizeText(value);
+
+          if (!text) return "CL";
+
+          const clean = text.includes("@") ? text.split("@")[0] : text;
+          const parts = clean.split(/\s+/).filter(Boolean);
+
+          if (parts.length >= 2) {
+            return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
+          }
+
+          return clean.slice(0, 2).toUpperCase();
+        }
+
+        function renderLeaderboard(payload = {}) {
+          const rows =
+            payload.leaderboard ||
+            payload.rows ||
+            payload.members ||
+            payload.topEarners ||
+            payload.top_earners ||
+            [];
+
           const safeRows = Array.isArray(rows) ? rows.slice(0, 5) : [];
 
           const header = `
@@ -1625,20 +1748,35 @@
               .map((row, index) => {
                 const rank = row.rank || index + 1;
                 const name =
-                  row.referralName ||
                   row.name ||
                   row.memberName ||
+                  row.member_name ||
+                  row.full_name ||
                   `Member #${rank}`;
+                const email = normalizeEmail(row.email);
                 const approved =
-                  row.approvedReferrals || row.approved_referrals || row.approved || 0;
-                const earned = row.earnedAmount || row.earned_amount || approved * 7;
+                  row.approvedReferrals ||
+                  row.approved_referrals ||
+                  row.approved ||
+                  0;
+                const earned =
+                  row.totalEarned ||
+                  row.total_earned ||
+                  row.earnedAmount ||
+                  row.earned_amount ||
+                  row.allowanceBalance ||
+                  row.allowance_balance ||
+                  0;
 
                 return `
                   <div class="table-row">
                     <span><span class="rank-medal">${escapeHtml(rank)}</span></span>
                     <span class="member-cell">
-                      <span class="avatar">${escapeHtml(String(name).charAt(0))}</span>
-                      <span class="member-name">${escapeHtml(name)}</span>
+                      <span class="avatar">${escapeHtml(getInitials(name || email))}</span>
+                      <span class="member-name">
+                        ${escapeHtml(name)}
+                        ${email ? `<span class="member-email">${escapeHtml(email)}</span>` : ""}
+                      </span>
                     </span>
                     <span>${escapeHtml(approved)}</span>
                     <span class="green-money">${escapeHtml(money(earned))}</span>
@@ -1648,15 +1786,21 @@
               .join("");
         }
 
-        function renderRecentReferrals(rows = []) {
+        function renderRecentReferrals(payload = {}) {
+          const rows =
+            payload.referrals ||
+            payload.recentReferrals ||
+            payload.recent_referrals ||
+            [];
+
           const safeRows = Array.isArray(rows) ? rows.slice(0, 5) : [];
 
           const header = `
             <div class="table-row header">
-              <span>Name</span>
+              <span>Type</span>
+              <span>Member</span>
               <span>Status</span>
-              <span>Joined</span>
-              <span>Earnings</span>
+              <span>Amount</span>
             </div>
           `;
 
@@ -1670,7 +1814,11 @@
             header +
             safeRows
               .map((referral) => {
-                const name = referral.name || referral.full_name || "New Member";
+                const type = normalizeText(referral.level || referral.type || "direct").toLowerCase();
+                const isTeam = type === "team";
+                const label = isTeam ? "Member B → C" : "Member A → B";
+                const name = referral.name || referral.full_name || referral.email || "New Member";
+                const email = normalizeEmail(referral.email);
                 const statusRaw = normalizeText(
                   referral.statusLabel || referral.status,
                   "Pending"
@@ -1678,29 +1826,28 @@
                 const status = statusRaw.toLowerCase().includes("approved")
                   ? "approved"
                   : "pending";
-                const amount = Number(referral.amount || referral.reward_amount || 0);
+                const amount = Number(
+                  referral.amount || referral.reward_amount || referral.earned || 0
+                );
                 const approved = status === "approved";
 
                 return `
                   <div class="table-row">
+                    <span>${escapeHtml(label)}</span>
                     <span class="member-cell">
-                      <span class="avatar">${escapeHtml(String(name).charAt(0))}</span>
-                      <span class="member-name">${escapeHtml(name)}</span>
+                      <span class="avatar">${escapeHtml(getInitials(name || email))}</span>
+                      <span class="member-name">
+                        ${escapeHtml(name)}
+                        ${email ? `<span class="member-email">${escapeHtml(email)}</span>` : ""}
+                      </span>
                     </span>
                     <span>
                       <span class="status-tag ${status}">
                         ${escapeHtml(titleCase(statusRaw))}
                       </span>
                     </span>
-                    <span>${escapeHtml(
-                      formatDate(
-                        referral.created_at ||
-                          referral.createdAt ||
-                          referral.joined_at
-                      )
-                    )}</span>
-                    <span class="${approved ? "green-money" : ""}">
-                      ${approved ? "+ " + escapeHtml(money(amount || 7)) : "Pending"}
+                    <span class="${isTeam ? "blue-money" : approved ? "green-money" : ""}">
+                      ${approved ? "+ " + escapeHtml(money(amount || (isTeam ? 1 : 7))) : "Pending"}
                     </span>
                   </div>
                 `;
@@ -1709,13 +1856,13 @@
         }
 
         function renderReferralPayload(payload = {}) {
-          state.referralPayload = payload;
+          state.referralsPayload = payload;
 
-          const summary = payload.summary || {};
+          const summary = normalizeSummary(payload);
+
           renderStats(summary);
-          renderFloors(payload);
-          renderLeaderboard(payload.leaderboard || []);
-          renderRecentReferrals(payload.referrals || payload.recentReferrals || []);
+          renderFloors(payload, summary);
+          renderRecentReferrals(payload);
 
           if (payload.member?.referralLink || payload.member?.referral_link) {
             els.referralLink.value = getReferralLink({
@@ -1759,30 +1906,67 @@
           }
         }
 
-        async function loadReferralTower() {
+        async function loadReferralDashboard() {
           setTowerStatus("Loading referral tower...");
 
           try {
-            const payload = await fetchJson(API.referralTower);
-            if (!payload) return;
+            const [referralsResult, leaderboardResult] = await Promise.allSettled([
+              fetchJson(API.referrals),
+              fetchJson(API.leaderboard),
+            ]);
 
-            renderReferralPayload(payload);
+            const referralsPayload =
+              referralsResult.status === "fulfilled" && referralsResult.value
+                ? referralsResult.value
+                : {};
+
+            const leaderboardPayload =
+              leaderboardResult.status === "fulfilled" && leaderboardResult.value
+                ? leaderboardResult.value
+                : {};
+
+            state.leaderboardPayload = leaderboardPayload;
+
+            renderReferralPayload(referralsPayload);
+            renderLeaderboard(leaderboardPayload);
+
+            if (
+              referralsResult.status !== "fulfilled" &&
+              leaderboardResult.status !== "fulfilled"
+            ) {
+              throw referralsResult.reason || leaderboardResult.reason;
+            }
           } catch (error) {
             setTowerStatus(
               error?.message || "Unable to load referral tower right now.",
               "error"
             );
 
-            renderStats({
+            const fallbackSummary = {
               totalReferrals: 0,
               approvedReferrals: 0,
+              directReferrals: 0,
+              teamReferrals: 0,
               pendingReferrals: 0,
-              earnedAmount: 0,
-            });
+              directEarnings: 0,
+              teamEarnings: 0,
+              growthPoolCredit: 0,
+              totalEarned: 0,
+            };
 
-            renderLeaderboard([]);
-            renderRecentReferrals([]);
+            renderStats(fallbackSummary);
+            renderFloors({}, fallbackSummary);
+            renderLeaderboard({});
+            renderRecentReferrals({});
           }
+        }
+
+        function renderBenefitsStatus() {
+          if (!els.benefitsStatus) return;
+
+          els.benefitsStatus.className = "benefits-status success";
+          els.benefitsStatus.textContent =
+            "Benefits are ready inside your Card Leo portal.";
         }
 
         async function copyReferralLink() {
@@ -1819,13 +2003,13 @@
               data?.redirectTo;
 
             if (!url) {
-              window.location.href = "/portal/billing.html";
+              window.location.href = "/portal/rewards.html";
               return;
             }
 
             window.location.href = url;
           } catch {
-            window.location.href = "/portal/billing.html";
+            window.location.href = "/portal/rewards.html";
           }
         }
 
@@ -1877,10 +2061,7 @@
 
             await loadSession();
 
-            await Promise.allSettled([
-              loadOverview(),
-              loadReferralTower(),
-            ]);
+            await Promise.allSettled([loadOverview(), loadReferralDashboard()]);
           } catch (error) {
             console.error("Portal dashboard error:", error);
             window.location.href =

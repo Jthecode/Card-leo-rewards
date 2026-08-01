@@ -1266,6 +1266,8 @@
           member: null,
           referralsPayload: null,
           leaderboardPayload: null,
+          isRedirecting: false,
+          hasLoaded: false,
         };
 
         function money(value) {
@@ -1307,30 +1309,21 @@
             .replace(/[_-]+/g, " ")
             .split(/\s+/)
             .filter(Boolean)
-            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .map(
+              (part) =>
+                part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+            )
             .join(" ");
-        }
-
-        function formatDate(value) {
-          if (!value) return "—";
-
-          const date = new Date(value);
-
-          if (Number.isNaN(date.getTime())) return "—";
-
-          return new Intl.DateTimeFormat("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }).format(date);
         }
 
         async function fetchJson(url, options = {}) {
           const response = await fetch(url, {
             method: options.method || "GET",
             credentials: "include",
+            cache: "no-store",
             headers: {
               Accept: "application/json",
+              "Cache-Control": "no-cache",
               ...(options.body ? { "Content-Type": "application/json" } : {}),
               ...(options.headers || {}),
             },
@@ -1339,23 +1332,51 @@
 
           const payload = await response.json().catch(() => ({}));
 
-          if (response.status === 401) {
-            window.location.href =
-              "/login.html?next=" +
-              encodeURIComponent(window.location.pathname + window.location.search);
-            return null;
-          }
-
           if (!response.ok || payload?.success === false || payload?.ok === false) {
             const error = new Error(
-              payload?.message || payload?.error || "Request failed."
+              payload?.message ||
+                payload?.error ||
+                `Request failed with status ${response.status}`
             );
+
             error.status = response.status;
             error.payload = payload;
+            error.url = url;
+
             throw error;
           }
 
           return unwrap(payload);
+        }
+
+        async function checkStillAuthenticated() {
+          try {
+            const data = await fetchJson(API.me);
+            return data?.authenticated === true;
+          } catch {
+            return false;
+          }
+        }
+
+        async function redirectToLoginOnlyIfActuallyLoggedOut(reason = "") {
+          if (state.isRedirecting) return;
+
+          const authenticated = await checkStillAuthenticated();
+
+          if (authenticated) {
+            console.warn(
+              "[portal/index] Blocked false login redirect because /api/auth/me is authenticated.",
+              reason
+            );
+            return;
+          }
+
+          state.isRedirecting = true;
+
+          window.location.replace(
+            "/login.html?next=" +
+              encodeURIComponent(window.location.pathname + window.location.search)
+          );
         }
 
         function getFullName(member) {
@@ -1401,8 +1422,12 @@
           const paymentStatus = getPaymentStatus(member);
 
           return (
-            ["active", "approved", "auto_approved", "paid", "current"].includes(status) ||
-            ["paid", "active", "current", "succeeded", "complete"].includes(paymentStatus)
+            ["active", "approved", "auto_approved", "paid", "current"].includes(
+              status
+            ) ||
+            ["paid", "active", "current", "succeeded", "complete"].includes(
+              paymentStatus
+            )
           );
         }
 
@@ -1483,16 +1508,24 @@
         }
 
         function renderMember(member) {
+          if (!member) return;
+
           state.member = member;
 
           const firstName = getFirstName(member);
           const paid = isPaidActive(member);
 
-          els.memberName.textContent = firstName;
-          els.memberTierBadge.textContent = paid
-            ? "♛ Allowance Card"
-            : "Payment Required";
-          els.referralLink.value = getReferralLink(member);
+          if (els.memberName) els.memberName.textContent = firstName;
+
+          if (els.memberTierBadge) {
+            els.memberTierBadge.textContent = paid
+              ? "♛ Allowance Card"
+              : "Payment Required";
+          }
+
+          if (els.referralLink) {
+            els.referralLink.value = getReferralLink(member);
+          }
 
           if (!paid) {
             setTowerStatus(
@@ -1602,16 +1635,41 @@
         }
 
         function renderStats(summary = {}) {
-          els.totalReferrals.textContent = String(summary.totalReferrals);
-          els.approvedReferrals.textContent = String(summary.approvedReferrals);
-          els.teamReferrals.textContent = String(summary.teamReferrals);
-          els.totalEarned.textContent = money(summary.totalEarned);
-          els.currentBalance.textContent = money(summary.totalEarned);
+          if (els.totalReferrals) {
+            els.totalReferrals.textContent = String(summary.totalReferrals);
+          }
 
-          els.directEarnings.textContent = money(summary.directEarnings);
-          els.teamEarnings.textContent = money(summary.teamEarnings);
-          els.growthPoolCredit.textContent = money(summary.growthPoolCredit);
-          els.leaderboardTotal.textContent = money(summary.totalEarned);
+          if (els.approvedReferrals) {
+            els.approvedReferrals.textContent = String(summary.approvedReferrals);
+          }
+
+          if (els.teamReferrals) {
+            els.teamReferrals.textContent = String(summary.teamReferrals);
+          }
+
+          if (els.totalEarned) {
+            els.totalEarned.textContent = money(summary.totalEarned);
+          }
+
+          if (els.currentBalance) {
+            els.currentBalance.textContent = money(summary.totalEarned);
+          }
+
+          if (els.directEarnings) {
+            els.directEarnings.textContent = money(summary.directEarnings);
+          }
+
+          if (els.teamEarnings) {
+            els.teamEarnings.textContent = money(summary.teamEarnings);
+          }
+
+          if (els.growthPoolCredit) {
+            els.growthPoolCredit.textContent = money(summary.growthPoolCredit);
+          }
+
+          if (els.leaderboardTotal) {
+            els.leaderboardTotal.textContent = money(summary.totalEarned);
+          }
         }
 
         function floorClass(floor) {
@@ -1620,7 +1678,9 @@
 
           if (type === "team") return "tower-floor team";
           if (type === "direct") return "tower-floor direct";
-          if (status === "earned" || status === "approved") return "tower-floor earned";
+          if (status === "earned" || status === "approved") {
+            return "tower-floor earned";
+          }
           if (status === "pending") return "tower-floor pending";
 
           return "tower-floor locked";
@@ -1667,6 +1727,8 @@
         }
 
         function renderFloors(payload = {}, summary = {}) {
+          if (!els.towerFloors) return;
+
           const floors = Array.isArray(payload?.tower?.floors)
             ? payload.tower.floors
             : defaultFloors(summary);
@@ -1717,6 +1779,8 @@
         }
 
         function renderLeaderboard(payload = {}) {
+          if (!els.leaderboardTable) return;
+
           const rows =
             payload.leaderboard ||
             payload.rows ||
@@ -1787,6 +1851,8 @@
         }
 
         function renderRecentReferrals(payload = {}) {
+          if (!els.recentReferralsTable) return;
+
           const rows =
             payload.referrals ||
             payload.recentReferrals ||
@@ -1814,10 +1880,16 @@
             header +
             safeRows
               .map((referral) => {
-                const type = normalizeText(referral.level || referral.type || "direct").toLowerCase();
+                const type = normalizeText(
+                  referral.level || referral.type || "direct"
+                ).toLowerCase();
                 const isTeam = type === "team";
                 const label = isTeam ? "Member B → C" : "Member A → B";
-                const name = referral.name || referral.full_name || referral.email || "New Member";
+                const name =
+                  referral.name ||
+                  referral.full_name ||
+                  referral.email ||
+                  "New Member";
                 const email = normalizeEmail(referral.email);
                 const statusRaw = normalizeText(
                   referral.statusLabel || referral.status,
@@ -1827,7 +1899,10 @@
                   ? "approved"
                   : "pending";
                 const amount = Number(
-                  referral.amount || referral.reward_amount || referral.earned || 0
+                  referral.amount ||
+                    referral.reward_amount ||
+                    referral.earned ||
+                    0
                 );
                 const approved = status === "approved";
 
@@ -1864,7 +1939,10 @@
           renderFloors(payload, summary);
           renderRecentReferrals(payload);
 
-          if (payload.member?.referralLink || payload.member?.referral_link) {
+          if (
+            els.referralLink &&
+            (payload.member?.referralLink || payload.member?.referral_link)
+          ) {
             els.referralLink.value = getReferralLink({
               ...(state.member || {}),
               referralLink: payload.member.referralLink,
@@ -1877,32 +1955,32 @@
 
         async function loadSession() {
           const data = await fetchJson(API.me);
-          if (!data) return;
-
           const member = data.member || data.profile || data.user;
 
-          if (!member || data.authenticated === false) {
-            window.location.href =
-              "/login.html?next=" +
-              encodeURIComponent(window.location.pathname + window.location.search);
-            return;
+          if (!member || data.authenticated !== true) {
+            await redirectToLoginOnlyIfActuallyLoggedOut(
+              "loadSession unauthenticated"
+            );
+            return null;
           }
 
           renderMember(member);
+          return member;
         }
 
         async function loadOverview() {
           try {
             const data = await fetchJson(API.overview);
-            if (!data) return;
-
             const member = data.member || data.profile || data.user;
 
             if (member) {
               renderMember({ ...(state.member || {}), ...member });
             }
-          } catch {
-            // Overview is optional.
+          } catch (error) {
+            console.warn(
+              "[portal/index] Overview skipped:",
+              error?.message || error
+            );
           }
         }
 
@@ -1910,10 +1988,11 @@
           setTowerStatus("Loading referral tower...");
 
           try {
-            const [referralsResult, leaderboardResult] = await Promise.allSettled([
-              fetchJson(API.referrals),
-              fetchJson(API.leaderboard),
-            ]);
+            const [referralsResult, leaderboardResult] =
+              await Promise.allSettled([
+                fetchJson(API.referrals),
+                fetchJson(API.leaderboard),
+              ]);
 
             const referralsPayload =
               referralsResult.status === "fulfilled" && referralsResult.value
@@ -1934,13 +2013,18 @@
               referralsResult.status !== "fulfilled" &&
               leaderboardResult.status !== "fulfilled"
             ) {
-              throw referralsResult.reason || leaderboardResult.reason;
+              console.warn(
+                "[portal/index] Referral and leaderboard APIs failed, but user remains logged in.",
+                referralsResult.reason || leaderboardResult.reason
+              );
+
+              setTowerStatus(
+                "Your account is logged in, but referral data could not load right now.",
+                "error"
+              );
             }
           } catch (error) {
-            setTowerStatus(
-              error?.message || "Unable to load referral tower right now.",
-              "error"
-            );
+            console.error("[portal/index] Referral dashboard error:", error);
 
             const fallbackSummary = {
               totalReferrals: 0,
@@ -1958,19 +2042,16 @@
             renderFloors({}, fallbackSummary);
             renderLeaderboard({});
             renderRecentReferrals({});
+
+            setTowerStatus(
+              "Your account is logged in, but referral data could not load right now.",
+              "error"
+            );
           }
         }
 
-        function renderBenefitsStatus() {
-          if (!els.benefitsStatus) return;
-
-          els.benefitsStatus.className = "benefits-status success";
-          els.benefitsStatus.textContent =
-            "Benefits are ready inside your Card Leo portal.";
-        }
-
         async function copyReferralLink() {
-          const link = els.referralLink.value;
+          const link = els.referralLink?.value || "";
 
           if (!link) {
             setTowerStatus("Referral link is not available yet.", "error");
@@ -1981,7 +2062,7 @@
             await navigator.clipboard.writeText(link);
             setTowerStatus("Referral link copied.", "success");
           } catch {
-            els.referralLink.select();
+            els.referralLink?.select();
             document.execCommand("copy");
             setTowerStatus("Referral link copied.", "success");
           }
@@ -2024,12 +2105,14 @@
             await fetch(API.logout, {
               method: "POST",
               credentials: "include",
+              cache: "no-store",
               headers: {
                 Accept: "application/json",
+                "Cache-Control": "no-cache",
               },
             });
 
-            window.location.href = "/login.html";
+            window.location.replace("/login.html");
           } catch {
             els.logoutButton.disabled = false;
             els.logoutButton.textContent = oldText;
@@ -2047,26 +2130,52 @@
           if (member) {
             renderMember(member);
           }
+
+          if (!state.hasLoaded) {
+            state.hasLoaded = true;
+            renderBenefitsStatus();
+            await Promise.allSettled([loadOverview(), loadReferralDashboard()]);
+          }
         });
 
-        window.addEventListener("cardleo:auth-failed", () => {
-          window.location.href =
-            "/login.html?next=" +
-            encodeURIComponent(window.location.pathname + window.location.search);
+        window.addEventListener("cardleo:auth-failed", async (event) => {
+          const detail = event?.detail || {};
+
+          if (detail.authenticated === true) {
+            return;
+          }
+
+          if (detail.reason === "payment_required") {
+            state.isRedirecting = true;
+
+            window.location.replace(
+              "/signup.html?status=payment_required&next=" +
+                encodeURIComponent(
+                  window.location.pathname + window.location.search
+                )
+            );
+
+            return;
+          }
+
+          await redirectToLoginOnlyIfActuallyLoggedOut("cardleo:auth-failed");
         });
 
         (async () => {
           try {
             renderBenefitsStatus();
 
-            await loadSession();
+            const member = await loadSession();
 
-            await Promise.allSettled([loadOverview(), loadReferralDashboard()]);
+            if (!member) return;
+
+            if (!state.hasLoaded) {
+              state.hasLoaded = true;
+              await Promise.allSettled([loadOverview(), loadReferralDashboard()]);
+            }
           } catch (error) {
-            console.error("Portal dashboard error:", error);
-            window.location.href =
-              "/login.html?next=" +
-              encodeURIComponent(window.location.pathname + window.location.search);
+            console.error("[portal/index] Startup error:", error);
+            await redirectToLoginOnlyIfActuallyLoggedOut("startup catch");
           }
         })();
       })();

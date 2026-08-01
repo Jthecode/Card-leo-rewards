@@ -15,9 +15,23 @@ const ACTIVE_STATUSES = new Set([
   "succeeded",
 ]);
 
+const EMPTY_RESPONSE = {
+  success: true,
+  ok: true,
+  authenticated: true,
+  message: "Monthly leaderboard loaded.",
+  leaderboard: [],
+  rows: [],
+  members: [],
+  topEarners: [],
+  top_earners: [],
+};
+
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
   res.setHeader("Content-Type", "application/json");
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+
   return res.end(JSON.stringify(payload));
 }
 
@@ -27,6 +41,18 @@ function normalizeString(value) {
 
 function normalizeEmail(value) {
   return normalizeString(value).toLowerCase();
+}
+
+function normalizeComparable(value) {
+  return normalizeString(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9@._-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function compactComparable(value) {
+  return normalizeComparable(value).replace(/[^a-z0-9@._-]/g, "");
 }
 
 function isValidEmail(value) {
@@ -39,15 +65,23 @@ function moneyAmount(value) {
 }
 
 function formatName(member) {
-  const fullName = normalizeString(member.full_name || member.fullName);
+  const fullName = normalizeString(member?.full_name || member?.fullName);
 
   if (fullName) return fullName;
 
-  const firstName = normalizeString(member.first_name || member.firstName);
-  const lastName = normalizeString(member.last_name || member.lastName);
+  const firstName = normalizeString(member?.first_name || member?.firstName);
+  const lastName = normalizeString(member?.last_name || member?.lastName);
   const name = [firstName, lastName].filter(Boolean).join(" ");
 
-  return name || normalizeEmail(member.email) || "Card Leo Member";
+  return name || normalizeEmail(member?.email) || "Card Leo Member";
+}
+
+function getFirstName(member) {
+  return normalizeString(member?.first_name || member?.firstName);
+}
+
+function getLastName(member) {
+  return normalizeString(member?.last_name || member?.lastName);
 }
 
 function getInitials(member) {
@@ -64,10 +98,10 @@ function getInitials(member) {
 }
 
 function isApprovedMember(member) {
-  const status = normalizeString(member.status).toLowerCase();
-  const paymentStatus = normalizeString(member.payment_status).toLowerCase();
-  const membershipStatus = normalizeString(member.membership_status).toLowerCase();
-  const approvalStatus = normalizeString(member.approval_status).toLowerCase();
+  const status = normalizeString(member?.status).toLowerCase();
+  const paymentStatus = normalizeString(member?.payment_status).toLowerCase();
+  const membershipStatus = normalizeString(member?.membership_status).toLowerCase();
+  const approvalStatus = normalizeString(member?.approval_status).toLowerCase();
 
   return (
     ACTIVE_STATUSES.has(status) ||
@@ -79,70 +113,142 @@ function isApprovedMember(member) {
 
 function getReferralEmail(member) {
   return normalizeEmail(
-    member.referral_email ||
-      member.referralEmail ||
-      member.sponsor_email ||
-      member.sponsorEmail ||
+    member?.referral_email ||
+      member?.referralEmail ||
+      member?.sponsor_email ||
+      member?.sponsorEmail ||
       ""
   );
 }
 
 function getReferralName(member) {
   return normalizeString(
-    member.referral_name ||
-      member.referralName ||
-      member.sponsor_name ||
-      member.sponsorName ||
+    member?.referral_name ||
+      member?.referralName ||
+      member?.sponsor_name ||
+      member?.sponsorName ||
       ""
   );
 }
 
 function getReferralCode(member) {
   return normalizeString(
-    member.referral_code ||
-      member.referralCode ||
-      member.sponsor_code ||
-      member.sponsorCode ||
+    member?.referral_code ||
+      member?.referralCode ||
+      member?.sponsor_code ||
+      member?.sponsorCode ||
       ""
   );
 }
 
-function normalizeCode(value) {
-  return normalizeString(value).toLowerCase();
-}
-
 function getMemberReferralCode(member) {
-  const saved = normalizeString(member.referral_code || member.referralCode);
+  const saved = normalizeString(member?.referral_code || member?.referralCode);
 
-  if (saved) return normalizeCode(saved);
+  if (saved) return compactComparable(saved);
 
-  const email = normalizeEmail(member.email);
+  const email = normalizeEmail(member?.email);
   const emailPrefix = email.split("@")[0];
 
-  return normalizeCode(emailPrefix || member.id || "");
+  return compactComparable(emailPrefix || member?.id || "");
+}
+
+function getMemberAliases(member) {
+  const email = normalizeEmail(member?.email);
+  const emailPrefix = email ? email.split("@")[0] : "";
+  const firstName = getFirstName(member);
+  const lastName = getLastName(member);
+  const fullName = formatName(member);
+  const referralCode = getMemberReferralCode(member);
+  const id = normalizeString(member?.id);
+
+  const aliases = [
+    email,
+    emailPrefix,
+    firstName,
+    lastName,
+    fullName,
+    `${firstName} ${lastName}`,
+    `${lastName} ${firstName}`,
+    referralCode,
+    id,
+  ];
+
+  // Helpful alias for Maurece/Moe situation.
+  if (
+    normalizeComparable(firstName) === "maurece" ||
+    normalizeComparable(firstName) === "maurice" ||
+    normalizeComparable(fullName).includes("maurece") ||
+    normalizeComparable(fullName).includes("maurice")
+  ) {
+    aliases.push("moe");
+  }
+
+  return Array.from(
+    new Set(
+      aliases
+        .map((value) => normalizeString(value))
+        .filter(Boolean)
+    )
+  );
+}
+
+function getReferralValues(member) {
+  const values = [
+    getReferralEmail(member),
+    getReferralName(member),
+    getReferralCode(member),
+    member?.sponsor,
+    member?.sponsor_id,
+    member?.sponsorId,
+    member?.referred_by,
+    member?.referredBy,
+    member?.referred_by_email,
+    member?.referredByEmail,
+    member?.upline_email,
+    member?.uplineEmail,
+  ];
+
+  return Array.from(
+    new Set(
+      values
+        .map((value) => normalizeString(value))
+        .filter(Boolean)
+    )
+  );
+}
+
+function valuesMatch(value, alias) {
+  const cleanValue = normalizeComparable(value);
+  const cleanAlias = normalizeComparable(alias);
+  const compactValue = compactComparable(value);
+  const compactAlias = compactComparable(alias);
+
+  if (!cleanValue || !cleanAlias) return false;
+
+  if (cleanValue === cleanAlias) return true;
+  if (compactValue && compactAlias && compactValue === compactAlias) return true;
+
+  return false;
 }
 
 function matchesReferrer(member, referrer) {
+  if (!member || !referrer) return false;
+
+  const memberEmail = normalizeEmail(member.email);
   const referrerEmail = normalizeEmail(referrer.email);
-  const referrerCode = getMemberReferralCode(referrer);
-  const referrerId = normalizeCode(referrer.id);
 
-  const memberReferralEmail = getReferralEmail(member);
-  const memberReferralName = normalizeCode(getReferralName(member));
-  const memberReferralCode = normalizeCode(getReferralCode(member));
+  if (!memberEmail || !referrerEmail) return false;
+  if (memberEmail === referrerEmail) return false;
 
-  if (memberReferralEmail && memberReferralEmail === referrerEmail) return true;
-  if (memberReferralName && memberReferralName === referrerEmail) return true;
-  if (memberReferralCode && memberReferralCode === referrerEmail) return true;
+  const referralValues = getReferralValues(member);
+  const referrerAliases = getMemberAliases(referrer);
 
-  if (referrerCode) {
-    if (memberReferralName === referrerCode) return true;
-    if (memberReferralCode === referrerCode) return true;
-  }
-
-  if (referrerId) {
-    if (memberReferralName === referrerId) return true;
-    if (memberReferralCode === referrerId) return true;
+  for (const referralValue of referralValues) {
+    for (const alias of referrerAliases) {
+      if (valuesMatch(referralValue, alias)) {
+        return true;
+      }
+    }
   }
 
   return false;
@@ -152,7 +258,7 @@ function uniqueMembersByIdOrEmail(members) {
   const seen = new Set();
 
   return members.filter((member) => {
-    const key = normalizeString(member.id) || normalizeEmail(member.email);
+    const key = normalizeString(member?.id) || normalizeEmail(member?.email);
 
     if (!key || seen.has(key)) return false;
 
@@ -165,7 +271,7 @@ async function getAllMembers() {
   const { data, error } = await supabaseAdmin
     .from("signups")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   if (error) throw error;
 
@@ -173,7 +279,7 @@ async function getAllMembers() {
 }
 
 function buildMemberBreakdown(member, allMembers) {
-  const memberEmail = normalizeEmail(member.email);
+  const memberEmail = normalizeEmail(member?.email);
 
   if (!memberEmail || !isValidEmail(memberEmail)) {
     return {
@@ -190,7 +296,7 @@ function buildMemberBreakdown(member, allMembers) {
 
   const directReferrals = uniqueMembersByIdOrEmail(
     allMembers.filter((possibleDirect) => {
-      const possibleEmail = normalizeEmail(possibleDirect.email);
+      const possibleEmail = normalizeEmail(possibleDirect?.email);
 
       if (!possibleEmail || possibleEmail === memberEmail) return false;
 
@@ -202,12 +308,12 @@ function buildMemberBreakdown(member, allMembers) {
 
   const teamReferrals = uniqueMembersByIdOrEmail(
     allMembers.filter((possibleTeamMember) => {
-      const teamEmail = normalizeEmail(possibleTeamMember.email);
+      const teamEmail = normalizeEmail(possibleTeamMember?.email);
 
       if (!teamEmail || teamEmail === memberEmail) return false;
 
       return approvedDirectReferrals.some((directMember) => {
-        const directEmail = normalizeEmail(directMember.email);
+        const directEmail = normalizeEmail(directMember?.email);
 
         if (!directEmail || teamEmail === directEmail) return false;
 
@@ -236,7 +342,7 @@ function buildMemberBreakdown(member, allMembers) {
 }
 
 function getTopTeamReferralExamples(member, breakdown) {
-  return breakdown.approvedTeamReferrals.slice(0, 5).map((teamMember) => {
+  return breakdown.approvedTeamReferrals.slice(0, 10).map((teamMember) => {
     const through = breakdown.approvedDirectReferrals.find((directMember) =>
       matchesReferrer(teamMember, directMember)
     );
@@ -263,12 +369,26 @@ function getTopTeamReferralExamples(member, breakdown) {
   });
 }
 
-function buildLeaderboardRow(member, index, breakdown) {
+function getDirectReferralExamples(breakdown) {
+  return breakdown.approvedDirectReferrals.slice(0, 10).map((directMember) => ({
+    member_b: {
+      id: normalizeString(directMember.id),
+      name: formatName(directMember),
+      email: normalizeEmail(directMember.email),
+    },
+    label: "Member A referred Member B",
+    amount: DIRECT_REFERRAL_REWARD,
+    note: `Direct referral: ${formatName(directMember)}`,
+  }));
+}
+
+function buildLeaderboardRow(member, breakdown) {
   const approvedDirectCount = breakdown.approvedDirectReferrals.length;
   const approvedTeamCount = breakdown.approvedTeamReferrals.length;
+  const approvedCount = approvedDirectCount + approvedTeamCount;
 
   return {
-    rank: index + 1,
+    rank: 0,
 
     id: normalizeString(member.id),
     member_id: normalizeString(member.id),
@@ -283,9 +403,10 @@ function buildLeaderboardRow(member, index, breakdown) {
     status: normalizeString(member.status),
     payment_status: normalizeString(member.payment_status),
     membership_status: normalizeString(member.membership_status),
+    approval_status: normalizeString(member.approval_status),
 
-    approvedReferrals: approvedDirectCount + approvedTeamCount,
-    approved_referrals: approvedDirectCount + approvedTeamCount,
+    approvedReferrals: approvedCount,
+    approved_referrals: approvedCount,
 
     directReferrals: breakdown.directReferrals.length,
     direct_referrals: breakdown.directReferrals.length,
@@ -318,19 +439,42 @@ function buildLeaderboardRow(member, index, breakdown) {
 
     payout_status: normalizeString(member.payout_status || "not_requested"),
 
-    referral_examples: getTopTeamReferralExamples(member, breakdown),
+    direct_referral_examples: getDirectReferralExamples(breakdown),
+    team_referral_examples: getTopTeamReferralExamples(member, breakdown),
+    referral_examples: [
+      ...getDirectReferralExamples(breakdown),
+      ...getTopTeamReferralExamples(member, breakdown),
+    ],
 
     labels: {
       direct: "Member A referred Member B",
       team: "Member B referred Member C",
       direct_amount: DIRECT_REFERRAL_REWARD,
       team_amount: TEAM_REFERRAL_REWARD,
+      growth_pool_amount: GROWTH_POOL_REWARD,
     },
   };
 }
 
+function isMissingColumnError(error) {
+  const code = String(error?.code || "");
+  const message = String(error?.message || "").toLowerCase();
+  const details = String(error?.details || "").toLowerCase();
+
+  return (
+    code === "42703" ||
+    code === "PGRST204" ||
+    message.includes("column") ||
+    message.includes("schema cache") ||
+    message.includes("could not find") ||
+    details.includes("column") ||
+    details.includes("schema cache") ||
+    details.includes("could not find")
+  );
+}
+
 async function saveLeaderboardTotals(row) {
-  const updatePayload = {
+  const fullPayload = {
     direct_referral_earnings: row.directEarnings,
     team_referral_earnings: row.teamEarnings,
     account_credit: row.teamEarnings,
@@ -338,17 +482,38 @@ async function saveLeaderboardTotals(row) {
     total_referral_earnings: row.totalEarned,
     allowance_balance: row.totalEarned,
     reward_balance: row.totalEarned,
+    updated_at: new Date().toISOString(),
   };
 
-  const { error } = await supabaseAdmin
+  let result = await supabaseAdmin
     .from("signups")
-    .update(updatePayload)
+    .update(fullPayload)
     .eq("id", row.id);
 
-  if (error) {
+  if (!result.error) return;
+
+  if (!isMissingColumnError(result.error)) {
     console.error("Leaderboard totals save failed:", {
       email: row.email,
-      error,
+      error: result.error,
+    });
+
+    return;
+  }
+
+  const fallbackPayload = {
+    updated_at: new Date().toISOString(),
+  };
+
+  result = await supabaseAdmin
+    .from("signups")
+    .update(fallbackPayload)
+    .eq("id", row.id);
+
+  if (result.error) {
+    console.error("Leaderboard fallback save failed:", {
+      email: row.email,
+      error: result.error,
     });
   }
 }
@@ -382,6 +547,29 @@ function getMonthLabel(date = new Date()) {
   }).format(date);
 }
 
+function buildDebugChain(allMembers) {
+  const targetEmails = [
+    "maurecewilliams@yahoo.com",
+    "marethiaa@yahoo.com",
+    "monicawilliams10@gmail.com",
+  ];
+
+  return allMembers
+    .filter((member) => targetEmails.includes(normalizeEmail(member.email)))
+    .map((member) => ({
+      email: normalizeEmail(member.email),
+      name: formatName(member),
+      status: normalizeString(member.status),
+      payment_status: normalizeString(member.payment_status),
+      membership_status: normalizeString(member.membership_status),
+      approval_status: normalizeString(member.approval_status),
+      referral_email: getReferralEmail(member),
+      referral_name: getReferralName(member),
+      referral_code: getReferralCode(member),
+      approved: isApprovedMember(member),
+    }));
+}
+
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
@@ -399,28 +587,53 @@ export default async function handler(req, res) {
       Math.min(100, Number(req.query?.limit || req.query?.per_page || 50))
     );
 
+    const includeZero =
+      String(req.query?.include_zero ?? "true").toLowerCase() !== "false";
+
+    const debug =
+      String(req.query?.debug ?? "").toLowerCase() === "true" ||
+      String(req.query?.debug ?? "") === "1";
+
     const allMembers = await getAllMembers();
+
+    if (!allMembers.length) {
+      return sendJson(res, 200, {
+        ...EMPTY_RESPONSE,
+        month_key: getMonthKey(),
+        month_label: getMonthLabel(),
+        summary: {
+          totalMembers: 0,
+          total_members: 0,
+          totalLeaderboardMembers: 0,
+          total_leaderboard_members: 0,
+          totalDirectEarnings: 0,
+          total_direct_earnings: 0,
+          totalTeamEarnings: 0,
+          total_team_earnings: 0,
+          totalGrowthPoolCredit: 0,
+          total_growth_pool_credit: 0,
+          totalLeaderboardEarnings: 0,
+          total_leaderboard_earnings: 0,
+        },
+      });
+    }
 
     const approvedMembers = allMembers.filter((member) => {
       const email = normalizeEmail(member.email);
+
       return email && isValidEmail(email) && isApprovedMember(member);
     });
 
     const calculatedRows = approvedMembers.map((member) => {
       const breakdown = buildMemberBreakdown(member, allMembers);
-
-      return {
-        member,
-        breakdown,
-        totalEarned: breakdown.totalEarned,
-      };
+      return buildLeaderboardRow(member, breakdown);
     });
 
-    const leaderboardRows = sortLeaderboardRows(
-      calculatedRows.map((item, index) =>
-        buildLeaderboardRow(item.member, index, item.breakdown)
-      )
-    ).map((row, index) => ({
+    const filteredRows = includeZero
+      ? calculatedRows
+      : calculatedRows.filter((row) => row.totalEarned > 0);
+
+    const leaderboardRows = sortLeaderboardRows(filteredRows).map((row, index) => ({
       ...row,
       rank: index + 1,
     }));
@@ -494,6 +707,20 @@ export default async function handler(req, res) {
       members: visibleRows,
       topEarners: visibleRows,
       top_earners: visibleRows,
+
+      debug: debug
+        ? {
+            chain: buildDebugChain(allMembers),
+            expected_current_chain_without_micah: {
+              maurece_or_moe:
+                "Marethia direct referral = $7, Monica second-level referral through Marethia = $1, total = $8.",
+              marethia:
+                "Monica direct referral = $7, total = $7 until Micah creates an approved account.",
+              monica:
+                "No approved referrals yet until Micah creates an approved account.",
+            },
+          }
+        : undefined,
     });
   } catch (error) {
     console.error("Card Leo leaderboard/monthly error:", error);

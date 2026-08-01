@@ -55,6 +55,23 @@ const PAYMENT_REQUIRED_STATUSES = new Set([
   "",
 ]);
 
+const BAD_PORTAL_REDIRECTS = new Set([
+  "",
+  "/",
+  "/login",
+  "/login.html",
+  "login",
+  "login.html",
+  "/member-login",
+  "member-login",
+  "/signup",
+  "/signup.html",
+  "signup",
+  "signup.html",
+  "/join",
+  "join",
+]);
+
 const AUTH_COOKIE_ALIASES = [
   SESSION_COOKIE_NAME,
   SESSION_TOKEN_COOKIE_NAME,
@@ -250,18 +267,11 @@ function safeBase64JsonParse(value) {
 
   if (!raw) return null;
 
-  const attempts = [
-    raw,
-    raw.replace(/-/g, "+").replace(/_/g, "/"),
-  ];
+  const attempts = [raw, raw.replace(/-/g, "+").replace(/_/g, "/")];
 
   for (const attempt of attempts) {
     try {
-      const padded = attempt.padEnd(
-        Math.ceil(attempt.length / 4) * 4,
-        "="
-      );
-
+      const padded = attempt.padEnd(Math.ceil(attempt.length / 4) * 4, "=");
       const decoded = Buffer.from(padded, "base64").toString("utf8");
       const parsed = JSON.parse(decoded);
 
@@ -517,10 +527,23 @@ function normalizeMemberStatus(member) {
 }
 
 function resolvePortalLoginUrl(member) {
-  const portalLoginUrl = normalizeString(member?.portal_login_url);
+  const rawPortalLoginUrl = normalizeString(member?.portal_login_url);
+  const portalLoginUrl = rawPortalLoginUrl.toLowerCase();
 
-  if (portalLoginUrl.startsWith("/") && !portalLoginUrl.startsWith("//")) {
-    return portalLoginUrl;
+  if (BAD_PORTAL_REDIRECTS.has(portalLoginUrl)) {
+    return DEFAULT_REDIRECT;
+  }
+
+  if (!rawPortalLoginUrl) {
+    return DEFAULT_REDIRECT;
+  }
+
+  if (rawPortalLoginUrl.startsWith("/") && !rawPortalLoginUrl.startsWith("//")) {
+    if (!rawPortalLoginUrl.startsWith("/portal")) {
+      return DEFAULT_REDIRECT;
+    }
+
+    return rawPortalLoginUrl;
   }
 
   return DEFAULT_REDIRECT;
@@ -537,6 +560,7 @@ function sanitizeMember(member) {
 
   const portalAccess = hasPortalAccessForMember(member);
   const requiresPayment = doesMemberRequirePayment(member);
+  const portalLoginUrl = resolvePortalLoginUrl(member);
 
   return {
     id: member.id || null,
@@ -597,7 +621,8 @@ function sanitizeMember(member) {
     tier,
     tierLabel: titleCase(tier),
 
-    portalLoginUrl: resolvePortalLoginUrl(member),
+    portalLoginUrl,
+    portal_login_url: portalLoginUrl,
     portalAccess,
     accessLevel: "member",
 
@@ -676,6 +701,7 @@ function buildProfile(member) {
     billing_day: safeMember.billingDay,
     email_verified: safeMember.emailVerified,
     email_verified_at: safeMember.emailVerifiedAt,
+    portal_login_url: safeMember.portalLoginUrl,
     created_at: safeMember.createdAt,
     updated_at: safeMember.updatedAt,
   };
@@ -1007,7 +1033,7 @@ function activeSessionResponse(res, member, sessionCookie) {
   const value = sessionCookie?.value || {};
   const now = getUnixNow();
   const expiresAt = getSessionExpiresAt(sessionCookie);
-  const redirectTo = safeMember?.portalLoginUrl || DEFAULT_REDIRECT;
+  const redirectTo = resolvePortalLoginUrl(member);
 
   return ok(
     res,

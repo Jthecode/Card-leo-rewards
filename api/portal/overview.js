@@ -32,6 +32,7 @@ const ACTIVE_STATUSES = new Set([
   "complete",
   "completed",
   "succeeded",
+  "auto_approved",
 ]);
 
 const PAID_PAYMENT_STATUSES = new Set([
@@ -51,8 +52,21 @@ const ACTIVE_MEMBERSHIP_STATUSES = new Set([
   "current",
 ]);
 
+const INACTIVE_STATUSES = new Set([
+  "inactive",
+  "disabled",
+  "suspended",
+  "paused",
+  "denied",
+  "closed",
+  "cancelled",
+  "canceled",
+]);
+
 const SESSION_COOKIE_NAMES = [
   "cardleo_session",
+  "cardleo_auth",
+  "cardleo_portal_session",
   "card_leo_session",
   "member_session",
   "portal_session",
@@ -72,7 +86,7 @@ function normalizeEmail(value) {
 }
 
 function normalizeStatus(value) {
-  return normalizeText(value || "pending").toLowerCase();
+  return normalizeText(value || "").toLowerCase();
 }
 
 function normalizeTier(value) {
@@ -154,6 +168,40 @@ function parseCookies(req) {
     }, {});
 }
 
+function parseJsonObject(value) {
+  if (isObject(value)) return value;
+
+  const raw = normalizeText(value);
+
+  if (!raw) return null;
+
+  const parsed = safeJsonParse(raw, null);
+
+  if (isObject(parsed)) return parsed;
+
+  try {
+    const decoded = Buffer.from(raw, "base64").toString("utf8");
+    const parsedBase64 = safeJsonParse(decoded, null);
+
+    if (isObject(parsedBase64)) return parsedBase64;
+  } catch {
+    // Ignore invalid base64.
+  }
+
+  try {
+    const normalized = raw.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    const decoded = Buffer.from(padded, "base64").toString("utf8");
+    const parsedBase64Url = safeJsonParse(decoded, null);
+
+    if (isObject(parsedBase64Url)) return parsedBase64Url;
+  } catch {
+    // Ignore invalid base64url.
+  }
+
+  return null;
+}
+
 function readSessionCookie(req) {
   const cookies = parseCookies(req);
   const configuredName =
@@ -172,7 +220,7 @@ function readSessionCookie(req) {
 
     if (!raw) continue;
 
-    const parsed = safeJsonParse(raw, null);
+    const parsed = parseJsonObject(raw);
 
     if (isObject(parsed)) {
       return {
@@ -218,11 +266,27 @@ function isSessionExpired(sessionMeta) {
 
 function getSessionMemberId(sessionMeta) {
   const session = sessionMeta?.data || {};
+  const user = isObject(session.user) ? session.user : {};
+  const member = isObject(session.member) ? session.member : {};
+  const profile = isObject(session.profile) ? session.profile : {};
+  const metadata = isObject(user.user_metadata) ? user.user_metadata : {};
 
   return normalizeText(
-    session.member?.id ||
-      session.profile?.id ||
-      session.user?.id ||
+    member.id ||
+      member.signupId ||
+      member.signup_id ||
+      member.memberId ||
+      member.member_id ||
+      profile.id ||
+      profile.signupId ||
+      profile.signup_id ||
+      profile.memberId ||
+      profile.member_id ||
+      user.id ||
+      metadata.signupId ||
+      metadata.signup_id ||
+      metadata.memberId ||
+      metadata.member_id ||
       session.signupId ||
       session.signup_id ||
       session.memberId ||
@@ -233,11 +297,16 @@ function getSessionMemberId(sessionMeta) {
 
 function getSessionEmail(sessionMeta) {
   const session = sessionMeta?.data || {};
+  const user = isObject(session.user) ? session.user : {};
+  const member = isObject(session.member) ? session.member : {};
+  const profile = isObject(session.profile) ? session.profile : {};
+  const metadata = isObject(user.user_metadata) ? user.user_metadata : {};
 
   return normalizeEmail(
-    session.member?.email ||
-      session.profile?.email ||
-      session.user?.email ||
+    member.email ||
+      profile.email ||
+      user.email ||
+      metadata.email ||
       session.email ||
       session.userEmail
   );
@@ -245,13 +314,17 @@ function getSessionEmail(sessionMeta) {
 
 function getSessionRole(sessionMeta) {
   const session = sessionMeta?.data || {};
+  const user = isObject(session.user) ? session.user : {};
+  const member = isObject(session.member) ? session.member : {};
+  const profile = isObject(session.profile) ? session.profile : {};
+  const metadata = isObject(user.user_metadata) ? user.user_metadata : {};
 
   return normalizeText(
     session.role ||
-      session.profile?.role ||
-      session.user?.role ||
-      session.user?.user_metadata?.role ||
-      session.member?.role ||
+      profile.role ||
+      user.role ||
+      metadata.role ||
+      member.role ||
       "member"
   ).toLowerCase();
 }
@@ -302,6 +375,15 @@ function hasPortalAccess(member) {
   const membershipStatus = normalizeStatus(member.membership_status);
   const approvalStatus = normalizeStatus(member.approval_status);
 
+  if (
+    INACTIVE_STATUSES.has(status) ||
+    INACTIVE_STATUSES.has(paymentStatus) ||
+    INACTIVE_STATUSES.has(membershipStatus) ||
+    INACTIVE_STATUSES.has(approvalStatus)
+  ) {
+    return false;
+  }
+
   return (
     ACTIVE_STATUSES.has(status) ||
     PAID_PAYMENT_STATUSES.has(paymentStatus) ||
@@ -317,7 +399,7 @@ function normalizeMemberStatus(member) {
 
   const status = normalizeStatus(member.status);
 
-  if (["pending", "reviewing"].includes(status)) return "pending";
+  if (["pending", "reviewing", ""].includes(status)) return "pending";
   if (["disabled", "suspended", "paused"].includes(status)) return "suspended";
   if (["denied", "closed", "cancelled", "canceled"].includes(status)) {
     return status;
@@ -360,7 +442,7 @@ function sanitizeMember(member) {
   if (!member) return null;
 
   const portalAccess = hasPortalAccess(member);
-  const safeStatus = normalizeStatus(member.status);
+  const safeStatus = normalizeStatus(member.status) || "pending";
   const paymentStatus = normalizeStatus(member.payment_status);
   const membershipStatus = normalizeStatus(member.membership_status);
   const approvalStatus = normalizeStatus(member.approval_status);
@@ -392,13 +474,13 @@ function sanitizeMember(member) {
     interest: member.interest || "",
     goals: member.goals || "",
 
-    status: safeStatus,
+    status: portalAccess ? "active" : safeStatus,
     payment_status: paymentStatus,
-    membership_status: membershipStatus,
+    membership_status: portalAccess ? "active" : membershipStatus,
     approval_status: portalAccess ? "approved" : approvalStatus,
 
     paymentStatus,
-    membershipStatus,
+    membershipStatus: portalAccess ? "active" : membershipStatus,
     approvalStatus: portalAccess ? "approved" : approvalStatus,
 
     memberStatus: normalizeMemberStatus(member),
@@ -955,7 +1037,26 @@ function createPortalPayload({
   const alerts = buildAlerts({ member, onboarding });
 
   return {
+    authenticated: true,
     member: safeMember,
+    profile: safeMember,
+    user: {
+      id: safeMember.id,
+      email: safeMember.email,
+      role: "member",
+      user_metadata: {
+        full_name: safeMember.fullName,
+        first_name: safeMember.firstName,
+        last_name: safeMember.lastName,
+        status: safeMember.status,
+        payment_status: safeMember.paymentStatus,
+        membership_status: safeMember.membershipStatus,
+        approval_status: safeMember.approvalStatus,
+        access_member_identifier: access.member_identifier,
+        access_member_status: access.member_status,
+        access_perks_ready: access.perks_ready,
+      },
+    },
 
     access,
 
@@ -1101,8 +1202,6 @@ async function getAuthenticatedMember(req, res) {
   }
 
   if (!hasPortalAccess(signupRecord) && !isAdminRole(role)) {
-    clearAuthCookies(res);
-
     const status = normalizeStatus(signupRecord.status || "pending");
 
     return {
@@ -1110,11 +1209,15 @@ async function getAuthenticatedMember(req, res) {
       role,
       response: forbidden(
         res,
-        status === "pending" || status === "reviewing"
-          ? "Your account is pending approval."
+        status === "pending" || status === "reviewing" || !status
+          ? "Your account is pending approval or payment."
           : "Your account is not active.",
         {
+          authenticated: true,
           member: sanitizeMember(signupRecord),
+          requires_payment: true,
+          requiresPayment: true,
+          redirectTo: "/signup.html?status=payment_required",
         }
       ),
     };

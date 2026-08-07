@@ -23,7 +23,33 @@ import {
 const DEFAULT_PORTAL_PATH = "/portal/index.html";
 const DEFAULT_TIMEZONE = "America/New_York";
 
-const ACTIVE_STATUSES = new Set(["active", "approved", "invited"]);
+const ACTIVE_STATUSES = new Set([
+  "active",
+  "approved",
+  "invited",
+  "paid",
+  "current",
+  "complete",
+  "completed",
+  "succeeded",
+]);
+
+const PAID_PAYMENT_STATUSES = new Set([
+  "paid",
+  "active",
+  "current",
+  "succeeded",
+  "complete",
+  "completed",
+]);
+
+const ACTIVE_MEMBERSHIP_STATUSES = new Set([
+  "active",
+  "activated",
+  "approved",
+  "paid",
+  "current",
+]);
 
 const SESSION_COOKIE_NAMES = [
   "cardleo_session",
@@ -85,7 +111,10 @@ function safeDate(value) {
 }
 
 function getClientIp(req) {
-  const forwardedFor = req.headers?.["x-forwarded-for"];
+  const forwardedFor =
+    req.headers?.["x-forwarded-for"] ||
+    req.headers?.["x-real-ip"] ||
+    req.headers?.["cf-connecting-ip"];
 
   if (typeof forwardedFor === "string" && forwardedFor.trim()) {
     return forwardedFor.split(",")[0].trim();
@@ -127,7 +156,8 @@ function parseCookies(req) {
 
 function readSessionCookie(req) {
   const cookies = parseCookies(req);
-  const configuredName = getSessionCookieName?.();
+  const configuredName =
+    typeof getSessionCookieName === "function" ? getSessionCookieName() : "";
 
   const names = Array.from(
     new Set(
@@ -161,7 +191,10 @@ function getSessionExpiresAt(sessionMeta) {
 
   const candidates = [
     session.expires_at,
+    session.expiresAt,
+    session.exp,
     session.session?.expires_at,
+    session.session?.expiresAt,
   ];
 
   for (const candidate of candidates) {
@@ -261,49 +294,162 @@ function getDisplayName(member) {
   return joined || "Card Leo Member";
 }
 
-function normalizeMemberStatus(value) {
-  const status = normalizeStatus(value);
+function hasPortalAccess(member) {
+  if (!member) return false;
 
-  if (["active", "approved", "invited"].includes(status)) return "active";
+  const status = normalizeStatus(member.status);
+  const paymentStatus = normalizeStatus(member.payment_status);
+  const membershipStatus = normalizeStatus(member.membership_status);
+  const approvalStatus = normalizeStatus(member.approval_status);
+
+  return (
+    ACTIVE_STATUSES.has(status) ||
+    PAID_PAYMENT_STATUSES.has(paymentStatus) ||
+    ACTIVE_MEMBERSHIP_STATUSES.has(membershipStatus) ||
+    ACTIVE_STATUSES.has(approvalStatus)
+  );
+}
+
+function normalizeMemberStatus(member) {
+  if (!member) return "pending";
+
+  if (hasPortalAccess(member)) return "active";
+
+  const status = normalizeStatus(member.status);
+
   if (["pending", "reviewing"].includes(status)) return "pending";
   if (["disabled", "suspended", "paused"].includes(status)) return "suspended";
-  if (["denied", "closed"].includes(status)) return status;
+  if (["denied", "closed", "cancelled", "canceled"].includes(status)) {
+    return status;
+  }
 
   return status || "pending";
+}
+
+function getAccessMemberStatus(member) {
+  return normalizeText(member?.access_member_status || "pending");
+}
+
+function getAccessPerksReady(member) {
+  const raw = member?.access_perks_ready;
+
+  if (typeof raw === "boolean") return raw;
+
+  return getAccessMemberStatus(member).toUpperCase() === "OPEN";
+}
+
+function buildAccessPayload(member) {
+  const accessMemberStatus = getAccessMemberStatus(member);
+  const accessPerksReady = getAccessPerksReady(member);
+
+  return {
+    member_identifier: normalizeText(member?.access_member_identifier),
+    member_customer_identifier: normalizeText(member?.access_member_identifier),
+    member_status: accessMemberStatus,
+    status: accessMemberStatus,
+    synced_at: member?.access_synced_at || null,
+    suspended_at: member?.access_suspended_at || null,
+    sync_error: normalizeText(member?.access_sync_error),
+    perks_ready: accessPerksReady,
+    benefits_ready: accessPerksReady,
+    ready: accessPerksReady,
+  };
 }
 
 function sanitizeMember(member) {
   if (!member) return null;
 
+  const portalAccess = hasPortalAccess(member);
   const safeStatus = normalizeStatus(member.status);
-  const portalAccess = ACTIVE_STATUSES.has(safeStatus);
+  const paymentStatus = normalizeStatus(member.payment_status);
+  const membershipStatus = normalizeStatus(member.membership_status);
+  const approvalStatus = normalizeStatus(member.approval_status);
+  const access = buildAccessPayload(member);
 
   return {
     id: member.id || null,
     signupId: member.id || null,
+    signup_id: member.id || null,
+
     portalUserId: member.portal_user_id || null,
+    portal_user_id: member.portal_user_id || null,
+
     email: member.email || null,
+
     firstName: member.first_name || "",
+    first_name: member.first_name || "",
+
     lastName: member.last_name || "",
+    last_name: member.last_name || "",
+
     fullName: getDisplayName(member),
+    full_name: getDisplayName(member),
     name: getDisplayName(member),
+
     phone: member.phone || "",
     city: member.city || "",
     state: member.state || "",
     interest: member.interest || "",
-    status: member.status || "",
-    memberStatus: normalizeMemberStatus(member.status),
+    goals: member.goals || "",
+
+    status: safeStatus,
+    payment_status: paymentStatus,
+    membership_status: membershipStatus,
+    approval_status: portalAccess ? "approved" : approvalStatus,
+
+    paymentStatus,
+    membershipStatus,
+    approvalStatus: portalAccess ? "approved" : approvalStatus,
+
+    memberStatus: normalizeMemberStatus(member),
+
     tier: normalizeTier(member.tier || "core"),
     tierLabel: titleCase(normalizeTier(member.tier || "core")),
+
     referralCode: member.referral_code || "",
+    referral_code: member.referral_code || "",
+
     portalLoginUrl: member.portal_login_url || DEFAULT_PORTAL_PATH,
+    portal_login_url: member.portal_login_url || DEFAULT_PORTAL_PATH,
     portalAccess,
+    portal_access: portalAccess,
     accessLevel: "member",
+    access_level: "member",
+
+    stripeCustomerId: member.stripe_customer_id || "",
+    stripe_customer_id: member.stripe_customer_id || "",
+    stripeSubscriptionId: member.stripe_subscription_id || "",
+    stripe_subscription_id: member.stripe_subscription_id || "",
+    stripeCheckoutSessionId: member.stripe_checkout_session_id || "",
+    stripe_checkout_session_id: member.stripe_checkout_session_id || "",
+
+    accessMemberIdentifier: access.member_identifier,
+    access_member_identifier: access.member_identifier,
+    accessMemberStatus: access.member_status,
+    access_member_status: access.member_status,
+    accessSyncedAt: access.synced_at,
+    access_synced_at: access.synced_at,
+    accessSuspendedAt: access.suspended_at,
+    access_suspended_at: access.suspended_at,
+    accessSyncError: access.sync_error,
+    access_sync_error: access.sync_error,
+    accessPerksReady: access.perks_ready,
+    access_perks_ready: access.perks_ready,
+
+    benefitsReady: access.benefits_ready,
+    benefits_ready: access.benefits_ready,
+
     emailVerified: Boolean(member.email_verified),
     emailVerifiedAt: member.email_verified_at || null,
+    email_verified: Boolean(member.email_verified),
+    email_verified_at: member.email_verified_at || null,
+
     joinedAt: member.created_at || null,
     createdAt: member.created_at || null,
     updatedAt: member.updated_at || null,
+    created_at: member.created_at || null,
+    updated_at: member.updated_at || null,
+
     role: "member",
   };
 }
@@ -318,7 +464,7 @@ function buildDefaultOnboarding(member) {
       normalizeText(member?.phone)
   );
 
-  const rewardsActivated = ACTIVE_STATUSES.has(normalizeStatus(member?.status));
+  const rewardsActivated = hasPortalAccess(member);
 
   let percent = 0;
 
@@ -344,9 +490,7 @@ function buildDefaultRewardAccount(member) {
   return {
     signup_id: member?.id || null,
     member_id: member?.id || null,
-    account_status: ACTIVE_STATUSES.has(normalizeStatus(member?.status))
-      ? "active"
-      : "pending",
+    account_status: hasPortalAccess(member) ? "active" : "pending",
     total_cardleo_allocated: 0,
     total_direct_referral_earned: 0,
     total_override_earned: 0,
@@ -405,14 +549,16 @@ function buildPreferences(settings = {}) {
 
 function buildQuickActions(member) {
   const safeMember = sanitizeMember(member);
+  const access = buildAccessPayload(member);
 
   return [
     {
       id: "view_benefits",
-      label: "View Benefits",
+      label: access.perks_ready ? "Open Benefits" : "View Benefits",
       href: "/portal/benefits.html",
       icon: "rewards",
-      enabled: true,
+      enabled: Boolean(safeMember?.portalAccess),
+      status: access.perks_ready ? "active" : "syncing",
     },
     {
       id: "activity",
@@ -431,14 +577,14 @@ function buildQuickActions(member) {
     {
       id: "referrals",
       label: "Referral Tools",
-      href: "/portal/referrals.html",
+      href: "/portal/leaderboard.html",
       icon: "referrals",
-      enabled: Boolean(safeMember?.referralCode || true),
+      enabled: true,
     },
     {
       id: "support",
       label: "Contact Support",
-      href: "/contact.html",
+      href: "/portal/support.html",
       icon: "support",
       enabled: true,
     },
@@ -463,6 +609,28 @@ function buildAccountActivity(member) {
       metadata: {
         memberId: member.id,
         email: member.email,
+      },
+    });
+  }
+
+  if (member?.access_synced_at) {
+    items.push({
+      id: `access_synced:${member.id}`,
+      source: "access_amt",
+      category: "benefits",
+      type: "access_synced",
+      title: "Access Perks Sync Updated",
+      description:
+        getAccessMemberStatus(member).toUpperCase() === "OPEN"
+          ? "Your Access Perks member record is active."
+          : "Your Access Perks member record was updated.",
+      status: getAccessMemberStatus(member),
+      badge: "Benefits",
+      occurredAt: safeDate(member.access_synced_at),
+      createdAt: safeDate(member.access_synced_at),
+      metadata: {
+        accessMemberIdentifier: member.access_member_identifier || "",
+        accessMemberStatus: member.access_member_status || "",
       },
     });
   }
@@ -525,11 +693,14 @@ function mapMemberActivityRow(row) {
   };
 }
 
-async function getSignupRecord({ signupId, email }) {
-  const extendedFields = [
+function getExtendedSignupFields() {
+  return [
     "id",
     "email",
     "status",
+    "payment_status",
+    "membership_status",
+    "approval_status",
     "first_name",
     "last_name",
     "full_name",
@@ -537,11 +708,24 @@ async function getSignupRecord({ signupId, email }) {
     "city",
     "state",
     "interest",
+    "goals",
     "agreed",
     "tier",
     "referral_code",
     "email_verified",
     "email_verified_at",
+    "activation_fee_amount",
+    "monthly_fee_amount",
+    "billing_day",
+    "stripe_customer_id",
+    "stripe_subscription_id",
+    "stripe_checkout_session_id",
+    "access_member_identifier",
+    "access_member_status",
+    "access_synced_at",
+    "access_suspended_at",
+    "access_sync_error",
+    "access_perks_ready",
     "created_at",
     "updated_at",
     "portal_login_url",
@@ -549,8 +733,10 @@ async function getSignupRecord({ signupId, email }) {
     "portal_settings",
     "portal_sessions",
   ].join(", ");
+}
 
-  const baseFields = [
+function getBaseSignupFields() {
+  return [
     "id",
     "email",
     "status",
@@ -567,13 +753,18 @@ async function getSignupRecord({ signupId, email }) {
     "portal_login_url",
     "portal_user_id",
   ].join(", ");
+}
 
-  let query = supabaseAdmin.from("signups").select(extendedFields).limit(1);
+async function getSignupRecord({ signupId, email }) {
+  let query = supabaseAdmin
+    .from("signups")
+    .select(getExtendedSignupFields())
+    .limit(1);
 
   if (signupId) {
     query = query.eq("id", signupId);
   } else {
-    query = query.eq("email", email);
+    query = query.ilike("email", email);
   }
 
   let result = await query.maybeSingle();
@@ -581,13 +772,13 @@ async function getSignupRecord({ signupId, email }) {
   if (result.error && isMissingOptionalTableOrColumn(result.error)) {
     let fallbackQuery = supabaseAdmin
       .from("signups")
-      .select(baseFields)
+      .select(getBaseSignupFields())
       .limit(1);
 
     if (signupId) {
       fallbackQuery = fallbackQuery.eq("id", signupId);
     } else {
-      fallbackQuery = fallbackQuery.eq("email", email);
+      fallbackQuery = fallbackQuery.ilike("email", email);
     }
 
     const fallback = await fallbackQuery.maybeSingle();
@@ -596,6 +787,15 @@ async function getSignupRecord({ signupId, email }) {
       data: fallback.data
         ? {
             ...fallback.data,
+            payment_status: "",
+            membership_status: "",
+            approval_status: "",
+            access_member_identifier: "",
+            access_member_status: "pending",
+            access_synced_at: null,
+            access_suspended_at: null,
+            access_sync_error: "",
+            access_perks_ready: false,
             portal_settings: {},
             portal_sessions: [],
           }
@@ -656,6 +856,7 @@ async function getFeatureFlags() {
     referrals_enabled: true,
     support_enabled: true,
     benefits_enabled: true,
+    access_perks_enabled: true,
   };
 
   try {
@@ -673,6 +874,7 @@ async function getFeatureFlags() {
       referrals_enabled: data?.value?.referrals_enabled !== false,
       support_enabled: data?.value?.support_enabled !== false,
       benefits_enabled: data?.value?.benefits_enabled !== false,
+      access_perks_enabled: data?.value?.access_perks_enabled !== false,
     };
   } catch {
     return fallback;
@@ -694,6 +896,7 @@ function buildStats({ onboarding, rewardAccount, recentActivity }) {
 
 function buildAlerts({ member, onboarding }) {
   const alerts = [];
+  const access = buildAccessPayload(member);
 
   if (!member?.email_verified && !member?.email_verified_at) {
     alerts.push({
@@ -717,6 +920,21 @@ function buildAlerts({ member, onboarding }) {
     });
   }
 
+  if (hasPortalAccess(member) && !access.perks_ready) {
+    alerts.push({
+      id: "access_perks_sync",
+      type: access.sync_error ? "warning" : "info",
+      title: access.sync_error
+        ? "Access Perks sync pending"
+        : "Access Perks is being connected",
+      message: access.sync_error
+        ? "Your membership is active, but Access Perks member sync is waiting on the correct Access AMT endpoint."
+        : "Your membership is active. Access Perks will show as active once your member record syncs.",
+      actionLabel: "View Benefits",
+      actionHref: "/portal/benefits.html",
+    });
+  }
+
   return alerts;
 }
 
@@ -729,6 +947,7 @@ function createPortalPayload({
 }) {
   const settings = isObject(member.portal_settings) ? member.portal_settings : {};
   const safeMember = sanitizeMember(member);
+  const access = buildAccessPayload(member);
   const preferences = buildPreferences(settings);
   const security = buildSecurityInfo(member, settings);
   const support = buildSupportInfo(settings);
@@ -737,39 +956,68 @@ function createPortalPayload({
 
   return {
     member: safeMember,
+
+    access,
+
+    benefits: {
+      enabled: featureFlags.benefits_enabled !== false,
+      access_perks_enabled: featureFlags.access_perks_enabled !== false,
+      ready: access.perks_ready,
+      status: access.member_status,
+      member_identifier: access.member_identifier,
+      synced_at: access.synced_at,
+      sync_error: access.sync_error,
+      portal_url: "/portal/benefits.html",
+    },
+
     overview: {
       member: safeMember,
+      access,
+      benefits: {
+        ready: access.perks_ready,
+        status: access.member_status,
+        href: "/portal/benefits.html",
+      },
       stats,
       alerts,
       quickActions: buildQuickActions(member),
       recentActivity,
       timezone: DEFAULT_TIMEZONE,
     },
+
     portal: {
       access: safeMember.portalAccess,
       path: DEFAULT_PORTAL_PATH,
       loginUrl: safeMember.portalLoginUrl,
       accessLevel: safeMember.accessLevel,
     },
+
     onboarding,
     rewardAccount,
     featureFlags,
     preferences,
     security,
     support,
-    sessions: Array.isArray(member.portal_sessions)
-      ? member.portal_sessions
-      : [],
+
+    sessions: Array.isArray(member.portal_sessions) ? member.portal_sessions : [],
+
     summary: {
       memberId: safeMember.id,
       profileId: safeMember.id,
       memberName: safeMember.fullName,
       email: safeMember.email,
       status: safeMember.status,
+      payment_status: safeMember.paymentStatus,
+      membership_status: safeMember.membershipStatus,
+      approval_status: safeMember.approvalStatus,
       memberStatus: safeMember.memberStatus,
       tier: safeMember.tier,
       tierLabel: safeMember.tierLabel,
       portalAccess: safeMember.portalAccess,
+      accessMemberIdentifier: access.member_identifier,
+      accessMemberStatus: access.member_status,
+      accessPerksReady: access.perks_ready,
+      benefitsReady: access.benefits_ready,
       timezone: DEFAULT_TIMEZONE,
     },
   };
@@ -852,10 +1100,10 @@ async function getAuthenticatedMember(req, res) {
     };
   }
 
-  const status = normalizeStatus(signupRecord.status || "pending");
-
-  if (!ACTIVE_STATUSES.has(status) && !isAdminRole(role)) {
+  if (!hasPortalAccess(signupRecord) && !isAdminRole(role)) {
     clearAuthCookies(res);
+
+    const status = normalizeStatus(signupRecord.status || "pending");
 
     return {
       member: null,
@@ -949,6 +1197,8 @@ export default async function handler(req, res) {
       memberId,
       email: member.email,
       role,
+      accessMemberStatus: payload.access.member_status,
+      accessPerksReady: payload.access.perks_ready,
       ip: getClientIp(req),
     });
 

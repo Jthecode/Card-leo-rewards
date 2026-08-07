@@ -218,6 +218,7 @@
         border: 1px solid var(--line);
         background: rgba(255, 255, 255, 0.035);
         color: var(--muted);
+        line-height: 1.55;
       }
 
       .status-banner.show {
@@ -234,6 +235,12 @@
         color: #bfffe5;
         border-color: rgba(72, 240, 107, 0.24);
         background: rgba(72, 240, 107, 0.09);
+      }
+
+      .status-banner.warning {
+        color: #fff1b6;
+        border-color: rgba(255, 209, 102, 0.28);
+        background: rgba(255, 209, 102, 0.08);
       }
 
       .hero {
@@ -296,6 +303,13 @@
         font-weight: 900;
         border-color: transparent;
         background: linear-gradient(135deg, var(--green-2), var(--green));
+      }
+
+      .badge.is-red {
+        color: #2a0505;
+        font-weight: 900;
+        border-color: transparent;
+        background: linear-gradient(135deg, #ffd2d8, #ff7676);
       }
 
       .hero-title {
@@ -386,6 +400,7 @@
       .member-item-value {
         margin-top: 8px;
         font-weight: 900;
+        word-break: break-word;
       }
 
       .section {
@@ -868,7 +883,7 @@
           <article class="panel hero-card">
             <div class="hero-badges">
               <span class="badge is-gold" id="heroAccessBadge">Premium Access</span>
-              <span class="badge is-green" id="heroStatusBadge">Benefits Active</span>
+              <span class="badge is-green" id="heroStatusBadge">Checking Status</span>
               <span class="badge" id="heroBenefitCountBadge">Loading benefits...</span>
             </div>
 
@@ -891,7 +906,7 @@
 
               <div class="hero-stat">
                 <div class="hero-stat-label">Portal Status</div>
-                <div class="hero-stat-value" id="heroPortalStatus">Active</div>
+                <div class="hero-stat-value" id="heroPortalStatus">Checking</div>
               </div>
             </div>
           </article>
@@ -918,7 +933,7 @@
 
               <div class="member-item">
                 <div class="member-item-label">Search Source</div>
-                <div class="member-item-value" id="memberSource">Card Leo</div>
+                <div class="member-item-value" id="memberSource">Access Perks</div>
               </div>
 
               <div class="member-item">
@@ -1039,6 +1054,18 @@
                 <li>Benefits stay inside cardleorewards.com.</li>
                 <li>Your Access API token stays protected on the backend.</li>
                 <li>Only active paid members can view benefits.</li>
+              </ul>
+            </article>
+
+            <article class="panel side-card">
+              <h3 class="info-title">Access Perks Status</h3>
+              <p class="info-copy" id="accessStatusCopy">
+                Checking your Access Perks member sync status...
+              </p>
+              <ul class="info-list">
+                <li id="accessMemberIdentifier">Member ID: Checking...</li>
+                <li id="accessMemberStatus">AMT Status: Checking...</li>
+                <li id="accessSyncStatus">Sync: Checking...</li>
               </ul>
             </article>
 
@@ -1174,41 +1201,15 @@
         },
         fitness: {
           q: "fitness gym studio workout yoga pilates training",
-          terms: [
-            "fitness",
-            "gym",
-            "studio",
-            "workout",
-            "training",
-            "yoga",
-            "pilates",
-          ],
+          terms: ["fitness", "gym", "studio", "workout", "training", "yoga", "pilates"],
         },
         wellness: {
           q: "health wellness spa care massage dental vision",
-          terms: [
-            "health",
-            "wellness",
-            "spa",
-            "care",
-            "medical",
-            "dental",
-            "vision",
-            "massage",
-          ],
+          terms: ["health", "wellness", "spa", "care", "medical", "dental", "vision", "massage"],
         },
         "health-and-wellness": {
           q: "health wellness spa care massage dental vision",
-          terms: [
-            "health",
-            "wellness",
-            "spa",
-            "care",
-            "medical",
-            "dental",
-            "vision",
-            "massage",
-          ],
+          terms: ["health", "wellness", "spa", "care", "medical", "dental", "vision", "massage"],
         },
         "grocery-coupons": {
           q: "grocery coupons market supermarket food",
@@ -1220,15 +1221,7 @@
         },
         "parks-and-tickets": {
           q: "parks tickets attractions theme park zoo museum aquarium",
-          terms: [
-            "park",
-            "ticket",
-            "attraction",
-            "theme park",
-            "zoo",
-            "museum",
-            "aquarium",
-          ],
+          terms: ["park", "ticket", "attraction", "theme park", "zoo", "museum", "aquarium"],
         },
         insurance: {
           q: "insurance",
@@ -1307,22 +1300,50 @@
         },
       ];
 
+      const DEMO_BENEFITS = [
+        {
+          id: "demo-restaurant",
+          title: "Restaurant Savings",
+          merchantName: "Card Leo Dining",
+          description: "Dining and local restaurant savings available through Card Leo Rewards.",
+          discount: "Member savings",
+          category: "restaurants",
+        },
+        {
+          id: "demo-travel",
+          title: "Travel Deals",
+          merchantName: "Card Leo Travel",
+          description: "Travel, hotel, rental car, and attraction savings for active members.",
+          discount: "Travel savings",
+          category: "travel",
+        },
+        {
+          id: "demo-shopping",
+          title: "Shopping Offers",
+          merchantName: "Card Leo Shopping",
+          description: "Retail, online shopping, lifestyle, and member-only discount offers.",
+          discount: "Retail savings",
+          category: "shopping",
+        },
+      ];
+
       const state = {
         member: null,
+        access: null,
         categories: [],
         benefits: [],
         selectedCategory: "",
         query: "",
         loading: false,
-        source: "card-leo",
+        source: "access-perks",
       };
 
       const API = {
-        me: "../api/auth/me",
-        categories: "../api/access/get-benefit-categories",
-        search: "../api/access/search-benefits",
-        details: "../api/access/get-benefit-details",
-        logout: "../api/auth/logout",
+        me: "/api/auth/me",
+        categories: "/api/access/get-benefit-categories",
+        search: "/api/access/search-benefits",
+        details: "/api/access/get-benefit-details",
+        logout: "/api/auth/logout",
       };
 
       const els = {
@@ -1341,6 +1362,10 @@
         memberBenefitTier: document.getElementById("memberBenefitTier"),
         memberSource: document.getElementById("memberSource"),
         memberId: document.getElementById("memberId"),
+        accessStatusCopy: document.getElementById("accessStatusCopy"),
+        accessMemberIdentifier: document.getElementById("accessMemberIdentifier"),
+        accessMemberStatus: document.getElementById("accessMemberStatus"),
+        accessSyncStatus: document.getElementById("accessSyncStatus"),
         searchInput: document.getElementById("searchInput"),
         categorySelect: document.getElementById("categorySelect"),
         searchButton: document.getElementById("searchButton"),
@@ -1391,6 +1416,52 @@
       function unwrap(payload) {
         if (!payload || typeof payload !== "object") return {};
         return payload.data && typeof payload.data === "object" ? payload.data : payload;
+      }
+
+      function showBanner(message, type = "") {
+        if (!els.statusBanner) return;
+
+        if (!message) {
+          els.statusBanner.className = "status-banner";
+          els.statusBanner.textContent = "";
+          return;
+        }
+
+        els.statusBanner.className = `status-banner show ${type}`.trim();
+        els.statusBanner.textContent = message;
+      }
+
+      async function fetchJson(url, options = {}) {
+        const response = await fetch(url, {
+          method: options.method || "GET",
+          credentials: "include",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+            ...(options.body ? { "Content-Type": "application/json" } : {}),
+            ...(options.headers || {}),
+          },
+          ...options,
+        });
+
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok || payload?.success === false || payload?.ok === false) {
+          const error = new Error(
+            payload?.message ||
+              payload?.error ||
+              `Request failed with status ${response.status}`
+          );
+
+          error.status = response.status;
+          error.payload = payload;
+          error.url = url;
+
+          throw error;
+        }
+
+        return unwrap(payload);
       }
 
       function getString(...values) {
@@ -1457,6 +1528,153 @@
           .slice(0, 2)
           .map((part) => part.charAt(0).toUpperCase())
           .join("");
+      }
+
+      function normalizeEmail(value) {
+        return normalizeText(value).toLowerCase();
+      }
+
+      function getMemberFullName(member = {}) {
+        return (
+          normalizeText(member.fullName) ||
+          normalizeText(member.full_name) ||
+          normalizeText(member.name) ||
+          [member.firstName || member.first_name, member.lastName || member.last_name]
+            .map(normalizeText)
+            .filter(Boolean)
+            .join(" ") ||
+          "Card Leo Member"
+        );
+      }
+
+      function getMemberStatus(member = {}) {
+        return normalizeText(
+          member.membership_status ||
+            member.membershipStatus ||
+            member.payment_status ||
+            member.paymentStatus ||
+            member.status ||
+            "active"
+        ).toLowerCase();
+      }
+
+      function isPaidActive(member = {}) {
+        const status = getMemberStatus(member);
+        const paymentStatus = normalizeText(member.payment_status || member.paymentStatus).toLowerCase();
+
+        return (
+          ["active", "approved", "paid", "current", "complete", "completed"].includes(status) ||
+          ["paid", "active", "current", "succeeded", "complete", "completed"].includes(paymentStatus)
+        );
+      }
+
+      function getAccessData(source = {}) {
+        const access = source.access || {};
+        const member = source.member || source.profile || source.user || source || {};
+
+        const memberStatus =
+          normalizeText(access.member_status) ||
+          normalizeText(access.status) ||
+          normalizeText(member.access_member_status) ||
+          normalizeText(member.accessMemberStatus) ||
+          "pending";
+
+        const memberIdentifier =
+          normalizeText(access.member_identifier) ||
+          normalizeText(access.memberCustomerIdentifier) ||
+          normalizeText(access.member_customer_identifier) ||
+          normalizeText(member.access_member_identifier) ||
+          normalizeText(member.accessMemberIdentifier) ||
+          normalizeText(member.id);
+
+        const syncError =
+          normalizeText(access.sync_error) ||
+          normalizeText(member.access_sync_error) ||
+          normalizeText(member.accessSyncError);
+
+        const syncedAt =
+          access.synced_at ||
+          member.access_synced_at ||
+          member.accessSyncedAt ||
+          null;
+
+        const perksReady =
+          access.perks_ready === true ||
+          access.benefits_ready === true ||
+          member.access_perks_ready === true ||
+          member.accessPerksReady === true ||
+          member.benefits_ready === true ||
+          member.benefitsReady === true ||
+          memberStatus.toUpperCase() === "OPEN";
+
+        return {
+          memberStatus,
+          memberIdentifier,
+          syncError,
+          syncedAt,
+          perksReady,
+        };
+      }
+
+      function updateAccessStatusUi(source = {}) {
+        const access = getAccessData(source);
+        const member = source.member || source.profile || state.member || {};
+        const paid = isPaidActive(member);
+
+        state.access = access;
+
+        if (els.accessMemberIdentifier) {
+          els.accessMemberIdentifier.textContent = `Member ID: ${
+            access.memberIdentifier || "Pending"
+          }`;
+        }
+
+        if (els.accessMemberStatus) {
+          els.accessMemberStatus.textContent = `AMT Status: ${
+            access.memberStatus || "Pending"
+          }`;
+        }
+
+        if (els.accessSyncStatus) {
+          els.accessSyncStatus.textContent = access.perksReady
+            ? "Sync: Active"
+            : access.syncError
+              ? "Sync: Waiting on Access endpoint"
+              : "Sync: Pending";
+        }
+
+        if (els.accessStatusCopy) {
+          if (!paid) {
+            els.accessStatusCopy.textContent =
+              "Your account must be active and paid before benefits are available.";
+          } else if (access.perksReady) {
+            els.accessStatusCopy.textContent =
+              "Access Perks is active for this member.";
+          } else if (access.syncError) {
+            els.accessStatusCopy.textContent =
+              "Your membership is active, but Access AMT sync is waiting on the final endpoint path from Access Development.";
+          } else {
+            els.accessStatusCopy.textContent =
+              "Your membership is active. Access Perks is syncing and benefits can still be searched while backend access is connected.";
+          }
+        }
+
+        if (els.heroStatusBadge) {
+          if (!paid) {
+            els.heroStatusBadge.className = "badge is-red";
+            els.heroStatusBadge.textContent = "Payment Required";
+          } else if (access.perksReady) {
+            els.heroStatusBadge.className = "badge is-green";
+            els.heroStatusBadge.textContent = "Benefits Active";
+          } else {
+            els.heroStatusBadge.className = "badge";
+            els.heroStatusBadge.textContent = "Benefits Syncing";
+          }
+        }
+
+        if (els.heroPortalStatus) {
+          els.heroPortalStatus.textContent = paid ? "Active" : "Payment Required";
+        }
       }
 
       function getBenefitRaw(benefit) {
@@ -1650,7 +1868,7 @@
           raw.city
         );
 
-        const state = getString(
+        const stateValue = getString(
           benefit?.state,
           store.state_region,
           store.state,
@@ -1670,7 +1888,7 @@
           raw.zip
         );
 
-        return [address, city, state, zip].filter(Boolean).join(", ");
+        return [address, city, stateValue, zip].filter(Boolean).join(", ");
       }
 
       function getDisplayPhone(benefit) {
@@ -1802,426 +2020,235 @@
         return merged;
       }
 
-      function showBanner(message, type = "") {
-        if (!message) {
-          els.statusBanner.className = "status-banner";
-          els.statusBanner.textContent = "";
-          return;
+      function getCategoryIcon(category) {
+        const slug = slugify(category);
+
+        const found = FALLBACK_CATEGORIES.find((item) => item.slug === slug);
+
+        return found?.icon || "★";
+      }
+
+      function normalizeBenefitsPayload(payload) {
+        const data = unwrap(payload);
+
+        const possible =
+          data.benefits ||
+          data.offers ||
+          data.results ||
+          data.items ||
+          data.data ||
+          [];
+
+        if (Array.isArray(possible)) return possible;
+
+        if (isObject(possible) && Array.isArray(possible.items)) {
+          return possible.items;
         }
 
-        els.statusBanner.className = `status-banner show ${type}`.trim();
-        els.statusBanner.textContent = message;
-      }
-
-      async function fetchJson(url, options = {}) {
-        const response = await fetch(url, {
-          method: options.method || "GET",
-          credentials: "include",
-          headers: {
-            Accept: "application/json",
-            ...(options.headers || {}),
-          },
-          ...options,
-        });
-
-        const payload = await response.json().catch(() => ({}));
-
-        if (response.status === 401) {
-          window.location.href =
-            "../login.html?next=" + encodeURIComponent("/portal/benefits.html");
-          return null;
+        if (isObject(possible) && Array.isArray(possible.results)) {
+          return possible.results;
         }
 
-        if (!response.ok || payload?.success === false || payload?.ok === false) {
-          const error = new Error(payload?.message || payload?.error || "Request failed.");
-          error.status = response.status;
-          error.payload = payload;
-          throw error;
-        }
-
-        return unwrap(payload);
-      }
-
-      function getMemberFromPayload(payload) {
-        return payload?.member || payload?.profile || payload?.user || {};
-      }
-
-      function getFullName(member) {
-        const full =
-          normalizeText(member.fullName) ||
-          normalizeText(member.full_name) ||
-          normalizeText(member.name);
-
-        if (full) return full;
-
-        return (
-          [member.firstName || member.first_name, member.lastName || member.last_name]
-            .map(normalizeText)
-            .filter(Boolean)
-            .join(" ") || "Card Leo Member"
-        );
-      }
-
-      function getMemberStatus(member) {
-        return titleCase(
-          member.membership_status ||
-            member.membershipStatus ||
-            member.status ||
-            "Active"
-        );
+        return [];
       }
 
       function renderMember(member) {
         state.member = member;
 
-        const name = getFullName(member);
+        const name = getMemberFullName(member);
+        const email = normalizeEmail(member.email);
         const status = getMemberStatus(member);
-        const email = normalizeText(member.email, "Member account");
-        const memberId =
-          normalizeText(member.id) ||
-          normalizeText(member.memberId) ||
-          normalizeText(member.signupId) ||
-          "—";
+        const access = getAccessData({ member, access: state.access || {} });
 
-        els.memberAvatar.textContent = getInitials(name);
-        els.memberName.textContent = name;
-        els.memberEmail.textContent = email;
-        els.memberStatus.textContent = status;
-        els.memberId.textContent = memberId;
-        els.memberBenefitTier.textContent = "Lifestyle";
-        els.memberSource.textContent = "Card Leo";
-        els.heroStatusBadge.textContent = status;
+        if (els.memberAvatar) els.memberAvatar.textContent = getInitials(name);
+        if (els.memberName) els.memberName.textContent = name;
+        if (els.memberEmail) els.memberEmail.textContent = email || "Member account";
+        if (els.memberStatus) els.memberStatus.textContent = titleCase(status || "active");
+        if (els.memberId) els.memberId.textContent = access.memberIdentifier || member.id || "Pending";
+        if (els.memberBenefitTier) {
+          els.memberBenefitTier.textContent = access.perksReady ? "Access Perks" : "Lifestyle";
+        }
+        if (els.memberSource) {
+          els.memberSource.textContent = "Access Perks";
+        }
+
+        updateAccessStatusUi({ member, access });
       }
 
-      function setLoadingBenefits() {
-        els.benefitsGrid.innerHTML = `
-          <div class="status-state">
-            <span class="loading">
-              <span class="loading-dot"></span>
-              Loading your benefits...
-            </span>
-          </div>
-        `;
+      function renderHeroStats() {
+        const benefitCount = state.benefits.length;
+        const categoryCount = state.categories.length || FALLBACK_CATEGORIES.length;
+
+        if (els.heroTotalBenefits) {
+          els.heroTotalBenefits.textContent = String(benefitCount);
+        }
+
+        if (els.heroCategoryCount) {
+          els.heroCategoryCount.textContent = String(categoryCount);
+        }
+
+        if (els.heroBenefitCountBadge) {
+          els.heroBenefitCountBadge.textContent =
+            benefitCount > 0 ? `${benefitCount} visible benefits` : "Search benefits";
+        }
       }
 
-      function renderStats() {
-        const count = state.benefits.length;
-        const categoryCount =
-          state.categories.length ||
-          new Set(
-            state.benefits
-              .map((benefit) => benefit.categoryName || benefit.category)
-              .filter(Boolean)
-          ).size;
-
-        els.heroTotalBenefits.textContent = String(count);
-        els.heroCategoryCount.textContent = String(categoryCount);
-        els.heroBenefitCountBadge.textContent = `${count} benefit${
-          count === 1 ? "" : "s"
-        } visible`;
-        els.heroAccessBadge.textContent = "Card Leo Benefits";
-        els.heroPortalStatus.textContent = "Active";
-      }
-
-      function selectCategory(category) {
-        state.selectedCategory = category || "";
-        els.categorySelect.value = state.selectedCategory;
-        els.searchInput.value = "";
-        loadBenefits();
-      }
-
-      function renderCategories(categories) {
-        state.categories = mergeCategories(categories);
+      function renderCategorySelect(categories) {
+        if (!els.categorySelect) return;
 
         els.categorySelect.innerHTML =
           `<option value="">All Categories</option>` +
-          state.categories
-            .map((category) => {
-              const value = category.slug || category.id || slugify(category.name);
-              return `
-                <option value="${escapeHtml(value)}">
-                  ${escapeHtml(category.name)}
-                </option>
-              `;
-            })
+          categories
+            .map(
+              (category) =>
+                `<option value="${escapeHtml(category.slug)}">${escapeHtml(
+                  category.name
+                )}</option>`
+            )
             .join("");
 
-        els.categoryGrid.innerHTML = state.categories
-          .map((category) => {
-            const value = category.slug || category.id || slugify(category.name);
+        els.categorySelect.value = state.selectedCategory || "";
+      }
 
-            return `
+      function renderCategories(categories) {
+        if (!els.categoryGrid) return;
+
+        if (!categories.length) {
+          els.categoryGrid.innerHTML = `
+            <div class="status-state">No benefit categories are available yet.</div>
+          `;
+          return;
+        }
+
+        els.categoryGrid.innerHTML = categories
+          .map(
+            (category) => `
               <article class="panel category-card">
-                <button type="button" data-category="${escapeHtml(value)}">
+                <button type="button" data-category="${escapeHtml(category.slug)}">
                   <div class="category-icon">${escapeHtml(category.icon || "★")}</div>
                   <h3 class="category-title">${escapeHtml(category.name)}</h3>
-                  <p class="category-copy">${escapeHtml(
-                    category.description ||
-                      `Browse ${category.name} savings and member offers.`
-                  )}</p>
+                  <p class="category-copy">${escapeHtml(category.description || "")}</p>
                 </button>
               </article>
-            `;
-          })
+            `
+          )
           .join("");
 
         els.categoryGrid.querySelectorAll("[data-category]").forEach((button) => {
           button.addEventListener("click", () => {
-            selectCategory(button.getAttribute("data-category") || "");
+            const category = button.getAttribute("data-category") || "";
+            state.selectedCategory = category;
+
+            if (els.categorySelect) {
+              els.categorySelect.value = category;
+            }
+
+            loadBenefits();
           });
         });
-
-        document.querySelectorAll("[data-quick-category]").forEach((button) => {
-          button.addEventListener("click", () => {
-            selectCategory(button.getAttribute("data-quick-category") || "");
-          });
-        });
-
-        renderStats();
       }
 
-      function renderBenefits(benefits, source = "card-leo") {
-        state.source = source;
+      function renderBenefits(benefits) {
+        if (!els.benefitsGrid) return;
 
-        const deduped = dedupeFrontendBenefits(Array.isArray(benefits) ? benefits : []);
-        const filtered = deduped.filter((benefit) =>
-          shouldKeepForCategory(benefit, state.selectedCategory)
-        );
+        const selected = state.selectedCategory;
+        const query = state.query.toLowerCase();
+
+        const filtered = dedupeFrontendBenefits(benefits)
+          .filter((benefit) => shouldKeepForCategory(benefit, selected))
+          .filter((benefit) => {
+            if (!query) return true;
+            return getSearchText(benefit).includes(query);
+          });
 
         state.benefits = filtered;
 
-        els.memberSource.textContent =
-          source === "access-development" ? "Access API" : "Card Leo";
+        renderHeroStats();
 
-        renderStats();
+        if (els.benefitsSubtitle) {
+          const label = selected ? titleCase(selected) : "All Categories";
+          els.benefitsSubtitle.textContent = `${filtered.length} benefits visible for ${label}.`;
+        }
 
-        if (!state.benefits.length) {
+        if (!filtered.length) {
           els.benefitsGrid.innerHTML = `
             <div class="empty-state">
-              No benefits matched this category yet. Try using the search box with a keyword like restaurant, hotel, shopping, fitness, or entertainment.
+              No benefits found yet. Try another category or search term.
             </div>
           `;
           return;
         }
 
-        els.benefitsGrid.innerHTML = state.benefits
-          .map((benefit) => {
+        els.benefitsGrid.innerHTML = filtered
+          .map((benefit, index) => {
             const title = getDisplayTitle(benefit);
             const merchant = getDisplayMerchant(benefit);
             const description = getDisplayDescription(benefit);
             const discount = getDisplayDiscount(benefit);
             const location = getDisplayLocation(benefit);
-            const claimUrl = getBestClaimUrl(benefit);
+            const category = benefit.category || benefit.categoryName || state.selectedCategory || "Benefit";
 
             return `
               <article class="panel benefit-card">
                 <div class="benefit-top">
-                  <div class="benefit-icon">${escapeHtml(benefit.categoryIcon || "★")}</div>
-                  <span class="pill is-gold">${escapeHtml(discount)}</span>
+                  <div>
+                    <span class="pill is-gold">${escapeHtml(titleCase(category))}</span>
+                  </div>
+                  <div class="benefit-icon">${escapeHtml(getCategoryIcon(category))}</div>
                 </div>
 
                 <h3 class="benefit-title">${escapeHtml(title)}</h3>
                 <p class="merchant-name">${escapeHtml(merchant)}</p>
-
-                ${
-                  location
-                    ? `<p class="benefit-location">${escapeHtml(location)}</p>`
-                    : ""
-                }
-
                 <p class="benefit-copy">${escapeHtml(description)}</p>
+                <p class="benefit-location">${escapeHtml(location || discount)}</p>
 
                 <div class="benefit-footer">
-                  <span class="pill is-green">${escapeHtml(
-                    benefit.categoryName || titleCase(benefit.category || "Benefit")
-                  )}</span>
-
-                  <span class="pill">${escapeHtml(benefit.locationType || "member")}</span>
-
-                  <button
-                    class="button button-primary"
-                    type="button"
-                    data-benefit-id="${escapeHtml(benefit.id)}"
-                  >
+                  <button class="button button-primary" type="button" data-benefit-index="${index}">
                     View Details
                   </button>
-
-                  ${
-                    claimUrl
-                      ? `
-                        <a
-                          class="button button-ghost"
-                          href="${escapeHtml(claimUrl)}"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Claim
-                        </a>
-                      `
-                      : ""
-                  }
                 </div>
               </article>
             `;
           })
           .join("");
 
-        els.benefitsGrid.querySelectorAll("[data-benefit-id]").forEach((button) => {
+        els.benefitsGrid.querySelectorAll("[data-benefit-index]").forEach((button) => {
           button.addEventListener("click", () => {
-            openBenefitDetails(button.getAttribute("data-benefit-id") || "");
+            const index = Number(button.getAttribute("data-benefit-index"));
+            const benefit = filtered[index];
+
+            if (benefit) openBenefitModal(benefit);
           });
         });
       }
 
-      async function loadSession() {
-        const payload = await fetchJson(API.me);
-        if (!payload) return;
+      function getQrUrl(url) {
+        const safeUrl = normalizeText(url);
 
-        renderMember(getMemberFromPayload(payload));
-      }
+        if (!safeUrl || !safeUrl.startsWith("http")) return "";
 
-      async function loadCategories() {
-        try {
-          const payload = await fetchJson(API.categories);
-          if (!payload) return;
-
-          renderCategories(payload.categories || []);
-        } catch (error) {
-          console.error("[benefits] categories error:", error);
-          renderCategories([]);
-          showBanner(
-            "Using Card Leo category filters while live category data connects.",
-            "error"
-          );
-        }
-      }
-
-      async function loadBenefits() {
-        setLoadingBenefits();
-
-        state.query = normalizeText(els.searchInput.value);
-        state.selectedCategory = normalizeText(els.categorySelect.value);
-
-        const params = new URLSearchParams();
-        const selectedSlug = slugify(state.selectedCategory);
-        const categoryRule = CATEGORY_RULES[selectedSlug];
-        const categoryQuery = categoryRule?.q || "";
-
-        if (state.query) {
-          params.set("q", state.query);
-        } else if (categoryQuery) {
-          params.set("q", categoryQuery);
-        }
-
-        if (state.selectedCategory) {
-          params.set("category", state.selectedCategory);
-        }
-
-        params.set("limit", "100");
-
-        try {
-          const payload = await fetchJson(`${API.search}?${params.toString()}`);
-          if (!payload) return;
-
-          renderBenefits(payload.benefits || [], payload.source);
-
-          els.benefitsSubtitle.textContent =
-            payload.source === "access-development"
-              ? "Live benefits loaded inside Card Leo Rewards."
-              : "Showing Card Leo default benefit examples while the Access endpoint connects.";
-
-          if (payload.source === "access-development") {
-            showBanner("Benefits loaded successfully inside Card Leo Rewards.", "success");
-          }
-        } catch (error) {
-          console.error("[benefits] search error:", error);
-          renderBenefits([], "card-leo");
-          showBanner(error?.message || "Unable to load benefits right now.", "error");
-        }
-      }
-
-      function showModal() {
-        els.modal.classList.add("show");
-        els.modal.setAttribute("aria-hidden", "false");
-      }
-
-      function closeModal() {
-        els.modal.classList.remove("show");
-        els.modal.setAttribute("aria-hidden", "true");
-      }
-
-      function renderClaimBox(claimUrl) {
-        if (!claimUrl) {
-          return `
-            <div class="detail-box">
-              <div class="detail-label">Claim This Benefit</div>
-              <div class="detail-value">
-                This offer does not include a claim link yet. Use the redemption instructions shown here.
-              </div>
-            </div>
-          `;
-        }
-
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-          claimUrl
+        return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+          safeUrl
         )}`;
-
-        return `
-          <div class="detail-box">
-            <div class="detail-label">Claim This Benefit</div>
-            <div class="detail-value">
-              <p style="margin:0;color:var(--muted);">
-                Scan the QR code or open the claim link to redeem this Access benefit.
-              </p>
-
-              <div class="claim-wrap">
-                <img
-                  class="claim-qr"
-                  src="${escapeHtml(qrUrl)}"
-                  alt="Benefit claim QR code"
-                />
-
-                <div class="claim-actions">
-                  <a
-                    class="button button-primary"
-                    href="${escapeHtml(claimUrl)}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Claim Benefit
-                  </a>
-
-                  <a
-                    class="claim-link"
-                    href="${escapeHtml(claimUrl)}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    ${escapeHtml(claimUrl)}
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
       }
 
-      function renderDetailModal(benefit) {
+      function renderBenefitDetails(benefit) {
         const title = getDisplayTitle(benefit);
         const merchant = getDisplayMerchant(benefit);
         const description = getDisplayDescription(benefit);
         const terms = getDisplayTerms(benefit);
         const discount = getDisplayDiscount(benefit);
-        const claimUrl = getBestClaimUrl(benefit);
-        const detailsUrl = getDisplayDetailsUrl(benefit);
-        const website = getDisplayWebsite(benefit);
         const location = getDisplayLocation(benefit);
         const phone = getDisplayPhone(benefit);
-        const promoCode = normalizeText(benefit.promoCode || benefit.promo_code);
+        const website = getDisplayWebsite(benefit);
+        const claimUrl = getBestClaimUrl(benefit);
+        const qrUrl = getQrUrl(claimUrl);
+        const category = benefit.category || benefit.categoryName || "Benefit";
 
-        els.modalCategory.textContent =
-          benefit.categoryName || titleCase(benefit.category || "Benefit");
-        els.modalTitle.textContent = title;
+        if (els.modalCategory) els.modalCategory.textContent = titleCase(category);
+        if (els.modalTitle) els.modalTitle.textContent = title;
+
+        if (!els.modalBody) return;
 
         els.modalBody.innerHTML = `
           <div class="detail-grid">
@@ -2231,36 +2258,14 @@
             </div>
 
             <div class="detail-box">
-              <div class="detail-label">Savings</div>
-              <div class="detail-value">${escapeHtml(discount)}</div>
-            </div>
-
-            <div class="detail-box">
-              <div class="detail-label">Description</div>
+              <div class="detail-label">Offer</div>
               <div class="detail-value">${escapeHtml(description)}</div>
             </div>
 
             <div class="detail-box">
-              <div class="detail-label">How To Redeem</div>
-              <div class="detail-value">${escapeHtml(
-                benefit.instructions ||
-                  benefit.redemptionType ||
-                  "Open the claim link or scan the QR code to follow the redemption instructions."
-              )}</div>
+              <div class="detail-label">Savings</div>
+              <div class="detail-value">${escapeHtml(discount)}</div>
             </div>
-
-            ${renderClaimBox(claimUrl)}
-
-            ${
-              promoCode
-                ? `
-                  <div class="detail-box">
-                    <div class="detail-label">Promo Code</div>
-                    <div class="detail-value">${escapeHtml(promoCode)}</div>
-                  </div>
-                `
-                : ""
-            }
 
             ${
               location
@@ -2284,128 +2289,330 @@
                 : ""
             }
 
-            <div class="detail-box">
-              <div class="detail-label">Terms</div>
-              <div class="detail-value">${escapeHtml(terms)}</div>
-            </div>
-
             ${
-              website || detailsUrl
+              website
                 ? `
                   <div class="detail-box">
-                    <div class="detail-label">More Information</div>
+                    <div class="detail-label">Website</div>
                     <div class="detail-value">
-                      <div style="display:flex;flex-wrap:wrap;gap:10px;">
-                        ${
-                          detailsUrl
-                            ? `<a class="button button-ghost" href="${escapeHtml(
-                                detailsUrl
-                              )}" target="_blank" rel="noopener noreferrer">View Offer Page</a>`
-                            : ""
-                        }
-
-                        ${
-                          website
-                            ? `<a class="button button-ghost" href="${escapeHtml(
-                                website
-                              )}" target="_blank" rel="noopener noreferrer">Merchant Website</a>`
-                            : ""
-                        }
-                      </div>
+                      <a class="claim-link" href="${escapeHtml(website)}" target="_blank" rel="noopener">
+                        ${escapeHtml(website)}
+                      </a>
                     </div>
                   </div>
                 `
                 : ""
             }
+
+            <div class="detail-box">
+              <div class="detail-label">Terms</div>
+              <div class="detail-value">${escapeHtml(terms)}</div>
+            </div>
+
+            <div class="detail-box">
+              <div class="detail-label">Redeem</div>
+              ${
+                claimUrl
+                  ? `
+                    <div class="claim-wrap">
+                      ${
+                        qrUrl
+                          ? `<img class="claim-qr" src="${escapeHtml(
+                              qrUrl
+                            )}" alt="Benefit QR code" />`
+                          : ""
+                      }
+
+                      <div class="claim-actions">
+                        <a
+                          class="button button-primary"
+                          href="${escapeHtml(claimUrl)}"
+                          target="_blank"
+                          rel="noopener"
+                        >
+                          Open Redeem Link
+                        </a>
+
+                        <a class="claim-link" href="${escapeHtml(claimUrl)}" target="_blank" rel="noopener">
+                          ${escapeHtml(claimUrl)}
+                        </a>
+                      </div>
+                    </div>
+                  `
+                  : `
+                    <div class="detail-value">
+                      This offer does not include a redeem link yet. Check the offer details or try another benefit.
+                    </div>
+                  `
+              }
+            </div>
           </div>
         `;
       }
 
-      async function openBenefitDetails(id) {
-        if (!id) return;
+      async function openBenefitModal(benefit) {
+        if (!els.modal) return;
 
-        const localBenefit = state.benefits.find(
-          (benefit) => String(benefit.id) === String(id)
-        );
+        els.modal.classList.add("show");
+        els.modal.setAttribute("aria-hidden", "false");
 
-        showModal();
+        if (els.modalTitle) els.modalTitle.textContent = getDisplayTitle(benefit);
+        if (els.modalBody) {
+          els.modalBody.innerHTML = `<div class="status-state">Loading benefit details...</div>`;
+        }
 
-        if (localBenefit) {
-          renderDetailModal(localBenefit);
+        const id =
+          benefit.id ||
+          benefit.offer_id ||
+          benefit.offerId ||
+          getBenefitRaw(benefit).id ||
+          getBenefitRaw(benefit).offer_id ||
+          "";
+
+        if (!id || String(id).startsWith("demo-")) {
+          renderBenefitDetails(benefit);
           return;
         }
 
-        els.modalCategory.textContent = "Loading";
-        els.modalTitle.textContent = "Benefit Details";
-        els.modalBody.innerHTML = `<div class="status-state">Loading benefit details...</div>`;
-
         try {
-          const payload = await fetchJson(`${API.details}?id=${encodeURIComponent(id)}`);
-          const remoteBenefit = payload?.benefit;
+          const detailsUrl = `${API.details}?id=${encodeURIComponent(id)}`;
+          const data = await fetchJson(detailsUrl);
+          const detailedBenefit = data.benefit || data.offer || data.result || data || benefit;
 
-          if (remoteBenefit) {
-            renderDetailModal(remoteBenefit);
-            return;
-          }
-
-          els.modalBody.innerHTML = `
-            <div class="empty-state">
-              Unable to load this benefit right now.
-            </div>
-          `;
+          renderBenefitDetails({
+            ...benefit,
+            ...detailedBenefit,
+            raw: detailedBenefit.raw || benefit.raw || detailedBenefit,
+          });
         } catch (error) {
-          console.warn("[benefits] details route skipped/fallback:", error);
-
-          els.modalBody.innerHTML = `
-            <div class="empty-state">
-              ${escapeHtml(error?.message || "Unable to load this benefit right now.")}
-            </div>
-          `;
+          console.warn("[benefits] details fallback:", error);
+          renderBenefitDetails(benefit);
         }
       }
 
-      async function handleLogout() {
-        const button = els.logoutButton;
-        const oldText = button.textContent;
+      function closeModal() {
+        if (!els.modal) return;
 
-        button.disabled = true;
-        button.textContent = "Logging out...";
+        els.modal.classList.remove("show");
+        els.modal.setAttribute("aria-hidden", "true");
+      }
+
+      async function loadSession() {
+        const data = await fetchJson(API.me);
+        const member = data.member || data.profile || data.user;
+
+        if (!member || data.authenticated !== true) {
+          window.location.replace(
+            "/login.html?next=" + encodeURIComponent(window.location.pathname)
+          );
+          return null;
+        }
+
+        state.access = getAccessData(data);
+        renderMember(member);
+        updateAccessStatusUi(data);
+
+        if (!isPaidActive(member)) {
+          showBanner(
+            "Membership payment is required before benefits are unlocked.",
+            "error"
+          );
+          return member;
+        }
+
+        if (state.access.perksReady) {
+          showBanner("Access Perks is active. Your benefits are ready.", "success");
+        } else if (state.access.syncError) {
+          showBanner(
+            "Your membership is active, but Access AMT sync is waiting on the correct endpoint path from Access Development. Benefits search can still load through the protected backend if the Offers API is active.",
+            "warning"
+          );
+        } else {
+          showBanner(
+            "Your membership is active. Access Perks member sync is pending, and benefits search will load if the Offers API is connected.",
+            "warning"
+          );
+        }
+
+        return member;
+      }
+
+      async function loadCategories() {
+        try {
+          const data = await fetchJson(API.categories);
+          const apiCategories =
+            data.categories ||
+            data.results ||
+            data.items ||
+            [];
+
+          state.categories = mergeCategories(apiCategories);
+        } catch (error) {
+          console.warn("[benefits] category fallback:", error);
+          state.categories = mergeCategories([]);
+        }
+
+        renderCategorySelect(state.categories);
+        renderCategories(state.categories);
+        renderHeroStats();
+      }
+
+      function buildSearchUrl() {
+        const params = new URLSearchParams();
+
+        if (state.query) params.set("q", state.query);
+        if (state.selectedCategory) {
+          params.set("category", state.selectedCategory);
+
+          const rule = CATEGORY_RULES[slugify(state.selectedCategory)];
+          if (rule?.q && !state.query) {
+            params.set("q", rule.q);
+          }
+        }
+
+        params.set("limit", "48");
+
+        const member = state.member || {};
+        const zip =
+          member.postal_code ||
+          member.postalCode ||
+          member.zip ||
+          member.zip_code ||
+          member.zipCode ||
+          "";
+
+        if (zip) params.set("postal_code", zip);
+
+        return `${API.search}?${params.toString()}`;
+      }
+
+      async function loadBenefits() {
+        state.loading = true;
+
+        if (els.searchButton) {
+          els.searchButton.disabled = true;
+          els.searchButton.textContent = "Searching...";
+        }
+
+        if (els.benefitsGrid) {
+          els.benefitsGrid.innerHTML = `
+            <div class="status-state">
+              <span class="loading">
+                <span class="loading-dot"></span>
+                Loading your benefits...
+              </span>
+            </div>
+          `;
+        }
+
+        try {
+          const data = await fetchJson(buildSearchUrl());
+          const benefits = normalizeBenefitsPayload(data);
+
+          if (!benefits.length) {
+            renderBenefits(DEMO_BENEFITS);
+            showBanner(
+              "No live Access offers were returned yet, so the page is showing placeholder benefit categories while the Access endpoint is finalized.",
+              "warning"
+            );
+          } else {
+            renderBenefits(benefits);
+          }
+        } catch (error) {
+          console.error("[benefits] search error:", error);
+
+          renderBenefits(DEMO_BENEFITS);
+
+          showBanner(
+            error?.message ||
+              "Live benefits could not load yet. Showing placeholder benefit cards while the Access Offers API is finalized.",
+            "warning"
+          );
+        } finally {
+          state.loading = false;
+
+          if (els.searchButton) {
+            els.searchButton.disabled = false;
+            els.searchButton.textContent = "Search";
+          }
+        }
+      }
+
+      async function logout() {
+        if (!els.logoutButton) return;
+
+        const oldText = els.logoutButton.textContent;
+        els.logoutButton.disabled = true;
+        els.logoutButton.textContent = "Logging out...";
 
         try {
           await fetch(API.logout, {
             method: "POST",
             credentials: "include",
-            headers: { Accept: "application/json" },
+            cache: "no-store",
+            headers: {
+              Accept: "application/json",
+              "Cache-Control": "no-cache",
+            },
           });
-        } catch (error) {
-          console.error("[benefits] logout error:", error);
-        } finally {
-          window.location.href = "../login.html";
-          button.disabled = false;
-          button.textContent = oldText;
+
+          window.location.replace("/login.html");
+        } catch {
+          els.logoutButton.disabled = false;
+          els.logoutButton.textContent = oldText;
+          alert("We could not log you out right now. Please try again.");
         }
       }
 
-      els.logoutButton.addEventListener("click", handleLogout);
-      els.searchButton.addEventListener("click", loadBenefits);
-      els.categorySelect.addEventListener("change", loadBenefits);
+      function bindEvents() {
+        els.logoutButton?.addEventListener("click", logout);
 
-      els.searchInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
+        els.searchButton?.addEventListener("click", () => {
+          state.query = normalizeText(els.searchInput?.value);
+          state.selectedCategory = normalizeText(els.categorySelect?.value);
           loadBenefits();
-        }
-      });
+        });
 
-      els.modalCloseButton.addEventListener("click", closeModal);
+        els.searchInput?.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            state.query = normalizeText(els.searchInput?.value);
+            state.selectedCategory = normalizeText(els.categorySelect?.value);
+            loadBenefits();
+          }
+        });
 
-      els.modal.addEventListener("click", (event) => {
-        if (event.target === els.modal) closeModal();
-      });
+        els.categorySelect?.addEventListener("change", () => {
+          state.selectedCategory = normalizeText(els.categorySelect.value);
+          loadBenefits();
+        });
 
-      window.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") closeModal();
-      });
+        document.querySelectorAll("[data-quick-category]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const category = button.getAttribute("data-quick-category") || "";
+
+            state.selectedCategory = category;
+
+            if (els.categorySelect) {
+              els.categorySelect.value = category;
+            }
+
+            loadBenefits();
+          });
+        });
+
+        els.modalCloseButton?.addEventListener("click", closeModal);
+
+        els.modal?.addEventListener("click", (event) => {
+          if (event.target === els.modal) closeModal();
+        });
+
+        window.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") closeModal();
+        });
+      }
+
+      bindEvents();
 
       (async () => {
         try {

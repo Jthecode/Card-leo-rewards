@@ -549,6 +549,20 @@ function resolvePortalLoginUrl(member) {
   return DEFAULT_REDIRECT;
 }
 
+function getAccessMemberStatus(member) {
+  return normalizeString(member?.access_member_status || "pending");
+}
+
+function getAccessPerksReady(member) {
+  const raw = member?.access_perks_ready;
+
+  if (typeof raw === "boolean") return raw;
+
+  const status = getAccessMemberStatus(member).toUpperCase();
+
+  return status === "OPEN";
+}
+
 function sanitizeMember(member) {
   if (!member) return null;
 
@@ -561,6 +575,13 @@ function sanitizeMember(member) {
   const portalAccess = hasPortalAccessForMember(member);
   const requiresPayment = doesMemberRequirePayment(member);
   const portalLoginUrl = resolvePortalLoginUrl(member);
+
+  const accessMemberIdentifier = normalizeString(member.access_member_identifier);
+  const accessMemberStatus = getAccessMemberStatus(member);
+  const accessSyncedAt = member.access_synced_at || null;
+  const accessSuspendedAt = member.access_suspended_at || null;
+  const accessSyncError = normalizeString(member.access_sync_error);
+  const accessPerksReady = getAccessPerksReady(member);
 
   return {
     id: member.id || null,
@@ -630,6 +651,27 @@ function sanitizeMember(member) {
     stripeSubscriptionId: member.stripe_subscription_id || "",
     stripeCheckoutSessionId: member.stripe_checkout_session_id || "",
 
+    accessMemberIdentifier,
+    access_member_identifier: accessMemberIdentifier,
+
+    accessMemberStatus,
+    access_member_status: accessMemberStatus,
+
+    accessSyncedAt,
+    access_synced_at: accessSyncedAt,
+
+    accessSuspendedAt,
+    access_suspended_at: accessSuspendedAt,
+
+    accessSyncError,
+    access_sync_error: accessSyncError,
+
+    accessPerksReady,
+    access_perks_ready: accessPerksReady,
+
+    benefitsReady: accessPerksReady,
+    benefits_ready: accessPerksReady,
+
     emailVerified: Boolean(member.email_verified),
     emailVerifiedAt: member.email_verified_at || null,
 
@@ -662,6 +704,9 @@ function buildUser(member) {
       signup_id: safeMember.id,
       member_id: safeMember.id,
       portal_user_id: safeMember.portalUserId,
+      access_member_identifier: safeMember.accessMemberIdentifier,
+      access_member_status: safeMember.accessMemberStatus,
+      access_perks_ready: safeMember.accessPerksReady,
     },
     app_metadata: {
       provider: "cardleo-signups",
@@ -699,9 +744,18 @@ function buildProfile(member) {
     activation_fee_amount: safeMember.activationFeeAmount,
     monthly_fee_amount: safeMember.monthlyFeeAmount,
     billing_day: safeMember.billingDay,
+    portal_login_url: safeMember.portalLoginUrl,
+
+    access_member_identifier: safeMember.accessMemberIdentifier,
+    access_member_status: safeMember.accessMemberStatus,
+    access_synced_at: safeMember.accessSyncedAt,
+    access_suspended_at: safeMember.accessSuspendedAt,
+    access_sync_error: safeMember.accessSyncError,
+    access_perks_ready: safeMember.accessPerksReady,
+    benefits_ready: safeMember.benefitsReady,
+
     email_verified: safeMember.emailVerified,
     email_verified_at: safeMember.emailVerifiedAt,
-    portal_login_url: safeMember.portalLoginUrl,
     created_at: safeMember.createdAt,
     updated_at: safeMember.updatedAt,
   };
@@ -767,6 +821,12 @@ function getSelectFields({ extended = true } = {}) {
     "stripe_customer_id",
     "stripe_subscription_id",
     "stripe_checkout_session_id",
+    "access_member_identifier",
+    "access_member_status",
+    "access_synced_at",
+    "access_suspended_at",
+    "access_sync_error",
+    "access_perks_ready",
     "session_token",
     "auth_token",
     "login_token",
@@ -851,6 +911,14 @@ function hydrateMember(row) {
     activation_fee_amount: row.activation_fee_amount || 25,
     monthly_fee_amount: row.monthly_fee_amount || 20,
     billing_day: row.billing_day || 10,
+
+    access_member_identifier: row.access_member_identifier || "",
+    access_member_status: row.access_member_status || "pending",
+    access_synced_at: row.access_synced_at || null,
+    access_suspended_at: row.access_suspended_at || null,
+    access_sync_error: row.access_sync_error || "",
+    access_perks_ready: Boolean(row.access_perks_ready),
+
     ...row,
   };
 }
@@ -1051,6 +1119,17 @@ function activeSessionResponse(res, member, sessionCookie) {
       requiresPayment: false,
       payment_required: false,
       paymentRequired: false,
+
+      access: {
+        member_identifier: safeMember?.accessMemberIdentifier || "",
+        member_status: safeMember?.accessMemberStatus || "pending",
+        synced_at: safeMember?.accessSyncedAt || null,
+        suspended_at: safeMember?.accessSuspendedAt || null,
+        sync_error: safeMember?.accessSyncError || "",
+        perks_ready: Boolean(safeMember?.accessPerksReady),
+        benefits_ready: Boolean(safeMember?.benefitsReady),
+      },
+
       session: {
         provider: "cardleo-signups",
         token_type: "custom",
@@ -1179,6 +1258,8 @@ export default async function handler(req, res) {
       status: normalizeStatus(member.status),
       paymentStatus: normalizeStatus(member.payment_status),
       membershipStatus: normalizeStatus(member.membership_status),
+      accessMemberStatus: getAccessMemberStatus(member),
+      accessPerksReady: getAccessPerksReady(member),
       ip: getClientIp(req),
     });
 

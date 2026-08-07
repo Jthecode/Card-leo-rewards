@@ -1030,8 +1030,7 @@
             </div>
           </div>
         </section>
-
-        <section class="dashboard-grid">
+                <section class="dashboard-grid">
           <article class="panel tower-card" id="referralTower">
             <div class="panel-inner">
               <h2 class="tower-title">Referral Tower</h2>
@@ -1133,15 +1132,16 @@
                 <div>
                   <h3 id="benefitsTitle">Card Leo Lifestyle Benefits</h3>
                   <p id="benefitsSubtitle">
-                    Search restaurants, travel, shopping, entertainment,
-                    fitness, and local savings inside Card Leo Rewards.
+                    Restaurants, shopping, travel, entertainment, fitness, and
+                    local savings are connected through Card Leo Rewards.
                   </p>
+
                   <div
-                    class="benefits-status success"
+                    class="benefits-status"
                     id="benefitsStatus"
                     aria-live="polite"
                   >
-                    Benefits are ready inside your Card Leo portal.
+                    Checking your Access Perks status...
                   </div>
                 </div>
 
@@ -1259,11 +1259,17 @@
           recentReferralsTable: document.getElementById("recentReferralsTable"),
 
           logoutButton: document.getElementById("logoutButton"),
+
+          benefitsPanel: document.getElementById("benefitsPanel"),
+          benefitsTitle: document.getElementById("benefitsTitle"),
+          benefitsSubtitle: document.getElementById("benefitsSubtitle"),
           benefitsStatus: document.getElementById("benefitsStatus"),
+          openBenefitsButton: document.getElementById("openBenefitsButton"),
         };
 
         const state = {
           member: null,
+          access: null,
           referralsPayload: null,
           leaderboardPayload: null,
           isRedirecting: false,
@@ -1348,8 +1354,7 @@
 
           return unwrap(payload);
         }
-
-        async function checkStillAuthenticated() {
+                async function checkStillAuthenticated() {
           try {
             const data = await fetchJson(API.me);
             return data?.authenticated === true;
@@ -1429,6 +1434,117 @@
               paymentStatus
             )
           );
+        }
+
+        function getAccessData(source = {}) {
+          const access = source.access || {};
+
+          const member =
+            source.member ||
+            source.profile ||
+            source.user ||
+            source ||
+            {};
+
+          const memberStatus =
+            normalizeText(access.member_status) ||
+            normalizeText(access.status) ||
+            normalizeText(member.access_member_status) ||
+            normalizeText(member.accessMemberStatus) ||
+            "pending";
+
+          const memberIdentifier =
+            normalizeText(access.member_identifier) ||
+            normalizeText(access.memberCustomerIdentifier) ||
+            normalizeText(access.member_customer_identifier) ||
+            normalizeText(member.access_member_identifier) ||
+            normalizeText(member.accessMemberIdentifier);
+
+          const syncError =
+            normalizeText(access.sync_error) ||
+            normalizeText(member.access_sync_error) ||
+            normalizeText(member.accessSyncError);
+
+          const syncedAt =
+            access.synced_at ||
+            access.access_synced_at ||
+            member.access_synced_at ||
+            member.accessSyncedAt ||
+            null;
+
+          const perksReady =
+            access.perks_ready === true ||
+            access.benefits_ready === true ||
+            member.access_perks_ready === true ||
+            member.accessPerksReady === true ||
+            member.benefits_ready === true ||
+            member.benefitsReady === true ||
+            memberStatus.toUpperCase() === "OPEN";
+
+          return {
+            memberStatus,
+            memberIdentifier,
+            syncError,
+            syncedAt,
+            perksReady,
+          };
+        }
+
+        function renderBenefitsStatus(source = {}) {
+          if (!els.benefitsStatus) return;
+
+          const access = getAccessData(source);
+          state.access = access;
+
+          const paid = isPaidActive(state.member || source.member || source);
+
+          if (!paid) {
+            els.benefitsStatus.className = "benefits-status error";
+            els.benefitsStatus.textContent =
+              "Membership payment is required before benefits are unlocked.";
+
+            if (els.openBenefitsButton) {
+              els.openBenefitsButton.textContent = "Payment Required";
+              els.openBenefitsButton.href = "/signup.html?status=payment_required";
+            }
+
+            return;
+          }
+
+          if (access.perksReady) {
+            els.benefitsStatus.className = "benefits-status success";
+            els.benefitsStatus.textContent =
+              "Access Perks is active. Your restaurants, shopping, travel, and local savings are ready.";
+
+            if (els.openBenefitsButton) {
+              els.openBenefitsButton.textContent = "Open My Benefits";
+              els.openBenefitsButton.href = "/portal/benefits.html";
+            }
+
+            return;
+          }
+
+          if (access.syncError) {
+            els.benefitsStatus.className = "benefits-status error";
+            els.benefitsStatus.textContent =
+              "Your membership is active, but Access Perks is still waiting on the Access AMT endpoint. Benefits will show after sync is confirmed.";
+
+            if (els.openBenefitsButton) {
+              els.openBenefitsButton.textContent = "View Benefits Page";
+              els.openBenefitsButton.href = "/portal/benefits.html";
+            }
+
+            return;
+          }
+
+          els.benefitsStatus.className = "benefits-status";
+          els.benefitsStatus.textContent =
+            "Your membership is active. Access Perks is syncing now and will become available once the member record is confirmed.";
+
+          if (els.openBenefitsButton) {
+            els.openBenefitsButton.textContent = "View Benefits Page";
+            els.openBenefitsButton.href = "/portal/benefits.html";
+          }
         }
 
         function getPreferredBaseUrl() {
@@ -1527,20 +1643,14 @@
             els.referralLink.value = getReferralLink(member);
           }
 
+          renderBenefitsStatus(member);
+
           if (!paid) {
             setTowerStatus(
               "Membership payment is required before full portal access is unlocked.",
               "error"
             );
           }
-        }
-
-        function renderBenefitsStatus() {
-          if (!els.benefitsStatus) return;
-
-          els.benefitsStatus.className = "benefits-status success";
-          els.benefitsStatus.textContent =
-            "Benefits are ready inside your Card Leo portal.";
         }
 
         function getSummaryNumber(summary, keys, fallback = 0) {
@@ -1671,8 +1781,7 @@
             els.leaderboardTotal.textContent = money(summary.totalEarned);
           }
         }
-
-        function floorClass(floor) {
+                function floorClass(floor) {
           const type = normalizeText(floor.type || floor.level).toLowerCase();
           const status = normalizeText(floor.status || floor.state).toLowerCase();
 
@@ -1747,7 +1856,9 @@
 
               if (!label && type === "team") label = "Member B referred Member C";
               if (!label && type === "direct") label = "Member A referred Member B";
-              if (!label) label = status === "pending" ? "Pending Referral" : "Open Floor";
+              if (!label) {
+                label = status === "pending" ? "Pending Referral" : "Open Floor";
+              }
 
               const moneyText =
                 amount > 0 ? `+${money(amount)}` : titleCase(status || "Locked");
@@ -1964,7 +2075,10 @@
             return null;
           }
 
+          state.access = getAccessData(data);
           renderMember(member);
+          renderBenefitsStatus(data);
+
           return member;
         }
 
@@ -1976,6 +2090,14 @@
             if (member) {
               renderMember({ ...(state.member || {}), ...member });
             }
+
+            renderBenefitsStatus({
+              ...(data || {}),
+              member: {
+                ...(state.member || {}),
+                ...(member || {}),
+              },
+            });
           } catch (error) {
             console.warn(
               "[portal/index] Overview skipped:",
@@ -2126,14 +2248,19 @@
 
         window.addEventListener("cardleo:auth-ready", async (event) => {
           const member = event?.detail?.member;
+          const access = event?.detail?.access || {};
 
           if (member) {
             renderMember(member);
           }
 
+          renderBenefitsStatus({
+            member: member || state.member || {},
+            access,
+          });
+
           if (!state.hasLoaded) {
             state.hasLoaded = true;
-            renderBenefitsStatus();
             await Promise.allSettled([loadOverview(), loadReferralDashboard()]);
           }
         });
@@ -2163,7 +2290,13 @@
 
         (async () => {
           try {
-            renderBenefitsStatus();
+            renderBenefitsStatus({
+              member: {},
+              access: {
+                member_status: "pending",
+                perks_ready: false,
+              },
+            });
 
             const member = await loadSession();
 
@@ -2175,7 +2308,46 @@
             }
           } catch (error) {
             console.error("[portal/index] Startup error:", error);
-            await redirectToLoginOnlyIfActuallyLoggedOut("startup catch");
+
+            if (error?.status === 401 || error?.status === 403) {
+              await redirectToLoginOnlyIfActuallyLoggedOut("startup auth error");
+              return;
+            }
+
+            setTowerStatus(
+              "Your account is logged in, but portal data could not load right now.",
+              "error"
+            );
+
+            renderLeaderboard({});
+            renderRecentReferrals({});
+            renderStats({
+              totalReferrals: 0,
+              approvedReferrals: 0,
+              directReferrals: 0,
+              teamReferrals: 0,
+              pendingReferrals: 0,
+              directEarnings: 0,
+              teamEarnings: 0,
+              growthPoolCredit: 0,
+              totalEarned: 0,
+            });
+
+            renderFloors(
+              {},
+              {
+                directReferrals: 0,
+                teamReferrals: 0,
+              }
+            );
+
+            renderBenefitsStatus({
+              member: state.member || {},
+              access: state.access || {
+                member_status: "pending",
+                perks_ready: false,
+              },
+            });
           }
         })();
       })();

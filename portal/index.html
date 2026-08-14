@@ -1,1724 +1,4616 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
+<head>
+  <meta charset="UTF-8" />
 
-    <title>Member Portal | Card Leo Rewards</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
 
-    <meta
-      name="description"
-      content="Card Leo Rewards member portal dashboard. View membership status, rewards, benefits, referral tower, leaderboard, billing, profile details, and support."
-    />
-    <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#030303" />
+  <title>Member Portal | Card Leo Rewards</title>
 
-    <link
-      rel="canonical"
-      href="https://www.cardleorewards.com/portal/index.html"
-    />
-    <link rel="stylesheet" href="/style.css" />
-    <link rel="stylesheet" href="/assets/css/portal.css" />
+  <meta
+    name="description"
+    content="Card Leo Rewards member portal dashboard. View membership status, rewards, benefits, referral tower, leaderboard, billing, profile details, and support."
+  />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#030303" />
 
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
-      rel="stylesheet"
-    />
+  <link
+    rel="canonical"
+    href="https://www.cardleorewards.com/portal/index.html"
+  />
 
-    <style>
-      :root {
-        --leo-black: #030303;
-        --leo-panel: rgba(9, 9, 9, 0.92);
-        --leo-line: rgba(231, 182, 79, 0.22);
-        --leo-line-soft: rgba(255, 255, 255, 0.08);
-        --leo-gold: #e7b64f;
-        --leo-gold-2: #f7d98b;
-        --leo-white: #f8f3e7;
-        --leo-muted: rgba(248, 243, 231, 0.68);
-        --leo-muted-2: rgba(248, 243, 231, 0.5);
-        --leo-green: #48f06b;
-        --leo-blue: #7ec8ff;
-        --leo-red: #ff7676;
-        --leo-yellow: #ffd166;
-        --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
-        --sidebar-width: 290px;
-      }
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/assets/css/portal.css" />
 
-      * {
-        box-sizing: border-box;
-      }
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
 
-      html {
-        scroll-behavior: smooth;
-      }
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
 
-      body {
-        margin: 0;
-        min-height: 100vh;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system,
-          BlinkMacSystemFont, "Segoe UI", sans-serif;
-        color: var(--leo-white);
-        background:
-          radial-gradient(circle at 84% 9%, rgba(231, 182, 79, 0.13), transparent 26%),
-          radial-gradient(circle at 55% 100%, rgba(231, 182, 79, 0.08), transparent 28%),
-          linear-gradient(180deg, #030303 0%, #080808 46%, #010101 100%);
-      }
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
+    rel="stylesheet"
+  />
 
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
+  <style>
+    :root {
+      --leo-black: #030303;
+      --leo-panel: rgba(9, 9, 9, 0.92);
 
-      button,
-      input {
-        font: inherit;
-      }
+      --leo-line: rgba(231, 182, 79, 0.22);
+      --leo-line-soft: rgba(255, 255, 255, 0.08);
 
-      button {
-        cursor: pointer;
-      }
+      --leo-gold: #e7b64f;
+      --leo-gold-2: #f7d98b;
 
+      --leo-white: #f8f3e7;
+
+      --leo-muted: rgba(248, 243, 231, 0.68);
+      --leo-muted-2: rgba(248, 243, 231, 0.5);
+
+      --leo-green: #48f06b;
+      --leo-blue: #7ec8ff;
+      --leo-red: #ff7676;
+      --leo-yellow: #ffd166;
+
+      --leo-shadow:
+        0 28px 90px rgba(0, 0, 0, 0.62);
+
+      --sidebar-width: 290px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+
+      min-height: 100vh;
+
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: var(--leo-white);
+
+      background:
+        radial-gradient(
+          circle at 84% 9%,
+          rgba(231, 182, 79, 0.13),
+          transparent 26%
+        ),
+        radial-gradient(
+          circle at 55% 100%,
+          rgba(231, 182, 79, 0.08),
+          transparent 28%
+        ),
+        linear-gradient(
+          180deg,
+          #030303 0%,
+          #080808 46%,
+          #010101 100%
+        );
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    :focus-visible {
+      outline:
+        2px solid var(--leo-gold-2);
+
+      outline-offset: 3px;
+    }
+
+    /* =========================================================
+       PORTAL SHELL
+    ========================================================= */
+
+    .portal-shell {
+      min-height: 100vh;
+
+      display: grid;
+
+      grid-template-columns:
+        var(--sidebar-width)
+        1fr;
+
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.035) 1px,
+          transparent 1px
+        ),
+        radial-gradient(
+          circle at 72% 24%,
+          rgba(231, 182, 79, 0.07),
+          transparent 28%
+        );
+
+      background-size:
+        96px 96px,
+        auto;
+    }
+
+    /* =========================================================
+       SIDEBAR
+    ========================================================= */
+
+    .sidebar {
+      position: sticky;
+
+      top: 0;
+
+      height: 100vh;
+
+      overflow: auto;
+
+      padding:
+        30px
+        22px;
+
+      border-right:
+        1px solid rgba(231, 182, 79, 0.18);
+
+      background:
+        radial-gradient(
+          circle at top,
+          rgba(231, 182, 79, 0.12),
+          transparent 30%
+        ),
+        rgba(0, 0, 0, 0.72);
+
+      backdrop-filter:
+        blur(20px);
+
+      -webkit-backdrop-filter:
+        blur(20px);
+    }
+
+    .brand-lockup {
+      text-align: center;
+
+      margin-bottom: 30px;
+    }
+
+    .lion-logo {
+      width: 128px;
+      height: 78px;
+
+      margin:
+        0
+        auto
+        8px;
+
+      display: grid;
+
+      place-items: center;
+
+      color: var(--leo-gold-2);
+
+      font-size: 2.8rem;
+
+      filter:
+        drop-shadow(
+          0 0 20px
+          rgba(231, 182, 79, 0.3)
+        );
+    }
+
+    .brand-lockup h1 {
+      margin: 0;
+
+      font-family:
+        "Playfair Display",
+        serif;
+
+      font-size: 1.82rem;
+
+      line-height: 0.95;
+
+      letter-spacing: 0.08em;
+
+      text-transform: uppercase;
+    }
+
+    .brand-lockup span {
+      display: block;
+
+      margin-top: 0.28rem;
+
+      color: var(--leo-gold);
+
+      font-size: 0.78rem;
+
+      font-weight: 800;
+
+      letter-spacing: 0.22em;
+
+      text-transform: uppercase;
+    }
+
+    .side-nav {
+      display: grid;
+
+      gap: 8px;
+    }
+
+    .side-link,
+    .logout-btn {
+      display: flex;
+
+      align-items: center;
+
+      gap: 13px;
+
+      min-height: 52px;
+
+      width: 100%;
+
+      padding:
+        0
+        16px;
+
+      border-radius: 12px;
+
+      border:
+        1px solid transparent;
+
+      background:
+        transparent;
+
+      color:
+        rgba(248, 243, 231, 0.82);
+
+      font-size: 0.98rem;
+
+      font-weight: 700;
+    }
+
+    .side-link:hover,
+    .logout-btn:hover,
+    .side-link.is-active {
+      color: #070707;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f7d98b,
+          #b87912
+        );
+
+      box-shadow:
+        0 16px 42px
+        rgba(184, 121, 18, 0.24);
+    }
+
+    .side-icon {
+      width: 24px;
+
+      text-align: center;
+
+      font-size: 1.08rem;
+    }
+
+    /* =========================================================
+       ALLOWANCE CARD SIDEBAR
+    ========================================================= */
+
+    .earn-card {
+      margin-top: 30px;
+
+      padding: 20px;
+
+      border-radius: 22px;
+
+      border:
+        1px solid rgba(231, 182, 79, 0.24);
+
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(231, 182, 79, 0.16),
+          transparent 36%
+        ),
+        rgba(255, 255, 255, 0.035);
+    }
+
+    .earn-card h2 {
+      margin:
+        0
+        0
+        10px;
+
+      color:
+        var(--leo-gold-2);
+
+      font-size:
+        1.35rem;
+
+      line-height:
+        1.05;
+
+      text-transform:
+        uppercase;
+    }
+
+    .earn-card p {
+      margin:
+        0
+        0
+        18px;
+
+      color:
+        var(--leo-muted);
+
+      line-height:
+        1.55;
+    }
+
+    .mini-allowance-card {
+      height:
+        96px;
+
+      border-radius:
+        16px;
+
+      background:
+        radial-gradient(
+          circle at 82% 14%,
+          rgba(247, 217, 139, 0.24),
+          transparent 32%
+        ),
+        linear-gradient(
+          145deg,
+          #050505,
+          #101010 46%,
+          #000
+        );
+
+      border:
+        1px solid rgba(231, 182, 79, 0.28);
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      color:
+        var(--leo-gold-2);
+
+      font-family:
+        "Playfair Display",
+        serif;
+
+      letter-spacing:
+        0.12em;
+
+      text-transform:
+        uppercase;
+
+      box-shadow:
+        0 18px 42px
+        rgba(0, 0, 0, 0.36);
+    }
+
+    /* =========================================================
+       MAIN
+    ========================================================= */
+
+    .main {
+      min-width: 0;
+
+      padding: 28px;
+    }
+
+    .top-grid {
+      display: grid;
+
+      grid-template-columns:
+        minmax(220px, 0.75fr)
+        minmax(400px, 1.45fr)
+        minmax(230px, 0.75fr);
+
+      gap: 20px;
+
+      align-items: stretch;
+
+      margin-bottom: 20px;
+    }
+
+    .welcome-block {
+      padding:
+        8px
+        0;
+    }
+
+    .welcome-block p {
+      margin:
+        0
+        0
+        4px;
+
+      color:
+        var(--leo-white);
+    }
+
+    .welcome-block h2 {
+      margin: 0;
+
+      color:
+        var(--leo-gold);
+
+      font-size:
+        clamp(
+          1.85rem,
+          4vw,
+          2.6rem
+        );
+
+      letter-spacing:
+        -0.04em;
+    }
+
+    .member-badge {
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      gap:
+        8px;
+
+      margin-top:
+        10px;
+
+      min-height:
+        34px;
+
+      padding:
+        0
+        13px;
+
+      border-radius:
+        999px;
+
+      border:
+        1px solid rgba(231, 182, 79, 0.36);
+
+      background:
+        rgba(231, 182, 79, 0.12);
+
+      color:
+        var(--leo-gold-2);
+
+      font-size:
+        0.82rem;
+
+      font-weight:
+        900;
+    }
+
+    /* =========================================================
+       PANEL
+    ========================================================= */
+
+    .panel {
+      position:
+        relative;
+
+      overflow:
+        hidden;
+
+      border-radius:
+        22px;
+
+      border:
+        1px solid rgba(231, 182, 79, 0.24);
+
+      background:
+        radial-gradient(
+          circle at 90% 10%,
+          rgba(231, 182, 79, 0.14),
+          transparent 34%
+        ),
+        linear-gradient(
+          180deg,
+          rgba(19, 19, 19, 0.92),
+          rgba(4, 4, 4, 0.94)
+        );
+
+      box-shadow:
+        var(--leo-shadow);
+    }
+
+    .panel-inner {
+      position:
+        relative;
+
+      z-index:
+        1;
+
+      padding:
+        20px;
+    }
+
+    .panel-label {
+      display:
+        block;
+
+      margin-bottom:
+        8px;
+
+      color:
+        var(--leo-white);
+
+      font-size:
+        0.9rem;
+
+      font-weight:
+        600;
+    }
+
+    /* =========================================================
+       REFERRAL SHARE PANEL
+    ========================================================= */
+
+    .referral-panel {
+      border-color:
+        rgba(247, 217, 139, 0.32);
+    }
+
+    .referral-panel .panel-inner {
+      padding:
+        20px;
+    }
+
+    .referral-heading-row {
+      display:
+        flex;
+
+      align-items:
+        flex-start;
+
+      justify-content:
+        space-between;
+
+      gap:
+        14px;
+
+      margin-bottom:
+        12px;
+    }
+
+    .referral-heading-row h3 {
+      margin: 0;
+
+      color:
+        var(--leo-gold-2);
+
+      font-size:
+        1.05rem;
+    }
+
+    .referral-heading-row p {
+      margin:
+        5px
+        0
+        0;
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.84rem;
+
+      line-height:
+        1.5;
+    }
+
+    .ref-link-row {
+      display:
+        grid;
+
+      grid-template-columns:
+        minmax(0, 1fr)
+        auto;
+
+      gap:
+        10px;
+
+      align-items:
+        center;
+
+      padding:
+        8px
+        8px
+        8px
+        14px;
+
+      border-radius:
+        14px;
+
+      border:
+        1px solid rgba(231, 182, 79, 0.18);
+
+      background:
+        rgba(0, 0, 0, 0.38);
+    }
+
+    .ref-input {
+      width:
+        100%;
+
+      min-width:
+        0;
+
+      min-height:
+        42px;
+
+      border:
+        0;
+
+      outline:
+        0;
+
+      background:
+        transparent;
+
+      color:
+        var(--leo-white);
+
+      font-size:
+        0.89rem;
+
+      text-overflow:
+        ellipsis;
+    }
+
+    .copy-btn,
+    .icon-btn {
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      width:
+        46px;
+
+      height:
+        46px;
+
+      border-radius:
+        12px;
+
+      border:
+        0;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f7d98b,
+          #b87912
+        );
+
+      color:
+        #050505;
+
+      font-size:
+        1.15rem;
+
+      font-weight:
+        900;
+    }
+
+    .referral-actions {
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(
+          4,
+          minmax(0, 1fr)
+        );
+
+      gap:
+        8px;
+
+      margin-top:
+        10px;
+    }
+
+    .referral-action-btn {
+      min-height:
+        42px;
+
+      padding:
+        0
+        10px;
+
+      border-radius:
+        12px;
+
+      border:
+        1px solid rgba(231, 182, 79, 0.2);
+
+      background:
+        rgba(255, 255, 255, 0.04);
+
+      color:
+        var(--leo-white);
+
+      font-weight:
+        800;
+
+      font-size:
+        0.82rem;
+    }
+
+    .referral-action-btn:hover {
+      border-color:
+        rgba(247, 217, 139, 0.42);
+
+      color:
+        var(--leo-gold-2);
+    }
+
+    .referral-action-btn.primary {
+      border:
+        0;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f7d98b,
+          #b87912
+        );
+
+      color:
+        #050505;
+    }
+
+    .referral-helper {
+      margin:
+        10px
+        0
+        0;
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.8rem;
+
+      line-height:
+        1.5;
+    }
+
+    .referral-share-status {
+      min-height:
+        1.4em;
+
+      margin-top:
+        8px;
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.8rem;
+
+      line-height:
+        1.45;
+    }
+
+    .referral-share-status.success {
+      color:
+        #bfffe5;
+    }
+
+    .referral-share-status.error {
+      color:
+        #ffd2d8;
+    }
+
+    /* =========================================================
+       BALANCE
+    ========================================================= */
+
+    .balance-card .panel-inner {
+      height:
+        100%;
+
+      display:
+        grid;
+
+      grid-template-columns:
+        1fr
+        auto;
+
+      align-items:
+        center;
+
+      gap:
+        10px;
+    }
+
+    .balance-card strong {
+      display:
+        block;
+
+      color:
+        var(--leo-gold);
+
+      font-size:
+        clamp(
+          1.9rem,
+          4vw,
+          2.65rem
+        );
+
+      line-height:
+        1;
+    }
+
+    /* =========================================================
+       DASHBOARD GRID
+    ========================================================= */
+
+    .dashboard-grid {
+      display:
+        grid;
+
+      grid-template-columns:
+        minmax(340px, 0.82fr)
+        minmax(480px, 1.18fr);
+
+      gap:
+        20px;
+    }
+
+    /* =========================================================
+       TOWER
+    ========================================================= */
+
+    .tower-card {
+      min-height:
+        720px;
+    }
+
+    .tower-title {
+      margin: 0;
+
+      color:
+        var(--leo-white);
+
+      font-size:
+        clamp(
+          1.5rem,
+          3vw,
+          2rem
+        );
+
+      line-height:
+        1;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        0.02em;
+    }
+
+    .tower-copy {
+      margin:
+        10px
+        0
+        0;
+
+      color:
+        var(--leo-white);
+
+      line-height:
+        1.5;
+    }
+
+    .tower-copy strong {
+      color:
+        var(--leo-gold-2);
+    }
+
+    .tower-breakdown {
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(
+          4,
+          1fr
+        );
+
+      gap:
+        10px;
+
+      margin-top:
+        18px;
+    }
+
+    .breakdown-box {
+      padding:
+        14px;
+
+      border-radius:
+        14px;
+
+      border:
+        1px solid rgba(231, 182, 79, 0.18);
+
+      background:
+        rgba(255, 255, 255, 0.035);
+    }
+
+    .breakdown-box span {
+      display:
+        block;
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.72rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.12em;
+
+      text-transform:
+        uppercase;
+    }
+
+    .breakdown-box strong {
+      display:
+        block;
+
+      margin-top:
+        0.42rem;
+
+      font-size:
+        1.1rem;
+    }
+
+    .tower-visual {
+      margin-top:
+        18px;
+
+      padding:
+        10px
+        0
+        0;
+
+      display:
+        grid;
+
+      justify-items:
+        center;
+    }
+
+    .tower-lions {
+      width:
+        min(
+          245px,
+          70%
+        );
+
+      min-height:
+        105px;
+
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      color:
+        var(--leo-gold-2);
+
+      font-size:
+        4.3rem;
+
+      filter:
+        drop-shadow(
+          0 0 22px
+          rgba(231, 182, 79, 0.34)
+        );
+    }
+
+    .tower-lions img {
+      width:
+        100%;
+
+      height:
+        auto;
+
+      display:
+        block;
+    }
+
+    .tower-lions span {
+      display:
+        none;
+    }
+
+    .tower-spire {
+      width:
+        54%;
+
+      height:
+        34px;
+
+      clip-path:
+        polygon(
+          50% 0%,
+          100% 100%,
+          0% 100%
+        );
+
+      background:
+        linear-gradient(
+          135deg,
+          #f7d98b,
+          #b87912
+        );
+    }
+
+    .tower-floors {
+      width:
+        min(
+          420px,
+          100%
+        );
+
+      display:
+        grid;
+
+      gap:
+        7px;
+    }
+
+    .tower-floor {
+      display:
+        grid;
+
+      grid-template-columns:
+        38px
+        1fr
+        auto;
+
+      gap:
+        12px;
+
+      align-items:
+        center;
+
+      min-height:
+        46px;
+
+      padding:
+        8px
+        13px;
+
+      border-radius:
+        13px;
+
+      border:
+        1px solid rgba(231, 182, 79, 0.18);
+
+      background:
+        linear-gradient(
+          180deg,
+          #171717,
+          #090909
+        );
+
+      color:
+        rgba(248, 243, 231, 0.46);
+    }
+
+    .tower-floor.direct,
+    .tower-floor.earned {
+      color:
+        #080808;
+
+      background:
+        linear-gradient(
+          180deg,
+          #f7d98b,
+          #c88716
+        );
+
+      border-color:
+        rgba(255, 255, 255, 0.22);
+
+      box-shadow:
+        0 0 24px rgba(231, 182, 79, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .tower-floor.team {
+      color:
+        #05121c;
+
+      background:
+        linear-gradient(
+          180deg,
+          #9fdcff,
+          #5cb2f2
+        );
+
+      border-color:
+        rgba(255, 255, 255, 0.22);
+    }
+
+    .tower-floor.pending {
+      color:
+        rgba(248, 243, 231, 0.72);
+
+      background:
+        linear-gradient(
+          180deg,
+          #575757,
+          #191919
+        );
+
+      border-color:
+        rgba(255, 255, 255, 0.14);
+    }
+
+    .tower-floor.locked {
+      color:
+        rgba(248, 243, 231, 0.36);
+    }
+
+    .floor-number {
+      font-weight:
+        900;
+
+      color:
+        inherit;
+    }
+
+    .floor-name {
+      min-width:
+        0;
+
+      overflow:
+        hidden;
+
+      white-space:
+        nowrap;
+
+      text-overflow:
+        ellipsis;
+    }
+
+    .floor-money {
+      color:
+        var(--leo-green);
+
+      font-weight:
+        900;
+    }
+
+    .tower-floor.direct .floor-money,
+    .tower-floor.earned .floor-money,
+    .tower-floor.team .floor-money {
+      color:
+        #071007;
+    }
+
+    .tower-floor.pending .floor-money,
+    .tower-floor.locked .floor-money {
+      color:
+        inherit;
+    }
+
+    .tower-base {
+      width:
+        min(
+          460px,
+          98%
+        );
+
+      height:
+        28px;
+
+      margin-top:
+        7px;
+
+      border-radius:
+        999px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f7d98b,
+          #8b5b0b
+        );
+
+      box-shadow:
+        0 0 30px
+        rgba(231, 182, 79, 0.25);
+    }
+
+    .legend {
+      display:
+        flex;
+
+      flex-wrap:
+        wrap;
+
+      justify-content:
+        center;
+
+      gap:
+        18px;
+
+      margin-top:
+        18px;
+
+      padding-top:
+        18px;
+
+      border-top:
+        1px solid rgba(231, 182, 79, 0.16);
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.88rem;
+    }
+
+    .legend span {
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      gap:
+        8px;
+    }
+
+    .dot {
+      width:
+        14px;
+
+      height:
+        14px;
+
+      border-radius:
+        50%;
+    }
+
+    .dot.gold {
+      background:
+        var(--leo-gold);
+    }
+
+    .dot.blue {
+      background:
+        var(--leo-blue);
+    }
+
+    .dot.dark {
+      background:
+        #333;
+    }
+
+    /* =========================================================
+       RIGHT SIDE
+    ========================================================= */
+
+    .right-stack {
+      display:
+        grid;
+
+      gap:
+        20px;
+    }
+
+    .stat-grid {
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(
+          4,
+          1fr
+        );
+
+      gap:
+        16px;
+    }
+
+    .stat-card {
+      min-height:
+        142px;
+    }
+
+    .stat-card .panel-inner {
+      height:
+        100%;
+
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      text-align:
+        center;
+    }
+
+    .stat-icon {
+      color:
+        var(--leo-gold-2);
+
+      font-size:
+        1.8rem;
+
+      margin-bottom:
+        10px;
+    }
+
+    .stat-number {
+      color:
+        var(--leo-gold);
+
+      font-size:
+        2rem;
+
+      font-weight:
+        900;
+
+      line-height:
+        1;
+    }
+
+    .stat-label {
+      margin-top:
+        8px;
+
+      color:
+        var(--leo-white);
+    }
+
+    .section-title-row {
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      gap:
+        12px;
+
+      margin-bottom:
+        14px;
+    }
+
+    .section-title-row h2 {
+      margin:
+        0;
+
+      color:
+        var(--leo-white);
+
+      font-size:
+        1.45rem;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        0.02em;
+    }
+
+    .section-title-row a {
+      color:
+        var(--leo-gold);
+
+      font-size:
+        0.92rem;
+
+      font-weight:
+        700;
+    }
+
+    /* =========================================================
+       BENEFITS
+    ========================================================= */
+
+    .benefits-panel {
+      border-color:
+        rgba(247, 217, 139, 0.32);
+
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(247, 217, 139, 0.18),
+          transparent 36%
+        ),
+        linear-gradient(
+          180deg,
+          rgba(23, 18, 8, 0.96),
+          rgba(3, 3, 3, 0.95)
+        );
+    }
+
+    .benefits-grid {
+      display:
+        grid;
+
+      grid-template-columns:
+        auto
+        1fr
+        auto;
+
+      gap:
+        18px;
+
+      align-items:
+        center;
+    }
+
+    .benefits-icon {
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      width:
+        66px;
+
+      height:
+        66px;
+
+      border-radius:
+        20px;
+
+      border:
+        1px solid rgba(247, 217, 139, 0.34);
+
+      color:
+        var(--leo-gold-2);
+
+      background:
+        rgba(247, 217, 139, 0.09);
+
+      font-size:
+        2rem;
+    }
+
+    .benefits-panel h3 {
+      margin:
+        0
+        0
+        6px;
+
+      color:
+        var(--leo-gold-2);
+
+      font-size:
+        1.35rem;
+    }
+
+    .benefits-panel p {
+      margin:
+        0;
+
+      color:
+        var(--leo-muted);
+
+      line-height:
+        1.55;
+    }
+
+    .benefits-actions {
+      display:
+        grid;
+
+      gap:
+        8px;
+
+      min-width:
+        180px;
+    }
+
+    .benefits-status {
+      margin-top:
+        12px;
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.92rem;
+
+      line-height:
+        1.55;
+    }
+
+    .benefits-status.success {
+      color:
+        #bfffe5;
+    }
+
+    .benefits-status.error {
+      color:
+        #ffd2d8;
+    }
+
+    /* =========================================================
+       BUTTONS
+    ========================================================= */
+
+    .btn {
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      min-height:
+        46px;
+
+      padding:
+        0.8rem
+        1.05rem;
+
+      border:
+        0;
+
+      border-radius:
+        999px;
+
+      font-weight:
+        900;
+    }
+
+    .btn-primary {
+      background:
+        linear-gradient(
+          135deg,
+          #f7d98b,
+          #b87912
+        );
+
+      color:
+        #050505;
+    }
+
+    .btn-secondary {
+      border:
+        1px solid rgba(231, 182, 79, 0.26);
+
+      background:
+        rgba(255, 255, 255, 0.04);
+
+      color:
+        var(--leo-white);
+    }
+
+    /* =========================================================
+       TABLES
+    ========================================================= */
+
+    .table-wrap {
+      overflow:
+        hidden;
+
+      border-radius:
+        16px;
+
+      border:
+        1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .table-row {
+      display:
+        grid;
+
+      grid-template-columns:
+        70px
+        minmax(0, 1fr)
+        140px
+        110px;
+
+      gap:
+        12px;
+
+      align-items:
+        center;
+
+      min-height:
+        54px;
+
+      padding:
+        0
+        16px;
+
+      border-bottom:
+        1px solid rgba(255, 255, 255, 0.08);
+
+      color:
+        var(--leo-white);
+    }
+
+    .table-row:last-child {
+      border-bottom:
+        0;
+    }
+
+    .table-row.header {
+      min-height:
+        46px;
+
+      color:
+        rgba(248, 243, 231, 0.6);
+
+      font-size:
+        0.76rem;
+
+      letter-spacing:
+        0.06em;
+
+      text-transform:
+        uppercase;
+
+      background:
+        rgba(255, 255, 255, 0.04);
+    }
+
+    .rank-medal {
+      display:
+        inline-grid;
+
+      place-items:
+        center;
+
+      width:
+        34px;
+
+      height:
+        34px;
+
+      border-radius:
+        50%;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f7d98b,
+          #b87912
+        );
+
+      color:
+        #080808;
+
+      font-weight:
+        900;
+    }
+
+    .member-cell {
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        10px;
+
+      min-width:
+        0;
+    }
+
+    .avatar {
+      width:
+        34px;
+
+      height:
+        34px;
+
+      border-radius:
+        50%;
+
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      flex:
+        0 0 auto;
+
+      background:
+        rgba(231, 182, 79, 0.16);
+
+      border:
+        1px solid rgba(231, 182, 79, 0.22);
+
+      color:
+        var(--leo-gold-2);
+
+      font-weight:
+        900;
+    }
+
+    .member-name {
+      min-width:
+        0;
+
+      overflow:
+        hidden;
+
+      white-space:
+        nowrap;
+
+      text-overflow:
+        ellipsis;
+    }
+
+    .member-email {
+      display:
+        block;
+
+      margin-top:
+        0.1rem;
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.78rem;
+
+      overflow:
+        hidden;
+
+      white-space:
+        nowrap;
+
+      text-overflow:
+        ellipsis;
+    }
+
+    .green-money {
+      color:
+        var(--leo-green);
+
+      font-weight:
+        900;
+    }
+
+    .blue-money {
+      color:
+        var(--leo-blue);
+
+      font-weight:
+        900;
+    }
+
+    .status-tag {
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      min-height:
+        28px;
+
+      padding:
+        0
+        12px;
+
+      border-radius:
+        999px;
+
+      font-size:
+        0.8rem;
+
+      font-weight:
+        800;
+    }
+
+    .status-tag.approved {
+      color:
+        #d9ffe2;
+
+      background:
+        rgba(72, 240, 107, 0.14);
+
+      border:
+        1px solid rgba(72, 240, 107, 0.25);
+    }
+
+    .status-tag.pending {
+      color:
+        #ffeaa6;
+
+      background:
+        rgba(255, 209, 102, 0.12);
+
+      border:
+        1px solid rgba(255, 209, 102, 0.24);
+    }
+
+    /* =========================================================
+       PROMO
+    ========================================================= */
+
+    .promo-card {
+      display:
+        grid;
+
+      grid-template-columns:
+        auto
+        1fr
+        auto;
+
+      gap:
+        18px;
+
+      align-items:
+        center;
+    }
+
+    .promo-shield {
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      width:
+        64px;
+
+      height:
+        64px;
+
+      border-radius:
+        18px;
+
+      border:
+        1px solid rgba(231, 182, 79, 0.32);
+
+      color:
+        var(--leo-gold-2);
+
+      background:
+        rgba(231, 182, 79, 0.08);
+
+      font-size:
+        2rem;
+    }
+
+    .promo-card h3 {
+      margin:
+        0
+        0
+        5px;
+
+      color:
+        var(--leo-gold-2);
+    }
+
+    .promo-card p {
+      margin:
+        0;
+
+      color:
+        var(--leo-muted);
+    }
+
+    /* =========================================================
+       STATUS
+    ========================================================= */
+
+    .status-box {
+      margin-top:
+        14px;
+
+      padding:
+        14px
+        16px;
+
+      border-radius:
+        16px;
+
+      border:
+        1px solid rgba(255, 255, 255, 0.08);
+
+      color:
+        var(--leo-muted);
+
+      background:
+        rgba(255, 255, 255, 0.04);
+    }
+
+    .status-box.success {
+      color:
+        #bfffe5;
+
+      border-color:
+        rgba(72, 240, 107, 0.24);
+
+      background:
+        rgba(72, 240, 107, 0.1);
+    }
+
+    .status-box.error {
+      color:
+        #ffd2d8;
+
+      border-color:
+        rgba(255, 118, 118, 0.24);
+
+      background:
+        rgba(255, 118, 118, 0.1);
+    }
+
+    .empty-box {
+      padding:
+        18px;
+
+      border-radius:
+        16px;
+
+      border:
+        1px dashed rgba(255, 255, 255, 0.16);
+
+      color:
+        var(--leo-muted);
+
+      text-align:
+        center;
+    }
+
+    /* =========================================================
+       MOBILE TOPBAR
+    ========================================================= */
+
+    .mobile-topbar {
+      display:
+        none;
+    }
+
+    /* =========================================================
+       RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 1180px) {
       .portal-shell {
-        min-height: 100vh;
-        display: grid;
-        grid-template-columns: var(--sidebar-width) 1fr;
-        background:
-          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-          radial-gradient(circle at 72% 24%, rgba(231, 182, 79, 0.07), transparent 28%);
-        background-size: 96px 96px, auto;
+        grid-template-columns:
+          1fr;
       }
 
       .sidebar {
-        position: sticky;
-        top: 0;
-        height: 100vh;
-        overflow: auto;
-        padding: 30px 22px;
-        border-right: 1px solid rgba(231, 182, 79, 0.18);
+        display:
+          none;
+      }
+
+      .mobile-topbar {
+        display:
+          flex;
+
+        position:
+          sticky;
+
+        top:
+          0;
+
+        z-index:
+          50;
+
+        align-items:
+          center;
+
+        justify-content:
+          space-between;
+
+        gap:
+          12px;
+
+        padding:
+          14px
+          18px;
+
+        border-bottom:
+          1px solid rgba(231, 182, 79, 0.18);
+
         background:
-          radial-gradient(circle at top, rgba(231, 182, 79, 0.12), transparent 30%),
-          rgba(0, 0, 0, 0.72);
-        backdrop-filter: blur(20px);
+          rgba(0, 0, 0, 0.82);
+
+        backdrop-filter:
+          blur(18px);
+
+        -webkit-backdrop-filter:
+          blur(18px);
       }
 
-      .brand-lockup {
-        text-align: center;
-        margin-bottom: 30px;
+      .mobile-topbar strong {
+        color:
+          var(--leo-gold-2);
       }
 
-      .lion-logo {
-        width: 128px;
-        height: 78px;
-        margin: 0 auto 8px;
-        display: grid;
-        place-items: center;
-        color: var(--leo-gold-2);
-        font-size: 2.8rem;
-        filter: drop-shadow(0 0 20px rgba(231, 182, 79, 0.3));
+      .top-grid,
+      .dashboard-grid {
+        grid-template-columns:
+          1fr;
       }
+    }
 
-      .brand-lockup h1 {
-        margin: 0;
-        font-family: "Playfair Display", serif;
-        font-size: 1.82rem;
-        line-height: 0.95;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .brand-lockup span {
-        display: block;
-        margin-top: 0.28rem;
-        color: var(--leo-gold);
-        font-size: 0.78rem;
-        font-weight: 800;
-        letter-spacing: 0.22em;
-        text-transform: uppercase;
-      }
-
-      .side-nav {
-        display: grid;
-        gap: 8px;
-      }
-
-      .side-link,
-      .logout-btn {
-        display: flex;
-        align-items: center;
-        gap: 13px;
-        min-height: 52px;
-        width: 100%;
-        padding: 0 16px;
-        border-radius: 12px;
-        border: 1px solid transparent;
-        background: transparent;
-        color: rgba(248, 243, 231, 0.82);
-        font-size: 0.98rem;
-        font-weight: 700;
-      }
-
-      .side-link:hover,
-      .logout-btn:hover,
-      .side-link.is-active {
-        color: #070707;
-        background: linear-gradient(135deg, #f7d98b, #b87912);
-        box-shadow: 0 16px 42px rgba(184, 121, 18, 0.24);
-      }
-
-      .side-icon {
-        width: 24px;
-        text-align: center;
-        font-size: 1.08rem;
-      }
-
-      .earn-card {
-        margin-top: 30px;
-        padding: 20px;
-        border-radius: 22px;
-        border: 1px solid rgba(231, 182, 79, 0.24);
-        background:
-          radial-gradient(circle at top right, rgba(231, 182, 79, 0.16), transparent 36%),
-          rgba(255, 255, 255, 0.035);
-      }
-
-      .earn-card h2 {
-        margin: 0 0 10px;
-        color: var(--leo-gold-2);
-        font-size: 1.35rem;
-        line-height: 1.05;
-        text-transform: uppercase;
-      }
-
-      .earn-card p {
-        margin: 0 0 18px;
-        color: var(--leo-muted);
-        line-height: 1.55;
-      }
-
-      .mini-allowance-card {
-        height: 96px;
-        border-radius: 16px;
-        background:
-          radial-gradient(circle at 82% 14%, rgba(247, 217, 139, 0.24), transparent 32%),
-          linear-gradient(145deg, #050505, #101010 46%, #000);
-        border: 1px solid rgba(231, 182, 79, 0.28);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--leo-gold-2);
-        font-family: "Playfair Display", serif;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
-      }
-
+    @media (max-width: 820px) {
       .main {
-        min-width: 0;
-        padding: 28px;
+        padding:
+          18px;
       }
 
-      .top-grid {
-        display: grid;
-        grid-template-columns: 1fr minmax(330px, 520px) minmax(230px, 300px);
-        gap: 20px;
-        align-items: stretch;
-        margin-bottom: 20px;
+      .stat-grid,
+      .tower-breakdown {
+        grid-template-columns:
+          repeat(
+            2,
+            1fr
+          );
       }
 
-      .welcome-block {
-        padding: 8px 0;
+      .table-row {
+        grid-template-columns:
+          52px
+          1fr;
+
+        padding:
+          12px;
       }
 
-      .welcome-block p {
-        margin: 0 0 4px;
-        color: var(--leo-white);
+      .table-row span:nth-child(3),
+      .table-row span:nth-child(4),
+      .table-row.header span:nth-child(3),
+      .table-row.header span:nth-child(4) {
+        grid-column:
+          2;
       }
 
-      .welcome-block h2 {
-        margin: 0;
-        color: var(--leo-gold);
-        font-size: clamp(1.85rem, 4vw, 2.6rem);
-        letter-spacing: -0.04em;
+      .promo-card,
+      .benefits-grid {
+        grid-template-columns:
+          1fr;
       }
 
-      .member-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 10px;
-        min-height: 34px;
-        padding: 0 13px;
-        border-radius: 999px;
-        border: 1px solid rgba(231, 182, 79, 0.36);
-        background: rgba(231, 182, 79, 0.12);
-        color: var(--leo-gold-2);
-        font-size: 0.82rem;
-        font-weight: 900;
+      .benefits-actions {
+        min-width:
+          0;
       }
 
-      .panel {
-        position: relative;
-        overflow: hidden;
-        border-radius: 22px;
-        border: 1px solid rgba(231, 182, 79, 0.24);
-        background:
-          radial-gradient(circle at 90% 10%, rgba(231, 182, 79, 0.14), transparent 34%),
-          linear-gradient(180deg, rgba(19, 19, 19, 0.92), rgba(4, 4, 4, 0.94));
-        box-shadow: var(--leo-shadow);
+      .referral-actions {
+        grid-template-columns:
+          repeat(
+            2,
+            1fr
+          );
       }
+    }
 
-      .panel-inner {
-        position: relative;
-        z-index: 1;
-        padding: 20px;
-      }
-
-      .panel-label {
-        display: block;
-        margin-bottom: 8px;
-        color: var(--leo-white);
-        font-size: 0.9rem;
-        font-weight: 600;
+    @media (max-width: 560px) {
+      .stat-grid,
+      .tower-breakdown {
+        grid-template-columns:
+          1fr;
       }
 
       .ref-link-row {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 10px;
-        align-items: center;
-      }
+        grid-template-columns:
+          1fr;
 
-      .ref-input {
-        width: 100%;
-        min-height: 42px;
-        border: 0;
-        outline: 0;
-        background: transparent;
-        color: var(--leo-white);
-        font-size: 0.96rem;
+        padding:
+          10px;
       }
 
       .copy-btn,
       .icon-btn {
-        display: grid;
-        place-items: center;
-        width: 46px;
-        height: 46px;
-        border-radius: 12px;
-        border: 0;
-        background: linear-gradient(135deg, #f7d98b, #b87912);
-        color: #050505;
-        font-size: 1.15rem;
-        font-weight: 900;
+        width:
+          100%;
       }
 
-      .balance-card .panel-inner {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .balance-card strong {
-        display: block;
-        color: var(--leo-gold);
-        font-size: clamp(1.9rem, 4vw, 2.65rem);
-        line-height: 1;
-      }
-
-      .dashboard-grid {
-        display: grid;
-        grid-template-columns: minmax(340px, 0.82fr) minmax(480px, 1.18fr);
-        gap: 20px;
-      }
-
-      .tower-card {
-        min-height: 720px;
-      }
-
-      .tower-title {
-        margin: 0;
-        color: var(--leo-white);
-        font-size: clamp(1.5rem, 3vw, 2rem);
-        line-height: 1;
-        text-transform: uppercase;
-        letter-spacing: 0.02em;
-      }
-
-      .tower-copy {
-        margin: 10px 0 0;
-        color: var(--leo-white);
-        line-height: 1.5;
-      }
-
-      .tower-copy strong {
-        color: var(--leo-gold-2);
-      }
-
-      .tower-breakdown {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-top: 18px;
-      }
-
-      .breakdown-box {
-        padding: 14px;
-        border-radius: 14px;
-        border: 1px solid rgba(231, 182, 79, 0.18);
-        background: rgba(255, 255, 255, 0.035);
-      }
-
-      .breakdown-box span {
-        display: block;
-        color: var(--leo-muted-2);
-        font-size: 0.72rem;
-        font-weight: 900;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      .breakdown-box strong {
-        display: block;
-        margin-top: 0.42rem;
-        font-size: 1.1rem;
-      }
-
-      .tower-visual {
-        margin-top: 18px;
-        padding: 10px 0 0;
-        display: grid;
-        justify-items: center;
-      }
-
-      .tower-lions {
-        width: min(245px, 70%);
-        min-height: 105px;
-        display: grid;
-        place-items: center;
-        color: var(--leo-gold-2);
-        font-size: 4.3rem;
-        filter: drop-shadow(0 0 22px rgba(231, 182, 79, 0.34));
-      }
-
-      .tower-lions img {
-        width: 100%;
-        height: auto;
-        display: block;
-      }
-
-      .tower-lions span {
-        display: none;
-      }
-
-      .tower-spire {
-        width: 54%;
-        height: 34px;
-        clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-        background: linear-gradient(135deg, #f7d98b, #b87912);
-      }
-
-      .tower-floors {
-        width: min(420px, 100%);
-        display: grid;
-        gap: 7px;
+      .referral-actions {
+        grid-template-columns:
+          1fr
+          1fr;
       }
 
       .tower-floor {
-        display: grid;
-        grid-template-columns: 38px 1fr auto;
-        gap: 12px;
-        align-items: center;
-        min-height: 46px;
-        padding: 8px 13px;
-        border-radius: 13px;
-        border: 1px solid rgba(231, 182, 79, 0.18);
-        background: linear-gradient(180deg, #171717, #090909);
-        color: rgba(248, 243, 231, 0.46);
-      }
-
-      .tower-floor.direct,
-      .tower-floor.earned {
-        color: #080808;
-        background: linear-gradient(180deg, #f7d98b, #c88716);
-        border-color: rgba(255, 255, 255, 0.22);
-        box-shadow:
-          0 0 24px rgba(231, 182, 79, 0.2),
-          inset 0 1px 0 rgba(255, 255, 255, 0.5);
-      }
-
-      .tower-floor.team {
-        color: #05121c;
-        background: linear-gradient(180deg, #9fdcff, #5cb2f2);
-        border-color: rgba(255, 255, 255, 0.22);
-      }
-
-      .tower-floor.pending {
-        color: rgba(248, 243, 231, 0.72);
-        background: linear-gradient(180deg, #575757, #191919);
-        border-color: rgba(255, 255, 255, 0.14);
-      }
-
-      .tower-floor.locked {
-        color: rgba(248, 243, 231, 0.36);
-      }
-
-      .floor-number {
-        font-weight: 900;
-        color: inherit;
-      }
-
-      .floor-name {
-        min-width: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+        grid-template-columns:
+          32px
+          1fr;
       }
 
       .floor-money {
-        color: var(--leo-green);
-        font-weight: 900;
+        grid-column:
+          2;
       }
-            .tower-floor.direct .floor-money,
-      .tower-floor.earned .floor-money,
-      .tower-floor.team .floor-money {
-        color: #071007;
-      }
-
-      .tower-floor.pending .floor-money,
-      .tower-floor.locked .floor-money {
-        color: inherit;
-      }
-
-      .tower-base {
-        width: min(460px, 98%);
-        height: 28px;
-        margin-top: 7px;
-        border-radius: 999px;
-        background: linear-gradient(135deg, #f7d98b, #8b5b0b);
-        box-shadow: 0 0 30px rgba(231, 182, 79, 0.25);
-      }
-
-      .legend {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 18px;
-        margin-top: 18px;
-        padding-top: 18px;
-        border-top: 1px solid rgba(231, 182, 79, 0.16);
-        color: var(--leo-muted);
-        font-size: 0.88rem;
-      }
-
-      .legend span {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .dot {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-      }
-
-      .dot.gold {
-        background: var(--leo-gold);
-      }
-
-      .dot.blue {
-        background: var(--leo-blue);
-      }
-
-      .dot.dark {
-        background: #333;
-      }
-
-      .right-stack {
-        display: grid;
-        gap: 20px;
-      }
-
-      .stat-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-      }
-
-      .stat-card {
-        min-height: 142px;
-      }
-
-      .stat-card .panel-inner {
-        height: 100%;
-        display: grid;
-        place-items: center;
-        text-align: center;
-      }
-
-      .stat-icon {
-        color: var(--leo-gold-2);
-        font-size: 1.8rem;
-        margin-bottom: 10px;
-      }
-
-      .stat-number {
-        color: var(--leo-gold);
-        font-size: 2rem;
-        font-weight: 900;
-        line-height: 1;
-      }
-
-      .stat-label {
-        margin-top: 8px;
-        color: var(--leo-white);
-      }
-
-      .section-title-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 14px;
-      }
-
-      .section-title-row h2 {
-        margin: 0;
-        color: var(--leo-white);
-        font-size: 1.45rem;
-        text-transform: uppercase;
-        letter-spacing: 0.02em;
-      }
-
-      .section-title-row a {
-        color: var(--leo-gold);
-        font-size: 0.92rem;
-        font-weight: 700;
-      }
-
-      .benefits-panel {
-        border-color: rgba(247, 217, 139, 0.32);
-        background:
-          radial-gradient(circle at top right, rgba(247, 217, 139, 0.18), transparent 36%),
-          linear-gradient(180deg, rgba(23, 18, 8, 0.96), rgba(3, 3, 3, 0.95));
-      }
-
-      .benefits-grid {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: 18px;
-        align-items: center;
-      }
-
-      .benefits-icon {
-        display: grid;
-        place-items: center;
-        width: 66px;
-        height: 66px;
-        border-radius: 20px;
-        border: 1px solid rgba(247, 217, 139, 0.34);
-        color: var(--leo-gold-2);
-        background: rgba(247, 217, 139, 0.09);
-        font-size: 2rem;
-      }
-
-      .benefits-panel h3 {
-        margin: 0 0 6px;
-        color: var(--leo-gold-2);
-        font-size: 1.35rem;
-      }
-
-      .benefits-panel p {
-        margin: 0;
-        color: var(--leo-muted);
-        line-height: 1.55;
-      }
-
-      .benefits-actions {
-        display: grid;
-        gap: 8px;
-        min-width: 180px;
-      }
-
-      .benefits-status {
-        margin-top: 12px;
-        color: var(--leo-muted);
-        font-size: 0.92rem;
-        line-height: 1.55;
-      }
-
-      .benefits-status.success {
-        color: #bfffe5;
-      }
-
-      .benefits-status.error {
-        color: #ffd2d8;
-      }
-
-      .table-wrap {
-        overflow: hidden;
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-      }
-
-      .table-row {
-        display: grid;
-        grid-template-columns: 70px minmax(0, 1fr) 140px 110px;
-        gap: 12px;
-        align-items: center;
-        min-height: 54px;
-        padding: 0 16px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        color: var(--leo-white);
-      }
-
-      .table-row:last-child {
-        border-bottom: 0;
-      }
-
-      .table-row.header {
-        min-height: 46px;
-        color: rgba(248, 243, 231, 0.6);
-        font-size: 0.76rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        background: rgba(255, 255, 255, 0.04);
-      }
-
-      .rank-medal {
-        display: inline-grid;
-        place-items: center;
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #f7d98b, #b87912);
-        color: #080808;
-        font-weight: 900;
-      }
-
-      .member-cell {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-      }
-
-      .avatar {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        flex: 0 0 auto;
-        background: rgba(231, 182, 79, 0.16);
-        border: 1px solid rgba(231, 182, 79, 0.22);
-        color: var(--leo-gold-2);
-        font-weight: 900;
-      }
-
-      .member-name {
-        min-width: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-
-      .member-email {
-        display: block;
-        margin-top: 0.1rem;
-        color: var(--leo-muted-2);
-        font-size: 0.78rem;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-
-      .green-money {
-        color: var(--leo-green);
-        font-weight: 900;
-      }
-
-      .blue-money {
-        color: var(--leo-blue);
-        font-weight: 900;
-      }
-
-      .status-tag {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 28px;
-        padding: 0 12px;
-        border-radius: 999px;
-        font-size: 0.8rem;
-        font-weight: 800;
-      }
-
-      .status-tag.approved {
-        color: #d9ffe2;
-        background: rgba(72, 240, 107, 0.14);
-        border: 1px solid rgba(72, 240, 107, 0.25);
-      }
-
-      .status-tag.pending {
-        color: #ffeaa6;
-        background: rgba(255, 209, 102, 0.12);
-        border: 1px solid rgba(255, 209, 102, 0.24);
-      }
-
-      .promo-card {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: 18px;
-        align-items: center;
-      }
-
-      .promo-shield {
-        display: grid;
-        place-items: center;
-        width: 64px;
-        height: 64px;
-        border-radius: 18px;
-        border: 1px solid rgba(231, 182, 79, 0.32);
-        color: var(--leo-gold-2);
-        background: rgba(231, 182, 79, 0.08);
-        font-size: 2rem;
-      }
-
-      .promo-card h3 {
-        margin: 0 0 5px;
-        color: var(--leo-gold-2);
-      }
-
-      .promo-card p {
-        margin: 0;
-        color: var(--leo-muted);
-      }
-
-      .status-box {
-        margin-top: 14px;
-        padding: 14px 16px;
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        color: var(--leo-muted);
-        background: rgba(255, 255, 255, 0.04);
-      }
-
-      .status-box.success {
-        color: #bfffe5;
-        border-color: rgba(72, 240, 107, 0.24);
-        background: rgba(72, 240, 107, 0.1);
-      }
-
-      .status-box.error {
-        color: #ffd2d8;
-        border-color: rgba(255, 118, 118, 0.24);
-        background: rgba(255, 118, 118, 0.1);
-      }
-
-      .empty-box {
-        padding: 18px;
-        border-radius: 16px;
-        border: 1px dashed rgba(255, 255, 255, 0.16);
-        color: var(--leo-muted);
-        text-align: center;
-      }
-
-      .mobile-topbar {
-        display: none;
-      }
-
-      @media (max-width: 1180px) {
-        .portal-shell {
-          grid-template-columns: 1fr;
-        }
-
-        .sidebar {
-          display: none;
-        }
-
-        .mobile-topbar {
-          display: flex;
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          padding: 14px 18px;
-          border-bottom: 1px solid rgba(231, 182, 79, 0.18);
-          background: rgba(0, 0, 0, 0.82);
-          backdrop-filter: blur(18px);
-        }
-
-        .mobile-topbar strong {
-          color: var(--leo-gold-2);
-        }
-
-        .top-grid,
-        .dashboard-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (max-width: 820px) {
-        .main {
-          padding: 18px;
-        }
-
-        .stat-grid,
-        .tower-breakdown {
-          grid-template-columns: repeat(2, 1fr);
-        }
-
-        .table-row {
-          grid-template-columns: 52px 1fr;
-          padding: 12px;
-        }
-
-        .table-row span:nth-child(3),
-        .table-row span:nth-child(4),
-        .table-row.header span:nth-child(3),
-        .table-row.header span:nth-child(4) {
-          grid-column: 2;
-        }
-
-        .promo-card,
-        .benefits-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .benefits-actions {
-          min-width: 0;
-        }
-      }
-
-      @media (max-width: 560px) {
-        .stat-grid,
-        .tower-breakdown {
-          grid-template-columns: 1fr;
-        }
-
-        .ref-link-row {
-          grid-template-columns: 1fr;
-        }
-
-        .copy-btn,
-        .icon-btn {
-          width: 100%;
-        }
-
-        .tower-floor {
-          grid-template-columns: 32px 1fr;
-        }
-
-        .floor-money {
-          grid-column: 2;
-        }
-      }
-    </style>
-  </head>
-
-  <body data-require-auth data-cardleo-auth-guard="auto">
-    <div class="mobile-topbar">
-      <strong>Card Leo Rewards</strong>
-      <a href="/portal/index.html" class="member-badge">Portal</a>
-    </div>
-
-    <div class="portal-shell">
-      <aside class="sidebar">
-        <div class="brand-lockup">
-          <div class="lion-logo" aria-hidden="true">♛</div>
-          <h1>Card Leo</h1>
-          <span>Rewards</span>
+    }
+  </style>
+</head>
+
+<body
+  data-require-auth
+  data-cardleo-auth-guard="auto"
+>
+
+  <!-- =======================================================
+       MOBILE HEADER
+  ======================================================== -->
+
+  <div class="mobile-topbar">
+    <strong>
+      Card Leo Rewards
+    </strong>
+
+    <a
+      href="/portal/index.html"
+      class="member-badge"
+    >
+      Portal
+    </a>
+  </div>
+
+  <div class="portal-shell">
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+      <div class="brand-lockup">
+
+        <div
+          class="lion-logo"
+          aria-hidden="true"
+        >
+          ♛
         </div>
 
-        <nav class="side-nav" aria-label="Member portal navigation">
-          <a class="side-link is-active" href="/portal/index.html">
-            <span class="side-icon">▣</span>
-            <span>Dashboard</span>
-          </a>
+        <h1>
+          Card Leo
+        </h1>
 
-          <a class="side-link" href="/portal/leaderboard.html">
-            <span class="side-icon">♜</span>
-            <span>Referral Tower</span>
-          </a>
+        <span>
+          Rewards
+        </span>
 
-          <a class="side-link" href="/portal/profile.html">
-            <span class="side-icon">♙</span>
-            <span>My Account</span>
-          </a>
+      </div>
 
-          <a class="side-link" href="/portal/rewards.html">
-            <span class="side-icon">🎁</span>
-            <span>Rewards</span>
-          </a>
+      <nav
+        class="side-nav"
+        aria-label="Member portal navigation"
+      >
 
-          <a class="side-link" href="/portal/benefits.html">
-            <span class="side-icon">♔</span>
-            <span>Benefits</span>
-          </a>
+        <a
+          class="side-link is-active"
+          href="/portal/index.html"
+        >
+          <span class="side-icon">
+            ▣
+          </span>
 
-          <a class="side-link" href="/portal/support.html">
-            <span class="side-icon">☏</span>
-            <span>Support</span>
-          </a>
+          <span>
+            Dashboard
+          </span>
+        </a>
 
-          <a class="side-link" href="/portal/settings.html">
-            <span class="side-icon">⚙</span>
-            <span>Settings</span>
-          </a>
+        <a
+          class="side-link"
+          href="/portal/leaderboard.html"
+        >
+          <span class="side-icon">
+            ♜
+          </span>
 
-          <button class="logout-btn" type="button" id="logoutButton" data-logout>
-            <span class="side-icon">↪</span>
-            <span>Logout</span>
-          </button>
-        </nav>
+          <span>
+            Referral Tower
+          </span>
+        </a>
 
-        <div class="earn-card">
-          <h2>Allowance Card</h2>
+        <a
+          class="side-link"
+          href="/portal/profile.html"
+        >
+          <span class="side-icon">
+            ♙
+          </span>
+
+          <span>
+            My Account
+          </span>
+        </a>
+
+        <a
+          class="side-link"
+          href="/portal/rewards.html"
+        >
+          <span class="side-icon">
+            🎁
+          </span>
+
+          <span>
+            Rewards
+          </span>
+        </a>
+
+        <a
+          class="side-link"
+          href="/portal/benefits.html"
+        >
+          <span class="side-icon">
+            ♔
+          </span>
+
+          <span>
+            Benefits
+          </span>
+        </a>
+
+        <a
+          class="side-link"
+          href="/portal/support.html"
+        >
+          <span class="side-icon">
+            ☏
+          </span>
+
+          <span>
+            Support
+          </span>
+        </a>
+
+        <a
+          class="side-link"
+          href="/portal/settings.html"
+        >
+          <span class="side-icon">
+            ⚙
+          </span>
+
+          <span>
+            Settings
+          </span>
+        </a>
+
+        <button
+          class="logout-btn"
+          type="button"
+          id="logoutButton"
+          data-logout
+        >
+          <span class="side-icon">
+            ↪
+          </span>
+
+          <span>
+            Logout
+          </span>
+        </button>
+
+      </nav>
+
+      <div class="earn-card">
+
+        <h2>
+          Allowance Card
+        </h2>
+
+        <p>
+          Direct referrals and qualifying team activity
+          build your Card Leo Rewards allowance progress.
+        </p>
+
+        <div class="mini-allowance-card">
+          Allowance Card
+        </div>
+
+      </div>
+
+    </aside>
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="main">
+
+      <!-- ===================================================
+           TOP ROW
+      ==================================================== -->
+
+      <section class="top-grid">
+
+        <div class="welcome-block">
+
           <p>
-            Member A referred Member B = $7. Member B referred Member C = $1 for
-            Member A.
+            Welcome back,
           </p>
-          <div class="mini-allowance-card">Allowance Card</div>
+
+          <h2 id="memberName">
+            Card Leo Member
+          </h2>
+
+          <div
+            class="member-badge"
+            id="memberTierBadge"
+          >
+            Allowance Card
+          </div>
+
         </div>
-      </aside>
 
-      <main class="main">
-        <section class="top-grid">
-          <div class="welcome-block">
-            <p>Welcome back,</p>
-            <h2 id="memberName">Card Leo Member</h2>
-            <div class="member-badge" id="memberTierBadge">Allowance Card</div>
-          </div>
+        <!-- ===============================================
+             PERSONAL REFERRAL LINK
+        ================================================ -->
 
-          <div class="panel">
-            <div class="panel-inner">
-              <span class="panel-label">Your Referral Link</span>
-              <div class="ref-link-row">
-                <input
-                  class="ref-input"
-                  id="referralLink"
-                  value="https://www.cardleorewards.com/signup.html?ref=member"
-                  readonly
-                  aria-label="Your referral link"
-                />
-                <button class="copy-btn" type="button" id="copyReferralButton">
-                  ⧉
-                </button>
-              </div>
-            </div>
-          </div>
+        <div class="panel referral-panel">
 
-          <div class="panel balance-card">
-            <div class="panel-inner">
+          <div class="panel-inner">
+
+            <div class="referral-heading-row">
+
               <div>
-                <span class="panel-label">Current Balance</span>
-                <strong id="currentBalance">$0.00</strong>
+
+                <h3>
+                  Your Personal Referral Link
+                </h3>
+
+                <p>
+                  Copy or send this exact link so new recruits
+                  are connected to your Card Leo Rewards account.
+                </p>
+
               </div>
-              <button class="icon-btn" type="button" id="billingPortalButton">
-                ▰
+
+            </div>
+
+            <div class="ref-link-row">
+
+              <input
+                class="ref-input"
+                id="referralLink"
+                value="https://www.cardleorewards.com/signup.html?ref=member"
+                readonly
+                aria-label="Your personal Card Leo Rewards referral link"
+              />
+
+              <button
+                class="copy-btn"
+                type="button"
+                id="copyReferralButton"
+                aria-label="Copy referral link"
+                title="Copy referral link"
+              >
+                ⧉
               </button>
+
             </div>
+
+            <!-- =========================================
+                 QUICK SHARE OPTIONS
+            ========================================== -->
+
+            <div
+              class="referral-actions"
+              aria-label="Referral sharing options"
+            >
+
+              <button
+                class="referral-action-btn primary"
+                type="button"
+                id="shareReferralButton"
+              >
+                Share
+              </button>
+
+              <button
+                class="referral-action-btn"
+                type="button"
+                id="textReferralButton"
+              >
+                Text
+              </button>
+
+              <button
+                class="referral-action-btn"
+                type="button"
+                id="emailReferralButton"
+              >
+                Email
+              </button>
+
+              <button
+                class="referral-action-btn"
+                type="button"
+                id="copyReferralTextButton"
+              >
+                Copy Message
+              </button>
+
+            </div>
+
+            <p class="referral-helper">
+              <strong>
+                How to use it:
+              </strong>
+              send this exact link to your recruit. They should
+              open the link, create their account, and continue
+              through secure membership payment. You can then
+              track them below in Recent Referrals and your
+              Referral Tower.
+            </p>
+
+            <div
+              class="referral-share-status"
+              id="referralShareStatus"
+              aria-live="polite"
+            ></div>
+
           </div>
-        </section>
-                <section class="dashboard-grid">
-          <article class="panel tower-card" id="referralTower">
+
+        </div>
+
+        <!-- ===============================================
+             CURRENT BALANCE
+        ================================================ -->
+
+        <div class="panel balance-card">
+
+          <div class="panel-inner">
+
+            <div>
+
+              <span class="panel-label">
+                Current Balance
+              </span>
+
+              <strong id="currentBalance">
+                $0.00
+              </strong>
+
+            </div>
+
+            <button
+              class="icon-btn"
+              type="button"
+              id="billingPortalButton"
+              aria-label="Open billing portal"
+              title="Billing"
+            >
+              ▰
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ===================================================
+           MAIN DASHBOARD
+      ==================================================== -->
+
+      <section class="dashboard-grid">
+
+        <!-- ===============================================
+             REFERRAL TOWER
+        ================================================ -->
+
+        <article
+          class="panel tower-card"
+          id="referralTower"
+        >
+
+          <div class="panel-inner">
+
+            <h2 class="tower-title">
+              Referral Tower
+            </h2>
+
+            <p class="tower-copy">
+              <strong>
+                Direct referral = $7.00
+              </strong>
+              <br />
+
+              <strong>
+                Team referral example = $1.00
+              </strong>
+            </p>
+
+            <div class="tower-breakdown">
+
+              <div class="breakdown-box">
+
+                <span>
+                  Direct
+                </span>
+
+                <strong
+                  class="green-money"
+                  id="directEarnings"
+                >
+                  $0.00
+                </strong>
+
+              </div>
+
+              <div class="breakdown-box">
+
+                <span>
+                  Team
+                </span>
+
+                <strong
+                  class="blue-money"
+                  id="teamEarnings"
+                >
+                  $0.00
+                </strong>
+
+              </div>
+
+              <div class="breakdown-box">
+
+                <span>
+                  Growth Pool
+                </span>
+
+                <strong id="growthPoolCredit">
+                  $0.00
+                </strong>
+
+              </div>
+
+              <div class="breakdown-box">
+
+                <span>
+                  Total
+                </span>
+
+                <strong
+                  class="green-money"
+                  id="leaderboardTotal"
+                >
+                  $0.00
+                </strong>
+
+              </div>
+
+            </div>
+
+            <div class="tower-visual">
+
+              <div class="tower-lions">
+
+                <img
+                  src="/assets/img/white-lions-logo.png"
+                  alt="Card Leo Rewards White Lions Logo"
+                  onerror="
+                    this.style.display='none';
+                    this.nextElementSibling.style.display='block';
+                  "
+                />
+
+                <span aria-hidden="true">
+                  ♛
+                </span>
+
+              </div>
+
+              <div class="tower-spire"></div>
+
+              <div
+                class="tower-floors"
+                id="towerFloors"
+              >
+
+                <div class="empty-box">
+                  Loading referral tower...
+                </div>
+
+              </div>
+
+              <div class="tower-base"></div>
+
+              <div class="legend">
+
+                <span>
+                  <i class="dot gold"></i>
+                  Direct = $7
+                </span>
+
+                <span>
+                  <i class="dot blue"></i>
+                  Team = $1
+                </span>
+
+                <span>
+                  <i class="dot dark"></i>
+                  Pending / Locked
+                </span>
+
+              </div>
+
+              <div
+                class="status-box"
+                id="towerStatus"
+                hidden
+              ></div>
+
+            </div>
+
+          </div>
+
+        </article>
+
+        <!-- ===============================================
+             RIGHT SIDE
+        ================================================ -->
+
+        <div class="right-stack">
+
+          <!-- =============================================
+               STATS
+          ============================================== -->
+
+          <section class="stat-grid">
+
+            <article class="panel stat-card">
+
+              <div class="panel-inner">
+
+                <div class="stat-icon">
+                  ♚
+                </div>
+
+                <div
+                  class="stat-number"
+                  id="totalReferrals"
+                >
+                  0
+                </div>
+
+                <div class="stat-label">
+                  Total Referrals
+                </div>
+
+              </div>
+
+            </article>
+
+            <article class="panel stat-card">
+
+              <div class="panel-inner">
+
+                <div class="stat-icon">
+                  ✓
+                </div>
+
+                <div
+                  class="stat-number"
+                  id="approvedReferrals"
+                >
+                  0
+                </div>
+
+                <div class="stat-label">
+                  Approved
+                </div>
+
+              </div>
+
+            </article>
+
+            <article class="panel stat-card">
+
+              <div class="panel-inner">
+
+                <div class="stat-icon">
+                  ↳
+                </div>
+
+                <div
+                  class="stat-number"
+                  id="teamReferrals"
+                >
+                  0
+                </div>
+
+                <div class="stat-label">
+                  Team
+                </div>
+
+              </div>
+
+            </article>
+
+            <article class="panel stat-card">
+
+              <div class="panel-inner">
+
+                <div class="stat-icon">
+                  $
+                </div>
+
+                <div
+                  class="stat-number"
+                  id="totalEarned"
+                >
+                  $0
+                </div>
+
+                <div class="stat-label">
+                  Total Earned
+                </div>
+
+              </div>
+
+            </article>
+
+          </section>
+
+          <!-- =============================================
+               BENEFITS
+          ============================================== -->
+
+          <section
+            class="panel benefits-panel"
+            id="benefitsPanel"
+          >
+
+            <div class="panel-inner benefits-grid">
+
+              <div class="benefits-icon">
+                ♔
+              </div>
+
+              <div>
+
+                <h3 id="benefitsTitle">
+                  Card Leo Lifestyle Benefits
+                </h3>
+
+                <p id="benefitsSubtitle">
+                  Restaurants, shopping, travel,
+                  entertainment, fitness, and local savings
+                  are connected through Card Leo Rewards.
+                </p>
+
+                <div
+                  class="benefits-status"
+                  id="benefitsStatus"
+                  aria-live="polite"
+                >
+                  Checking your Access Perks status...
+                </div>
+
+              </div>
+
+              <div class="benefits-actions">
+
+                <a
+                  class="btn btn-primary"
+                  id="openBenefitsButton"
+                  href="/portal/benefits.html"
+                >
+                  Open My Benefits
+                </a>
+
+                <a
+                  class="btn btn-secondary"
+                  href="/portal/benefits.html"
+                >
+                  View Details
+                </a>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          <!-- =============================================
+               LEADERBOARD
+          ============================================== -->
+
+          <section class="panel">
+
             <div class="panel-inner">
-              <h2 class="tower-title">Referral Tower</h2>
-              <p class="tower-copy">
-                <strong>Member A referred Member B +$7.00</strong><br />
-                <strong>Member B referred Member C +$1.00</strong>
-              </p>
 
-              <div class="tower-breakdown">
-                <div class="breakdown-box">
-                  <span>Direct</span>
-                  <strong class="green-money" id="directEarnings">$0.00</strong>
-                </div>
+              <div class="section-title-row">
 
-                <div class="breakdown-box">
-                  <span>Team</span>
-                  <strong class="blue-money" id="teamEarnings">$0.00</strong>
-                </div>
+                <h2>
+                  Top Earners Leaderboard
+                </h2>
 
-                <div class="breakdown-box">
-                  <span>Growth Pool</span>
-                  <strong id="growthPoolCredit">$0.00</strong>
-                </div>
+                <a href="/portal/leaderboard.html">
+                  View All
+                </a>
 
-                <div class="breakdown-box">
-                  <span>Total</span>
-                  <strong class="green-money" id="leaderboardTotal">$0.00</strong>
-                </div>
               </div>
 
-              <div class="tower-visual">
-                <div class="tower-lions">
-                  <img
-                    src="/assets/img/white-lions-logo.png"
-                    alt="Card Leo Rewards White Lions Logo"
-                    onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                  />
-                  <span aria-hidden="true">♛</span>
+              <div
+                class="table-wrap"
+                id="leaderboardTable"
+              >
+
+                <div class="table-row header">
+
+                  <span>
+                    Rank
+                  </span>
+
+                  <span>
+                    Member
+                  </span>
+
+                  <span>
+                    Approved
+                  </span>
+
+                  <span>
+                    Earnings
+                  </span>
+
                 </div>
 
-                <div class="tower-spire"></div>
-
-                <div class="tower-floors" id="towerFloors">
-                  <div class="empty-box">Loading referral tower...</div>
+                <div class="empty-box">
+                  Loading leaderboard...
                 </div>
 
-                <div class="tower-base"></div>
-
-                <div class="legend">
-                  <span><i class="dot gold"></i> Direct = $7</span>
-                  <span><i class="dot blue"></i> Team = $1</span>
-                  <span><i class="dot dark"></i> Pending / Locked</span>
-                </div>
-
-                <div class="status-box" id="towerStatus" hidden></div>
               </div>
+
             </div>
-          </article>
 
-          <div class="right-stack">
-            <section class="stat-grid">
-              <article class="panel stat-card">
-                <div class="panel-inner">
-                  <div class="stat-icon">♚</div>
-                  <div class="stat-number" id="totalReferrals">0</div>
-                  <div class="stat-label">Total Referrals</div>
-                </div>
-              </article>
+          </section>
 
-              <article class="panel stat-card">
-                <div class="panel-inner">
-                  <div class="stat-icon">✓</div>
-                  <div class="stat-number" id="approvedReferrals">0</div>
-                  <div class="stat-label">Approved</div>
-                </div>
-              </article>
+          <!-- =============================================
+               RECENT REFERRALS
+          ============================================== -->
 
-              <article class="panel stat-card">
-                <div class="panel-inner">
-                  <div class="stat-icon">↳</div>
-                  <div class="stat-number" id="teamReferrals">0</div>
-                  <div class="stat-label">Team</div>
-                </div>
-              </article>
+          <section class="panel">
 
-              <article class="panel stat-card">
-                <div class="panel-inner">
-                  <div class="stat-icon">$</div>
-                  <div class="stat-number" id="totalEarned">$0</div>
-                  <div class="stat-label">Total Earned</div>
-                </div>
-              </article>
-            </section>
+            <div class="panel-inner">
 
-            <section class="panel benefits-panel" id="benefitsPanel">
-              <div class="panel-inner benefits-grid">
-                <div class="benefits-icon">♔</div>
+              <div class="section-title-row">
 
-                <div>
-                  <h3 id="benefitsTitle">Card Leo Lifestyle Benefits</h3>
-                  <p id="benefitsSubtitle">
-                    Restaurants, shopping, travel, entertainment, fitness, and
-                    local savings are connected through Card Leo Rewards.
-                  </p>
+                <h2>
+                  Recent Referrals
+                </h2>
 
-                  <div
-                    class="benefits-status"
-                    id="benefitsStatus"
-                    aria-live="polite"
-                  >
-                    Checking your Access Perks status...
-                  </div>
-                </div>
+                <a href="/portal/leaderboard.html">
+                  View All
+                </a>
 
-                <div class="benefits-actions">
-                  <a
-                    class="btn btn-primary"
-                    id="openBenefitsButton"
-                    href="/portal/benefits.html"
-                  >
-                    Open My Benefits
-                  </a>
-
-                  <a class="btn btn-secondary" href="/portal/benefits.html">
-                    View Details
-                  </a>
-                </div>
               </div>
-            </section>
 
-            <section class="panel">
-              <div class="panel-inner">
-                <div class="section-title-row">
-                  <h2>Top Earners Leaderboard</h2>
-                  <a href="/portal/leaderboard.html">View All</a>
+              <div
+                class="table-wrap"
+                id="recentReferralsTable"
+              >
+
+                <div class="table-row header">
+
+                  <span>
+                    Type
+                  </span>
+
+                  <span>
+                    Member
+                  </span>
+
+                  <span>
+                    Status
+                  </span>
+
+                  <span>
+                    Amount
+                  </span>
+
                 </div>
 
-                <div class="table-wrap" id="leaderboardTable">
-                  <div class="table-row header">
-                    <span>Rank</span>
-                    <span>Member</span>
-                    <span>Approved</span>
-                    <span>Earnings</span>
-                  </div>
-
-                  <div class="empty-box">Loading leaderboard...</div>
+                <div class="empty-box">
+                  Loading recent referrals...
                 </div>
+
               </div>
-            </section>
 
-            <section class="panel">
-              <div class="panel-inner">
-                <div class="section-title-row">
-                  <h2>Recent Referrals</h2>
-                  <a href="/portal/leaderboard.html">View All</a>
-                </div>
+            </div>
 
-                <div class="table-wrap" id="recentReferralsTable">
-                  <div class="table-row header">
-                    <span>Type</span>
-                    <span>Member</span>
-                    <span>Status</span>
-                    <span>Amount</span>
-                  </div>
+          </section>
 
-                  <div class="empty-box">Loading recent referrals...</div>
-                </div>
+          <!-- =============================================
+               REFERRAL CTA
+          ============================================== -->
+
+          <section class="panel promo-card">
+
+            <div class="panel-inner promo-card">
+
+              <div class="promo-shield">
+                ♛
               </div>
-            </section>
 
-            <section class="panel promo-card">
-              <div class="panel-inner promo-card">
-                <div class="promo-shield">♛</div>
+              <div>
 
-                <div>
-                  <h3>The more you refer, the higher you rise.</h3>
-                  <p>
-                    Allowances are dispersed on the 1st and 3rd of every month.
-                    Keep your membership active and build your referral tower.
-                  </p>
-                </div>
+                <h3>
+                  Ready To Invite Someone?
+                </h3>
 
-                <a href="/signup.html" class="btn btn-primary">Refer Now →</a>
+                <p>
+                  Use your personal referral link so the
+                  recruit is connected to your account.
+                </p>
+
               </div>
-            </section>
-          </div>
-        </section>
-      </main>
-    </div>
 
-    <script src="/assets/js/auth-guard.js"></script>
+              <button
+                type="button"
+                class="btn btn-primary"
+                id="promoShareButton"
+              >
+                Share My Link →
+              </button>
 
-    <script>
-      (() => {
-        const API = {
-          me: "/api/auth/me",
-          overview: "/api/portal/overview",
-          referrals: "/api/referrals/me",
-          leaderboard: "/api/leaderboard/monthly",
-          logout: "/api/auth/logout",
-          billingPortal: "/api/billing/portal",
-        };
+            </div>
 
-        const els = {
-          memberName: document.getElementById("memberName"),
-          memberTierBadge: document.getElementById("memberTierBadge"),
-          referralLink: document.getElementById("referralLink"),
-          copyReferralButton: document.getElementById("copyReferralButton"),
-          billingPortalButton: document.getElementById("billingPortalButton"),
-          currentBalance: document.getElementById("currentBalance"),
+          </section>
 
-          towerFloors: document.getElementById("towerFloors"),
-          towerStatus: document.getElementById("towerStatus"),
+        </div>
 
-          totalReferrals: document.getElementById("totalReferrals"),
-          approvedReferrals: document.getElementById("approvedReferrals"),
-          teamReferrals: document.getElementById("teamReferrals"),
-          totalEarned: document.getElementById("totalEarned"),
+      </section>
 
-          directEarnings: document.getElementById("directEarnings"),
-          teamEarnings: document.getElementById("teamEarnings"),
-          growthPoolCredit: document.getElementById("growthPoolCredit"),
-          leaderboardTotal: document.getElementById("leaderboardTotal"),
+    </main>
 
-          leaderboardTable: document.getElementById("leaderboardTable"),
-          recentReferralsTable: document.getElementById("recentReferralsTable"),
+  </div>
 
-          logoutButton: document.getElementById("logoutButton"),
+  <!-- =======================================================
+       AUTH GUARD
+  ======================================================== -->
 
-          benefitsPanel: document.getElementById("benefitsPanel"),
-          benefitsTitle: document.getElementById("benefitsTitle"),
-          benefitsSubtitle: document.getElementById("benefitsSubtitle"),
-          benefitsStatus: document.getElementById("benefitsStatus"),
-          openBenefitsButton: document.getElementById("openBenefitsButton"),
-        };
+  <script src="/assets/js/auth-guard.js"></script>
 
-        const state = {
-          member: null,
-          access: null,
-          referralsPayload: null,
-          leaderboardPayload: null,
-          isRedirecting: false,
-          hasLoaded: false,
-        };
+  <!-- =======================================================
+       PORTAL JAVASCRIPT
+  ======================================================== -->
 
-        function money(value) {
-          const number = Number(value || 0);
+  <script>
+    (() => {
+      "use strict";
 
-          return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(Number.isFinite(number) ? number : 0);
+      /* =====================================================
+         API
+      ===================================================== */
+
+      const API = {
+        me:
+          "/api/auth/me",
+
+        overview:
+          "/api/portal/overview",
+
+        referrals:
+          "/api/referrals/me",
+
+        leaderboard:
+          "/api/leaderboard/monthly",
+
+        logout:
+          "/api/auth/logout",
+
+        billingPortal:
+          "/api/billing/portal"
+      };
+
+      /* =====================================================
+         ELEMENTS
+      ===================================================== */
+
+      const els = {
+        memberName:
+          document.getElementById(
+            "memberName"
+          ),
+
+        memberTierBadge:
+          document.getElementById(
+            "memberTierBadge"
+          ),
+
+        referralLink:
+          document.getElementById(
+            "referralLink"
+          ),
+
+        copyReferralButton:
+          document.getElementById(
+            "copyReferralButton"
+          ),
+
+        shareReferralButton:
+          document.getElementById(
+            "shareReferralButton"
+          ),
+
+        textReferralButton:
+          document.getElementById(
+            "textReferralButton"
+          ),
+
+        emailReferralButton:
+          document.getElementById(
+            "emailReferralButton"
+          ),
+
+        copyReferralTextButton:
+          document.getElementById(
+            "copyReferralTextButton"
+          ),
+
+        referralShareStatus:
+          document.getElementById(
+            "referralShareStatus"
+          ),
+
+        promoShareButton:
+          document.getElementById(
+            "promoShareButton"
+          ),
+
+        billingPortalButton:
+          document.getElementById(
+            "billingPortalButton"
+          ),
+
+        currentBalance:
+          document.getElementById(
+            "currentBalance"
+          ),
+
+        towerFloors:
+          document.getElementById(
+            "towerFloors"
+          ),
+
+        towerStatus:
+          document.getElementById(
+            "towerStatus"
+          ),
+
+        totalReferrals:
+          document.getElementById(
+            "totalReferrals"
+          ),
+
+        approvedReferrals:
+          document.getElementById(
+            "approvedReferrals"
+          ),
+
+        teamReferrals:
+          document.getElementById(
+            "teamReferrals"
+          ),
+
+        totalEarned:
+          document.getElementById(
+            "totalEarned"
+          ),
+
+        directEarnings:
+          document.getElementById(
+            "directEarnings"
+          ),
+
+        teamEarnings:
+          document.getElementById(
+            "teamEarnings"
+          ),
+
+        growthPoolCredit:
+          document.getElementById(
+            "growthPoolCredit"
+          ),
+
+        leaderboardTotal:
+          document.getElementById(
+            "leaderboardTotal"
+          ),
+
+        leaderboardTable:
+          document.getElementById(
+            "leaderboardTable"
+          ),
+
+        recentReferralsTable:
+          document.getElementById(
+            "recentReferralsTable"
+          ),
+
+        logoutButton:
+          document.getElementById(
+            "logoutButton"
+          ),
+
+        benefitsPanel:
+          document.getElementById(
+            "benefitsPanel"
+          ),
+
+        benefitsTitle:
+          document.getElementById(
+            "benefitsTitle"
+          ),
+
+        benefitsSubtitle:
+          document.getElementById(
+            "benefitsSubtitle"
+          ),
+
+        benefitsStatus:
+          document.getElementById(
+            "benefitsStatus"
+          ),
+
+        openBenefitsButton:
+          document.getElementById(
+            "openBenefitsButton"
+          )
+      };
+
+      /* =====================================================
+         STATE
+      ===================================================== */
+
+      const state = {
+        member:
+          null,
+
+        access:
+          null,
+
+        referralsPayload:
+          null,
+
+        leaderboardPayload:
+          null,
+
+        isRedirecting:
+          false,
+
+        hasLoaded:
+          false
+      };
+
+      /* =====================================================
+         HELPERS
+      ===================================================== */
+
+      function normalizeText(
+        value,
+        fallback = ""
+      ) {
+        const text =
+          String(
+            value ?? ""
+          ).trim();
+
+        return (
+          text ||
+          fallback
+        );
+      }
+
+      function normalizeEmail(
+        value
+      ) {
+        return normalizeText(
+          value
+        ).toLowerCase();
+      }
+
+      function money(
+        value
+      ) {
+        const number =
+          Number(
+            value || 0
+          );
+
+        return new Intl.NumberFormat(
+          "en-US",
+          {
+            style:
+              "currency",
+
+            currency:
+              "USD"
+          }
+        ).format(
+          Number.isFinite(
+            number
+          )
+            ? number
+            : 0
+        );
+      }
+
+      function escapeHtml(
+        value
+      ) {
+        return String(
+          value ?? ""
+        )
+          .replaceAll(
+            "&",
+            "&amp;"
+          )
+          .replaceAll(
+            "<",
+            "&lt;"
+          )
+          .replaceAll(
+            ">",
+            "&gt;"
+          )
+          .replaceAll(
+            '"',
+            "&quot;"
+          )
+          .replaceAll(
+            "'",
+            "&#39;"
+          );
+      }
+
+      function unwrap(
+        payload
+      ) {
+        if (
+          !payload ||
+          typeof payload !==
+            "object"
+        ) {
+          return {};
         }
 
-        function escapeHtml(value) {
-          return String(value ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#39;");
-        }
+        return (
+          payload.data &&
+          typeof payload.data ===
+            "object"
+        )
+          ? payload.data
+          : payload;
+      }
 
-        function normalizeText(value, fallback = "") {
-          const text = String(value ?? "").trim();
-          return text || fallback;
-        }
+      function titleCase(
+        value
+      ) {
+        return String(
+          value || ""
+        )
+          .replace(
+            /[_-]+/g,
+            " "
+          )
+          .split(
+            /\s+/
+          )
+          .filter(
+            Boolean
+          )
+          .map(
+            (part) =>
+              part
+                .charAt(0)
+                .toUpperCase() +
+              part
+                .slice(1)
+                .toLowerCase()
+          )
+          .join(" ");
+      }
 
-        function normalizeEmail(value) {
-          return normalizeText(value).toLowerCase();
-        }
+      /* =====================================================
+         API FETCHER
+      ===================================================== */
 
-        function unwrap(payload) {
-          if (!payload || typeof payload !== "object") return {};
-          return payload.data && typeof payload.data === "object"
-            ? payload.data
-            : payload;
-        }
+      async function fetchJson(
+        url,
+        options = {}
+      ) {
+        const response =
+          await fetch(
+            url,
+            {
+              method:
+                options.method ||
+                "GET",
 
-        function titleCase(value) {
-          return String(value || "")
-            .replace(/[_-]+/g, " ")
-            .split(/\s+/)
-            .filter(Boolean)
-            .map(
-              (part) =>
-                part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
-            )
-            .join(" ");
-        }
+              credentials:
+                "include",
 
-        async function fetchJson(url, options = {}) {
-          const response = await fetch(url, {
-            method: options.method || "GET",
-            credentials: "include",
-            cache: "no-store",
-            headers: {
-              Accept: "application/json",
-              "Cache-Control": "no-cache",
-              ...(options.body ? { "Content-Type": "application/json" } : {}),
-              ...(options.headers || {}),
-            },
-            ...options,
-          });
+              cache:
+                "no-store",
 
-          const payload = await response.json().catch(() => ({}));
+              headers: {
+                Accept:
+                  "application/json",
 
-          if (!response.ok || payload?.success === false || payload?.ok === false) {
-            const error = new Error(
+                "Cache-Control":
+                  "no-cache",
+
+                ...(options.body
+                  ? {
+                      "Content-Type":
+                        "application/json"
+                    }
+                  : {}),
+
+                ...(options.headers ||
+                  {})
+              },
+
+              ...options
+            }
+          );
+
+        const payload =
+          await response
+            .json()
+            .catch(
+              () => ({})
+            );
+
+        if (
+          !response.ok ||
+          payload?.success ===
+            false ||
+          payload?.ok ===
+            false
+        ) {
+          const error =
+            new Error(
               payload?.message ||
                 payload?.error ||
                 `Request failed with status ${response.status}`
             );
 
-            error.status = response.status;
-            error.payload = payload;
-            error.url = url;
+          error.status =
+            response.status;
 
-            throw error;
-          }
+          error.payload =
+            payload;
 
-          return unwrap(payload);
-        }
-                async function checkStillAuthenticated() {
-          try {
-            const data = await fetchJson(API.me);
-            return data?.authenticated === true;
-          } catch {
-            return false;
-          }
+          error.url =
+            url;
+
+          throw error;
         }
 
-        async function redirectToLoginOnlyIfActuallyLoggedOut(reason = "") {
-          if (state.isRedirecting) return;
+        return unwrap(
+          payload
+        );
+      }
 
-          const authenticated = await checkStillAuthenticated();
+      /* =====================================================
+         AUTH
+      ===================================================== */
 
-          if (authenticated) {
-            console.warn(
-              "[portal/index] Blocked false login redirect because /api/auth/me is authenticated.",
-              reason
+      async function checkStillAuthenticated() {
+        try {
+          const data =
+            await fetchJson(
+              API.me
             );
-            return;
-          }
-
-          state.isRedirecting = true;
-
-          window.location.replace(
-            "/login.html?next=" +
-              encodeURIComponent(window.location.pathname + window.location.search)
-          );
-        }
-
-        function getFullName(member) {
-          const full =
-            normalizeText(member?.fullName) ||
-            normalizeText(member?.full_name) ||
-            normalizeText(member?.name);
-
-          if (full) return full;
-
-          const first = normalizeText(member?.firstName || member?.first_name);
-          const last = normalizeText(member?.lastName || member?.last_name);
-
-          return [first, last].filter(Boolean).join(" ") || "Card Leo Member";
-        }
-
-        function getFirstName(member) {
-          return (
-            normalizeText(member?.firstName || member?.first_name) ||
-            getFullName(member).split(/\s+/)[0] ||
-            "Member"
-          );
-        }
-
-        function getStatus(member) {
-          return normalizeText(
-            member?.membership_status ||
-              member?.membershipStatus ||
-              member?.status ||
-              member?.member_status ||
-              "active"
-          ).toLowerCase();
-        }
-
-        function getPaymentStatus(member) {
-          return normalizeText(
-            member?.payment_status || member?.paymentStatus || "paid"
-          ).toLowerCase();
-        }
-
-        function isPaidActive(member) {
-          const status = getStatus(member);
-          const paymentStatus = getPaymentStatus(member);
 
           return (
-            ["active", "approved", "auto_approved", "paid", "current"].includes(
-              status
-            ) ||
-            ["paid", "active", "current", "succeeded", "complete"].includes(
-              paymentStatus
+            data?.authenticated ===
+            true
+          );
+        } catch {
+          return false;
+        }
+      }
+
+      async function redirectToLoginOnlyIfActuallyLoggedOut(
+        reason = ""
+      ) {
+        if (
+          state.isRedirecting
+        ) {
+          return;
+        }
+
+        const authenticated =
+          await checkStillAuthenticated();
+
+        if (
+          authenticated
+        ) {
+          console.warn(
+            "[portal/index] Blocked false login redirect because /api/auth/me is authenticated.",
+            reason
+          );
+
+          return;
+        }
+
+        state.isRedirecting =
+          true;
+
+        window.location.replace(
+          "/login.html?next=" +
+            encodeURIComponent(
+              window.location.pathname +
+                window.location.search
             )
+        );
+      }
+
+      /* =====================================================
+         MEMBER
+      ===================================================== */
+
+      function getFullName(
+        member
+      ) {
+        const full =
+          normalizeText(
+            member?.fullName
+          ) ||
+          normalizeText(
+            member?.full_name
+          ) ||
+          normalizeText(
+            member?.name
           );
+
+        if (full) {
+          return full;
         }
 
-        function getAccessData(source = {}) {
-          const access = source.access || {};
+        const first =
+          normalizeText(
+            member?.firstName ||
+              member?.first_name
+          );
 
-          const member =
-            source.member ||
-            source.profile ||
-            source.user ||
-            source ||
-            {};
+        const last =
+          normalizeText(
+            member?.lastName ||
+              member?.last_name
+          );
 
-          const memberStatus =
-            normalizeText(access.member_status) ||
-            normalizeText(access.status) ||
-            normalizeText(member.access_member_status) ||
-            normalizeText(member.accessMemberStatus) ||
-            "pending";
+        return (
+          [
+            first,
+            last
+          ]
+            .filter(Boolean)
+            .join(" ") ||
+          "Card Leo Member"
+        );
+      }
 
-          const memberIdentifier =
-            normalizeText(access.member_identifier) ||
-            normalizeText(access.memberCustomerIdentifier) ||
-            normalizeText(access.member_customer_identifier) ||
-            normalizeText(member.access_member_identifier) ||
-            normalizeText(member.accessMemberIdentifier);
+      function getFirstName(
+        member
+      ) {
+        return (
+          normalizeText(
+            member?.firstName ||
+              member?.first_name
+          ) ||
+          getFullName(
+            member
+          )
+            .split(/\s+/)[0] ||
+          "Member"
+        );
+      }
 
-          const syncError =
-            normalizeText(access.sync_error) ||
-            normalizeText(member.access_sync_error) ||
-            normalizeText(member.accessSyncError);
+      function getStatus(
+        member
+      ) {
+        return normalizeText(
+          member?.membership_status ||
+            member?.membershipStatus ||
+            member?.status ||
+            member?.member_status ||
+            ""
+        ).toLowerCase();
+      }
 
-          const syncedAt =
-            access.synced_at ||
-            access.access_synced_at ||
-            member.access_synced_at ||
-            member.accessSyncedAt ||
-            null;
+      function getPaymentStatus(
+        member
+      ) {
+        return normalizeText(
+          member?.payment_status ||
+            member?.paymentStatus ||
+            ""
+        ).toLowerCase();
+      }
 
-          const perksReady =
-            access.perks_ready === true ||
-            access.benefits_ready === true ||
-            member.access_perks_ready === true ||
-            member.accessPerksReady === true ||
-            member.benefits_ready === true ||
-            member.benefitsReady === true ||
-            memberStatus.toUpperCase() === "OPEN";
+      /*
+       * PAYMENT-FIRST CHECK
+       *
+       * An account must never be treated as paid
+       * simply because status says "active".
+       */
 
-          return {
-            memberStatus,
-            memberIdentifier,
-            syncError,
-            syncedAt,
-            perksReady,
-          };
+      function isPaidActive(
+        member
+      ) {
+        const status =
+          getStatus(
+            member
+          );
+
+        const paymentStatus =
+          getPaymentStatus(
+            member
+          );
+
+        const unpaidStatuses =
+          new Set([
+            "",
+            "unpaid",
+            "pending",
+            "payment_pending",
+            "pending_payment",
+            "requires_payment",
+            "incomplete",
+            "past_due",
+            "failed",
+            "payment_failed"
+          ]);
+
+        if (
+          unpaidStatuses.has(
+            paymentStatus
+          )
+        ) {
+          return false;
         }
 
-        function renderBenefitsStatus(source = {}) {
-          if (!els.benefitsStatus) return;
+        const paymentIsPaid =
+          [
+            "paid",
+            "active",
+            "current",
+            "succeeded",
+            "complete",
+            "completed"
+          ].includes(
+            paymentStatus
+          );
 
-          const access = getAccessData(source);
-          state.access = access;
+        if (
+          !paymentIsPaid
+        ) {
+          return false;
+        }
 
-          const paid = isPaidActive(state.member || source.member || source);
+        return [
+          "active",
+          "approved",
+          "auto_approved",
+          "paid",
+          "current",
+          "complete",
+          "completed"
+        ].includes(
+          status
+        );
+      }
 
-          if (!paid) {
-            els.benefitsStatus.className = "benefits-status error";
-            els.benefitsStatus.textContent =
-              "Membership payment is required before benefits are unlocked.";
+      /* =====================================================
+         ACCESS PERKS
+      ===================================================== */
 
-            if (els.openBenefitsButton) {
-              els.openBenefitsButton.textContent = "Payment Required";
-              els.openBenefitsButton.href = "/signup.html?status=payment_required";
-            }
+      function getAccessData(
+        source = {}
+      ) {
+        const access =
+          source.access ||
+          {};
 
-            return;
-          }
+        const member =
+          source.member ||
+          source.profile ||
+          source.user ||
+          source ||
+          {};
 
-          if (access.perksReady) {
-            els.benefitsStatus.className = "benefits-status success";
-            els.benefitsStatus.textContent =
-              "Access Perks is active. Your restaurants, shopping, travel, and local savings are ready.";
+        const memberStatus =
+          normalizeText(
+            access.member_status
+          ) ||
+          normalizeText(
+            access.status
+          ) ||
+          normalizeText(
+            member.access_member_status
+          ) ||
+          normalizeText(
+            member.accessMemberStatus
+          ) ||
+          "pending";
 
-            if (els.openBenefitsButton) {
-              els.openBenefitsButton.textContent = "Open My Benefits";
-              els.openBenefitsButton.href = "/portal/benefits.html";
-            }
+        const memberIdentifier =
+          normalizeText(
+            access.member_identifier
+          ) ||
+          normalizeText(
+            access.memberCustomerIdentifier
+          ) ||
+          normalizeText(
+            access.member_customer_identifier
+          ) ||
+          normalizeText(
+            member.access_member_identifier
+          ) ||
+          normalizeText(
+            member.accessMemberIdentifier
+          );
 
-            return;
-          }
+        const syncError =
+          normalizeText(
+            access.sync_error
+          ) ||
+          normalizeText(
+            member.access_sync_error
+          ) ||
+          normalizeText(
+            member.accessSyncError
+          );
 
-          if (access.syncError) {
-            els.benefitsStatus.className = "benefits-status error";
-            els.benefitsStatus.textContent =
-              "Your membership is active, but Access Perks is still waiting on the Access AMT endpoint. Benefits will show after sync is confirmed.";
+        const syncedAt =
+          access.synced_at ||
+          access.access_synced_at ||
+          member.access_synced_at ||
+          member.accessSyncedAt ||
+          null;
 
-            if (els.openBenefitsButton) {
-              els.openBenefitsButton.textContent = "View Benefits Page";
-              els.openBenefitsButton.href = "/portal/benefits.html";
-            }
+        const perksReady =
+          access.perks_ready ===
+            true ||
+          access.benefits_ready ===
+            true ||
+          member.access_perks_ready ===
+            true ||
+          member.accessPerksReady ===
+            true ||
+          member.benefits_ready ===
+            true ||
+          member.benefitsReady ===
+            true ||
+          memberStatus.toUpperCase() ===
+            "OPEN";
 
-            return;
-          }
+        return {
+          memberStatus,
+          memberIdentifier,
+          syncError,
+          syncedAt,
+          perksReady
+        };
+      }
 
-          els.benefitsStatus.className = "benefits-status";
+      function renderBenefitsStatus(
+        source = {}
+      ) {
+        if (
+          !els.benefitsStatus
+        ) {
+          return;
+        }
+
+        const access =
+          getAccessData(
+            source
+          );
+
+        state.access =
+          access;
+
+        const paid =
+          isPaidActive(
+            state.member ||
+              source.member ||
+              source
+          );
+
+        if (!paid) {
+          els.benefitsStatus.className =
+            "benefits-status error";
+
           els.benefitsStatus.textContent =
-            "Your membership is active. Access Perks is syncing now and will become available once the member record is confirmed.";
+            "Membership payment is required before benefits are unlocked.";
 
-          if (els.openBenefitsButton) {
-            els.openBenefitsButton.textContent = "View Benefits Page";
-            els.openBenefitsButton.href = "/portal/benefits.html";
-          }
-        }
+          if (
+            els.openBenefitsButton
+          ) {
+            els.openBenefitsButton.textContent =
+              "Payment Required";
 
-        function getPreferredBaseUrl() {
-          return "https://www.cardleorewards.com";
-        }
-
-        function cleanReferralCode(value) {
-          const raw = String(value || "").trim();
-
-          if (!raw) return "";
-
-          try {
-            const parsed = new URL(raw);
-            const fromUrl =
-              parsed.searchParams.get("ref") ||
-              parsed.searchParams.get("referral") ||
-              parsed.searchParams.get("sponsor") ||
-              "";
-
-            if (fromUrl) return cleanReferralCode(fromUrl);
-          } catch {
-            // Not a URL.
+            els.openBenefitsButton.href =
+              "/login.html?payment_required=1";
           }
 
-          return raw
-            .replace(/^https?:\/\/[^?]+\/signup(?:\.html)?\?ref=/i, "")
-            .replace(/^https?:\/\/[^?]+\/join(?:\.html)?\?ref=/i, "")
-            .replace(/^ref=/i, "")
-            .replace(/^referral=/i, "")
-            .replace(/^sponsor=/i, "")
-            .toLowerCase()
-            .replace(/[^a-z0-9._@-]/g, "");
+          return;
         }
 
-        function getReferralCode(member) {
-          return (
-            cleanReferralCode(member?.referral_code) ||
-            cleanReferralCode(member?.referralCode) ||
-            cleanReferralCode(member?.username) ||
-            cleanReferralCode(normalizeText(member?.email).split("@")[0]) ||
-            "member"
-          );
+        if (
+          access.perksReady
+        ) {
+          els.benefitsStatus.className =
+            "benefits-status success";
+
+          els.benefitsStatus.textContent =
+            "Access Perks is active. Your restaurants, shopping, travel, entertainment, fitness, and local savings are ready.";
+
+          if (
+            els.openBenefitsButton
+          ) {
+            els.openBenefitsButton.textContent =
+              "Open My Benefits";
+
+            els.openBenefitsButton.href =
+              "/portal/benefits.html";
+          }
+
+          return;
         }
 
-        function getReferralLink(member) {
-          const existing =
-            normalizeText(member?.referral_link) ||
-            normalizeText(member?.referralLink) ||
-            normalizeText(member?.portal_referral_link);
+        if (
+          access.syncError
+        ) {
+          els.benefitsStatus.className =
+            "benefits-status error";
 
-          if (existing && existing.includes("/signup")) {
-            return existing;
+          els.benefitsStatus.textContent =
+            "Your Card Leo membership is active, but Access Perks is still waiting for member synchronization.";
+
+          if (
+            els.openBenefitsButton
+          ) {
+            els.openBenefitsButton.textContent =
+              "View Benefits Page";
+
+            els.openBenefitsButton.href =
+              "/portal/benefits.html";
           }
 
-          return `${getPreferredBaseUrl()}/signup.html?ref=${encodeURIComponent(
-            getReferralCode(member)
-          )}`;
+          return;
         }
 
-        function setTowerStatus(message, type = "info") {
-          if (!els.towerStatus) return;
+        els.benefitsStatus.className =
+          "benefits-status";
 
-          if (!message) {
-            els.towerStatus.hidden = true;
-            els.towerStatus.className = "status-box";
-            els.towerStatus.textContent = "";
-            return;
-          }
+        els.benefitsStatus.textContent =
+          "Your membership is active. Access Perks is syncing and will become available once your Access member record is confirmed.";
 
-          els.towerStatus.hidden = false;
-          els.towerStatus.className = "status-box";
+        if (
+          els.openBenefitsButton
+        ) {
+          els.openBenefitsButton.textContent =
+            "View Benefits Page";
 
-          if (type === "success") els.towerStatus.classList.add("success");
-          if (type === "error") els.towerStatus.classList.add("error");
+          els.openBenefitsButton.href =
+            "/portal/benefits.html";
+        }
+      }
 
-          els.towerStatus.textContent = message;
+      /* =====================================================
+         REFERRAL LINK
+      ===================================================== */
+
+      function getPreferredBaseUrl() {
+        return "https://www.cardleorewards.com";
+      }
+
+      function cleanReferralCode(
+        value
+      ) {
+        const raw =
+          String(
+            value || ""
+          ).trim();
+
+        if (!raw) {
+          return "";
         }
 
-        function renderMember(member) {
-          if (!member) return;
+        try {
+          const parsed =
+            new URL(raw);
 
-          state.member = member;
+          const fromUrl =
+            parsed.searchParams.get(
+              "ref"
+            ) ||
+            parsed.searchParams.get(
+              "referral"
+            ) ||
+            parsed.searchParams.get(
+              "referral_code"
+            ) ||
+            parsed.searchParams.get(
+              "sponsor"
+            ) ||
+            parsed.searchParams.get(
+              "code"
+            ) ||
+            "";
 
-          const firstName = getFirstName(member);
-          const paid = isPaidActive(member);
-
-          if (els.memberName) els.memberName.textContent = firstName;
-
-          if (els.memberTierBadge) {
-            els.memberTierBadge.textContent = paid
-              ? "♛ Allowance Card"
-              : "Payment Required";
-          }
-
-          if (els.referralLink) {
-            els.referralLink.value = getReferralLink(member);
-          }
-
-          renderBenefitsStatus(member);
-
-          if (!paid) {
-            setTowerStatus(
-              "Membership payment is required before full portal access is unlocked.",
-              "error"
+          if (
+            fromUrl
+          ) {
+            return cleanReferralCode(
+              fromUrl
             );
           }
+        } catch {
+          /*
+           * Not a URL.
+           */
         }
 
-        function getSummaryNumber(summary, keys, fallback = 0) {
-          for (const key of keys) {
-            const value = summary?.[key];
+        return raw
+          .replace(
+            /^https?:\/\/[^?]+\/signup(?:\.html)?\?ref=/i,
+            ""
+          )
+          .replace(
+            /^https?:\/\/[^?]+\/join(?:\.html)?\?ref=/i,
+            ""
+          )
+          .replace(
+            /^ref=/i,
+            ""
+          )
+          .replace(
+            /^referral=/i,
+            ""
+          )
+          .replace(
+            /^referral_code=/i,
+            ""
+          )
+          .replace(
+            /^sponsor=/i,
+            ""
+          )
+          .replace(
+            /^code=/i,
+            ""
+          )
+          .toLowerCase()
+          .replace(
+            /[^a-z0-9._@-]/g,
+            ""
+          );
+      }
 
-            if (value !== undefined && value !== null && value !== "") {
-              const number = Number(value);
-              return Number.isFinite(number) ? number : fallback;
+      function getReferralCode(
+        member
+      ) {
+        return (
+          cleanReferralCode(
+            member?.referral_code
+          ) ||
+          cleanReferralCode(
+            member?.referralCode
+          ) ||
+          cleanReferralCode(
+            member?.username
+          ) ||
+          cleanReferralCode(
+            normalizeText(
+              member?.email
+            ).split("@")[0]
+          ) ||
+          "member"
+        );
+      }
+
+      function getReferralLink(
+        member
+      ) {
+        const existing =
+          normalizeText(
+            member?.referral_link
+          ) ||
+          normalizeText(
+            member?.referralLink
+          ) ||
+          normalizeText(
+            member?.portal_referral_link
+          );
+
+        /*
+         * If API already returned a complete signup link,
+         * trust it.
+         */
+
+        if (
+          existing &&
+          existing.includes(
+            "/signup"
+          )
+        ) {
+          return existing;
+        }
+
+        return (
+          `${getPreferredBaseUrl()}` +
+          `/signup.html?ref=` +
+          encodeURIComponent(
+            getReferralCode(
+              member
+            )
+          )
+        );
+      }
+
+      /* =====================================================
+         REFERRAL SHARING
+      ===================================================== */
+
+      function getCurrentReferralLink() {
+        return normalizeText(
+          els.referralLink?.value
+        );
+      }
+
+      function getReferralShareMessage() {
+        const link =
+          getCurrentReferralLink();
+
+        const firstName =
+          getFirstName(
+            state.member ||
+              {}
+          );
+
+        return [
+          `Hey! ${firstName} invited you to join Card Leo Rewards.`,
+
+          "Use my personal referral link below to create your account:",
+
+          link,
+
+          "Complete the signup form and continue to secure membership payment so your account can be activated and connected to my referral team."
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+      }
+
+      function setReferralShareStatus(
+        message,
+        type = "info"
+      ) {
+        if (
+          !els.referralShareStatus
+        ) {
+          return;
+        }
+
+        els.referralShareStatus.className =
+          "referral-share-status";
+
+        if (
+          type === "success"
+        ) {
+          els.referralShareStatus.classList.add(
+            "success"
+          );
+        }
+
+        if (
+          type === "error"
+        ) {
+          els.referralShareStatus.classList.add(
+            "error"
+          );
+        }
+
+        els.referralShareStatus.textContent =
+          normalizeText(
+            message
+          );
+      }
+
+      async function writeClipboard(
+        text
+      ) {
+        if (
+          navigator.clipboard?.writeText
+        ) {
+          await navigator.clipboard.writeText(
+            text
+          );
+
+          return true;
+        }
+
+        /*
+         * Fallback for older browsers.
+         */
+
+        const temporary =
+          document.createElement(
+            "textarea"
+          );
+
+        temporary.value =
+          text;
+
+        temporary.setAttribute(
+          "readonly",
+          ""
+        );
+
+        temporary.style.position =
+          "fixed";
+
+        temporary.style.opacity =
+          "0";
+
+        temporary.style.pointerEvents =
+          "none";
+
+        document.body.appendChild(
+          temporary
+        );
+
+        temporary.select();
+
+        const copied =
+          document.execCommand(
+            "copy"
+          );
+
+        temporary.remove();
+
+        return copied;
+      }
+
+      async function copyReferralLink() {
+        const link =
+          getCurrentReferralLink();
+
+        if (!link) {
+          setReferralShareStatus(
+            "Referral link is not available yet.",
+            "error"
+          );
+
+          return;
+        }
+
+        try {
+          await writeClipboard(
+            link
+          );
+
+          setReferralShareStatus(
+            "Referral link copied. Paste it into a text, email, or direct message.",
+            "success"
+          );
+        } catch {
+          setReferralShareStatus(
+            "We could not copy the link automatically. Select the referral link and copy it manually.",
+            "error"
+          );
+        }
+      }
+
+      async function copyReferralMessage() {
+        const link =
+          getCurrentReferralLink();
+
+        if (!link) {
+          setReferralShareStatus(
+            "Referral link is not available yet.",
+            "error"
+          );
+
+          return;
+        }
+
+        try {
+          await writeClipboard(
+            getReferralShareMessage()
+          );
+
+          setReferralShareStatus(
+            "Referral message copied. Paste it into a text, email, Instagram DM, Facebook message, or anywhere else you recruit.",
+            "success"
+          );
+        } catch {
+          setReferralShareStatus(
+            "We could not copy the referral message automatically.",
+            "error"
+          );
+        }
+      }
+
+      function textReferralLink() {
+        const link =
+          getCurrentReferralLink();
+
+        if (!link) {
+          setReferralShareStatus(
+            "Referral link is not available yet.",
+            "error"
+          );
+
+          return;
+        }
+
+        const body =
+          encodeURIComponent(
+            getReferralShareMessage()
+          );
+
+        const isIOS =
+          /iPad|iPhone|iPod/.test(
+            navigator.userAgent
+          );
+
+        /*
+         * iPhone and Android handle the body
+         * separator slightly differently.
+         */
+
+        const smsUrl =
+          isIOS
+            ? `sms:&body=${body}`
+            : `sms:?body=${body}`;
+
+        setReferralShareStatus(
+          "Opening your text messaging app...",
+          "success"
+        );
+
+        window.location.href =
+          smsUrl;
+      }
+
+      function emailReferralLink() {
+        const link =
+          getCurrentReferralLink();
+
+        if (!link) {
+          setReferralShareStatus(
+            "Referral link is not available yet.",
+            "error"
+          );
+
+          return;
+        }
+
+        const subject =
+          encodeURIComponent(
+            "Join Card Leo Rewards With My Referral Link"
+          );
+
+        const body =
+          encodeURIComponent(
+            getReferralShareMessage()
+          );
+
+        setReferralShareStatus(
+          "Opening your email app...",
+          "success"
+        );
+
+        window.location.href =
+          `mailto:?subject=${subject}&body=${body}`;
+      }
+
+      async function shareReferralLink() {
+        const link =
+          getCurrentReferralLink();
+
+        if (!link) {
+          setReferralShareStatus(
+            "Referral link is not available yet.",
+            "error"
+          );
+
+          return;
+        }
+
+        /*
+         * Native phone sharing.
+         *
+         * This opens options such as:
+         * Messages
+         * Mail
+         * WhatsApp
+         * Facebook
+         * other installed apps
+         */
+
+        if (
+          navigator.share
+        ) {
+          try {
+            await navigator.share({
+              title:
+                "Card Leo Rewards",
+
+              text:
+                getReferralShareMessage(),
+
+              url:
+                link
+            });
+
+            setReferralShareStatus(
+              "Referral link shared.",
+              "success"
+            );
+
+            return;
+          } catch (error) {
+            /*
+             * User closing the share window is normal.
+             */
+
+            if (
+              error?.name ===
+              "AbortError"
+            ) {
+              return;
             }
           }
-
-          return fallback;
         }
 
-        function normalizeSummary(payload = {}) {
-          const summary = payload.summary || payload.stats || {};
+        /*
+         * Desktop fallback:
+         * copy full recruiting message.
+         */
 
-          const directReferrals = getSummaryNumber(summary, [
-            "approvedDirectReferrals",
-            "approved_direct_referrals",
-            "directReferrals",
-            "direct_referrals",
-          ]);
+        await copyReferralMessage();
+      }
 
-          const teamReferrals = getSummaryNumber(summary, [
-            "approvedTeamReferrals",
-            "approved_team_referrals",
-            "teamReferrals",
-            "team_referrals",
-          ]);
+      /* =====================================================
+         TOWER STATUS
+      ===================================================== */
 
-          const pendingReferrals = getSummaryNumber(summary, [
-            "pendingReferrals",
-            "pending_referrals",
-          ]);
+      function setTowerStatus(
+        message,
+        type = "info"
+      ) {
+        if (
+          !els.towerStatus
+        ) {
+          return;
+        }
 
-          const totalReferrals = getSummaryNumber(
-            summary,
-            ["totalReferrals", "total_referrals"],
-            directReferrals + teamReferrals + pendingReferrals
+        if (!message) {
+          els.towerStatus.hidden =
+            true;
+
+          els.towerStatus.className =
+            "status-box";
+
+          els.towerStatus.textContent =
+            "";
+
+          return;
+        }
+
+        els.towerStatus.hidden =
+          false;
+
+        els.towerStatus.className =
+          "status-box";
+
+        if (
+          type === "success"
+        ) {
+          els.towerStatus.classList.add(
+            "success"
+          );
+        }
+
+        if (
+          type === "error"
+        ) {
+          els.towerStatus.classList.add(
+            "error"
+          );
+        }
+
+        els.towerStatus.textContent =
+          message;
+      }
+
+      /* =====================================================
+         RENDER MEMBER
+      ===================================================== */
+
+      function renderMember(
+        member
+      ) {
+        if (!member) {
+          return;
+        }
+
+        state.member =
+          member;
+
+        const firstName =
+          getFirstName(
+            member
           );
 
-          const approvedReferrals = getSummaryNumber(
-            summary,
-            ["approvedReferrals", "approved_referrals"],
-            directReferrals + teamReferrals
+        const paid =
+          isPaidActive(
+            member
           );
 
-          const directEarnings = getSummaryNumber(
+        if (
+          els.memberName
+        ) {
+          els.memberName.textContent =
+            firstName;
+        }
+
+        if (
+          els.memberTierBadge
+        ) {
+          const tier =
+            normalizeText(
+              member?.tier
+            );
+
+          els.memberTierBadge.textContent =
+            paid
+              ? tier
+                ? `♛ ${titleCase(tier)}`
+                : "♛ Allowance Card"
+              : "Payment Required";
+        }
+
+        if (
+          els.referralLink
+        ) {
+          els.referralLink.value =
+            getReferralLink(
+              member
+            );
+        }
+
+        renderBenefitsStatus(
+          member
+        );
+
+        if (!paid) {
+          setTowerStatus(
+            "Membership payment is required before full portal access is unlocked.",
+            "error"
+          );
+        }
+      }
+
+      /* =====================================================
+         SUMMARY
+      ===================================================== */
+
+      function getSummaryNumber(
+        summary,
+        keys,
+        fallback = 0
+      ) {
+        for (
+          const key of keys
+        ) {
+          const value =
+            summary?.[key];
+
+          if (
+            value !== undefined &&
+            value !== null &&
+            value !== ""
+          ) {
+            const number =
+              Number(value);
+
+            return Number.isFinite(
+              number
+            )
+              ? number
+              : fallback;
+          }
+        }
+
+        return fallback;
+      }
+
+      function normalizeSummary(
+        payload = {}
+      ) {
+        const summary =
+          payload.summary ||
+          payload.stats ||
+          {};
+
+        const directReferrals =
+          getSummaryNumber(
             summary,
-            ["directEarnings", "direct_earnings"],
-            directReferrals * 7
+            [
+              "approvedDirectReferrals",
+              "approved_direct_referrals",
+              "directReferrals",
+              "direct_referrals"
+            ]
           );
 
-          const teamEarnings = getSummaryNumber(
+        const teamReferrals =
+          getSummaryNumber(
             summary,
-            ["teamEarnings", "team_earnings"],
+            [
+              "approvedTeamReferrals",
+              "approved_team_referrals",
+              "teamReferrals",
+              "team_referrals"
+            ]
+          );
+
+        const pendingReferrals =
+          getSummaryNumber(
+            summary,
+            [
+              "pendingReferrals",
+              "pending_referrals"
+            ]
+          );
+
+        const totalReferrals =
+          getSummaryNumber(
+            summary,
+            [
+              "totalReferrals",
+              "total_referrals"
+            ],
+            directReferrals +
+              teamReferrals +
+              pendingReferrals
+          );
+
+        const approvedReferrals =
+          getSummaryNumber(
+            summary,
+            [
+              "approvedReferrals",
+              "approved_referrals"
+            ],
+            directReferrals +
+              teamReferrals
+          );
+
+        const directEarnings =
+          getSummaryNumber(
+            summary,
+            [
+              "directEarnings",
+              "direct_earnings"
+            ],
+            directReferrals *
+              7
+          );
+
+        const teamEarnings =
+          getSummaryNumber(
+            summary,
+            [
+              "teamEarnings",
+              "team_earnings"
+            ],
             teamReferrals
           );
 
-          const growthPoolCredit = getSummaryNumber(
+        /*
+         * Do not manufacture the user's Growth Pool
+         * amount from team referrals.
+         *
+         * Only display a Growth Pool number when
+         * the API actually returns one.
+         */
+
+        const growthPoolCredit =
+          getSummaryNumber(
             summary,
-            ["growthPoolCredit", "growth_pool_credit"],
-            teamReferrals * 2
+            [
+              "growthPoolCredit",
+              "growth_pool_credit",
+              "growthPool",
+              "growth_pool"
+            ],
+            0
           );
 
-          const totalEarned = getSummaryNumber(
+        const totalEarned =
+          getSummaryNumber(
             summary,
             [
               "totalEarned",
@@ -1726,631 +4618,1522 @@
               "allowanceBalance",
               "allowance_balance",
               "rewardBalance",
-              "reward_balance",
+              "reward_balance"
             ],
-            directEarnings + teamEarnings
+            directEarnings +
+              teamEarnings
           );
 
-          return {
-            totalReferrals,
-            approvedReferrals,
-            directReferrals,
-            teamReferrals,
-            pendingReferrals,
-            directEarnings,
-            teamEarnings,
-            growthPoolCredit,
-            totalEarned,
-          };
+        return {
+          totalReferrals,
+          approvedReferrals,
+          directReferrals,
+          teamReferrals,
+          pendingReferrals,
+          directEarnings,
+          teamEarnings,
+          growthPoolCredit,
+          totalEarned
+        };
+      }
+
+      function renderStats(
+        summary = {}
+      ) {
+        if (
+          els.totalReferrals
+        ) {
+          els.totalReferrals.textContent =
+            String(
+              summary.totalReferrals ||
+                0
+            );
         }
 
-        function renderStats(summary = {}) {
-          if (els.totalReferrals) {
-            els.totalReferrals.textContent = String(summary.totalReferrals);
-          }
-
-          if (els.approvedReferrals) {
-            els.approvedReferrals.textContent = String(summary.approvedReferrals);
-          }
-
-          if (els.teamReferrals) {
-            els.teamReferrals.textContent = String(summary.teamReferrals);
-          }
-
-          if (els.totalEarned) {
-            els.totalEarned.textContent = money(summary.totalEarned);
-          }
-
-          if (els.currentBalance) {
-            els.currentBalance.textContent = money(summary.totalEarned);
-          }
-
-          if (els.directEarnings) {
-            els.directEarnings.textContent = money(summary.directEarnings);
-          }
-
-          if (els.teamEarnings) {
-            els.teamEarnings.textContent = money(summary.teamEarnings);
-          }
-
-          if (els.growthPoolCredit) {
-            els.growthPoolCredit.textContent = money(summary.growthPoolCredit);
-          }
-
-          if (els.leaderboardTotal) {
-            els.leaderboardTotal.textContent = money(summary.totalEarned);
-          }
-        }
-                function floorClass(floor) {
-          const type = normalizeText(floor.type || floor.level).toLowerCase();
-          const status = normalizeText(floor.status || floor.state).toLowerCase();
-
-          if (type === "team") return "tower-floor team";
-          if (type === "direct") return "tower-floor direct";
-          if (status === "earned" || status === "approved") {
-            return "tower-floor earned";
-          }
-          if (status === "pending") return "tower-floor pending";
-
-          return "tower-floor locked";
+        if (
+          els.approvedReferrals
+        ) {
+          els.approvedReferrals.textContent =
+            String(
+              summary.approvedReferrals ||
+                0
+            );
         }
 
-        function defaultFloors(summary = {}) {
-          const floors = [];
-          let floor = 1;
-
-          for (let i = 0; i < summary.directReferrals; i += 1) {
-            floors.push({
-              floor,
-              label: "Member A referred Member B",
-              status: "approved",
-              type: "direct",
-              amount: 7,
-            });
-            floor += 1;
-          }
-
-          for (let i = 0; i < summary.teamReferrals; i += 1) {
-            floors.push({
-              floor,
-              label: "Member B referred Member C",
-              status: "approved",
-              type: "team",
-              amount: 1,
-            });
-            floor += 1;
-          }
-
-          while (floors.length < 12) {
-            floors.push({
-              floor,
-              label: "Open Floor",
-              status: "locked",
-              type: "locked",
-              amount: 0,
-            });
-            floor += 1;
-          }
-
-          return floors.slice(0, 12);
+        if (
+          els.teamReferrals
+        ) {
+          els.teamReferrals.textContent =
+            String(
+              summary.teamReferrals ||
+                0
+            );
         }
 
-        function renderFloors(payload = {}, summary = {}) {
-          if (!els.towerFloors) return;
+        if (
+          els.totalEarned
+        ) {
+          els.totalEarned.textContent =
+            money(
+              summary.totalEarned
+            );
+        }
 
-          const floors = Array.isArray(payload?.tower?.floors)
+        if (
+          els.currentBalance
+        ) {
+          els.currentBalance.textContent =
+            money(
+              summary.totalEarned
+            );
+        }
+
+        if (
+          els.directEarnings
+        ) {
+          els.directEarnings.textContent =
+            money(
+              summary.directEarnings
+            );
+        }
+
+        if (
+          els.teamEarnings
+        ) {
+          els.teamEarnings.textContent =
+            money(
+              summary.teamEarnings
+            );
+        }
+
+        if (
+          els.growthPoolCredit
+        ) {
+          els.growthPoolCredit.textContent =
+            money(
+              summary.growthPoolCredit
+            );
+        }
+
+        if (
+          els.leaderboardTotal
+        ) {
+          els.leaderboardTotal.textContent =
+            money(
+              summary.totalEarned
+            );
+        }
+      }
+
+      /* =====================================================
+         TOWER FLOORS
+      ===================================================== */
+
+      function floorClass(
+        floor
+      ) {
+        const type =
+          normalizeText(
+            floor.type ||
+              floor.level
+          ).toLowerCase();
+
+        const status =
+          normalizeText(
+            floor.status ||
+              floor.state
+          ).toLowerCase();
+
+        if (
+          type === "team"
+        ) {
+          return (
+            "tower-floor team"
+          );
+        }
+
+        if (
+          type === "direct"
+        ) {
+          return (
+            "tower-floor direct"
+          );
+        }
+
+        if (
+          status === "earned" ||
+          status === "approved"
+        ) {
+          return (
+            "tower-floor earned"
+          );
+        }
+
+        if (
+          status === "pending"
+        ) {
+          return (
+            "tower-floor pending"
+          );
+        }
+
+        return (
+          "tower-floor locked"
+        );
+      }
+
+      function defaultFloors(
+        summary = {}
+      ) {
+        const floors =
+          [];
+
+        let floor =
+          1;
+
+        /*
+         * DIRECT REFERRALS
+         */
+
+        for (
+          let i = 0;
+          i < summary.directReferrals;
+          i += 1
+        ) {
+          floors.push({
+            floor,
+
+            label:
+              "Approved Direct Referral",
+
+            status:
+              "approved",
+
+            type:
+              "direct",
+
+            amount:
+              7
+          });
+
+          floor +=
+            1;
+        }
+
+        /*
+         * TEAM REFERRALS
+         */
+
+        for (
+          let i = 0;
+          i < summary.teamReferrals;
+          i += 1
+        ) {
+          floors.push({
+            floor,
+
+            label:
+              "Approved Team Referral",
+
+            status:
+              "approved",
+
+            type:
+              "team",
+
+            amount:
+              1
+          });
+
+          floor +=
+            1;
+        }
+
+        /*
+         * FILL EMPTY TOWER
+         */
+
+        while (
+          floors.length < 12
+        ) {
+          floors.push({
+            floor,
+
+            label:
+              "Open Floor",
+
+            status:
+              "locked",
+
+            type:
+              "locked",
+
+            amount:
+              0
+          });
+
+          floor +=
+            1;
+        }
+
+        return floors.slice(
+          0,
+          12
+        );
+      }
+
+      function renderFloors(
+        payload = {},
+        summary = {}
+      ) {
+        if (
+          !els.towerFloors
+        ) {
+          return;
+        }
+
+        const floors =
+          Array.isArray(
+            payload?.tower?.floors
+          )
             ? payload.tower.floors
-            : defaultFloors(summary);
+            : defaultFloors(
+                summary
+              );
 
-          const sorted = [...floors].sort(
-            (a, b) => Number(b.floor || 0) - Number(a.floor || 0)
+        const sorted =
+          [...floors].sort(
+            (a, b) =>
+              Number(
+                b.floor || 0
+              ) -
+              Number(
+                a.floor || 0
+              )
           );
 
-          els.towerFloors.innerHTML = sorted
-            .map((floor) => {
-              const amount = Number(floor.amount || 0);
-              const type = normalizeText(floor.type || floor.level).toLowerCase();
-              const status = normalizeText(floor.status || floor.state || "locked");
+        els.towerFloors.innerHTML =
+          sorted
+            .map(
+              (floor) => {
+                const amount =
+                  Number(
+                    floor.amount ||
+                      0
+                  );
 
-              let label = normalizeText(floor.label) || normalizeText(floor.name);
+                const type =
+                  normalizeText(
+                    floor.type ||
+                      floor.level
+                  ).toLowerCase();
 
-              if (!label && type === "team") label = "Member B referred Member C";
-              if (!label && type === "direct") label = "Member A referred Member B";
-              if (!label) {
-                label = status === "pending" ? "Pending Referral" : "Open Floor";
+                const status =
+                  normalizeText(
+                    floor.status ||
+                      floor.state ||
+                      "locked"
+                  );
+
+                let label =
+                  normalizeText(
+                    floor.label
+                  ) ||
+                  normalizeText(
+                    floor.name
+                  );
+
+                if (
+                  !label &&
+                  type === "team"
+                ) {
+                  label =
+                    "Approved Team Referral";
+                }
+
+                if (
+                  !label &&
+                  type === "direct"
+                ) {
+                  label =
+                    "Approved Direct Referral";
+                }
+
+                if (!label) {
+                  label =
+                    status === "pending"
+                      ? "Pending Referral"
+                      : "Open Floor";
+                }
+
+                const moneyText =
+                  amount > 0
+                    ? `+${money(amount)}`
+                    : titleCase(
+                        status ||
+                          "Locked"
+                      );
+
+                return `
+                  <div class="${floorClass(
+                    floor
+                  )}">
+                    <span class="floor-number">
+                      ${escapeHtml(
+                        floor.floor ||
+                          ""
+                      )}
+                    </span>
+
+                    <span class="floor-name">
+                      ${escapeHtml(
+                        label
+                      )}
+                    </span>
+
+                    <span class="floor-money">
+                      ${escapeHtml(
+                        moneyText
+                      )}
+                    </span>
+                  </div>
+                `;
               }
-
-              const moneyText =
-                amount > 0 ? `+${money(amount)}` : titleCase(status || "Locked");
-
-              return `
-                <div class="${floorClass(floor)}">
-                  <span class="floor-number">${escapeHtml(floor.floor || "")}</span>
-                  <span class="floor-name">${escapeHtml(label)}</span>
-                  <span class="floor-money">${escapeHtml(moneyText)}</span>
-                </div>
-              `;
-            })
+            )
             .join("");
+      }
+
+      /* =====================================================
+         INITIALS
+      ===================================================== */
+
+      function getInitials(
+        value
+      ) {
+        const text =
+          normalizeText(
+            value
+          );
+
+        if (!text) {
+          return "CL";
         }
 
-        function getInitials(value) {
-          const text = normalizeText(value);
+        const clean =
+          text.includes("@")
+            ? text.split("@")[0]
+            : text;
 
-          if (!text) return "CL";
+        const parts =
+          clean
+            .split(/\s+/)
+            .filter(Boolean);
 
-          const clean = text.includes("@") ? text.split("@")[0] : text;
-          const parts = clean.split(/\s+/).filter(Boolean);
-
-          if (parts.length >= 2) {
-            return `${parts[0][0] || ""}${parts[1][0] || ""}`.toUpperCase();
-          }
-
-          return clean.slice(0, 2).toUpperCase();
+        if (
+          parts.length >= 2
+        ) {
+          return (
+            `${parts[0][0] || ""}` +
+            `${parts[1][0] || ""}`
+          ).toUpperCase();
         }
 
-        function renderLeaderboard(payload = {}) {
-          if (!els.leaderboardTable) return;
+        return clean
+          .slice(
+            0,
+            2
+          )
+          .toUpperCase();
+      }
 
-          const rows =
-            payload.leaderboard ||
-            payload.rows ||
-            payload.members ||
-            payload.topEarners ||
-            payload.top_earners ||
-            [];
+      /* =====================================================
+         LEADERBOARD
+      ===================================================== */
 
-          const safeRows = Array.isArray(rows) ? rows.slice(0, 5) : [];
+      function renderLeaderboard(
+        payload = {}
+      ) {
+        if (
+          !els.leaderboardTable
+        ) {
+          return;
+        }
 
-          const header = `
-            <div class="table-row header">
-              <span>Rank</span>
-              <span>Member</span>
-              <span>Approved</span>
-              <span>Earnings</span>
-            </div>
-          `;
+        const rows =
+          payload.leaderboard ||
+          payload.rows ||
+          payload.members ||
+          payload.topEarners ||
+          payload.top_earners ||
+          [];
 
-          if (!safeRows.length) {
-            els.leaderboardTable.innerHTML =
-              header + `<div class="empty-box">No leaderboard activity yet.</div>`;
-            return;
-          }
+        const safeRows =
+          Array.isArray(
+            rows
+          )
+            ? rows.slice(
+                0,
+                5
+              )
+            : [];
 
+        const header = `
+          <div class="table-row header">
+            <span>Rank</span>
+            <span>Member</span>
+            <span>Approved</span>
+            <span>Earnings</span>
+          </div>
+        `;
+
+        if (
+          !safeRows.length
+        ) {
           els.leaderboardTable.innerHTML =
             header +
-            safeRows
-              .map((row, index) => {
-                const rank = row.rank || index + 1;
+            `
+              <div class="empty-box">
+                No leaderboard activity yet.
+              </div>
+            `;
+
+          return;
+        }
+
+        els.leaderboardTable.innerHTML =
+          header +
+          safeRows
+            .map(
+              (
+                row,
+                index
+              ) => {
+                const rank =
+                  row.rank ||
+                  index + 1;
+
                 const name =
                   row.name ||
                   row.memberName ||
                   row.member_name ||
                   row.full_name ||
                   `Member #${rank}`;
-                const email = normalizeEmail(row.email);
+
+                const email =
+                  normalizeEmail(
+                    row.email
+                  );
+
                 const approved =
-                  row.approvedReferrals ||
-                  row.approved_referrals ||
-                  row.approved ||
-                  0;
+                  Number(
+                    row.approvedReferrals ??
+                      row.approved_referrals ??
+                      row.approved ??
+                      0
+                  );
+
                 const earned =
-                  row.totalEarned ||
-                  row.total_earned ||
-                  row.earnedAmount ||
-                  row.earned_amount ||
-                  row.allowanceBalance ||
-                  row.allowance_balance ||
-                  0;
+                  Number(
+                    row.totalEarned ??
+                      row.total_earned ??
+                      row.earnedAmount ??
+                      row.earned_amount ??
+                      row.allowanceBalance ??
+                      row.allowance_balance ??
+                      0
+                  );
 
                 return `
                   <div class="table-row">
-                    <span><span class="rank-medal">${escapeHtml(rank)}</span></span>
-                    <span class="member-cell">
-                      <span class="avatar">${escapeHtml(getInitials(name || email))}</span>
-                      <span class="member-name">
-                        ${escapeHtml(name)}
-                        ${email ? `<span class="member-email">${escapeHtml(email)}</span>` : ""}
+
+                    <span>
+                      <span class="rank-medal">
+                        ${escapeHtml(rank)}
                       </span>
                     </span>
-                    <span>${escapeHtml(approved)}</span>
-                    <span class="green-money">${escapeHtml(money(earned))}</span>
+
+                    <span class="member-cell">
+
+                      <span class="avatar">
+                        ${escapeHtml(
+                          getInitials(
+                            name ||
+                              email
+                          )
+                        )}
+                      </span>
+
+                      <span class="member-name">
+
+                        ${escapeHtml(
+                          name
+                        )}
+
+                        ${
+                          email
+                            ? `
+                              <span class="member-email">
+                                ${escapeHtml(
+                                  email
+                                )}
+                              </span>
+                            `
+                            : ""
+                        }
+
+                      </span>
+
+                    </span>
+
+                    <span>
+                      ${escapeHtml(
+                        approved
+                      )}
+                    </span>
+
+                    <span class="green-money">
+                      ${escapeHtml(
+                        money(
+                          earned
+                        )
+                      )}
+                    </span>
+
                   </div>
                 `;
-              })
-              .join("");
+              }
+            )
+            .join("");
+      }
+
+      /* =====================================================
+         RECENT REFERRALS
+      ===================================================== */
+
+      function renderRecentReferrals(
+        payload = {}
+      ) {
+        if (
+          !els.recentReferralsTable
+        ) {
+          return;
         }
 
-        function renderRecentReferrals(payload = {}) {
-          if (!els.recentReferralsTable) return;
+        const rows =
+          payload.referrals ||
+          payload.recentReferrals ||
+          payload.recent_referrals ||
+          [];
 
-          const rows =
-            payload.referrals ||
-            payload.recentReferrals ||
-            payload.recent_referrals ||
-            [];
+        const safeRows =
+          Array.isArray(
+            rows
+          )
+            ? rows.slice(
+                0,
+                5
+              )
+            : [];
 
-          const safeRows = Array.isArray(rows) ? rows.slice(0, 5) : [];
+        const header = `
+          <div class="table-row header">
+            <span>Type</span>
+            <span>Member</span>
+            <span>Status</span>
+            <span>Amount</span>
+          </div>
+        `;
 
-          const header = `
-            <div class="table-row header">
-              <span>Type</span>
-              <span>Member</span>
-              <span>Status</span>
-              <span>Amount</span>
-            </div>
-          `;
-
-          if (!safeRows.length) {
-            els.recentReferralsTable.innerHTML =
-              header + `<div class="empty-box">No recent referrals yet.</div>`;
-            return;
-          }
-
+        if (
+          !safeRows.length
+        ) {
           els.recentReferralsTable.innerHTML =
             header +
-            safeRows
-              .map((referral) => {
-                const type = normalizeText(
-                  referral.level || referral.type || "direct"
-                ).toLowerCase();
-                const isTeam = type === "team";
-                const label = isTeam ? "Member B → C" : "Member A → B";
+            `
+              <div class="empty-box">
+                No recent referrals yet.
+              </div>
+            `;
+
+          return;
+        }
+
+        els.recentReferralsTable.innerHTML =
+          header +
+          safeRows
+            .map(
+              (
+                referral
+              ) => {
+                const type =
+                  normalizeText(
+                    referral.level ||
+                      referral.type ||
+                      "direct"
+                  ).toLowerCase();
+
+                const isTeam =
+                  type === "team";
+
+                const label =
+                  isTeam
+                    ? "Team"
+                    : "Direct";
+
                 const name =
                   referral.name ||
                   referral.full_name ||
+                  referral.fullName ||
                   referral.email ||
                   "New Member";
-                const email = normalizeEmail(referral.email);
-                const statusRaw = normalizeText(
-                  referral.statusLabel || referral.status,
-                  "Pending"
-                );
-                const status = statusRaw.toLowerCase().includes("approved")
-                  ? "approved"
-                  : "pending";
-                const amount = Number(
-                  referral.amount ||
-                    referral.reward_amount ||
-                    referral.earned ||
-                    0
-                );
-                const approved = status === "approved";
+
+                const email =
+                  normalizeEmail(
+                    referral.email
+                  );
+
+                const statusRaw =
+                  normalizeText(
+                    referral.statusLabel ||
+                      referral.status,
+                    "Pending"
+                  );
+
+                const normalizedStatus =
+                  statusRaw.toLowerCase();
+
+                const approved =
+                  [
+                    "approved",
+                    "active",
+                    "paid",
+                    "current",
+                    "completed",
+                    "complete"
+                  ].some(
+                    (status) =>
+                      normalizedStatus.includes(
+                        status
+                      )
+                  );
+
+                const status =
+                  approved
+                    ? "approved"
+                    : "pending";
+
+                const amount =
+                  Number(
+                    referral.amount ??
+                      referral.reward_amount ??
+                      referral.earned ??
+                      0
+                  );
+
+                const defaultAmount =
+                  isTeam
+                    ? 1
+                    : 7;
 
                 return `
                   <div class="table-row">
-                    <span>${escapeHtml(label)}</span>
-                    <span class="member-cell">
-                      <span class="avatar">${escapeHtml(getInitials(name || email))}</span>
-                      <span class="member-name">
-                        ${escapeHtml(name)}
-                        ${email ? `<span class="member-email">${escapeHtml(email)}</span>` : ""}
-                      </span>
+
+                    <span>
+                      ${escapeHtml(
+                        label
+                      )}
                     </span>
+
+                    <span class="member-cell">
+
+                      <span class="avatar">
+                        ${escapeHtml(
+                          getInitials(
+                            name ||
+                              email
+                          )
+                        )}
+                      </span>
+
+                      <span class="member-name">
+
+                        ${escapeHtml(
+                          name
+                        )}
+
+                        ${
+                          email
+                            ? `
+                              <span class="member-email">
+                                ${escapeHtml(
+                                  email
+                                )}
+                              </span>
+                            `
+                            : ""
+                        }
+
+                      </span>
+
+                    </span>
+
                     <span>
                       <span class="status-tag ${status}">
-                        ${escapeHtml(titleCase(statusRaw))}
+                        ${escapeHtml(
+                          titleCase(
+                            statusRaw
+                          )
+                        )}
                       </span>
                     </span>
-                    <span class="${isTeam ? "blue-money" : approved ? "green-money" : ""}">
-                      ${approved ? "+ " + escapeHtml(money(amount || (isTeam ? 1 : 7))) : "Pending"}
+
+                    <span
+                      class="${
+                        isTeam
+                          ? "blue-money"
+                          : approved
+                            ? "green-money"
+                            : ""
+                      }"
+                    >
+                      ${
+                        approved
+                          ? "+ " +
+                            escapeHtml(
+                              money(
+                                amount ||
+                                  defaultAmount
+                              )
+                            )
+                          : "Pending"
+                      }
                     </span>
+
                   </div>
                 `;
-              })
-              .join("");
+              }
+            )
+            .join("");
+      }
+
+      /* =====================================================
+         REFERRAL PAYLOAD
+      ===================================================== */
+
+      function renderReferralPayload(
+        payload = {}
+      ) {
+        state.referralsPayload =
+          payload;
+
+        const summary =
+          normalizeSummary(
+            payload
+          );
+
+        renderStats(
+          summary
+        );
+
+        renderFloors(
+          payload,
+          summary
+        );
+
+        renderRecentReferrals(
+          payload
+        );
+
+        const payloadMember =
+          payload.member ||
+          {};
+
+        const returnedLink =
+          payloadMember.referralLink ||
+          payloadMember.referral_link ||
+          payload.referralLink ||
+          payload.referral_link;
+
+        const returnedCode =
+          payloadMember.referralCode ||
+          payloadMember.referral_code ||
+          payload.referralCode ||
+          payload.referral_code;
+
+        if (
+          els.referralLink &&
+          (
+            returnedLink ||
+            returnedCode
+          )
+        ) {
+          els.referralLink.value =
+            getReferralLink({
+              ...(state.member ||
+                {}),
+
+              referralLink:
+                returnedLink,
+
+              referral_link:
+                returnedLink,
+
+              referralCode:
+                returnedCode,
+
+              referral_code:
+                returnedCode
+            });
         }
 
-        function renderReferralPayload(payload = {}) {
-          state.referralsPayload = payload;
+        setTowerStatus(
+          "Referral tower updated.",
+          "success"
+        );
+      }
 
-          const summary = normalizeSummary(payload);
+      /* =====================================================
+         SESSION
+      ===================================================== */
 
-          renderStats(summary);
-          renderFloors(payload, summary);
-          renderRecentReferrals(payload);
+      async function loadSession() {
+        const data =
+          await fetchJson(
+            API.me
+          );
+
+        const member =
+          data.member ||
+          data.profile ||
+          data.user;
+
+        if (
+          !member ||
+          data.authenticated !==
+            true
+        ) {
+          await redirectToLoginOnlyIfActuallyLoggedOut(
+            "loadSession unauthenticated"
+          );
+
+          return null;
+        }
+
+        state.access =
+          getAccessData(
+            data
+          );
+
+        renderMember(
+          member
+        );
+
+        renderBenefitsStatus(
+          data
+        );
+
+        return member;
+      }
+
+      /* =====================================================
+         OVERVIEW
+      ===================================================== */
+
+      async function loadOverview() {
+        try {
+          const data =
+            await fetchJson(
+              API.overview
+            );
+
+          const member =
+            data.member ||
+            data.profile ||
+            data.user;
 
           if (
-            els.referralLink &&
-            (payload.member?.referralLink || payload.member?.referral_link)
+            member
           ) {
-            els.referralLink.value = getReferralLink({
-              ...(state.member || {}),
-              referralLink: payload.member.referralLink,
-              referral_link: payload.member.referral_link,
+            renderMember({
+              ...(state.member ||
+                {}),
+              ...member
             });
           }
 
-          setTowerStatus("Referral tower updated.", "success");
-        }
+          /*
+           * Some overview endpoints may contain
+           * dashboard summary values.
+           */
 
-        async function loadSession() {
-          const data = await fetchJson(API.me);
-          const member = data.member || data.profile || data.user;
-
-          if (!member || data.authenticated !== true) {
-            await redirectToLoginOnlyIfActuallyLoggedOut(
-              "loadSession unauthenticated"
+          const possibleSummary =
+            normalizeSummary(
+              data
             );
-            return null;
+
+          if (
+            possibleSummary.totalReferrals ||
+            possibleSummary.totalEarned ||
+            possibleSummary.directReferrals ||
+            possibleSummary.teamReferrals ||
+            possibleSummary.growthPoolCredit
+          ) {
+            renderStats(
+              possibleSummary
+            );
           }
 
-          state.access = getAccessData(data);
-          renderMember(member);
-          renderBenefitsStatus(data);
+          renderBenefitsStatus({
+            ...(data ||
+              {}),
 
-          return member;
-        }
-
-        async function loadOverview() {
-          try {
-            const data = await fetchJson(API.overview);
-            const member = data.member || data.profile || data.user;
-
-            if (member) {
-              renderMember({ ...(state.member || {}), ...member });
+            member: {
+              ...(state.member ||
+                {}),
+              ...(member ||
+                {})
             }
+          });
+        } catch (error) {
+          console.warn(
+            "[portal/index] Overview skipped:",
+            error?.message ||
+              error
+          );
+        }
+      }
 
-            renderBenefitsStatus({
-              ...(data || {}),
-              member: {
-                ...(state.member || {}),
-                ...(member || {}),
-              },
-            });
-          } catch (error) {
+      /* =====================================================
+         REFERRAL + LEADERBOARD
+      ===================================================== */
+
+      async function loadReferralDashboard() {
+        setTowerStatus(
+          "Loading referral tower..."
+        );
+
+        try {
+          const [
+            referralsResult,
+            leaderboardResult
+          ] =
+            await Promise.allSettled([
+              fetchJson(
+                API.referrals
+              ),
+
+              fetchJson(
+                API.leaderboard
+              )
+            ]);
+
+          const referralsPayload =
+            referralsResult.status ===
+              "fulfilled" &&
+            referralsResult.value
+              ? referralsResult.value
+              : {};
+
+          const leaderboardPayload =
+            leaderboardResult.status ===
+              "fulfilled" &&
+            leaderboardResult.value
+              ? leaderboardResult.value
+              : {};
+
+          state.leaderboardPayload =
+            leaderboardPayload;
+
+          renderReferralPayload(
+            referralsPayload
+          );
+
+          renderLeaderboard(
+            leaderboardPayload
+          );
+
+          if (
+            referralsResult.status !==
+              "fulfilled" &&
+            leaderboardResult.status !==
+              "fulfilled"
+          ) {
             console.warn(
-              "[portal/index] Overview skipped:",
-              error?.message || error
+              "[portal/index] Referral and leaderboard APIs failed, but user remains logged in.",
+              referralsResult.reason ||
+                leaderboardResult.reason
             );
-          }
-        }
-
-        async function loadReferralDashboard() {
-          setTowerStatus("Loading referral tower...");
-
-          try {
-            const [referralsResult, leaderboardResult] =
-              await Promise.allSettled([
-                fetchJson(API.referrals),
-                fetchJson(API.leaderboard),
-              ]);
-
-            const referralsPayload =
-              referralsResult.status === "fulfilled" && referralsResult.value
-                ? referralsResult.value
-                : {};
-
-            const leaderboardPayload =
-              leaderboardResult.status === "fulfilled" && leaderboardResult.value
-                ? leaderboardResult.value
-                : {};
-
-            state.leaderboardPayload = leaderboardPayload;
-
-            renderReferralPayload(referralsPayload);
-            renderLeaderboard(leaderboardPayload);
-
-            if (
-              referralsResult.status !== "fulfilled" &&
-              leaderboardResult.status !== "fulfilled"
-            ) {
-              console.warn(
-                "[portal/index] Referral and leaderboard APIs failed, but user remains logged in.",
-                referralsResult.reason || leaderboardResult.reason
-              );
-
-              setTowerStatus(
-                "Your account is logged in, but referral data could not load right now.",
-                "error"
-              );
-            }
-          } catch (error) {
-            console.error("[portal/index] Referral dashboard error:", error);
-
-            const fallbackSummary = {
-              totalReferrals: 0,
-              approvedReferrals: 0,
-              directReferrals: 0,
-              teamReferrals: 0,
-              pendingReferrals: 0,
-              directEarnings: 0,
-              teamEarnings: 0,
-              growthPoolCredit: 0,
-              totalEarned: 0,
-            };
-
-            renderStats(fallbackSummary);
-            renderFloors({}, fallbackSummary);
-            renderLeaderboard({});
-            renderRecentReferrals({});
 
             setTowerStatus(
               "Your account is logged in, but referral data could not load right now.",
               "error"
             );
           }
+        } catch (error) {
+          console.error(
+            "[portal/index] Referral dashboard error:",
+            error
+          );
+
+          const fallbackSummary = {
+            totalReferrals:
+              0,
+
+            approvedReferrals:
+              0,
+
+            directReferrals:
+              0,
+
+            teamReferrals:
+              0,
+
+            pendingReferrals:
+              0,
+
+            directEarnings:
+              0,
+
+            teamEarnings:
+              0,
+
+            growthPoolCredit:
+              0,
+
+            totalEarned:
+              0
+          };
+
+          renderStats(
+            fallbackSummary
+          );
+
+          renderFloors(
+            {},
+            fallbackSummary
+          );
+
+          renderLeaderboard(
+            {}
+          );
+
+          renderRecentReferrals(
+            {}
+          );
+
+          setTowerStatus(
+            "Your account is logged in, but referral data could not load right now.",
+            "error"
+          );
         }
+      }
 
-        async function copyReferralLink() {
-          const link = els.referralLink?.value || "";
+      /* =====================================================
+         BILLING
+      ===================================================== */
 
-          if (!link) {
-            setTowerStatus("Referral link is not available yet.", "error");
+      async function openBillingPortal() {
+        try {
+          const data =
+            await fetchJson(
+              API.billingPortal,
+              {
+                method:
+                  "POST",
+
+                body:
+                  JSON.stringify({
+                    return_url:
+                      window.location.href
+                  })
+              }
+            );
+
+          const url =
+            data?.url ||
+            data?.billing_portal_url ||
+            data?.billingPortalUrl ||
+            data?.redirectTo;
+
+          if (!url) {
+            window.location.href =
+              "/portal/rewards.html";
+
             return;
           }
 
-          try {
-            await navigator.clipboard.writeText(link);
-            setTowerStatus("Referral link copied.", "success");
-          } catch {
-            els.referralLink?.select();
-            document.execCommand("copy");
-            setTowerStatus("Referral link copied.", "success");
-          }
+          window.location.href =
+            url;
+        } catch (
+          error
+        ) {
+          console.error(
+            "[portal/index] Billing portal error:",
+            error
+          );
+
+          window.location.href =
+            "/portal/rewards.html";
+        }
+      }
+
+      /* =====================================================
+         LOGOUT
+      ===================================================== */
+
+      async function logout() {
+        if (
+          !els.logoutButton
+        ) {
+          return;
         }
 
-        async function openBillingPortal() {
-          try {
-            const data = await fetchJson(API.billingPortal, {
-              method: "POST",
-              body: JSON.stringify({
-                return_url: window.location.href,
-              }),
-            });
+        const oldText =
+          els.logoutButton.textContent;
 
-            const url =
-              data?.url ||
-              data?.billing_portal_url ||
-              data?.billingPortalUrl ||
-              data?.redirectTo;
+        els.logoutButton.disabled =
+          true;
 
-            if (!url) {
-              window.location.href = "/portal/rewards.html";
-              return;
-            }
+        els.logoutButton.textContent =
+          "Logging out...";
 
-            window.location.href = url;
-          } catch {
-            window.location.href = "/portal/rewards.html";
-          }
-        }
+        try {
+          await fetch(
+            API.logout,
+            {
+              method:
+                "POST",
 
-        async function logout() {
-          if (!els.logoutButton) return;
+              credentials:
+                "include",
 
-          const oldText = els.logoutButton.textContent;
-          els.logoutButton.disabled = true;
-          els.logoutButton.textContent = "Logging out...";
+              cache:
+                "no-store",
 
-          try {
-            await fetch(API.logout, {
-              method: "POST",
-              credentials: "include",
-              cache: "no-store",
               headers: {
-                Accept: "application/json",
-                "Cache-Control": "no-cache",
-              },
-            });
+                Accept:
+                  "application/json",
 
-            window.location.replace("/login.html");
-          } catch {
-            els.logoutButton.disabled = false;
-            els.logoutButton.textContent = oldText;
-            alert("We could not log you out right now. Please try again.");
-          }
+                "Cache-Control":
+                  "no-cache"
+              }
+            }
+          );
+
+          window.location.replace(
+            "/login.html"
+          );
+        } catch {
+          els.logoutButton.disabled =
+            false;
+
+          els.logoutButton.textContent =
+            oldText;
+
+          alert(
+            "We could not log you out right now. Please try again."
+          );
         }
+      }
 
-        els.copyReferralButton?.addEventListener("click", copyReferralLink);
-        els.billingPortalButton?.addEventListener("click", openBillingPortal);
-        els.logoutButton?.addEventListener("click", logout);
+      /* =====================================================
+         EVENTS
+      ===================================================== */
 
-        window.addEventListener("cardleo:auth-ready", async (event) => {
-          const member = event?.detail?.member;
-          const access = event?.detail?.access || {};
+      els.copyReferralButton
+        ?.addEventListener(
+          "click",
+          copyReferralLink
+        );
 
-          if (member) {
-            renderMember(member);
+      els.copyReferralTextButton
+        ?.addEventListener(
+          "click",
+          copyReferralMessage
+        );
+
+      els.textReferralButton
+        ?.addEventListener(
+          "click",
+          textReferralLink
+        );
+
+      els.emailReferralButton
+        ?.addEventListener(
+          "click",
+          emailReferralLink
+        );
+
+      els.shareReferralButton
+        ?.addEventListener(
+          "click",
+          shareReferralLink
+        );
+
+      els.promoShareButton
+        ?.addEventListener(
+          "click",
+          shareReferralLink
+        );
+
+      els.billingPortalButton
+        ?.addEventListener(
+          "click",
+          openBillingPortal
+        );
+
+      els.logoutButton
+        ?.addEventListener(
+          "click",
+          logout
+        );
+
+      /* =====================================================
+         AUTH READY EVENT
+      ===================================================== */
+
+      window.addEventListener(
+        "cardleo:auth-ready",
+        async (
+          event
+        ) => {
+          const member =
+            event?.detail?.member;
+
+          const access =
+            event?.detail?.access ||
+            {};
+
+          if (
+            member
+          ) {
+            renderMember(
+              member
+            );
           }
 
           renderBenefitsStatus({
-            member: member || state.member || {},
-            access,
+            member:
+              member ||
+              state.member ||
+              {},
+
+            access
           });
 
-          if (!state.hasLoaded) {
-            state.hasLoaded = true;
-            await Promise.allSettled([loadOverview(), loadReferralDashboard()]);
+          if (
+            !state.hasLoaded
+          ) {
+            state.hasLoaded =
+              true;
+
+            await Promise.allSettled([
+              loadOverview(),
+              loadReferralDashboard()
+            ]);
           }
-        });
+        }
+      );
 
-        window.addEventListener("cardleo:auth-failed", async (event) => {
-          const detail = event?.detail || {};
+      /* =====================================================
+         AUTH FAILED EVENT
+      ===================================================== */
 
-          if (detail.authenticated === true) {
+      window.addEventListener(
+        "cardleo:auth-failed",
+        async (
+          event
+        ) => {
+          const detail =
+            event?.detail ||
+            {};
+
+          if (
+            detail.authenticated ===
+            true
+          ) {
             return;
           }
 
-          if (detail.reason === "payment_required") {
-            state.isRedirecting = true;
+          /*
+           * IMPORTANT:
+           *
+           * Existing unpaid users go to Member Login.
+           * Login will create their payment session and
+           * redirect them to Stripe.
+           *
+           * Do NOT send an existing account back through
+           * the signup form.
+           */
+
+          if (
+            detail.reason ===
+              "payment_required"
+          ) {
+            state.isRedirecting =
+              true;
 
             window.location.replace(
-              "/signup.html?status=payment_required&next=" +
+              "/login.html?payment_required=1&next=" +
                 encodeURIComponent(
-                  window.location.pathname + window.location.search
+                  window.location.pathname +
+                    window.location.search
                 )
             );
 
             return;
           }
 
-          await redirectToLoginOnlyIfActuallyLoggedOut("cardleo:auth-failed");
-        });
+          await redirectToLoginOnlyIfActuallyLoggedOut(
+            "cardleo:auth-failed"
+          );
+        }
+      );
 
-        (async () => {
-          try {
-            renderBenefitsStatus({
-              member: {},
-              access: {
-                member_status: "pending",
-                perks_ready: false,
-              },
-            });
+      /* =====================================================
+         STARTUP
+      ===================================================== */
 
-            const member = await loadSession();
+      (async () => {
+        try {
+          /*
+           * Temporary loading benefits state.
+           */
 
-            if (!member) return;
-
-            if (!state.hasLoaded) {
-              state.hasLoaded = true;
-              await Promise.allSettled([loadOverview(), loadReferralDashboard()]);
-            }
-          } catch (error) {
-            console.error("[portal/index] Startup error:", error);
-
-            if (error?.status === 401 || error?.status === 403) {
-              await redirectToLoginOnlyIfActuallyLoggedOut("startup auth error");
-              return;
-            }
-
-            setTowerStatus(
-              "Your account is logged in, but portal data could not load right now.",
-              "error"
-            );
-
-            renderLeaderboard({});
-            renderRecentReferrals({});
-            renderStats({
-              totalReferrals: 0,
-              approvedReferrals: 0,
-              directReferrals: 0,
-              teamReferrals: 0,
-              pendingReferrals: 0,
-              directEarnings: 0,
-              teamEarnings: 0,
-              growthPoolCredit: 0,
-              totalEarned: 0,
-            });
-
-            renderFloors(
+          renderBenefitsStatus({
+            member:
               {},
-              {
-                directReferrals: 0,
-                teamReferrals: 0,
-              }
+
+            access: {
+              member_status:
+                "pending",
+
+              perks_ready:
+                false
+            }
+          });
+
+          /*
+           * Confirm session.
+           */
+
+          const member =
+            await loadSession();
+
+          if (
+            !member
+          ) {
+            return;
+          }
+
+          /*
+           * Load portal data only once.
+           */
+
+          if (
+            !state.hasLoaded
+          ) {
+            state.hasLoaded =
+              true;
+
+            await Promise.allSettled([
+              loadOverview(),
+              loadReferralDashboard()
+            ]);
+          }
+        } catch (
+          error
+        ) {
+          console.error(
+            "[portal/index] Startup error:",
+            error
+          );
+
+          if (
+            error?.status ===
+              401 ||
+            error?.status ===
+              403
+          ) {
+            await redirectToLoginOnlyIfActuallyLoggedOut(
+              "startup auth error"
             );
 
-            renderBenefitsStatus({
-              member: state.member || {},
-              access: state.access || {
-                member_status: "pending",
-                perks_ready: false,
-              },
-            });
+            return;
           }
-        })();
+
+          setTowerStatus(
+            "Your account is logged in, but portal data could not load right now.",
+            "error"
+          );
+
+          renderLeaderboard(
+            {}
+          );
+
+          renderRecentReferrals(
+            {}
+          );
+
+          renderStats({
+            totalReferrals:
+              0,
+
+            approvedReferrals:
+              0,
+
+            directReferrals:
+              0,
+
+            teamReferrals:
+              0,
+
+            pendingReferrals:
+              0,
+
+            directEarnings:
+              0,
+
+            teamEarnings:
+              0,
+
+            growthPoolCredit:
+              0,
+
+            totalEarned:
+              0
+          });
+
+          renderFloors(
+            {},
+            {
+              directReferrals:
+                0,
+
+              teamReferrals:
+                0
+            }
+          );
+
+          renderBenefitsStatus({
+            member:
+              state.member ||
+              {},
+
+            access:
+              state.access ||
+              {
+                member_status:
+                  "pending",
+
+                perks_ready:
+                  false
+              }
+          });
+        }
       })();
-    </script>
-  </body>
+    })();
+  </script>
+
+</body>
 </html>

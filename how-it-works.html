@@ -93,19 +93,33 @@
   <style>
     :root {
       --leo-black: #030303;
-      --leo-panel: rgba(12, 12, 12, 0.9);
-      --leo-panel-2: rgba(255, 255, 255, 0.045);
+      --leo-black-2: #080808;
+      --leo-panel: rgba(12, 12, 12, 0.92);
+      --leo-panel-soft: rgba(255, 255, 255, 0.04);
+
       --leo-line: rgba(231, 182, 79, 0.23);
+      --leo-line-soft: rgba(255, 255, 255, 0.08);
+
       --leo-gold: #e7b64f;
       --leo-gold-2: #f7d98b;
       --leo-gold-3: #a66f10;
+
       --leo-white: #f8f3e7;
+
       --leo-muted: rgba(248, 243, 231, 0.72);
       --leo-muted-2: rgba(248, 243, 231, 0.52);
+
       --leo-green: #48f06b;
       --leo-blue: #7ec8ff;
       --leo-red: #ff7676;
-      --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
+
+      --leo-shadow:
+        0 28px 90px rgba(0, 0, 0, 0.62);
+
+      --leo-shadow-soft:
+        0 16px 44px rgba(0, 0, 0, 0.26);
+
+      --header-height: 86px;
     }
 
     * {
@@ -114,10 +128,16 @@
 
     html {
       scroll-behavior: smooth;
+      scroll-padding-top: 100px;
     }
 
     body {
       margin: 0;
+
+      width: 100%;
+      min-height: 100vh;
+
+      overflow-x: hidden;
 
       font-family:
         Inter,
@@ -148,19 +168,32 @@
         );
     }
 
+    body.nav-open {
+      overflow: hidden;
+    }
+
     a {
       color: inherit;
       text-decoration: none;
     }
 
     img,
-    video {
-      max-width: 100%;
+    video,
+    svg,
+    iframe {
       display: block;
+      max-width: 100%;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
     }
 
     button {
-      font: inherit;
+      cursor: pointer;
     }
 
     button,
@@ -168,9 +201,16 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    :focus-visible {
+      outline: 2px solid var(--leo-gold-2);
+      outline-offset: 4px;
+    }
+
     .site-shell {
+      width: 100%;
       min-height: 100vh;
-      overflow: hidden;
+
+      overflow-x: hidden;
 
       background:
         linear-gradient(
@@ -201,20 +241,22 @@
     .site-header {
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 1000;
 
-      background:
-        rgba(0, 0, 0, 0.86);
+      padding-top: env(safe-area-inset-top);
 
       border-bottom:
         1px solid rgba(231, 182, 79, 0.18);
+
+      background:
+        rgba(0, 0, 0, 0.88);
 
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
     }
 
     .nav-wrap {
-      min-height: 86px;
+      min-height: var(--header-height);
 
       display: flex;
       align-items: center;
@@ -224,6 +266,8 @@
     }
 
     .brand {
+      min-width: 0;
+
       display: inline-flex;
       align-items: center;
 
@@ -234,11 +278,13 @@
       width: 54px;
       height: 54px;
 
-      border-radius: 16px;
+      flex: 0 0 54px;
 
       object-fit: contain;
 
       padding: 0.35rem;
+
+      border-radius: 16px;
 
       border:
         1px solid rgba(231, 182, 79, 0.35);
@@ -263,6 +309,8 @@
       width: 54px;
       height: 54px;
 
+      flex: 0 0 54px;
+
       display: none;
       place-items: center;
 
@@ -286,10 +334,13 @@
       color: var(--leo-gold-2);
 
       font-weight: 900;
+
       letter-spacing: 0.08em;
     }
 
     .brand-copy {
+      min-width: 0;
+
       display: flex;
       flex-direction: column;
 
@@ -326,13 +377,15 @@
 
     .site-nav a {
       color:
-        rgba(248, 243, 231, 0.75);
+        rgba(248, 243, 231, 0.76);
 
-      font-weight: 800;
       font-size: 0.95rem;
 
+      font-weight: 800;
+
       transition:
-        color 0.22s ease;
+        color 0.2s ease,
+        background 0.2s ease;
     }
 
     .site-nav a:hover,
@@ -343,11 +396,18 @@
     .nav-cta {
       min-height: 46px;
 
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
       padding:
         0.78rem
         1.1rem;
 
       border-radius: 999px;
+
+      color:
+        #080808 !important;
 
       background:
         linear-gradient(
@@ -357,36 +417,36 @@
           #8b5b0b 100%
         );
 
-      color:
-        #080808 !important;
-
       box-shadow:
         0 18px 42px rgba(216, 154, 34, 0.28),
         inset 0 1px 0 rgba(255, 255, 255, 0.45);
     }
 
     .menu-toggle {
-      display: none;
-
       width: 48px;
       height: 48px;
 
+      flex: 0 0 48px;
+
+      display: none;
+      align-items: center;
+      justify-content: center;
+
+      flex-direction: column;
+
+      gap: 5px;
+
+      padding: 0;
+
       border:
-        1px solid rgba(231, 182, 79, 0.2);
+        1px solid rgba(231, 182, 79, 0.22);
 
       border-radius: 14px;
 
       background:
         rgba(255, 255, 255, 0.04);
 
-      align-items: center;
-      justify-content: center;
-
-      flex-direction: column;
-
-      gap: 0.25rem;
-
-      cursor: pointer;
+      color: var(--leo-white);
     }
 
     .menu-toggle span {
@@ -395,40 +455,61 @@
 
       border-radius: 999px;
 
-      background:
-        var(--leo-white);
+      background: var(--leo-white);
+
+      transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    .menu-toggle.is-open span:nth-child(1) {
+      transform:
+        translateY(7px)
+        rotate(45deg);
+    }
+
+    .menu-toggle.is-open span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .menu-toggle.is-open span:nth-child(3) {
+      transform:
+        translateY(-7px)
+        rotate(-45deg);
     }
 
     /* ==========================================================
-       GLOBAL BUTTONS
+       BUTTONS
     ========================================================== */
 
     .btn {
-      display: inline-flex;
+      min-height: 54px;
 
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-
-      min-height: 54px;
 
       padding:
         0.95rem
         1.35rem;
 
-      border-radius: 999px;
-
       border: 0;
+
+      border-radius: 999px;
 
       font-weight: 900;
 
-      cursor: pointer;
+      text-align: center;
 
       transition:
         opacity 0.2s ease,
-        border-color 0.2s ease;
+        border-color 0.2s ease,
+        background 0.2s ease;
     }
 
     .btn-primary {
+      color: #080808;
+
       background:
         linear-gradient(
           135deg,
@@ -437,49 +518,49 @@
           #8b5b0b 100%
         );
 
-      color: #080808;
-
       box-shadow:
         0 18px 42px rgba(216, 154, 34, 0.28),
         inset 0 1px 0 rgba(255, 255, 255, 0.45);
     }
 
     .btn-secondary {
+      color: var(--leo-white);
+
       border:
         1px solid rgba(231, 182, 79, 0.28);
 
       background:
         rgba(255, 255, 255, 0.045);
+    }
 
-      color:
-        var(--leo-white);
+    .btn:hover {
+      opacity: 0.94;
     }
 
     /* ==========================================================
-       TYPOGRAPHY
+       TYPE
     ========================================================== */
 
     .eyebrow {
-      display: inline-flex;
-      align-items: center;
-
-      gap: 0.65rem;
-
       margin:
         0
         0
         1rem;
 
-      color:
-        var(--leo-gold);
+      display: inline-flex;
+      align-items: center;
+
+      gap: 0.65rem;
+
+      color: var(--leo-gold);
 
       font-size: 0.78rem;
+
+      font-weight: 900;
 
       letter-spacing: 0.18em;
 
       text-transform: uppercase;
-
-      font-weight: 900;
     }
 
     .eyebrow::before {
@@ -533,6 +614,8 @@
     }
 
     .text-gradient {
+      color: transparent;
+
       background:
         linear-gradient(
           135deg,
@@ -543,29 +626,15 @@
 
       -webkit-background-clip: text;
       background-clip: text;
-
-      color: transparent;
     }
 
     .hero-text,
     .section-heading p,
     .section-copy p,
     .cta-panel p {
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
 
       line-height: 1.75;
-    }
-
-    .hero-text {
-      max-width: 72ch;
-
-      margin:
-        1rem
-        auto
-        0;
-
-      font-size: 1.08rem;
     }
 
     /* ==========================================================
@@ -589,62 +658,8 @@
       align-items: center;
     }
 
-    .hero-copy {
-      max-width: 940px;
-
-      margin:
-        0
-        auto;
-
-      text-align: center;
-    }
-
-    .membership-bubble {
-      display: inline-flex;
-      align-items: center;
-
-      gap: 0.55rem;
-
-      margin-top: 1.25rem;
-
-      padding:
-        0.7rem
-        1rem;
-
-      border-radius: 999px;
-
-      border:
-        1px solid rgba(231, 182, 79, 0.28);
-
-      background:
-        radial-gradient(
-          circle at top right,
-          rgba(231, 182, 79, 0.12),
-          transparent 38%
-        ),
-        rgba(255, 255, 255, 0.04);
-
-      color:
-        var(--leo-gold-2);
-
-      font-weight: 900;
-    }
-
-    .top-actions {
-      display: flex;
-
-      align-items: center;
-      justify-content: center;
-
-      flex-wrap: wrap;
-
-      gap: 0.8rem;
-
-      margin-top: 1.5rem;
-    }
-
     /* ==========================================================
-       TOP VIDEO — FIRST THING UNDER NAVIGATION
+       VIDEO FIRST
     ========================================================== */
 
     .hero-video-wrap {
@@ -658,9 +673,6 @@
     }
 
     .hero-video-first {
-      order: -1;
-
-      margin-top: 0;
       margin-bottom: 2.5rem;
     }
 
@@ -695,7 +707,6 @@
         1.25rem;
 
       display: flex;
-
       align-items: center;
       justify-content: space-between;
 
@@ -713,20 +724,19 @@
     }
 
     .video-top strong {
-      color:
-        var(--leo-gold-2);
+      color: var(--leo-gold-2);
 
       font-size: 1rem;
+
       font-weight: 900;
     }
 
     .video-top span {
-      display: inline-flex;
+      min-height: 30px;
 
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-
-      min-height: 30px;
 
       padding:
         0
@@ -740,13 +750,11 @@
       background:
         rgba(231, 182, 79, 0.08);
 
-      color:
-        var(--leo-gold-2);
+      color: var(--leo-gold-2);
 
       font-size: 0.78rem;
-      font-weight: 800;
 
-      letter-spacing: 0.04em;
+      font-weight: 800;
     }
 
     .video-frame {
@@ -754,10 +762,9 @@
 
       width: 100%;
 
-      aspect-ratio:
-        16 / 9;
-
       overflow: hidden;
+
+      aspect-ratio: 16 / 9;
 
       background:
         linear-gradient(
@@ -771,15 +778,86 @@
     }
 
     .video-frame video {
-      display: block;
-
       width: 100%;
       height: 100%;
 
       object-fit: cover;
 
+      background: #000;
+    }
+
+    /* ==========================================================
+       HERO TEXT
+    ========================================================== */
+
+    .hero-copy {
+      width: 100%;
+
+      max-width: 940px;
+
+      margin:
+        0
+        auto;
+
+      text-align: center;
+    }
+
+    .hero-text {
+      max-width: 72ch;
+
+      margin:
+        1rem
+        auto
+        0;
+
+      font-size: 1.08rem;
+    }
+
+    .membership-bubble {
+      margin-top: 1.25rem;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      gap: 0.55rem;
+
+      max-width: 100%;
+
+      padding:
+        0.7rem
+        1rem;
+
+      border-radius: 999px;
+
+      border:
+        1px solid rgba(231, 182, 79, 0.28);
+
       background:
-        #000;
+        radial-gradient(
+          circle at top right,
+          rgba(231, 182, 79, 0.12),
+          transparent 38%
+        ),
+        rgba(255, 255, 255, 0.04);
+
+      color: var(--leo-gold-2);
+
+      font-weight: 900;
+
+      text-align: center;
+    }
+
+    .top-actions {
+      margin-top: 1.5rem;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      flex-wrap: wrap;
+
+      gap: 0.8rem;
     }
 
     /* ==========================================================
@@ -824,19 +902,21 @@
     }
 
     /* ==========================================================
-       START HERE / QUICK OVERVIEW
+       QUICK OVERVIEW
     ========================================================== */
 
     .quick-grid {
       display: grid;
 
       grid-template-columns:
-        repeat(3, 1fr);
+        repeat(3, minmax(0, 1fr));
 
       gap: 1rem;
     }
 
     .quick-card {
+      min-width: 0;
+
       padding: 1.25rem;
 
       border-radius: 22px;
@@ -857,10 +937,10 @@
       width: 44px;
       height: 44px;
 
+      margin-bottom: 0.9rem;
+
       display: grid;
       place-items: center;
-
-      margin-bottom: 0.9rem;
 
       border-radius: 14px;
 
@@ -870,8 +950,7 @@
       background:
         rgba(247, 217, 139, 0.08);
 
-      color:
-        var(--leo-gold-2);
+      color: var(--leo-gold-2);
 
       font-weight: 900;
     }
@@ -886,8 +965,7 @@
     .quick-card p {
       margin: 0;
 
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
 
       line-height: 1.65;
     }
@@ -900,8 +978,8 @@
       display: grid;
 
       grid-template-columns:
-        0.82fr
-        1.18fr;
+        minmax(0, 0.82fr)
+        minmax(0, 1.18fr);
 
       gap: 2rem;
 
@@ -915,8 +993,7 @@
     }
 
     .guide-intro p {
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
 
       line-height: 1.75;
     }
@@ -928,6 +1005,8 @@
     }
 
     .guide-card {
+      min-width: 0;
+
       padding: 1.25rem;
 
       border-radius: 24px;
@@ -943,8 +1022,7 @@
         ),
         rgba(255, 255, 255, 0.035);
 
-      box-shadow:
-        0 16px 44px rgba(0, 0, 0, 0.26);
+      box-shadow: var(--leo-shadow-soft);
     }
 
     .guide-card-top {
@@ -955,17 +1033,26 @@
       gap: 0.9rem;
     }
 
+    .guide-card-top > div:last-child {
+      min-width: 0;
+    }
+
     .guide-step {
       width: 44px;
       height: 44px;
 
-      flex: 0 0 auto;
+      flex:
+        0
+        0
+        44px;
 
       display: grid;
-
       place-items: center;
 
       border-radius: 14px;
+
+      border:
+        1px solid rgba(247, 217, 139, 0.26);
 
       background:
         linear-gradient(
@@ -974,11 +1061,7 @@
           rgba(231, 182, 79, 0.08)
         );
 
-      border:
-        1px solid rgba(247, 217, 139, 0.26);
-
-      color:
-        var(--leo-gold-2);
+      color: var(--leo-gold-2);
 
       font-weight: 900;
     }
@@ -989,15 +1072,13 @@
         0
         0.4rem;
 
-      color:
-        var(--leo-white);
+      color: var(--leo-white);
     }
 
     .guide-card p {
       margin: 0;
 
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
 
       line-height: 1.65;
     }
@@ -1010,27 +1091,25 @@
 
       padding-left: 1.2rem;
 
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
 
       line-height: 1.65;
     }
 
     .guide-card li {
-      margin:
-        0.45rem
-        0;
+      margin: 0.45rem 0;
     }
 
     .guide-card strong {
-      color:
-        var(--leo-gold-2);
+      color: var(--leo-gold-2);
     }
 
     .example-box {
       margin-top: 1rem;
 
       padding: 1rem;
+
+      overflow: hidden;
 
       border-radius: 18px;
 
@@ -1044,8 +1123,7 @@
     .example-box-label {
       margin-bottom: 0.45rem;
 
-      color:
-        var(--leo-blue);
+      color: var(--leo-blue);
 
       font-size: 0.76rem;
 
@@ -1059,22 +1137,30 @@
     .example-box p {
       margin: 0;
 
-      color:
-        var(--leo-white);
+      color: var(--leo-white);
+
+      overflow-wrap: anywhere;
+    }
+
+    .example-box strong {
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .share-methods {
+      margin-top: 1rem;
+
       display: grid;
 
       grid-template-columns:
-        repeat(2, 1fr);
+        repeat(2, minmax(0, 1fr));
 
       gap: 0.8rem;
-
-      margin-top: 1rem;
     }
 
     .share-method {
+      min-width: 0;
+
       padding: 1rem;
 
       border-radius: 18px;
@@ -1089,8 +1175,7 @@
     .share-method span {
       display: block;
 
-      color:
-        var(--leo-gold);
+      color: var(--leo-gold);
 
       font-size: 0.75rem;
 
@@ -1106,31 +1191,38 @@
 
       margin-top: 0.35rem;
 
-      color:
-        var(--leo-white);
+      color: var(--leo-white);
     }
 
     .share-method p {
-      margin-top: 0.4rem;
+      margin:
+        0.4rem
+        0
+        0;
 
-      font-size:
-        0.9rem;
+      color: var(--leo-muted);
+
+      font-size: 0.9rem;
+
+      line-height: 1.55;
     }
 
     /* ==========================================================
-       NEW RECRUIT FLOW
+       JOURNEY
     ========================================================== */
 
     .journey-grid {
       display: grid;
 
       grid-template-columns:
-        repeat(4, 1fr);
+        repeat(4, minmax(0, 1fr));
 
       gap: 1rem;
     }
 
     .journey-card {
+      min-width: 0;
+
       padding: 1.2rem;
 
       border-radius: 22px;
@@ -1145,19 +1237,15 @@
     .journey-card span {
       display: inline-flex;
 
-      margin-bottom:
-        0.7rem;
+      margin-bottom: 0.7rem;
 
-      color:
-        var(--leo-gold);
+      color: var(--leo-gold);
 
-      font-size:
-        0.76rem;
+      font-size: 0.76rem;
 
       font-weight: 900;
 
-      letter-spacing:
-        0.12em;
+      letter-spacing: 0.12em;
 
       text-transform: uppercase;
     }
@@ -1172,11 +1260,9 @@
     .journey-card p {
       margin: 0;
 
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
 
-      line-height:
-        1.65;
+      line-height: 1.65;
     }
 
     /* ==========================================================
@@ -1187,8 +1273,8 @@
       display: grid;
 
       grid-template-columns:
-        0.95fr
-        1.05fr;
+        minmax(0, 0.95fr)
+        minmax(0, 1.05fr);
 
       gap: 2rem;
 
@@ -1196,6 +1282,8 @@
     }
 
     .tower-visual {
+      min-width: 0;
+
       padding: 1.2rem;
 
       border-radius: 30px;
@@ -1215,33 +1303,27 @@
           rgba(0, 0, 0, 0.95)
         );
 
-      box-shadow:
-        var(--leo-shadow);
+      box-shadow: var(--leo-shadow);
     }
 
     .tower-header {
-      display: flex;
+      margin-bottom: 1rem;
 
+      display: flex;
+      align-items: center;
       justify-content: space-between;
 
-      align-items: center;
-
       gap: 1rem;
-
-      margin-bottom:
-        1rem;
     }
 
     .tower-header h3 {
       margin: 0;
 
-      font-size:
-        1.35rem;
+      font-size: 1.35rem;
     }
 
     .tower-header span {
-      color:
-        var(--leo-gold-2);
+      color: var(--leo-gold-2);
 
       font-weight: 900;
     }
@@ -1253,13 +1335,14 @@
     }
 
     .tower-floor {
+      min-width: 0;
       min-height: 48px;
 
       display: grid;
 
       grid-template-columns:
         48px
-        1fr
+        minmax(0, 1fr)
         auto;
 
       align-items: center;
@@ -1320,7 +1403,6 @@
       height: 36px;
 
       display: grid;
-
       place-items: center;
 
       border-radius: 999px;
@@ -1328,26 +1410,29 @@
       background:
         rgba(0, 0, 0, 0.38);
 
-      color:
-        var(--leo-gold-2);
+      color: var(--leo-gold-2);
 
       font-weight: 900;
     }
 
     .floor-name {
+      min-width: 0;
+
       font-weight: 800;
+
+      overflow-wrap: anywhere;
     }
 
     .floor-money {
-      color:
-        var(--leo-green);
+      color: var(--leo-green);
 
       font-weight: 900;
+
+      white-space: nowrap;
     }
 
     .tower-floor.team .floor-money {
-      color:
-        var(--leo-blue);
+      color: var(--leo-blue);
     }
 
     .tower-rules {
@@ -1361,6 +1446,8 @@
     ========================================================== */
 
     .info-card {
+      min-width: 0;
+
       padding: 1.15rem;
 
       border-radius: 22px;
@@ -1376,8 +1463,7 @@
         ),
         rgba(255, 255, 255, 0.035);
 
-      box-shadow:
-        0 16px 44px rgba(0, 0, 0, 0.25);
+      box-shadow: var(--leo-shadow-soft);
     }
 
     .info-card h3 {
@@ -1386,18 +1472,15 @@
         0
         0.45rem;
 
-      color:
-        var(--leo-white);
+      color: var(--leo-white);
     }
 
     .info-card p {
       margin: 0;
 
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
 
-      line-height:
-        1.65;
+      line-height: 1.65;
     }
 
     .calculation-card {
@@ -1406,8 +1489,9 @@
     }
 
     .calculation-total {
-      margin-top:
-        0.9rem;
+      margin-top: 0.9rem;
+
+      color: var(--leo-green);
 
       font-size:
         clamp(
@@ -1416,24 +1500,21 @@
           3rem
         );
 
-      color:
-        var(--leo-green);
-
       font-weight: 900;
 
       line-height: 1;
     }
 
     /* ==========================================================
-       PORTAL TRACKING
+       TRACKING
     ========================================================== */
 
     .tracking-grid {
       display: grid;
 
       grid-template-columns:
-        0.95fr
-        1.05fr;
+        minmax(0, 0.95fr)
+        minmax(0, 1.05fr);
 
       gap: 2rem;
 
@@ -1447,11 +1528,13 @@
     }
 
     .tracking-row {
+      min-width: 0;
+
       display: grid;
 
       grid-template-columns:
         46px
-        1fr;
+        minmax(0, 1fr);
 
       gap: 0.9rem;
 
@@ -1473,7 +1556,6 @@
       height: 42px;
 
       display: grid;
-
       place-items: center;
 
       border-radius: 14px;
@@ -1481,8 +1563,7 @@
       background:
         rgba(231, 182, 79, 0.09);
 
-      color:
-        var(--leo-gold-2);
+      color: var(--leo-gold-2);
 
       font-weight: 900;
     }
@@ -1493,18 +1574,15 @@
         0
         0.3rem;
 
-      font-size:
-        1rem;
+      font-size: 1rem;
     }
 
     .tracking-row p {
       margin: 0;
 
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
 
-      line-height:
-        1.55;
+      line-height: 1.55;
     }
 
     /* ==========================================================
@@ -1515,12 +1593,14 @@
       display: grid;
 
       grid-template-columns:
-        repeat(3, 1fr);
+        repeat(3, minmax(0, 1fr));
 
       gap: 1rem;
     }
 
     .benefit-card {
+      min-width: 0;
+
       padding: 1.2rem;
 
       border-radius: 22px;
@@ -1541,15 +1621,12 @@
       width: 54px;
       height: 54px;
 
-      display: grid;
+      margin-bottom: 0.95rem;
 
+      display: grid;
       place-items: center;
 
-      margin-bottom:
-        0.95rem;
-
-      border-radius:
-        18px;
+      border-radius: 18px;
 
       border:
         1px solid rgba(231, 182, 79, 0.26);
@@ -1557,11 +1634,9 @@
       background:
         rgba(231, 182, 79, 0.1);
 
-      color:
-        var(--leo-gold-2);
+      color: var(--leo-gold-2);
 
-      font-size:
-        1.35rem;
+      font-size: 1.35rem;
     }
 
     .benefit-card h3 {
@@ -1574,11 +1649,9 @@
     .benefit-card p {
       margin: 0;
 
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
 
-      line-height:
-        1.65;
+      line-height: 1.65;
     }
 
     /* ==========================================================
@@ -1589,8 +1662,7 @@
       display: grid;
 
       grid-template-columns:
-        1fr
-        1fr;
+        repeat(2, minmax(0, 1fr));
 
       gap: 2rem;
 
@@ -1600,25 +1672,19 @@
     .rules-list {
       margin: 0;
 
-      padding-left:
-        1.2rem;
+      padding-left: 1.2rem;
 
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
     }
 
     .rules-list li {
-      margin:
-        0.55rem
-        0;
+      margin: 0.55rem 0;
 
-      line-height:
-        1.55;
+      line-height: 1.55;
     }
 
     .rules-list strong {
-      color:
-        var(--leo-gold-2);
+      color: var(--leo-gold-2);
     }
 
     /* ==========================================================
@@ -1626,23 +1692,21 @@
     ========================================================== */
 
     .qa-grid {
-      display: grid;
-
-      gap: 0.85rem;
-
-      max-width:
-        980px;
+      max-width: 980px;
 
       margin:
         0
         auto;
+
+      display: grid;
+
+      gap: 0.85rem;
     }
 
     .qa-item {
       overflow: hidden;
 
-      border-radius:
-        20px;
+      border-radius: 20px;
 
       border:
         1px solid rgba(231, 182, 79, 0.18);
@@ -1658,48 +1722,41 @@
 
     .qa-question {
       width: 100%;
-
-      min-height:
-        62px;
+      min-height: 62px;
 
       padding:
         1rem
         1.15rem;
 
-      border: 0;
-
-      background:
-        transparent;
-
-      color:
-        var(--leo-white);
-
       display: flex;
-
-      justify-content:
-        space-between;
-
-      align-items:
-        center;
+      align-items: center;
+      justify-content: space-between;
 
       gap: 1rem;
 
-      text-align:
-        left;
+      border: 0;
 
-      cursor:
-        pointer;
+      background: transparent;
 
-      font-weight:
-        900;
+      color: var(--leo-white);
+
+      text-align: left;
+
+      font-weight: 900;
     }
 
     .qa-question span {
-      color:
-        var(--leo-gold-2);
+      flex:
+        0
+        0
+        auto;
 
-      font-size:
-        1.25rem;
+      color: var(--leo-gold-2);
+
+      font-size: 1.25rem;
+
+      transition:
+        transform 0.2s ease;
     }
 
     .qa-answer {
@@ -1710,21 +1767,17 @@
         1.15rem
         1.15rem;
 
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
 
-      line-height:
-        1.7;
+      line-height: 1.7;
     }
 
     .qa-item.is-open .qa-answer {
-      display:
-        block;
+      display: block;
     }
 
     .qa-item.is-open .qa-question span {
-      transform:
-        rotate(45deg);
+      transform: rotate(45deg);
     }
 
     /* ==========================================================
@@ -1739,11 +1792,7 @@
           3rem
         );
 
-      border-radius:
-        32px;
-
-      text-align:
-        center;
+      border-radius: 32px;
 
       border:
         1px solid rgba(231, 182, 79, 0.18);
@@ -1760,24 +1809,21 @@
           rgba(4, 4, 4, 0.95)
         );
 
-      box-shadow:
-        var(--leo-shadow);
+      box-shadow: var(--leo-shadow);
+
+      text-align: center;
     }
 
     .cta-actions {
+      margin-top: 1.4rem;
+
       display: flex;
+      align-items: center;
+      justify-content: center;
 
-      justify-content:
-        center;
+      flex-wrap: wrap;
 
-      flex-wrap:
-        wrap;
-
-      gap:
-        0.85rem;
-
-      margin-top:
-        1.4rem;
+      gap: 0.85rem;
     }
 
     /* ==========================================================
@@ -1787,56 +1833,38 @@
     .site-footer {
       padding:
         2rem
-        0;
+        0
+        calc(
+          2rem +
+          env(safe-area-inset-bottom)
+        );
 
       border-top:
         1px solid rgba(231, 182, 79, 0.12);
 
-      color:
-        var(--leo-muted);
+      color: var(--leo-muted);
     }
 
     .footer-bottom {
-      display:
-        flex;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
 
-      align-items:
-        center;
-
-      justify-content:
-        space-between;
-
-      gap:
-        1rem;
+      gap: 1rem;
     }
 
     .footer-bottom p {
-      margin:
-        0;
+      margin: 0;
     }
 
     .back-to-top {
-      color:
-        var(--leo-gold-2);
+      color: var(--leo-gold-2);
 
-      font-weight:
-        900;
+      font-weight: 900;
     }
 
     /* ==========================================================
-       ACCESSIBILITY
-    ========================================================== */
-
-    :focus-visible {
-      outline:
-        2px solid var(--leo-gold-2);
-
-      outline-offset:
-        4px;
-    }
-
-    /* ==========================================================
-       RESPONSIVE
+       TABLET
     ========================================================== */
 
     @media (max-width: 1100px) {
@@ -1844,240 +1872,907 @@
       .tower-grid,
       .tracking-grid,
       .rules-grid {
-        grid-template-columns:
-          1fr;
+        grid-template-columns: 1fr;
       }
 
       .guide-intro {
-        position:
-          static;
+        position: static;
       }
 
       .quick-grid,
       .benefits-grid {
         grid-template-columns:
-          repeat(2, 1fr);
+          repeat(2, minmax(0, 1fr));
       }
 
       .journey-grid {
         grid-template-columns:
-          repeat(2, 1fr);
+          repeat(2, minmax(0, 1fr));
+      }
+
+      .section {
+        padding:
+          76px
+          0;
       }
     }
 
+    /* ==========================================================
+       MOBILE NAV
+    ========================================================== */
+
     @media (max-width: 980px) {
       .menu-toggle {
-        display:
-          inline-flex;
+        display: inline-flex;
       }
 
       .site-nav {
-        position:
-          absolute;
+        position: absolute;
 
         top:
-          calc(100% + 0.75rem);
+          calc(
+            100% +
+            0.55rem
+          );
 
-        left:
-          1rem;
+        left: 1rem;
+        right: 1rem;
 
-        right:
-          1rem;
+        max-height:
+          calc(
+            100vh -
+            110px
+          );
 
-        display:
-          grid;
+        overflow-y: auto;
 
-        gap:
-          0.85rem;
+        display: grid;
 
-        padding:
-          1rem;
+        gap: 0.35rem;
 
-        border-radius:
-          22px;
+        padding: 0.75rem;
+
+        border-radius: 20px;
 
         border:
           1px solid rgba(231, 182, 79, 0.2);
 
         background:
-          rgba(0, 0, 0, 0.96);
+          rgba(0, 0, 0, 0.97);
 
-        box-shadow:
-          var(--leo-shadow);
+        box-shadow: var(--leo-shadow);
 
-        opacity:
-          0;
+        opacity: 0;
 
-        pointer-events:
-          none;
+        visibility: hidden;
+
+        pointer-events: none;
 
         transform:
           translateY(-8px);
 
         transition:
-          0.22s ease;
+          opacity 0.2s ease,
+          transform 0.2s ease,
+          visibility 0.2s ease;
       }
 
       .site-nav.is-open {
-        opacity:
-          1;
+        opacity: 1;
 
-        pointer-events:
-          auto;
+        visibility: visible;
+
+        pointer-events: auto;
 
         transform:
           translateY(0);
       }
+
+      .site-nav a {
+        min-height: 48px;
+
+        display: flex;
+        align-items: center;
+
+        padding:
+          0.75rem
+          0.9rem;
+
+        border-radius: 12px;
+      }
+
+      .site-nav a.is-active:not(.nav-cta) {
+        background:
+          rgba(247, 217, 139, 0.08);
+      }
+
+      .nav-cta {
+        justify-content: center;
+      }
     }
 
+    /* ==========================================================
+       PHONE
+    ========================================================== */
+
     @media (max-width: 680px) {
+      :root {
+        --header-height: 70px;
+      }
+
+      html {
+        scroll-padding-top: 84px;
+      }
+
+      body {
+        font-size: 15px;
+      }
+
       .container {
         width:
           min(
-            100% - 1.2rem,
+            100% - 1rem,
             1320px
           );
       }
 
-      .brand-subtitle {
-        display:
-          none;
+      .nav-wrap {
+        gap: 0.65rem;
+      }
+
+      .brand {
+        gap: 0.65rem;
       }
 
       .brand-logo,
       .brand-fallback {
-        width:
-          46px;
+        width: 42px;
+        height: 42px;
 
-        height:
-          46px;
+        flex:
+          0
+          0
+          42px;
+
+        border-radius: 13px;
       }
 
-      .nav-wrap {
-        min-height:
-          78px;
+      .brand-title {
+        max-width: 180px;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+
+        white-space: nowrap;
+
+        font-size: 0.94rem;
       }
+
+      .brand-subtitle {
+        display: none;
+      }
+
+      .menu-toggle {
+        width: 44px;
+        height: 44px;
+
+        flex:
+          0
+          0
+          44px;
+
+        border-radius: 13px;
+      }
+
+      .site-nav {
+        left: 0.5rem;
+        right: 0.5rem;
+
+        top:
+          calc(
+            100% +
+            0.4rem
+          );
+
+        border-radius: 18px;
+      }
+
+      /* HERO */
 
       .hero {
         padding:
-          12px
+          8px
           0
-          58px;
+          50px;
       }
 
       .hero-video-first {
-        margin-bottom:
-          1.75rem;
+        margin-bottom: 1.55rem;
       }
 
       .video-card {
-        border-radius:
-          22px;
+        border-radius: 18px;
+
+        box-shadow:
+          0 18px 50px rgba(0, 0, 0, 0.62),
+          0 0 28px rgba(231, 182, 79, 0.06);
+      }
+
+      .video-top {
+        min-height: 48px;
+
+        padding:
+          0.72rem
+          0.8rem;
+
+        gap: 0.55rem;
+      }
+
+      .video-top strong {
+        font-size: 0.82rem;
+
+        line-height: 1.25;
+      }
+
+      .video-top span {
+        min-height: 26px;
+
+        padding:
+          0
+          0.6rem;
+
+        font-size: 0.64rem;
+
+        white-space: nowrap;
       }
 
       .hero-copy {
-        text-align:
-          center;
+        padding:
+          0
+          0.15rem;
+      }
+
+      .eyebrow {
+        margin-bottom: 0.7rem;
+
+        font-size: 0.7rem;
+
+        letter-spacing: 0.14em;
+      }
+
+      .eyebrow::before {
+        width: 24px;
       }
 
       .hero h1 {
         font-size:
           clamp(
-            2.45rem,
-            12vw,
-            4rem
+            2.15rem,
+            11vw,
+            3.35rem
           );
+
+        line-height: 1;
+
+        letter-spacing: -0.045em;
       }
 
-      .quick-grid,
-      .journey-grid,
-      .benefits-grid,
-      .share-methods {
-        grid-template-columns:
-          1fr;
+      .hero-text {
+        margin-top: 0.85rem;
+
+        font-size: 0.96rem;
+
+        line-height: 1.6;
+      }
+
+      .membership-bubble {
+        width: 100%;
+
+        margin-top: 1rem;
+
+        padding:
+          0.72rem
+          0.8rem;
+
+        border-radius: 16px;
+
+        font-size: 0.78rem;
+
+        line-height: 1.45;
+
+        white-space: normal;
       }
 
       .top-actions,
       .cta-actions {
-        flex-direction:
-          column;
+        width: 100%;
 
-        align-items:
-          stretch;
+        margin-top: 1.15rem;
+
+        display: grid;
+
+        grid-template-columns: 1fr;
+
+        gap: 0.65rem;
       }
 
       .btn {
-        width:
-          100%;
-      }
+        width: 100%;
 
-      .tower-header {
-        flex-direction:
-          column;
-
-        align-items:
-          flex-start;
-      }
-
-      .tower-floor {
-        grid-template-columns:
-          42px
-          1fr;
-      }
-
-      .floor-money {
-        grid-column:
-          2;
-      }
-
-      .video-top {
-        min-height:
-          auto;
+        min-height: 50px;
 
         padding:
           0.85rem
           1rem;
 
-        flex-direction:
-          row;
+        font-size: 0.94rem;
+      }
 
-        align-items:
-          center;
+      /* SECTIONS */
+
+      .section {
+        padding:
+          54px
+          0;
+      }
+
+      .section-heading {
+        margin-bottom: 1.55rem;
+
+        padding:
+          0
+          0.15rem;
+      }
+
+      .section-heading h2,
+      .section-copy h2,
+      .cta-panel h2 {
+        font-size:
+          clamp(
+            1.8rem,
+            9vw,
+            2.55rem
+          );
+
+        line-height: 1.05;
+
+        letter-spacing: -0.04em;
+      }
+
+      .section-heading p,
+      .section-copy p,
+      .cta-panel p {
+        line-height: 1.6;
+      }
+
+      /* GRIDS */
+
+      .quick-grid,
+      .journey-grid,
+      .benefits-grid,
+      .share-methods {
+        grid-template-columns: 1fr;
+
+        gap: 0.75rem;
+      }
+
+      .referral-guide-grid,
+      .tower-grid,
+      .tracking-grid,
+      .rules-grid {
+        gap: 1.35rem;
+      }
+
+      /* QUICK CARDS */
+
+      .quick-card,
+      .journey-card {
+        padding: 1rem;
+
+        border-radius: 18px;
+      }
+
+      .quick-number {
+        width: 40px;
+        height: 40px;
+
+        margin-bottom: 0.7rem;
+
+        border-radius: 12px;
+      }
+
+      /* GUIDE */
+
+      .guide-stack {
+        gap: 0.75rem;
+      }
+
+      .guide-card {
+        padding: 1rem;
+
+        border-radius: 18px;
+      }
+
+      .guide-card-top {
+        display: grid;
+
+        grid-template-columns:
+          38px
+          minmax(0, 1fr);
+
+        gap: 0.7rem;
+      }
+
+      .guide-step {
+        width: 38px;
+        height: 38px;
+
+        flex-basis: 38px;
+
+        border-radius: 11px;
+
+        font-size: 0.9rem;
+      }
+
+      .guide-card h3 {
+        font-size: 1rem;
+
+        line-height: 1.35;
+      }
+
+      .guide-card p,
+      .guide-card ul {
+        font-size: 0.92rem;
+
+        line-height: 1.55;
+      }
+
+      .guide-card ul {
+        padding-left: 1.05rem;
+      }
+
+      .guide-card li {
+        margin: 0.38rem 0;
+      }
+
+      .example-box {
+        padding: 0.8rem;
+
+        border-radius: 14px;
+      }
+
+      .share-method {
+        padding: 0.85rem;
+
+        border-radius: 15px;
+      }
+
+      .share-method span,
+      .journey-card span {
+        font-size: 0.68rem;
+      }
+
+      /* TOWER */
+
+      .tower-visual {
+        padding: 0.85rem;
+
+        border-radius: 19px;
+      }
+
+      .tower-header {
+        margin-bottom: 0.8rem;
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 0.35rem;
+      }
+
+      .tower-header h3 {
+        font-size: 1.08rem;
+      }
+
+      .tower-header span {
+        font-size: 0.9rem;
+      }
+
+      .tower-stack {
+        gap: 0.42rem;
+      }
+
+      .tower-floor {
+        min-height: 0;
+
+        grid-template-columns:
+          34px
+          minmax(0, 1fr);
+
+        gap: 0.65rem;
+
+        padding:
+          0.65rem
+          0.7rem;
+
+        border-radius: 13px;
+      }
+
+      .floor-num {
+        width: 32px;
+        height: 32px;
+
+        font-size: 0.78rem;
+      }
+
+      .floor-name {
+        font-size: 0.88rem;
+
+        line-height: 1.35;
+      }
+
+      .floor-money {
+        grid-column: 2;
+
+        margin-top: -0.15rem;
+
+        font-size: 0.82rem;
+      }
+
+      .tower-rules {
+        gap: 0.75rem;
+      }
+
+      /* INFO */
+
+      .info-card {
+        padding: 1rem;
+
+        border-radius: 18px;
+      }
+
+      .info-card h3 {
+        font-size: 1rem;
+      }
+
+      .info-card p {
+        font-size: 0.92rem;
+
+        line-height: 1.55;
+      }
+
+      .calculation-total {
+        font-size:
+          clamp(
+            1.9rem,
+            11vw,
+            2.55rem
+          );
+      }
+
+      /* TRACKING */
+
+      .tracking-list {
+        gap: 0.65rem;
+      }
+
+      .tracking-row {
+        grid-template-columns:
+          38px
+          minmax(0, 1fr);
+
+        gap: 0.7rem;
+
+        padding: 0.85rem;
+
+        border-radius: 16px;
+      }
+
+      .tracking-icon {
+        width: 38px;
+        height: 38px;
+
+        border-radius: 12px;
+
+        font-size: 0.85rem;
+      }
+
+      .tracking-row h3 {
+        font-size: 0.95rem;
+      }
+
+      .tracking-row p {
+        font-size: 0.88rem;
+
+        line-height: 1.5;
+      }
+
+      /* BENEFITS */
+
+      .benefit-card {
+        padding: 1rem;
+
+        display: grid;
+
+        grid-template-columns:
+          48px
+          minmax(0, 1fr);
+
+        column-gap: 0.8rem;
+
+        align-items: start;
+
+        border-radius: 18px;
+      }
+
+      .benefit-icon {
+        width: 48px;
+        height: 48px;
+
+        grid-row:
+          1
+          / span 2;
+
+        margin: 0;
+
+        border-radius: 15px;
+
+        font-size: 1.15rem;
+      }
+
+      .benefit-card h3 {
+        margin:
+          0
+          0
+          0.3rem;
+
+        align-self: end;
+      }
+
+      .benefit-card p {
+        font-size: 0.9rem;
+
+        line-height: 1.5;
+      }
+
+      /* RULES */
+
+      .rules-list {
+        padding-left: 1.05rem;
+
+        font-size: 0.92rem;
+      }
+
+      .rules-list li {
+        margin: 0.48rem 0;
+      }
+
+      /* FAQ */
+
+      .qa-grid {
+        gap: 0.65rem;
+      }
+
+      .qa-item {
+        border-radius: 16px;
+      }
+
+      .qa-question {
+        min-height: 54px;
+
+        padding:
+          0.85rem
+          0.95rem;
+
+        font-size: 0.92rem;
+
+        line-height: 1.35;
+      }
+
+      .qa-question span {
+        font-size: 1.1rem;
+      }
+
+      .qa-answer {
+        padding:
+          0
+          0.95rem
+          0.95rem;
+
+        font-size: 0.9rem;
+
+        line-height: 1.55;
+      }
+
+      /* CTA */
+
+      .cta-panel {
+        padding:
+          1.35rem
+          1rem;
+
+        border-radius: 20px;
+      }
+
+      /* FOOTER */
+
+      .footer-bottom {
+        flex-direction: column;
+
+        align-items: center;
+
+        gap: 0.7rem;
+
+        text-align: center;
+      }
+
+      .footer-bottom p,
+      .back-to-top {
+        width: 100%;
+
+        text-align: center;
+
+        font-size: 0.85rem;
+      }
+    }
+
+    /* ==========================================================
+       SMALL PHONE
+    ========================================================== */
+
+    @media (max-width: 430px) {
+      .container {
+        width:
+          min(
+            100% - 0.8rem,
+            1320px
+          );
+      }
+
+      .brand-title {
+        max-width: 145px;
+
+        font-size: 0.88rem;
+      }
+
+      .hero {
+        padding-top: 6px;
+      }
+
+      .video-card {
+        border-radius: 15px;
+      }
+
+      .video-top {
+        padding:
+          0.65rem
+          0.7rem;
       }
 
       .video-top strong {
-        font-size:
-          0.88rem;
+        max-width: 68%;
+
+        font-size: 0.76rem;
       }
 
       .video-top span {
-        font-size:
-          0.7rem;
+        padding:
+          0
+          0.5rem;
 
-        white-space:
-          nowrap;
+        font-size: 0.58rem;
       }
 
-      .footer-bottom {
-        flex-direction:
-          column;
+      .hero h1 {
+        font-size:
+          clamp(
+            2rem,
+            12vw,
+            2.8rem
+          );
+      }
 
-        align-items:
-          flex-start;
+      .hero-text {
+        font-size: 0.92rem;
+      }
+
+      .section {
+        padding:
+          46px
+          0;
+      }
+
+      .section-heading h2,
+      .section-copy h2,
+      .cta-panel h2 {
+        font-size:
+          clamp(
+            1.7rem,
+            9vw,
+            2.3rem
+          );
+      }
+
+      .eyebrow {
+        font-size: 0.64rem;
+      }
+
+      .quick-card,
+      .guide-card,
+      .journey-card,
+      .benefit-card,
+      .info-card {
+        padding: 0.9rem;
+      }
+
+      .guide-card-top {
+        grid-template-columns:
+          34px
+          minmax(0, 1fr);
+      }
+
+      .guide-step {
+        width: 34px;
+        height: 34px;
+
+        flex-basis: 34px;
+      }
+
+      .tower-floor {
+        grid-template-columns:
+          30px
+          minmax(0, 1fr);
+
+        padding:
+          0.58rem
+          0.62rem;
+      }
+
+      .floor-num {
+        width: 28px;
+        height: 28px;
+
+        font-size: 0.72rem;
+      }
+
+      .floor-name {
+        font-size: 0.82rem;
+      }
+
+      .floor-money {
+        font-size: 0.78rem;
+      }
+
+      .benefit-card {
+        grid-template-columns:
+          44px
+          minmax(0, 1fr);
+      }
+
+      .benefit-icon {
+        width: 44px;
+        height: 44px;
+      }
+
+      .qa-question {
+        font-size: 0.88rem;
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
       html {
-        scroll-behavior:
-          auto;
+        scroll-behavior: auto;
       }
 
       *,
       *::before,
       *::after {
-        transition:
-          none !important;
+        scroll-behavior: auto !important;
+
+        transition: none !important;
+
+        animation: none !important;
       }
     }
   </style>
@@ -2112,7 +2807,10 @@
             "
           />
 
-          <div class="brand-fallback">
+          <div
+            class="brand-fallback"
+            aria-hidden="true"
+          >
             CL
           </div>
 
@@ -2146,6 +2844,7 @@
         <nav
           class="site-nav"
           id="site-nav"
+          aria-label="Primary navigation"
         >
 
           <a href="/">
@@ -2178,16 +2877,12 @@
     <main>
 
       <!-- ======================================================
-           HOW IT WORKS — VIDEO FIRST
+           VIDEO FIRST
       ======================================================= -->
 
       <section class="hero">
 
         <div class="container hero-grid">
-
-          <!-- ==================================================
-               VIDEO — FIRST CONTENT UNDER NAVIGATION
-          =================================================== -->
 
           <div class="hero-video-wrap hero-video-first">
 
@@ -2304,8 +2999,7 @@
             </h2>
 
             <p>
-              Instead of repeating the same membership explanation,
-              these are the three actions that matter most once you
+              These are the three actions that matter most once you
               become a Card Leo Rewards member.
             </p>
 
@@ -2324,9 +3018,10 @@
               </h3>
 
               <p>
-                Complete your membership enrollment. After membership is confirmed,
-                your account can be approved automatically and your member
-                portal becomes available to use your discount mobile app and start saving.
+                Complete your membership enrollment. After membership is
+                confirmed, your account can be approved automatically and
+                your member portal becomes available to use your discount
+                mobile app and start saving.
               </p>
 
             </article>
@@ -2401,8 +3096,7 @@
             </p>
 
             <p>
-              Follow the steps on this page from top to bottom when recruiting
-              someone new.
+              Follow these steps when recruiting someone new.
             </p>
 
           </div>
@@ -2436,6 +3130,7 @@
               </div>
 
               <ul>
+
                 <li>
                   Open
                   <strong>
@@ -2450,6 +3145,7 @@
                 <li>
                   After login, open your main member dashboard.
                 </li>
+
               </ul>
 
             </article>
@@ -2495,6 +3191,7 @@
               </div>
 
               <ul>
+
                 <li>
                   Do not remove the referral code from the end of the link.
                 </li>
@@ -2507,6 +3204,7 @@
                 <li>
                   Use your personal referral URL whenever possible.
                 </li>
+
               </ul>
 
             </article>
@@ -2538,6 +3236,7 @@
               </div>
 
               <ul>
+
                 <li>
                   Press
                   <strong>
@@ -2550,16 +3249,17 @@
                 </li>
 
                 <li>
-                  Send where you want to send it.
+                  Open the text, email, or social media app where you want
+                  to send it.
                 </li>
 
                 <li>
                   Press and hold inside the message area on mobile and choose
                   <strong>
                     Paste
-                  </strong>,
-                  or use your computer's paste command.
+                  </strong>.
                 </li>
+
               </ul>
 
             </article>
@@ -2582,8 +3282,7 @@
 
                   <p>
                     You can send the same personal referral link through
-                    several different channels. Use the communication method
-                    that is easiest for the person you are inviting.
+                    several different channels.
                   </p>
 
                 </div>
@@ -2603,9 +3302,8 @@
                   </strong>
 
                   <p>
-                    Open your phone's Messages app, select the person,
-                    paste your referral link, add a short explanation,
-                    and send.
+                    Open your Messages app, select the person, paste your
+                    referral link, add a short explanation, and send.
                   </p>
 
                 </div>
@@ -2621,9 +3319,9 @@
                   </strong>
 
                   <p>
-                    Create a new email, explain Card Leo Rewards briefly,
-                    paste the referral link, and ask the recruit to use that
-                    link when creating the account.
+                    Create an email, explain Card Leo Rewards briefly,
+                    paste the referral link, and ask them to use that link
+                    when creating their account.
                   </p>
 
                 </div>
@@ -2639,9 +3337,8 @@
                   </strong>
 
                   <p>
-                    Paste the link into a direct message. Tell the recruit
-                    to open your exact link rather than searching for the
-                    signup page separately.
+                    Paste your referral link into a direct message and tell
+                    your recruit to open the exact link you sent.
                   </p>
 
                 </div>
@@ -2657,9 +3354,8 @@
                   </strong>
 
                   <p>
-                    If your portal displays a Share button, use it to open
-                    your phone's share menu and choose Messages, Mail, or
-                    another supported app.
+                    Use the Share button in your portal to open your phone's
+                    share menu and choose Messages, Mail, or another app.
                   </p>
 
                 </div>
@@ -2681,13 +3377,12 @@
                 <div>
 
                   <h3>
-                    Tell The Recruit What To Do
+                    Tell Your Recruit Exactly What To Do
                   </h3>
 
                   <p>
-                    Sending the link is only the first part. Make sure the
-                    recruit understands the signup and membership process so
-                    the referral does not remain incomplete.
+                    Sending the link is only the first part. Make sure they
+                    complete the full activation process.
                   </p>
 
                 </div>
@@ -2695,6 +3390,7 @@
               </div>
 
               <ul>
+
                 <li>
                   Open the referral link you sent.
                 </li>
@@ -2704,21 +3400,22 @@
                 </li>
 
                 <li>
-                  Create their account using their own email address.
+                  Create the account using their own email address.
                 </li>
 
                 <li>
-                  Continue to secure membership.
+                  Continue to secure membership payment.
                 </li>
 
                 <li>
-                  Complete the required membership.
+                  Complete membership activation.
                 </li>
 
                 <li>
-                  Once membership is confirmed and the account is approved,
-                  the referral can move into the active/approved stage.
+                  After payment is confirmed and the account is approved,
+                  the referral can move into approved status.
                 </li>
+
               </ul>
 
             </article>
@@ -2736,14 +3433,12 @@
                 <div>
 
                   <h3>
-                    Track The Recruit In Your Portal
+                    Track Your Recruit
                   </h3>
 
                   <p>
-                    Return to your member portal after sending your referral.
-                    Your referral tools are designed to show the difference
-                    between a recruit who has started and a recruit who has
-                    completed activation.
+                    Return to your member portal and track whether your recruit
+                    is pending or approved.
                   </p>
 
                 </div>
@@ -2751,6 +3446,7 @@
               </div>
 
               <ul>
+
                 <li>
                   Check
                   <strong>
@@ -2768,14 +3464,13 @@
                 </li>
 
                 <li>
-                  Review your referral tower to understand direct and team
-                  activity.
+                  Review your referral tower for direct and team activity.
                 </li>
 
                 <li>
-                  Review rewards and allowance progress separately from
-                  pending recruits.
+                  Review rewards and allowance progress separately.
                 </li>
+
               </ul>
 
             </article>
@@ -2787,7 +3482,7 @@
       </section>
 
       <!-- ======================================================
-           NEW RECRUIT JOURNEY
+           RECRUIT JOURNEY
       ======================================================= -->
 
       <section
@@ -2808,8 +3503,8 @@
             </h2>
 
             <p>
-              Understanding this process helps you know why a recruit may
-              appear as pending before becoming approved.
+              This is the path your recruit follows before becoming an
+              approved Card Leo Rewards member.
             </p>
 
           </div>
@@ -2827,8 +3522,8 @@
               </h3>
 
               <p>
-                The recruit opens the personal Card Leo Rewards signup URL
-                that you shared.
+                Your recruit opens the personal Card Leo Rewards signup link
+                you shared.
               </p>
 
             </article>
@@ -2844,8 +3539,8 @@
               </h3>
 
               <p>
-                The recruit completes the signup form and creates their
-                Card Leo Rewards account.
+                They complete the signup form and create their Card Leo
+                Rewards account.
               </p>
 
             </article>
@@ -2861,8 +3556,7 @@
               </h3>
 
               <p>
-                The recruit continues to secure membership and completes their
-                membership activation.
+                They continue through secure membership activation.
               </p>
 
             </article>
@@ -2878,9 +3572,8 @@
               </h3>
 
               <p>
-                After membership is confirmed and the member is approved, the
-                referral can qualify for the applicable referral tracking
-                and rewards.
+                After the qualifying requirements are completed, the referral
+                can move into approved status.
               </p>
 
             </article>
@@ -3127,9 +3820,8 @@
               </h2>
 
               <p>
-                Your referral tower helps separate members you personally
-                referred from qualifying activity created deeper inside
-                your team.
+                Your referral tower separates members you personally referred
+                from qualifying activity created deeper inside your team.
               </p>
 
             </div>
@@ -3182,14 +3874,13 @@
             <article class="info-card">
 
               <h3>
-                Pending Is Not The Same As Approved
+                Pending Is Not Approved
               </h3>
 
               <p>
-                A person who has only received your link or started signup
-                should not be treated the same as an approved member.
-                Payment and activation status matter when determining
-                qualifying referral activity.
+                A person who has received your link or started signup is not
+                the same as an approved member. Payment and activation status
+                determine qualifying referral activity.
               </p>
 
             </article>
@@ -3222,9 +3913,8 @@
             </h2>
 
             <p>
-              The portal is where your referral activity becomes useful.
-              Instead of guessing whether someone completed signup, check
-              the member tools for their current status.
+              Your portal lets you see referral activity instead of guessing
+              whether someone completed signup.
             </p>
 
           </div>
@@ -3244,8 +3934,7 @@
                 </h3>
 
                 <p>
-                  Use this link every time you invite a new recruit so the
-                  signup can be connected to your referral account.
+                  Use this link whenever you invite a new recruit.
                 </p>
 
               </div>
@@ -3265,8 +3954,8 @@
                 </h3>
 
                 <p>
-                  Review recruits who have entered the referral process but
-                  have not yet reached the approved member stage.
+                  See recruits who entered the process but have not reached
+                  approved status.
                 </p>
 
               </div>
@@ -3286,8 +3975,7 @@
                 </h3>
 
                 <p>
-                  This area should represent members who have completed the
-                  qualifying activation process.
+                  Track members who completed the qualifying activation process.
                 </p>
 
               </div>
@@ -3307,8 +3995,7 @@
                 </h3>
 
                 <p>
-                  Use the tower to understand the relationship between your
-                  direct referrals and team-building activity.
+                  See the relationship between direct and team referral activity.
                 </p>
 
               </div>
@@ -3328,8 +4015,8 @@
                 </h3>
 
                 <p>
-                  Track qualifying referral rewards and applicable allowance
-                  progress separately from members who are still pending.
+                  Track qualifying referral rewards and allowance progress
+                  separately from pending recruits.
                 </p>
 
               </div>
@@ -3364,8 +4051,8 @@
             </h2>
 
             <p>
-              Card Leo Rewards also provides a member benefits experience
-              designed around lifestyle savings and mobile-friendly access.
+              Card Leo Rewards includes a member benefits experience designed
+              around lifestyle savings and mobile-friendly access.
             </p>
 
           </div>
@@ -3383,8 +4070,7 @@
               </h3>
 
               <p>
-                Browse available restaurant and dining offers for local
-                and everyday savings.
+                Browse restaurant and dining offers for local and everyday savings.
               </p>
 
             </article>
@@ -3400,8 +4086,8 @@
               </h3>
 
               <p>
-                Explore travel, hotel, and trip-related offers available
-                through the member benefits experience.
+                Explore travel, hotel, and trip-related offers available through
+                the member benefits experience.
               </p>
 
             </article>
@@ -3433,8 +4119,7 @@
               </h3>
 
               <p>
-                Member perks can include events, activities, entertainment,
-                and experiences.
+                Access offers for events, activities, entertainment, and experiences.
               </p>
 
             </article>
@@ -3450,8 +4135,7 @@
               </h3>
 
               <p>
-                Lifestyle value can include wellness, fitness, and
-                health-related offers.
+                Find wellness, fitness, and health-related member offers.
               </p>
 
             </article>
@@ -3467,9 +4151,8 @@
               </h3>
 
               <p>
-                Use your phone to browse available member savings and
-                participating benefits as the Access Perks integration
-                becomes available inside the portal.
+                Browse participating benefits from your phone as Access Perks
+                becomes available inside the Card Leo Rewards member portal.
               </p>
 
             </article>
@@ -3502,8 +4185,8 @@
             </h2>
 
             <p>
-              These are the important rules to understand when tracking
-              membership status, referrals, and allowances.
+              Understand these rules when tracking membership status,
+              referrals, and allowances.
             </p>
 
           </div>
@@ -3551,9 +4234,8 @@
 
               <li>
                 <strong>
-                  Allowances are dispersed on the 1st and 3rd after the first 30 Days.
+                  Allowances are dispersed on the 1st and 3rd after the first 30 days.
                 </strong>
-                of every month.
               </li>
 
               <li>
@@ -3622,8 +4304,8 @@
 
               <div class="qa-answer">
                 Sign into your Card Leo Rewards member portal and look for
-                the referral section on your dashboard. Your personal
-                referral URL should be displayed there.
+                the referral section on your dashboard. Your personal referral
+                URL should be displayed there.
               </div>
 
             </article>
@@ -3673,14 +4355,14 @@
                 type="button"
                 aria-expanded="false"
               >
-                Can I send the referral link through Instagram or Facebook?
+                Can I send the link through Instagram or Facebook?
                 <span>+</span>
               </button>
 
               <div class="qa-answer">
                 Yes. Paste your personal referral link into a direct message.
-                Tell the recruit to open the exact link you sent so the
-                referral information stays attached to their signup.
+                Tell your recruit to open the exact link you sent so the referral
+                information stays attached to their signup.
               </div>
 
             </article>
@@ -3692,14 +4374,14 @@
                 type="button"
                 aria-expanded="false"
               >
-                What does my recruit need to do after opening the link?
+                What does my recruit do after opening the link?
                 <span>+</span>
               </button>
 
               <div class="qa-answer">
-                The recruit should complete the signup form using their own
-                information, create their account, continue to secure payment,
-                and complete membership activation.
+                They complete the signup form using their own information,
+                create their account, continue through secure membership
+                activation, and complete the required process.
               </div>
 
             </article>
@@ -3711,14 +4393,13 @@
                 type="button"
                 aria-expanded="false"
               >
-                When does a recruit become an approved referral?
+                When does a recruit become approved?
                 <span>+</span>
               </button>
 
               <div class="qa-answer">
-                A recruit should move into the approved stage after the
-                qualifying membership payment and activation requirements
-                are completed and the account is approved.
+                A recruit moves into approved status after the qualifying
+                membership and activation requirements are completed.
               </div>
 
             </article>
@@ -3735,8 +4416,8 @@
               </button>
 
               <div class="qa-answer">
-                Use your member portal. Approved and pending referrals can be
-                tracked there along with your referral tower and leaderboard.
+                Use your member portal. Approved and pending referrals can
+                be tracked there along with your referral tower and leaderboard.
               </div>
 
             </article>
@@ -3792,8 +4473,8 @@
 
               <div class="qa-answer">
                 The example shows 10 approved direct referrals at $7.00 each
-                for $70.00, plus $1.00 from Member B referring Member C, plus
-                a $100.00 company growth allowance, totaling $171.00.
+                for $70.00, plus $1.00 from Member B referring Member C,
+                plus a $100.00 company growth allowance, totaling $171.00.
               </div>
 
             </article>
@@ -3810,8 +4491,9 @@
               </button>
 
               <div class="qa-answer">
-                Eligible allowances are dispersed on the 1st and 3rd of
-                every month according to the current Card Leo Rewards rules.
+                Eligible allowances are dispersed on the 1st and 3rd according
+                to the current Card Leo Rewards allowance rules after the
+                applicable first 30-day period.
               </div>
 
             </article>
@@ -3829,8 +4511,8 @@
 
               <div class="qa-answer">
                 Available member benefits are designed to be accessible from
-                your Card Leo Rewards member experience. Card Leo Rewards is also
-                integrating Access Perks benefits into the member portal.
+                your Card Leo Rewards member experience. Card Leo Rewards is
+                also integrating Access Perks benefits into the member portal.
               </div>
 
             </article>
@@ -3849,8 +4531,8 @@
               <div class="qa-answer">
                 The member allowance card and payout setup are being handled
                 separately from the public signup page. The member portal
-                will be used to show the applicable allowance information
-                as those features are connected.
+                will show the applicable allowance information as those
+                features are connected.
               </div>
 
             </article>
@@ -3921,8 +4603,7 @@
         <p>
           ©
           <span data-year></span>
-          Card Leo Rewards.
-          All rights reserved.
+          Card Leo Rewards. All rights reserved.
         </p>
 
         <a
@@ -3946,11 +4627,9 @@
     (() => {
       "use strict";
 
-      /*
-       * ------------------------------------------------------
-       * YEAR
-       * ------------------------------------------------------
-       */
+      /* =====================================================
+         YEAR
+      ===================================================== */
 
       const year =
         document.querySelector(
@@ -3962,11 +4641,9 @@
           new Date().getFullYear();
       }
 
-      /*
-       * ------------------------------------------------------
-       * MOBILE NAV
-       * ------------------------------------------------------
-       */
+      /* =====================================================
+         MOBILE NAVIGATION
+      ===================================================== */
 
       const menuToggle =
         document.getElementById(
@@ -3978,72 +4655,143 @@
           "site-nav"
         );
 
+      function closeNavigation() {
+        if (!nav || !menuToggle) {
+          return;
+        }
+
+        nav.classList.remove(
+          "is-open"
+        );
+
+        menuToggle.classList.remove(
+          "is-open"
+        );
+
+        menuToggle.setAttribute(
+          "aria-expanded",
+          "false"
+        );
+
+        menuToggle.setAttribute(
+          "aria-label",
+          "Open navigation"
+        );
+
+        document.body.classList.remove(
+          "nav-open"
+        );
+      }
+
+      function openNavigation() {
+        if (!nav || !menuToggle) {
+          return;
+        }
+
+        nav.classList.add(
+          "is-open"
+        );
+
+        menuToggle.classList.add(
+          "is-open"
+        );
+
+        menuToggle.setAttribute(
+          "aria-expanded",
+          "true"
+        );
+
+        menuToggle.setAttribute(
+          "aria-label",
+          "Close navigation"
+        );
+
+        document.body.classList.add(
+          "nav-open"
+        );
+      }
+
       menuToggle?.addEventListener(
         "click",
         () => {
-
-          const isOpen =
-            nav?.classList.toggle(
+          const open =
+            nav?.classList.contains(
               "is-open"
             );
 
-          menuToggle.setAttribute(
-            "aria-expanded",
-            String(Boolean(isOpen))
-          );
-
-          menuToggle.setAttribute(
-            "aria-label",
-            isOpen
-              ? "Close navigation"
-              : "Open navigation"
-          );
+          if (open) {
+            closeNavigation();
+          } else {
+            openNavigation();
+          }
         }
       );
 
       nav
         ?.querySelectorAll("a")
         .forEach((link) => {
-
           link.addEventListener(
             "click",
-            () => {
-
-              nav.classList.remove(
-                "is-open"
-              );
-
-              menuToggle?.setAttribute(
-                "aria-expanded",
-                "false"
-              );
-
-              menuToggle?.setAttribute(
-                "aria-label",
-                "Open navigation"
-              );
-
-            }
+            closeNavigation
           );
-
         });
 
-      /*
-       * ------------------------------------------------------
-       * FAQ ACCORDION
-       * ------------------------------------------------------
-       */
+      document.addEventListener(
+        "click",
+        (event) => {
+          if (
+            !nav ||
+            !menuToggle ||
+            !nav.classList.contains(
+              "is-open"
+            )
+          ) {
+            return;
+          }
+
+          const clickedInsideNav =
+            nav.contains(
+              event.target
+            );
+
+          const clickedToggle =
+            menuToggle.contains(
+              event.target
+            );
+
+          if (
+            !clickedInsideNav &&
+            !clickedToggle
+          ) {
+            closeNavigation();
+          }
+        }
+      );
+
+      window.addEventListener(
+        "resize",
+        () => {
+          if (
+            window.innerWidth >
+            980
+          ) {
+            closeNavigation();
+          }
+        }
+      );
+
+      /* =====================================================
+         FAQ
+      ===================================================== */
 
       document
         .querySelectorAll(
           ".qa-question"
         )
         .forEach((button) => {
-
           button.addEventListener(
             "click",
             () => {
-
               const item =
                 button.closest(
                   ".qa-item"
@@ -4053,14 +4801,10 @@
                 return;
               }
 
-              const isOpen =
+              const currentlyOpen =
                 item.classList.contains(
                   "is-open"
                 );
-
-              /*
-               * Close other questions first.
-               */
 
               document
                 .querySelectorAll(
@@ -4068,32 +4812,25 @@
                 )
                 .forEach(
                   (otherItem) => {
-
-                    otherItem
-                      .classList
-                      .remove(
-                        "is-open"
-                      );
+                    otherItem.classList.remove(
+                      "is-open"
+                    );
 
                     const otherButton =
                       otherItem.querySelector(
                         ".qa-question"
                       );
 
-                    otherButton
-                      ?.setAttribute(
-                        "aria-expanded",
-                        "false"
-                      );
+                    otherButton?.setAttribute(
+                      "aria-expanded",
+                      "false"
+                    );
                   }
                 );
 
-              /*
-               * Open selected item if it was closed.
-               */
-
-              if (!isOpen) {
-
+              if (
+                !currentlyOpen
+              ) {
                 item.classList.add(
                   "is-open"
                 );
@@ -4102,65 +4839,39 @@
                   "aria-expanded",
                   "true"
                 );
-
               }
-
             }
           );
-
         });
 
-      /*
-       * ------------------------------------------------------
-       * ESCAPE CLOSES MOBILE NAV
-       * ------------------------------------------------------
-       */
+      /* =====================================================
+         ESCAPE
+      ===================================================== */
 
       document.addEventListener(
         "keydown",
         (event) => {
-
           if (
-            event.key === "Escape" &&
-            nav &&
-            menuToggle
+            event.key ===
+            "Escape"
           ) {
-
-            nav.classList.remove(
-              "is-open"
-            );
-
-            menuToggle.setAttribute(
-              "aria-expanded",
-              "false"
-            );
-
-            menuToggle.setAttribute(
-              "aria-label",
-              "Open navigation"
-            );
-
+            closeNavigation();
           }
-
         }
       );
 
-      /*
-       * ------------------------------------------------------
-       * INTERNAL LINKS
-       * ------------------------------------------------------
-       */
+      /* =====================================================
+         SMOOTH INTERNAL LINKS
+      ===================================================== */
 
       document
         .querySelectorAll(
           'a[href^="#"]'
         )
         .forEach((link) => {
-
           link.addEventListener(
             "click",
             (event) => {
-
               const href =
                 link.getAttribute(
                   "href"
@@ -4184,14 +4895,20 @@
 
               event.preventDefault();
 
+              closeNavigation();
+
               target.scrollIntoView({
-                behavior: "smooth",
+                behavior:
+                  window.matchMedia(
+                    "(prefers-reduced-motion: reduce)"
+                  ).matches
+                    ? "auto"
+                    : "smooth",
+
                 block: "start"
               });
-
             }
           );
-
         });
 
     })();

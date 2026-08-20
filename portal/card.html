@@ -1,0 +1,5275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+
+  <title>My Card | Card Leo Rewards</title>
+
+  <meta
+    name="description"
+    content="View your Card Leo Rewards digital allowance card, available allowance, card activity, and member card status."
+  />
+
+  <meta
+    name="theme-color"
+    content="#030303"
+  />
+
+  <meta
+    name="robots"
+    content="noindex, nofollow"
+  />
+
+  <link
+    rel="manifest"
+    href="/site.webmanifest"
+  />
+
+  <link
+    rel="stylesheet"
+    href="/style.css"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --leo-black: #030303;
+      --leo-black-2: #080808;
+      --leo-black-3: #101010;
+
+      --leo-panel:
+        rgba(15, 15, 15, 0.94);
+
+      --leo-panel-soft:
+        rgba(255, 255, 255, 0.04);
+
+      --leo-line:
+        rgba(231, 182, 79, 0.22);
+
+      --leo-line-soft:
+        rgba(255, 255, 255, 0.08);
+
+      --leo-gold:
+        #e7b64f;
+
+      --leo-gold-2:
+        #f7d98b;
+
+      --leo-gold-3:
+        #a66f10;
+
+      --leo-white:
+        #f8f3e7;
+
+      --leo-muted:
+        rgba(248, 243, 231, 0.7);
+
+      --leo-muted-2:
+        rgba(248, 243, 231, 0.48);
+
+      --leo-green:
+        #58e88b;
+
+      --leo-green-soft:
+        rgba(88, 232, 139, 0.12);
+
+      --leo-blue:
+        #7ec8ff;
+
+      --leo-blue-soft:
+        rgba(126, 200, 255, 0.12);
+
+      --leo-red:
+        #ff8080;
+
+      --leo-red-soft:
+        rgba(255, 128, 128, 0.1);
+
+      --leo-orange:
+        #ffbe63;
+
+      --leo-shadow:
+        0 28px 90px rgba(0, 0, 0, 0.64);
+
+      --leo-shadow-soft:
+        0 16px 48px rgba(0, 0, 0, 0.36);
+
+      --header-height:
+        82px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 96px;
+    }
+
+    body {
+      margin: 0;
+
+      min-height: 100vh;
+
+      overflow-x: hidden;
+
+      font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color:
+        var(--leo-white);
+
+      background:
+        radial-gradient(
+          circle at 86% 5%,
+          rgba(231, 182, 79, 0.15),
+          transparent 27%
+        ),
+        radial-gradient(
+          circle at 15% 82%,
+          rgba(126, 200, 255, 0.06),
+          transparent 30%
+        ),
+        linear-gradient(
+          180deg,
+          #030303,
+          #080808 50%,
+          #010101
+        );
+    }
+
+    body.nav-open {
+      overflow: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color:
+        transparent;
+    }
+
+    img,
+    svg {
+      display: block;
+      max-width: 100%;
+    }
+
+    :focus-visible {
+      outline:
+        2px solid
+        var(--leo-gold-2);
+
+      outline-offset:
+        3px;
+    }
+
+    .hidden {
+      display:
+        none !important;
+    }
+
+    .site-shell {
+      min-height:
+        100vh;
+
+      overflow-x:
+        hidden;
+
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.025) 1px,
+          transparent 1px
+        );
+
+      background-size:
+        88px 88px;
+    }
+
+    .container {
+      width:
+        min(
+          100% - 2rem,
+          1280px
+        );
+
+      margin:
+        0 auto;
+    }
+
+    /* ==========================================================
+       HEADER
+    ========================================================== */
+
+    .site-header {
+      position:
+        sticky;
+
+      top:
+        0;
+
+      z-index:
+        1000;
+
+      padding-top:
+        env(safe-area-inset-top);
+
+      border-bottom:
+        1px solid
+        rgba(231, 182, 79, 0.16);
+
+      background:
+        rgba(0, 0, 0, 0.88);
+
+      backdrop-filter:
+        blur(20px);
+
+      -webkit-backdrop-filter:
+        blur(20px);
+    }
+
+    .nav-wrap {
+      min-height:
+        var(--header-height);
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      gap:
+        1rem;
+    }
+
+    .brand {
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      gap:
+        0.8rem;
+
+      min-width:
+        0;
+    }
+
+    .brand-logo {
+      width:
+        48px;
+
+      height:
+        48px;
+
+      flex:
+        0 0 48px;
+
+      object-fit:
+        contain;
+
+      padding:
+        0.3rem;
+
+      border-radius:
+        15px;
+
+      border:
+        1px solid
+        rgba(231, 182, 79, 0.32);
+
+      background:
+        radial-gradient(
+          circle at top,
+          rgba(247, 217, 139, 0.2),
+          transparent 48%
+        ),
+        #050505;
+
+      box-shadow:
+        0 0 24px
+        rgba(231, 182, 79, 0.15);
+    }
+
+    .brand-fallback {
+      width:
+        48px;
+
+      height:
+        48px;
+
+      flex:
+        0 0 48px;
+
+      display:
+        none;
+
+      place-items:
+        center;
+
+      border-radius:
+        15px;
+
+      border:
+        1px solid
+        rgba(231, 182, 79, 0.32);
+
+      background:
+        #050505;
+
+      color:
+        var(--leo-gold-2);
+
+      font-weight:
+        900;
+    }
+
+    .brand-copy {
+      min-width:
+        0;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      line-height:
+        1.08;
+    }
+
+    .brand-title {
+      font-weight:
+        900;
+
+      letter-spacing:
+        -0.02em;
+
+      white-space:
+        nowrap;
+
+      overflow:
+        hidden;
+
+      text-overflow:
+        ellipsis;
+    }
+
+    .brand-subtitle {
+      margin-top:
+        0.18rem;
+
+      color:
+        var(--leo-gold);
+
+      font-size:
+        0.7rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.13em;
+
+      text-transform:
+        uppercase;
+    }
+
+    .site-nav {
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        0.95rem;
+    }
+
+    .site-nav a {
+      padding:
+        0.65rem
+        0.8rem;
+
+      border-radius:
+        12px;
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.92rem;
+
+      font-weight:
+        800;
+    }
+
+    .site-nav a:hover,
+    .site-nav a.is-active {
+      color:
+        var(--leo-gold-2);
+
+      background:
+        rgba(247, 217, 139, 0.06);
+    }
+
+    .logout-link {
+      border:
+        1px solid
+        rgba(255, 128, 128, 0.18);
+
+      color:
+        #ffadad !important;
+    }
+
+    .menu-toggle {
+      width:
+        46px;
+
+      height:
+        46px;
+
+      flex:
+        0 0 46px;
+
+      display:
+        none;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      flex-direction:
+        column;
+
+      gap:
+        5px;
+
+      padding:
+        0;
+
+      border:
+        1px solid
+        rgba(231, 182, 79, 0.2);
+
+      border-radius:
+        14px;
+
+      background:
+        rgba(255, 255, 255, 0.04);
+
+      color:
+        white;
+    }
+
+    .menu-toggle span {
+      width:
+        20px;
+
+      height:
+        2px;
+
+      border-radius:
+        999px;
+
+      background:
+        white;
+    }
+
+    /* ==========================================================
+       PAGE
+    ========================================================== */
+
+    .page {
+      padding:
+        34px
+        0
+        80px;
+    }
+
+    .page-head {
+      margin-bottom:
+        1.5rem;
+
+      display:
+        flex;
+
+      align-items:
+        flex-end;
+
+      justify-content:
+        space-between;
+
+      gap:
+        1rem;
+    }
+
+    .eyebrow {
+      margin:
+        0
+        0
+        0.55rem;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      gap:
+        0.55rem;
+
+      color:
+        var(--leo-gold);
+
+      font-size:
+        0.72rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.14em;
+
+      text-transform:
+        uppercase;
+    }
+
+    .eyebrow::before {
+      content:
+        "";
+
+      width:
+        28px;
+
+      height:
+        1px;
+
+      background:
+        linear-gradient(
+          90deg,
+          var(--leo-gold),
+          transparent
+        );
+    }
+
+    .page-head h1 {
+      margin:
+        0;
+
+      font-family:
+        "Playfair Display",
+        Georgia,
+        serif;
+
+      font-size:
+        clamp(
+          2.2rem,
+          5vw,
+          4rem
+        );
+
+      line-height:
+        1;
+
+      letter-spacing:
+        -0.05em;
+    }
+
+    .page-head p {
+      max-width:
+        700px;
+
+      margin:
+        0.7rem
+        0
+        0;
+
+      color:
+        var(--leo-muted);
+
+      line-height:
+        1.65;
+    }
+
+    .refresh-button {
+      min-height:
+        44px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      gap:
+        0.5rem;
+
+      padding:
+        0.72rem
+        1rem;
+
+      border:
+        1px solid
+        var(--leo-line);
+
+      border-radius:
+        999px;
+
+      background:
+        rgba(255, 255, 255, 0.04);
+
+      color:
+        var(--leo-white);
+
+      font-weight:
+        900;
+    }
+
+    .refresh-button:disabled {
+      opacity:
+        0.55;
+
+      cursor:
+        not-allowed;
+    }
+
+    /* ==========================================================
+       NOTICE
+    ========================================================== */
+
+    .notice {
+      margin-bottom:
+        1.3rem;
+
+      padding:
+        1rem
+        1.1rem;
+
+      display:
+        none;
+
+      border-radius:
+        18px;
+
+      border:
+        1px solid
+        var(--leo-line);
+
+      background:
+        rgba(255, 255, 255, 0.035);
+
+      line-height:
+        1.55;
+    }
+
+    .notice.show {
+      display:
+        block;
+    }
+
+    .notice.info {
+      border-color:
+        rgba(126, 200, 255, 0.24);
+
+      background:
+        rgba(126, 200, 255, 0.07);
+
+      color:
+        #c7e9ff;
+    }
+
+    .notice.success {
+      border-color:
+        rgba(88, 232, 139, 0.25);
+
+      background:
+        rgba(88, 232, 139, 0.08);
+
+      color:
+        #bfffd7;
+    }
+
+    .notice.error {
+      border-color:
+        rgba(255, 128, 128, 0.24);
+
+      background:
+        rgba(255, 128, 128, 0.08);
+
+      color:
+        #ffc0c0;
+    }
+
+    /* ==========================================================
+       TOP GRID
+    ========================================================== */
+
+    .top-grid {
+      display:
+        grid;
+
+      grid-template-columns:
+        minmax(0, 1.08fr)
+        minmax(320px, 0.92fr);
+
+      gap:
+        1.2rem;
+
+      align-items:
+        start;
+    }
+
+    /* ==========================================================
+       DIGITAL CARD
+    ========================================================== */
+
+    .card-shell {
+      position:
+        relative;
+
+      overflow:
+        hidden;
+
+      min-height:
+        360px;
+
+      border-radius:
+        32px;
+
+      border:
+        1px solid
+        rgba(247, 217, 139, 0.3);
+
+      background:
+        radial-gradient(
+          circle at 90% 8%,
+          rgba(247, 217, 139, 0.3),
+          transparent 30%
+        ),
+        radial-gradient(
+          circle at 5% 100%,
+          rgba(166, 111, 16, 0.23),
+          transparent 30%
+        ),
+        linear-gradient(
+          135deg,
+          #111111,
+          #030303 48%,
+          #171003
+        );
+
+      box-shadow:
+        var(--leo-shadow);
+    }
+
+    .card-shell::before {
+      content:
+        "";
+
+      position:
+        absolute;
+
+      inset:
+        0;
+
+      pointer-events:
+        none;
+
+      background:
+        linear-gradient(
+          110deg,
+          transparent 5%,
+          rgba(255, 255, 255, 0.07) 42%,
+          transparent 52%
+        );
+
+      opacity:
+        0.7;
+    }
+
+    .card-shell::after {
+      content:
+        "";
+
+      position:
+        absolute;
+
+      width:
+        320px;
+
+      height:
+        320px;
+
+      right:
+        -120px;
+
+      bottom:
+        -150px;
+
+      border-radius:
+        999px;
+
+      border:
+        1px solid
+        rgba(247, 217, 139, 0.12);
+    }
+
+    .digital-card {
+      position:
+        relative;
+
+      z-index:
+        2;
+
+      min-height:
+        360px;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      justify-content:
+        space-between;
+
+      padding:
+        clamp(
+          1.4rem,
+          4vw,
+          2rem
+        );
+    }
+
+    .card-top {
+      display:
+        flex;
+
+      align-items:
+        flex-start;
+
+      justify-content:
+        space-between;
+
+      gap:
+        1rem;
+    }
+
+    .card-brand {
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        0.75rem;
+    }
+
+    .card-brand-mark {
+      width:
+        48px;
+
+      height:
+        48px;
+
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      border-radius:
+        15px;
+
+      border:
+        1px solid
+        rgba(247, 217, 139, 0.34);
+
+      background:
+        rgba(247, 217, 139, 0.08);
+
+      color:
+        var(--leo-gold-2);
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.05em;
+    }
+
+    .card-brand strong {
+      display:
+        block;
+
+      font-size:
+        0.98rem;
+    }
+
+    .card-brand span {
+      display:
+        block;
+
+      margin-top:
+        0.2rem;
+
+      color:
+        var(--leo-gold);
+
+      font-size:
+        0.7rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.11em;
+
+      text-transform:
+        uppercase;
+    }
+
+    .card-state {
+      min-height:
+        30px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      padding:
+        0
+        0.75rem;
+
+      border-radius:
+        999px;
+
+      border:
+        1px solid
+        rgba(88, 232, 139, 0.25);
+
+      background:
+        var(--leo-green-soft);
+
+      color:
+        var(--leo-green);
+
+      font-size:
+        0.72rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.06em;
+
+      text-transform:
+        uppercase;
+    }
+
+    .card-state.pending {
+      border-color:
+        rgba(255, 190, 99, 0.25);
+
+      background:
+        rgba(255, 190, 99, 0.09);
+
+      color:
+        var(--leo-orange);
+    }
+
+    .card-state.disabled {
+      border-color:
+        rgba(255, 128, 128, 0.2);
+
+      background:
+        var(--leo-red-soft);
+
+      color:
+        var(--leo-red);
+    }
+
+    .chip-area {
+      margin-top:
+        1.5rem;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      gap:
+        1rem;
+    }
+
+    .chip {
+      width:
+        52px;
+
+      height:
+        40px;
+
+      position:
+        relative;
+
+      overflow:
+        hidden;
+
+      border-radius:
+        9px;
+
+      border:
+        1px solid
+        rgba(255, 239, 185, 0.42);
+
+      background:
+        linear-gradient(
+          135deg,
+          #f7d98b,
+          #ae771d
+        );
+    }
+
+    .chip::before,
+    .chip::after {
+      content:
+        "";
+
+      position:
+        absolute;
+
+      inset:
+        7px;
+
+      border:
+        1px solid
+        rgba(56, 36, 2, 0.32);
+
+      border-radius:
+        4px;
+    }
+
+    .chip::after {
+      inset:
+        0
+        23px;
+
+      border-top:
+        0;
+
+      border-bottom:
+        0;
+
+      border-radius:
+        0;
+    }
+
+    .contactless {
+      color:
+        var(--leo-gold-2);
+
+      font-size:
+        1.4rem;
+
+      transform:
+        rotate(90deg);
+    }
+
+    .card-number {
+      margin-top:
+        1.7rem;
+
+      font-size:
+        clamp(
+          1.45rem,
+          4vw,
+          2rem
+        );
+
+      font-weight:
+        700;
+
+      letter-spacing:
+        0.12em;
+
+      white-space:
+        nowrap;
+    }
+
+    .card-bottom {
+      margin-top:
+        1.6rem;
+
+      display:
+        flex;
+
+      align-items:
+        flex-end;
+
+      justify-content:
+        space-between;
+
+      gap:
+        1rem;
+    }
+
+    .card-field span {
+      display:
+        block;
+
+      margin-bottom:
+        0.3rem;
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.62rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.1em;
+
+      text-transform:
+        uppercase;
+    }
+
+    .card-field strong {
+      display:
+        block;
+
+      max-width:
+        230px;
+
+      overflow:
+        hidden;
+
+      text-overflow:
+        ellipsis;
+
+      white-space:
+        nowrap;
+
+      font-size:
+        0.95rem;
+    }
+
+    .card-type-mark {
+      text-align:
+        right;
+    }
+
+    .card-type-mark strong {
+      color:
+        var(--leo-gold-2);
+
+      font-family:
+        "Playfair Display",
+        serif;
+
+      font-size:
+        1.4rem;
+    }
+
+    .card-type-mark small {
+      display:
+        block;
+
+      margin-top:
+        0.1rem;
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.62rem;
+
+      font-weight:
+        800;
+
+      letter-spacing:
+        0.08em;
+
+      text-transform:
+        uppercase;
+    }
+
+    /* ==========================================================
+       BALANCE PANEL
+    ========================================================== */
+
+    .balance-panel {
+      border:
+        1px solid
+        var(--leo-line);
+
+      border-radius:
+        28px;
+
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(231, 182, 79, 0.12),
+          transparent 32%
+        ),
+        var(--leo-panel);
+
+      box-shadow:
+        var(--leo-shadow-soft);
+
+      overflow:
+        hidden;
+    }
+
+    .balance-main {
+      padding:
+        1.5rem;
+    }
+
+    .balance-label {
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.8rem;
+
+      font-weight:
+        800;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        0.1em;
+    }
+
+    .balance-value {
+      margin-top:
+        0.5rem;
+
+      font-family:
+        "Playfair Display",
+        Georgia,
+        serif;
+
+      font-size:
+        clamp(
+          2.7rem,
+          7vw,
+          4.6rem
+        );
+
+      font-weight:
+        800;
+
+      line-height:
+        1;
+
+      letter-spacing:
+        -0.05em;
+
+      color:
+        var(--leo-gold-2);
+    }
+
+    .balance-subtext {
+      margin-top:
+        0.7rem;
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.88rem;
+
+      line-height:
+        1.5;
+    }
+
+    .balance-details {
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+      border-top:
+        1px solid
+        var(--leo-line-soft);
+    }
+
+    .balance-detail {
+      padding:
+        1rem
+        1.25rem;
+    }
+
+    .balance-detail + .balance-detail {
+      border-left:
+        1px solid
+        var(--leo-line-soft);
+    }
+
+    .balance-detail span {
+      display:
+        block;
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.7rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.08em;
+
+      text-transform:
+        uppercase;
+    }
+
+    .balance-detail strong {
+      display:
+        block;
+
+      margin-top:
+        0.35rem;
+
+      font-size:
+        1.05rem;
+    }
+
+    .balance-source {
+      padding:
+        0.9rem
+        1.25rem;
+
+      border-top:
+        1px solid
+        var(--leo-line-soft);
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.75rem;
+
+      line-height:
+        1.45;
+    }
+
+    /* ==========================================================
+       SETUP PANEL
+    ========================================================== */
+
+    .setup-panel {
+      margin-top:
+        1.2rem;
+
+      padding:
+        1.2rem;
+
+      border:
+        1px solid
+        var(--leo-line);
+
+      border-radius:
+        22px;
+
+      background:
+        rgba(255, 255, 255, 0.035);
+    }
+
+    .setup-panel h3 {
+      margin:
+        0;
+
+      font-size:
+        1.05rem;
+    }
+
+    .setup-panel p {
+      margin:
+        0.45rem
+        0
+        0;
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.88rem;
+
+      line-height:
+        1.55;
+    }
+
+    .setup-steps {
+      margin-top:
+        1rem;
+
+      display:
+        grid;
+
+      gap:
+        0.6rem;
+    }
+
+    .setup-step {
+      min-height:
+        46px;
+
+      display:
+        grid;
+
+      grid-template-columns:
+        34px
+        minmax(0, 1fr)
+        auto;
+
+      align-items:
+        center;
+
+      gap:
+        0.7rem;
+
+      padding:
+        0.65rem
+        0.75rem;
+
+      border-radius:
+        14px;
+
+      background:
+        rgba(255, 255, 255, 0.03);
+
+      border:
+        1px solid
+        rgba(255, 255, 255, 0.06);
+    }
+
+    .setup-number {
+      width:
+        30px;
+
+      height:
+        30px;
+
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      border-radius:
+        999px;
+
+      background:
+        rgba(247, 217, 139, 0.08);
+
+      color:
+        var(--leo-gold-2);
+
+      font-size:
+        0.75rem;
+
+      font-weight:
+        900;
+    }
+
+    .setup-step strong {
+      font-size:
+        0.86rem;
+    }
+
+    .setup-status {
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.72rem;
+
+      font-weight:
+        900;
+    }
+
+    .setup-status.done {
+      color:
+        var(--leo-green);
+    }
+
+    .setup-status.waiting {
+      color:
+        var(--leo-orange);
+    }
+
+    /* ==========================================================
+       BUTTONS
+    ========================================================== */
+
+    .button {
+      min-height:
+        50px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      gap:
+        0.5rem;
+
+      padding:
+        0.85rem
+        1.1rem;
+
+      border:
+        0;
+
+      border-radius:
+        999px;
+
+      font-weight:
+        900;
+
+      text-align:
+        center;
+    }
+
+    .button-primary {
+      color:
+        #080808;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f7d98b,
+          #d89a22 50%,
+          #8b5b0b
+        );
+
+      box-shadow:
+        0 16px 38px
+        rgba(216, 154, 34, 0.22);
+    }
+
+    .button-secondary {
+      color:
+        var(--leo-white);
+
+      border:
+        1px solid
+        var(--leo-line);
+
+      background:
+        rgba(255, 255, 255, 0.04);
+    }
+
+    .button:disabled {
+      opacity:
+        0.55;
+
+      cursor:
+        not-allowed;
+    }
+
+    .setup-action {
+      margin-top:
+        1rem;
+
+      width:
+        100%;
+    }
+
+    /* ==========================================================
+       STATS
+    ========================================================== */
+
+    .stats-grid {
+      margin-top:
+        1.2rem;
+
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+      gap:
+        0.8rem;
+    }
+
+    .stat-card {
+      min-width:
+        0;
+
+      padding:
+        1rem;
+
+      border-radius:
+        18px;
+
+      border:
+        1px solid
+        rgba(231, 182, 79, 0.15);
+
+      background:
+        rgba(255, 255, 255, 0.03);
+    }
+
+    .stat-card span {
+      display:
+        block;
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.68rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.08em;
+
+      text-transform:
+        uppercase;
+    }
+
+    .stat-card strong {
+      display:
+        block;
+
+      margin-top:
+        0.4rem;
+
+      font-size:
+        1.2rem;
+
+      overflow:
+        hidden;
+
+      text-overflow:
+        ellipsis;
+
+      white-space:
+        nowrap;
+    }
+
+    /* ==========================================================
+       SECTION
+    ========================================================== */
+
+    .section {
+      margin-top:
+        1.4rem;
+
+      border:
+        1px solid
+        rgba(231, 182, 79, 0.16);
+
+      border-radius:
+        26px;
+
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(231, 182, 79, 0.07),
+          transparent 30%
+        ),
+        rgba(10, 10, 10, 0.88);
+
+      box-shadow:
+        var(--leo-shadow-soft);
+
+      overflow:
+        hidden;
+    }
+
+    .section-head {
+      min-height:
+        70px;
+
+      padding:
+        1rem
+        1.25rem;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      gap:
+        1rem;
+
+      border-bottom:
+        1px solid
+        var(--leo-line-soft);
+    }
+
+    .section-head h2 {
+      margin:
+        0;
+
+      font-size:
+        1.15rem;
+    }
+
+    .section-head p {
+      margin:
+        0.3rem
+        0
+        0;
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.82rem;
+    }
+
+    .section-badge {
+      min-height:
+        28px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      padding:
+        0
+        0.65rem;
+
+      border-radius:
+        999px;
+
+      background:
+        rgba(247, 217, 139, 0.07);
+
+      color:
+        var(--leo-gold-2);
+
+      font-size:
+        0.7rem;
+
+      font-weight:
+        900;
+    }
+
+    /* ==========================================================
+       TRANSACTIONS
+    ========================================================== */
+
+    .transaction-list {
+      display:
+        grid;
+    }
+
+    .transaction-row {
+      min-width:
+        0;
+
+      display:
+        grid;
+
+      grid-template-columns:
+        44px
+        minmax(0, 1fr)
+        auto;
+
+      align-items:
+        center;
+
+      gap:
+        0.85rem;
+
+      padding:
+        1rem
+        1.25rem;
+
+      border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.055);
+    }
+
+    .transaction-row:last-child {
+      border-bottom:
+        0;
+    }
+
+    .transaction-icon {
+      width:
+        42px;
+
+      height:
+        42px;
+
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      border-radius:
+        14px;
+
+      background:
+        rgba(247, 217, 139, 0.08);
+
+      color:
+        var(--leo-gold-2);
+
+      font-weight:
+        900;
+    }
+
+    .transaction-info {
+      min-width:
+        0;
+    }
+
+    .transaction-info strong {
+      display:
+        block;
+
+      overflow:
+        hidden;
+
+      text-overflow:
+        ellipsis;
+
+      white-space:
+        nowrap;
+
+      font-size:
+        0.92rem;
+    }
+
+    .transaction-info span {
+      display:
+        block;
+
+      margin-top:
+        0.25rem;
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.75rem;
+
+      overflow:
+        hidden;
+
+      text-overflow:
+        ellipsis;
+
+      white-space:
+        nowrap;
+    }
+
+    .transaction-amount {
+      text-align:
+        right;
+
+      font-weight:
+        900;
+
+      white-space:
+        nowrap;
+    }
+
+    .transaction-amount.credit {
+      color:
+        var(--leo-green);
+    }
+
+    .transaction-amount.debit {
+      color:
+        var(--leo-white);
+    }
+
+    .transaction-status {
+      display:
+        block;
+
+      margin-top:
+        0.25rem;
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.66rem;
+
+      font-weight:
+        800;
+
+      text-transform:
+        uppercase;
+    }
+
+    /* ==========================================================
+       ALLOWANCE LEDGER
+    ========================================================== */
+
+    .allowance-grid {
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+      gap:
+        0;
+
+      border-bottom:
+        1px solid
+        var(--leo-line-soft);
+    }
+
+    .allowance-stat {
+      padding:
+        1.2rem;
+    }
+
+    .allowance-stat + .allowance-stat {
+      border-left:
+        1px solid
+        var(--leo-line-soft);
+    }
+
+    .allowance-stat span {
+      display:
+        block;
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.68rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.08em;
+
+      text-transform:
+        uppercase;
+    }
+
+    .allowance-stat strong {
+      display:
+        block;
+
+      margin-top:
+        0.4rem;
+
+      font-size:
+        1.3rem;
+    }
+
+    /* ==========================================================
+       EMPTY
+    ========================================================== */
+
+    .empty-state {
+      padding:
+        2.5rem
+        1.2rem;
+
+      text-align:
+        center;
+    }
+
+    .empty-icon {
+      width:
+        58px;
+
+      height:
+        58px;
+
+      margin:
+        0 auto
+        1rem;
+
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      border-radius:
+        18px;
+
+      border:
+        1px solid
+        var(--leo-line);
+
+      background:
+        rgba(247, 217, 139, 0.05);
+
+      color:
+        var(--leo-gold-2);
+
+      font-size:
+        1.4rem;
+    }
+
+    .empty-state h3 {
+      margin:
+        0;
+    }
+
+    .empty-state p {
+      max-width:
+        520px;
+
+      margin:
+        0.55rem
+        auto
+        0;
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.86rem;
+
+      line-height:
+        1.55;
+    }
+
+    /* ==========================================================
+       LOADING
+    ========================================================== */
+
+    .loading-overlay {
+      position:
+        fixed;
+
+      inset:
+        0;
+
+      z-index:
+        3000;
+
+      display:
+        grid;
+
+      place-items:
+        center;
+
+      padding:
+        1rem;
+
+      background:
+        rgba(0, 0, 0, 0.88);
+
+      backdrop-filter:
+        blur(12px);
+    }
+
+    .loading-card {
+      width:
+        min(
+          100%,
+          360px
+        );
+
+      padding:
+        1.7rem;
+
+      border-radius:
+        24px;
+
+      border:
+        1px solid
+        var(--leo-line);
+
+      background:
+        #090909;
+
+      text-align:
+        center;
+
+      box-shadow:
+        var(--leo-shadow);
+    }
+
+    .spinner {
+      width:
+        42px;
+
+      height:
+        42px;
+
+      margin:
+        0 auto
+        1rem;
+
+      border:
+        3px solid
+        rgba(247, 217, 139, 0.15);
+
+      border-top-color:
+        var(--leo-gold-2);
+
+      border-radius:
+        999px;
+
+      animation:
+        spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform:
+          rotate(360deg);
+      }
+    }
+
+    .loading-card strong {
+      display:
+        block;
+    }
+
+    .loading-card p {
+      margin:
+        0.4rem
+        0
+        0;
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.84rem;
+
+      line-height:
+        1.5;
+    }
+
+    /* ==========================================================
+       FOOTER
+    ========================================================== */
+
+    .footer {
+      padding:
+        2rem
+        0
+        calc(
+          2rem +
+          env(safe-area-inset-bottom)
+        );
+
+      border-top:
+        1px solid
+        rgba(231, 182, 79, 0.1);
+
+      color:
+        var(--leo-muted-2);
+
+      text-align:
+        center;
+
+      font-size:
+        0.78rem;
+    }
+
+    /* ==========================================================
+       TABLET
+    ========================================================== */
+
+    @media (
+      max-width: 980px
+    ) {
+      .menu-toggle {
+        display:
+          inline-flex;
+      }
+
+      .site-nav {
+        position:
+          absolute;
+
+        top:
+          calc(
+            100% +
+            0.5rem
+          );
+
+        left:
+          1rem;
+
+        right:
+          1rem;
+
+        display:
+          grid;
+
+        gap:
+          0.35rem;
+
+        padding:
+          0.7rem;
+
+        border-radius:
+          18px;
+
+        border:
+          1px solid
+          var(--leo-line);
+
+        background:
+          rgba(0, 0, 0, 0.98);
+
+        box-shadow:
+          var(--leo-shadow);
+
+        opacity:
+          0;
+
+        visibility:
+          hidden;
+
+        pointer-events:
+          none;
+
+        transform:
+          translateY(-8px);
+      }
+
+      .site-nav.is-open {
+        opacity:
+          1;
+
+        visibility:
+          visible;
+
+        pointer-events:
+          auto;
+
+        transform:
+          translateY(0);
+      }
+
+      .site-nav a {
+        min-height:
+          46px;
+
+        display:
+          flex;
+
+        align-items:
+          center;
+      }
+
+      .top-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    /* ==========================================================
+       MOBILE
+    ========================================================== */
+
+    @media (
+      max-width: 680px
+    ) {
+      :root {
+        --header-height:
+          68px;
+      }
+
+      .container {
+        width:
+          min(
+            100% - 1rem,
+            1280px
+          );
+      }
+
+      .brand-logo,
+      .brand-fallback {
+        width:
+          40px;
+
+        height:
+          40px;
+
+        flex:
+          0 0 40px;
+
+        border-radius:
+          12px;
+      }
+
+      .brand-title {
+        max-width:
+          170px;
+
+        font-size:
+          0.9rem;
+      }
+
+      .brand-subtitle {
+        display:
+          none;
+      }
+
+      .menu-toggle {
+        width:
+          42px;
+
+        height:
+          42px;
+
+        flex-basis:
+          42px;
+      }
+
+      .site-nav {
+        left:
+          0.5rem;
+
+        right:
+          0.5rem;
+      }
+
+      .page {
+        padding:
+          18px
+          0
+          56px;
+      }
+
+      .page-head {
+        align-items:
+          flex-start;
+
+        flex-direction:
+          column;
+
+        margin-bottom:
+          1rem;
+      }
+
+      .page-head h1 {
+        font-size:
+          clamp(
+            2rem,
+            11vw,
+            3rem
+          );
+      }
+
+      .page-head p {
+        font-size:
+          0.9rem;
+
+        line-height:
+          1.55;
+      }
+
+      .refresh-button {
+        width:
+          100%;
+      }
+
+      .card-shell,
+      .digital-card {
+        min-height:
+          300px;
+      }
+
+      .card-shell {
+        border-radius:
+          22px;
+      }
+
+      .digital-card {
+        padding:
+          1.15rem;
+      }
+
+      .card-brand-mark {
+        width:
+          42px;
+
+        height:
+          42px;
+      }
+
+      .card-brand strong {
+        font-size:
+          0.86rem;
+      }
+
+      .card-brand span {
+        font-size:
+          0.6rem;
+      }
+
+      .card-state {
+        min-height:
+          26px;
+
+        padding:
+          0
+          0.55rem;
+
+        font-size:
+          0.6rem;
+      }
+
+      .chip-area {
+        margin-top:
+          1.15rem;
+      }
+
+      .chip {
+        width:
+          46px;
+
+        height:
+          35px;
+      }
+
+      .card-number {
+        margin-top:
+          1.3rem;
+
+        font-size:
+          clamp(
+            1.15rem,
+            6vw,
+            1.6rem
+          );
+
+        letter-spacing:
+          0.08em;
+      }
+
+      .card-bottom {
+        margin-top:
+          1.2rem;
+      }
+
+      .card-field strong {
+        max-width:
+          170px;
+
+        font-size:
+          0.82rem;
+      }
+
+      .card-type-mark strong {
+        font-size:
+          1.15rem;
+      }
+
+      .balance-panel {
+        border-radius:
+          22px;
+      }
+
+      .balance-main {
+        padding:
+          1.2rem;
+      }
+
+      .balance-value {
+        font-size:
+          clamp(
+            2.7rem,
+            14vw,
+            4rem
+          );
+      }
+
+      .balance-details {
+        grid-template-columns:
+          1fr
+          1fr;
+      }
+
+      .balance-detail {
+        padding:
+          0.9rem;
+      }
+
+      .setup-panel {
+        border-radius:
+          18px;
+      }
+
+      .stats-grid {
+        grid-template-columns:
+          1fr
+          1fr;
+
+        gap:
+          0.6rem;
+      }
+
+      .stat-card {
+        padding:
+          0.85rem;
+
+        border-radius:
+          15px;
+      }
+
+      .stat-card strong {
+        font-size:
+          1rem;
+      }
+
+      .section {
+        margin-top:
+          1rem;
+
+        border-radius:
+          20px;
+      }
+
+      .section-head {
+        min-height:
+          auto;
+
+        align-items:
+          flex-start;
+
+        padding:
+          0.95rem;
+
+        flex-direction:
+          column;
+      }
+
+      .section-badge {
+        min-height:
+          25px;
+      }
+
+      .transaction-row {
+        grid-template-columns:
+          40px
+          minmax(0, 1fr)
+          auto;
+
+        gap:
+          0.65rem;
+
+        padding:
+          0.85rem
+          0.95rem;
+      }
+
+      .transaction-icon {
+        width:
+          38px;
+
+        height:
+          38px;
+
+        border-radius:
+          12px;
+      }
+
+      .transaction-info strong {
+        font-size:
+          0.84rem;
+      }
+
+      .transaction-info span {
+        font-size:
+          0.68rem;
+      }
+
+      .transaction-amount {
+        font-size:
+          0.84rem;
+      }
+
+      .allowance-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .allowance-stat + .allowance-stat {
+        border-left:
+          0;
+
+        border-top:
+          1px solid
+          var(--leo-line-soft);
+      }
+    }
+
+    @media (
+      max-width: 420px
+    ) {
+      .container {
+        width:
+          min(
+            100% - 0.8rem,
+            1280px
+          );
+      }
+
+      .brand-title {
+        max-width:
+          135px;
+      }
+
+      .digital-card {
+        min-height:
+          285px;
+
+        padding:
+          1rem;
+      }
+
+      .card-state {
+        max-width:
+          90px;
+
+        overflow:
+          hidden;
+
+        text-overflow:
+          ellipsis;
+
+        white-space:
+          nowrap;
+      }
+
+      .card-number {
+        font-size:
+          1.05rem;
+      }
+
+      .card-field strong {
+        max-width:
+          145px;
+      }
+
+      .stats-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .transaction-row {
+        grid-template-columns:
+          38px
+          minmax(0, 1fr);
+      }
+
+      .transaction-amount {
+        grid-column:
+          2;
+
+        text-align:
+          left;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div
+    class="loading-overlay"
+    id="loadingOverlay"
+  >
+    <div class="loading-card">
+
+      <div class="spinner"></div>
+
+      <strong>
+        Loading Your Card
+      </strong>
+
+      <p>
+        Connecting your Card Leo member account and allowance information.
+      </p>
+
+    </div>
+  </div>
+
+  <div class="site-shell">
+
+    <!-- ======================================================
+         HEADER
+    ======================================================= -->
+
+    <header
+      class="site-header"
+      id="top"
+    >
+
+      <div class="container nav-wrap">
+
+        <a
+          class="brand"
+          href="/portal/index.html"
+        >
+
+          <img
+            class="brand-logo"
+            src="/assets/cardleo-logo.png"
+            alt="Card Leo Rewards"
+            onerror="
+              this.style.display='none';
+              this.nextElementSibling.style.display='grid';
+            "
+          />
+
+          <div
+            class="brand-fallback"
+            aria-hidden="true"
+          >
+            CL
+          </div>
+
+          <div class="brand-copy">
+
+            <span class="brand-title">
+              Card Leo Rewards
+            </span>
+
+            <span class="brand-subtitle">
+              Member Card
+            </span>
+
+          </div>
+
+        </a>
+
+        <button
+          id="menuToggle"
+          class="menu-toggle"
+          type="button"
+          aria-label="Open navigation"
+          aria-controls="siteNav"
+          aria-expanded="false"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <nav
+          class="site-nav"
+          id="siteNav"
+        >
+
+          <a href="/portal/index.html">
+            Dashboard
+          </a>
+
+          <a
+            href="/portal/card.html"
+            class="is-active"
+          >
+            My Card
+          </a>
+
+          <a href="/portal/benefits.html">
+            Benefits
+          </a>
+
+          <a href="/portal/index.html#referrals">
+            Referrals
+          </a>
+
+          <a
+            href="/api/portal/logout"
+            class="logout-link"
+            id="logoutLink"
+          >
+            Sign Out
+          </a>
+
+        </nav>
+
+      </div>
+
+    </header>
+
+    <!-- ======================================================
+         MAIN
+    ======================================================= -->
+
+    <main class="page">
+
+      <div class="container">
+
+        <!-- ==================================================
+             PAGE HEADER
+        =================================================== -->
+
+        <div class="page-head">
+
+          <div>
+
+            <p class="eyebrow">
+              Card Leo Allowance
+            </p>
+
+            <h1>
+              My Digital Card
+            </h1>
+
+            <p>
+              View your Card Leo digital card, available allowance,
+              card setup status, and recent activity.
+            </p>
+
+          </div>
+
+          <button
+            class="refresh-button"
+            id="refreshButton"
+            type="button"
+          >
+            ↻ Refresh Card
+          </button>
+
+        </div>
+
+        <div
+          class="notice"
+          id="pageNotice"
+          aria-live="polite"
+        ></div>
+
+        <!-- ==================================================
+             TOP
+        =================================================== -->
+
+        <div class="top-grid">
+
+          <!-- ==================================================
+               CARD
+          =================================================== -->
+
+          <div>
+
+            <section class="card-shell">
+
+              <div class="digital-card">
+
+                <div>
+
+                  <div class="card-top">
+
+                    <div class="card-brand">
+
+                      <div class="card-brand-mark">
+                        CL
+                      </div>
+
+                      <div>
+
+                        <strong>
+                          Card Leo Rewards
+                        </strong>
+
+                        <span>
+                          Digital Allowance Card
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                    <span
+                      class="card-state pending"
+                      id="cardState"
+                    >
+                      Loading
+                    </span>
+
+                  </div>
+
+                  <div class="chip-area">
+
+                    <div
+                      class="chip"
+                      aria-hidden="true"
+                    ></div>
+
+                    <div
+                      class="contactless"
+                      aria-hidden="true"
+                    >
+                      )))
+                    </div>
+
+                  </div>
+
+                  <div
+                    class="card-number"
+                    id="cardNumber"
+                  >
+                    •••• •••• •••• ••••
+                  </div>
+
+                </div>
+
+                <div class="card-bottom">
+
+                  <div class="card-field">
+
+                    <span>
+                      Cardholder
+                    </span>
+
+                    <strong
+                      id="cardholderName"
+                    >
+                      Card Leo Member
+                    </strong>
+
+                  </div>
+
+                  <div class="card-type-mark">
+
+                    <strong>
+                      LEO
+                    </strong>
+
+                    <small
+                      id="cardTypeLabel"
+                    >
+                      Virtual
+                    </small>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </section>
+
+          </div>
+
+          <!-- ==================================================
+               BALANCE
+          =================================================== -->
+
+          <div>
+
+            <section class="balance-panel">
+
+              <div class="balance-main">
+
+                <div class="balance-label">
+                  Available Allowance
+                </div>
+
+                <div
+                  class="balance-value"
+                  id="availableBalance"
+                >
+                  $0.00
+                </div>
+
+                <div
+                  class="balance-subtext"
+                  id="balanceMessage"
+                >
+                  Your available Card Leo allowance will appear here.
+                </div>
+
+              </div>
+
+              <div class="balance-details">
+
+                <div class="balance-detail">
+
+                  <span>
+                    Pending
+                  </span>
+
+                  <strong
+                    id="pendingBalance"
+                  >
+                    $0.00
+                  </strong>
+
+                </div>
+
+                <div class="balance-detail">
+
+                  <span>
+                    Currency
+                  </span>
+
+                  <strong
+                    id="balanceCurrency"
+                  >
+                    USD
+                  </strong>
+
+                </div>
+
+              </div>
+
+              <div
+                class="balance-source"
+                id="balanceSource"
+              >
+                Balance source: Card Leo
+              </div>
+
+            </section>
+
+            <!-- ==================================================
+                 SETUP
+            =================================================== -->
+
+            <section
+              class="setup-panel"
+              id="setupPanel"
+            >
+
+              <h3>
+                Card Setup
+              </h3>
+
+              <p
+                id="setupMessage"
+              >
+                Checking your Card Leo card status.
+              </p>
+
+              <div class="setup-steps">
+
+                <div class="setup-step">
+
+                  <span class="setup-number">
+                    1
+                  </span>
+
+                  <strong>
+                    Member Account
+                  </strong>
+
+                  <span
+                    class="setup-status"
+                    id="accountHolderStatus"
+                  >
+                    Checking
+                  </span>
+
+                </div>
+
+                <div class="setup-step">
+
+                  <span class="setup-number">
+                    2
+                  </span>
+
+                  <strong>
+                    Card Account
+                  </strong>
+
+                  <span
+                    class="setup-status"
+                    id="accountStatus"
+                  >
+                    Checking
+                  </span>
+
+                </div>
+
+                <div class="setup-step">
+
+                  <span class="setup-number">
+                    3
+                  </span>
+
+                  <strong>
+                    Virtual Card
+                  </strong>
+
+                  <span
+                    class="setup-status"
+                    id="virtualCardStatus"
+                  >
+                    Checking
+                  </span>
+
+                </div>
+
+              </div>
+
+              <button
+                type="button"
+                id="setupAction"
+                class="button button-primary setup-action hidden"
+              >
+                Continue Card Setup
+              </button>
+
+            </section>
+
+          </div>
+
+        </div>
+
+        <!-- ==================================================
+             QUICK STATS
+        =================================================== -->
+
+        <div class="stats-grid">
+
+          <div class="stat-card">
+
+            <span>
+              Card Status
+            </span>
+
+            <strong
+              id="statCardStatus"
+            >
+              —
+            </strong>
+
+          </div>
+
+          <div class="stat-card">
+
+            <span>
+              Last Four
+            </span>
+
+            <strong
+              id="statLastFour"
+            >
+              ————
+            </strong>
+
+          </div>
+
+          <div class="stat-card">
+
+            <span>
+              Card Type
+            </span>
+
+            <strong
+              id="statCardType"
+            >
+              —
+            </strong>
+
+          </div>
+
+          <div class="stat-card">
+
+            <span>
+              Provider
+            </span>
+
+            <strong
+              id="statProvider"
+            >
+              —
+            </strong>
+
+          </div>
+
+        </div>
+
+        <!-- ==================================================
+             ALLOWANCE LEDGER
+        =================================================== -->
+
+        <section class="section">
+
+          <div class="section-head">
+
+            <div>
+
+              <h2>
+                Allowance Summary
+              </h2>
+
+              <p>
+                Card Leo rewards and allowance activity.
+              </p>
+
+            </div>
+
+            <span
+              class="section-badge"
+              id="allowanceLedgerBadge"
+            >
+              Ledger
+            </span>
+
+          </div>
+
+          <div class="allowance-grid">
+
+            <div class="allowance-stat">
+
+              <span>
+                Total Credited
+              </span>
+
+              <strong
+                id="totalCredited"
+              >
+                $0.00
+              </strong>
+
+            </div>
+
+            <div class="allowance-stat">
+
+              <span>
+                Total Used
+              </span>
+
+              <strong
+                id="totalDebited"
+              >
+                $0.00
+              </strong>
+
+            </div>
+
+            <div class="allowance-stat">
+
+              <span>
+                Ledger Balance
+              </span>
+
+              <strong
+                id="ledgerBalance"
+              >
+                $0.00
+              </strong>
+
+            </div>
+
+          </div>
+
+          <div
+            id="allowanceTransactionList"
+            class="transaction-list"
+          ></div>
+
+          <div
+            class="empty-state"
+            id="allowanceEmpty"
+          >
+
+            <div class="empty-icon">
+              $
+            </div>
+
+            <h3>
+              No Allowance Activity Yet
+            </h3>
+
+            <p>
+              Your Card Leo reward and allowance credits will appear here
+              once eligible rewards are approved and dispersed.
+            </p>
+
+          </div>
+
+        </section>
+
+        <!-- ==================================================
+             CARD ACTIVITY
+        =================================================== -->
+
+        <section class="section">
+
+          <div class="section-head">
+
+            <div>
+
+              <h2>
+                Recent Card Activity
+              </h2>
+
+              <p>
+                Purchases and other activity from your Card Leo card.
+              </p>
+
+            </div>
+
+            <span
+              class="section-badge"
+              id="transactionCount"
+            >
+              0 Transactions
+            </span>
+
+          </div>
+
+          <div
+            id="transactionList"
+            class="transaction-list"
+          ></div>
+
+          <div
+            class="empty-state"
+            id="transactionEmpty"
+          >
+
+            <div class="empty-icon">
+              ◈
+            </div>
+
+            <h3>
+              No Card Activity Yet
+            </h3>
+
+            <p>
+              Once your digital card is active and you begin using it,
+              your recent Card Leo card activity will appear here.
+            </p>
+
+          </div>
+
+        </section>
+
+      </div>
+
+    </main>
+
+    <!-- ======================================================
+         FOOTER
+    ======================================================= -->
+
+    <footer class="footer">
+
+      <div class="container">
+
+        ©
+        <span data-year></span>
+        Card Leo Rewards.
+        Member card information is private and protected.
+
+      </div>
+
+    </footer>
+
+  </div>
+
+  <!-- ======================================================
+       JAVASCRIPT
+  ======================================================= -->
+
+  <script>
+    (() => {
+      "use strict";
+
+      /* =====================================================
+         CONFIG
+      ===================================================== */
+
+      const MEMBER_CARD_ENDPOINT =
+        "/api/cards/member-card";
+
+      const CREATE_CARDHOLDER_ENDPOINT =
+        "/api/cards/create-cardholder";
+
+      const CREATE_VIRTUAL_CARD_ENDPOINT =
+        "/api/cards/create-virtual-card";
+
+      /* =====================================================
+         DOM
+      ===================================================== */
+
+      const loadingOverlay =
+        document.getElementById(
+          "loadingOverlay"
+        );
+
+      const pageNotice =
+        document.getElementById(
+          "pageNotice"
+        );
+
+      const refreshButton =
+        document.getElementById(
+          "refreshButton"
+        );
+
+      const cardState =
+        document.getElementById(
+          "cardState"
+        );
+
+      const cardNumber =
+        document.getElementById(
+          "cardNumber"
+        );
+
+      const cardholderName =
+        document.getElementById(
+          "cardholderName"
+        );
+
+      const cardTypeLabel =
+        document.getElementById(
+          "cardTypeLabel"
+        );
+
+      const availableBalance =
+        document.getElementById(
+          "availableBalance"
+        );
+
+      const pendingBalance =
+        document.getElementById(
+          "pendingBalance"
+        );
+
+      const balanceCurrency =
+        document.getElementById(
+          "balanceCurrency"
+        );
+
+      const balanceMessage =
+        document.getElementById(
+          "balanceMessage"
+        );
+
+      const balanceSource =
+        document.getElementById(
+          "balanceSource"
+        );
+
+      const setupPanel =
+        document.getElementById(
+          "setupPanel"
+        );
+
+      const setupMessage =
+        document.getElementById(
+          "setupMessage"
+        );
+
+      const accountHolderStatus =
+        document.getElementById(
+          "accountHolderStatus"
+        );
+
+      const accountStatus =
+        document.getElementById(
+          "accountStatus"
+        );
+
+      const virtualCardStatus =
+        document.getElementById(
+          "virtualCardStatus"
+        );
+
+      const setupAction =
+        document.getElementById(
+          "setupAction"
+        );
+
+      const statCardStatus =
+        document.getElementById(
+          "statCardStatus"
+        );
+
+      const statLastFour =
+        document.getElementById(
+          "statLastFour"
+        );
+
+      const statCardType =
+        document.getElementById(
+          "statCardType"
+        );
+
+      const statProvider =
+        document.getElementById(
+          "statProvider"
+        );
+
+      const totalCredited =
+        document.getElementById(
+          "totalCredited"
+        );
+
+      const totalDebited =
+        document.getElementById(
+          "totalDebited"
+        );
+
+      const ledgerBalance =
+        document.getElementById(
+          "ledgerBalance"
+        );
+
+      const allowanceLedgerBadge =
+        document.getElementById(
+          "allowanceLedgerBadge"
+        );
+
+      const allowanceTransactionList =
+        document.getElementById(
+          "allowanceTransactionList"
+        );
+
+      const allowanceEmpty =
+        document.getElementById(
+          "allowanceEmpty"
+        );
+
+      const transactionList =
+        document.getElementById(
+          "transactionList"
+        );
+
+      const transactionEmpty =
+        document.getElementById(
+          "transactionEmpty"
+        );
+
+      const transactionCount =
+        document.getElementById(
+          "transactionCount"
+        );
+
+      /* =====================================================
+         BASIC HELPERS
+      ===================================================== */
+
+      function normalizeText(
+        value
+      ) {
+        return String(
+          value ?? ""
+        ).trim();
+      }
+
+      function normalizeStatus(
+        value
+      ) {
+        return normalizeText(
+          value
+        ).toLowerCase();
+      }
+
+      function money(
+        value,
+        currency = "USD"
+      ) {
+        const number =
+          Number(value || 0);
+
+        try {
+          return new Intl
+            .NumberFormat(
+              "en-US",
+              {
+                style:
+                  "currency",
+
+                currency:
+                  currency || "USD",
+
+                minimumFractionDigits:
+                  2,
+
+                maximumFractionDigits:
+                  2,
+              }
+            )
+            .format(
+              Number.isFinite(
+                number
+              )
+                ? number
+                : 0
+            );
+        } catch {
+          return `$${(
+            Number.isFinite(
+              number
+            )
+              ? number
+              : 0
+          ).toFixed(2)}`;
+        }
+      }
+
+      function titleCase(
+        value
+      ) {
+        return normalizeText(
+          value
+        )
+          .replace(
+            /[_-]+/g,
+            " "
+          )
+          .split(/\s+/)
+          .filter(Boolean)
+          .map(
+            (part) =>
+              part
+                .charAt(0)
+                .toUpperCase() +
+              part
+                .slice(1)
+                .toLowerCase()
+          )
+          .join(" ");
+      }
+
+      function safeDate(
+        value
+      ) {
+        if (!value) {
+          return "";
+        }
+
+        const date =
+          new Date(value);
+
+        if (
+          Number.isNaN(
+            date.getTime()
+          )
+        ) {
+          return "";
+        }
+
+        return date.toLocaleString(
+          [],
+          {
+            month:
+              "short",
+
+            day:
+              "numeric",
+
+            year:
+              "numeric",
+
+            hour:
+              "numeric",
+
+            minute:
+              "2-digit",
+          }
+        );
+      }
+
+      function escapeHtml(
+        value
+      ) {
+        return String(
+          value ?? ""
+        )
+          .replace(
+            /&/g,
+            "&amp;"
+          )
+          .replace(
+            /</g,
+            "&lt;"
+          )
+          .replace(
+            />/g,
+            "&gt;"
+          )
+          .replace(
+            /"/g,
+            "&quot;"
+          )
+          .replace(
+            /'/g,
+            "&#039;"
+          );
+      }
+
+      /* =====================================================
+         NOTICE
+      ===================================================== */
+
+      function showNotice(
+        message,
+        type = "info"
+      ) {
+        if (!pageNotice) {
+          return;
+        }
+
+        pageNotice
+          .classList
+          .remove(
+            "info",
+            "success",
+            "error"
+          );
+
+        if (!message) {
+          pageNotice
+            .classList
+            .remove(
+              "show"
+            );
+
+          pageNotice
+            .textContent =
+            "";
+
+          return;
+        }
+
+        pageNotice
+          .textContent =
+          message;
+
+        pageNotice
+          .classList
+          .add(
+            type,
+            "show"
+          );
+      }
+
+      /* =====================================================
+         LOADING
+      ===================================================== */
+
+      function setLoading(
+        loading
+      ) {
+        if (
+          loadingOverlay
+        ) {
+          loadingOverlay
+            .classList
+            .toggle(
+              "hidden",
+              !loading
+            );
+        }
+
+        if (
+          refreshButton
+        ) {
+          refreshButton.disabled =
+            loading;
+
+          refreshButton.textContent =
+            loading
+              ? "Loading..."
+              : "↻ Refresh Card";
+        }
+      }
+
+      /* =====================================================
+         FETCH
+      ===================================================== */
+
+      async function fetchJson(
+        url,
+        options = {}
+      ) {
+        const response =
+          await fetch(
+            url,
+            {
+              credentials:
+                "include",
+
+              headers: {
+                Accept:
+                  "application/json",
+
+                ...(
+                  options.body
+                    ? {
+                        "Content-Type":
+                          "application/json",
+                      }
+                    : {}
+                ),
+
+                ...(
+                  options.headers ||
+                  {}
+                ),
+              },
+
+              ...options,
+            }
+          );
+
+        let result;
+
+        try {
+          result =
+            await response.json();
+        } catch {
+          result = {
+            success:
+              false,
+
+            ok:
+              false,
+
+            message:
+              "The server returned an unreadable response.",
+          };
+        }
+
+        if (
+          response.status ===
+          401
+        ) {
+          window.location.href =
+            "/login.html";
+
+          throw new Error(
+            "Session expired."
+          );
+        }
+
+        if (
+          !response.ok ||
+          result?.success ===
+            false ||
+          result?.ok ===
+            false
+        ) {
+          const error =
+            new Error(
+              result?.message ||
+              "Request failed."
+            );
+
+          error.response =
+            result;
+
+          error.status =
+            response.status;
+
+          throw error;
+        }
+
+        return result;
+      }
+
+      /* =====================================================
+         CARD STATUS
+      ===================================================== */
+
+      function updateCardState(
+        status
+      ) {
+        const normalized =
+          normalizeStatus(
+            status
+          );
+
+        cardState
+          ?.classList
+          .remove(
+            "pending",
+            "disabled"
+          );
+
+        if (
+          [
+            "open",
+            "active",
+          ].includes(
+            normalized
+          )
+        ) {
+          cardState.textContent =
+            "Active";
+
+          return;
+        }
+
+        if (
+          [
+            "paused",
+            "pending",
+            "not_created",
+            "not started",
+          ].includes(
+            normalized
+          )
+        ) {
+          cardState
+            .classList
+            .add(
+              "pending"
+            );
+
+          cardState.textContent =
+            normalized ===
+            "paused"
+              ? "Paused"
+              : "Pending";
+
+          return;
+        }
+
+        if (
+          [
+            "closed",
+            "disabled",
+            "cancelled",
+          ].includes(
+            normalized
+          )
+        ) {
+          cardState
+            .classList
+            .add(
+              "disabled"
+            );
+
+          cardState.textContent =
+            titleCase(
+              normalized
+            );
+
+          return;
+        }
+
+        cardState
+          .classList
+          .add(
+            "pending"
+          );
+
+        cardState.textContent =
+          status
+            ? titleCase(
+                status
+              )
+            : "Not Ready";
+      }
+
+      /* =====================================================
+         SETUP STATUS
+      ===================================================== */
+
+      function setSetupStatus(
+        element,
+        complete,
+        waitingLabel = "Pending"
+      ) {
+        if (!element) {
+          return;
+        }
+
+        element
+          .classList
+          .remove(
+            "done",
+            "waiting"
+          );
+
+        if (complete) {
+          element
+            .classList
+            .add(
+              "done"
+            );
+
+          element.textContent =
+            "Complete";
+        } else {
+          element
+            .classList
+            .add(
+              "waiting"
+            );
+
+          element.textContent =
+            waitingLabel;
+        }
+      }
+
+      /* =====================================================
+         RENDER MEMBER
+      ===================================================== */
+
+      function renderMember(
+        member
+      ) {
+        const name =
+          normalizeText(
+            member?.fullName
+          ) ||
+          [
+            member?.firstName,
+            member?.lastName,
+          ]
+            .filter(Boolean)
+            .join(" ") ||
+          "Card Leo Member";
+
+        if (
+          cardholderName
+        ) {
+          cardholderName.textContent =
+            name.toUpperCase();
+        }
+      }
+
+      /* =====================================================
+         RENDER CARD
+      ===================================================== */
+
+      function renderCard(
+        card
+      ) {
+        const lastFour =
+          normalizeText(
+            card?.lastFour
+          );
+
+        const maskedNumber =
+          normalizeText(
+            card?.maskedNumber
+          ) ||
+          (
+            lastFour
+              ? `•••• •••• •••• ${lastFour}`
+              : "•••• •••• •••• ••••"
+          );
+
+        if (
+          cardNumber
+        ) {
+          cardNumber.textContent =
+            maskedNumber;
+        }
+
+        const type =
+          normalizeText(
+            card?.cardType
+          ) ||
+          "Virtual";
+
+        const status =
+          normalizeText(
+            card?.cardStatus
+          ) ||
+          "NOT_CREATED";
+
+        updateCardState(
+          status
+        );
+
+        if (
+          cardTypeLabel
+        ) {
+          cardTypeLabel.textContent =
+            titleCase(type);
+        }
+
+        if (
+          statCardStatus
+        ) {
+          statCardStatus.textContent =
+            titleCase(
+              status
+            );
+        }
+
+        if (
+          statLastFour
+        ) {
+          statLastFour.textContent =
+            lastFour ||
+            "————";
+        }
+
+        if (
+          statCardType
+        ) {
+          statCardType.textContent =
+            titleCase(type);
+        }
+
+        if (
+          statProvider
+        ) {
+          statProvider.textContent =
+            card?.provider
+              ? titleCase(
+                  card.provider
+                )
+              : "Card Leo";
+        }
+      }
+
+      /* =====================================================
+         RENDER BALANCE
+      ===================================================== */
+
+      function renderBalance(
+        balance
+      ) {
+        const currency =
+          normalizeText(
+            balance?.currency
+          ) ||
+          "USD";
+
+        const available =
+          Number(
+            balance?.available ||
+            0
+          );
+
+        const pending =
+          Number(
+            balance?.pending ||
+            0
+          );
+
+        if (
+          availableBalance
+        ) {
+          availableBalance.textContent =
+            money(
+              available,
+              currency
+            );
+        }
+
+        if (
+          pendingBalance
+        ) {
+          pendingBalance.textContent =
+            money(
+              pending,
+              currency
+            );
+        }
+
+        if (
+          balanceCurrency
+        ) {
+          balanceCurrency.textContent =
+            currency;
+        }
+
+        const source =
+          normalizeText(
+            balance?.source
+          );
+
+        if (
+          balanceSource
+        ) {
+          balanceSource.textContent =
+            source
+              ? `Balance source: ${titleCase(
+                  source
+                )}`
+              : "Balance source: Card Leo";
+        }
+
+        if (
+          balanceMessage
+        ) {
+          if (
+            balance?.live
+          ) {
+            balanceMessage.textContent =
+              "Your current live Card Leo card allowance.";
+          } else if (
+            source ===
+            "card_leo_ledger"
+          ) {
+            balanceMessage.textContent =
+              "Showing your Card Leo internal allowance ledger while card funding is being connected.";
+          } else {
+            balanceMessage.textContent =
+              "Your available allowance will appear here when eligible rewards are loaded.";
+          }
+        }
+      }
+
+      /* =====================================================
+         RENDER SETUP
+      ===================================================== */
+
+      function renderReadiness(
+        readiness,
+        lithic
+      ) {
+        const accountHolderCreated =
+          Boolean(
+            readiness
+              ?.accountHolderCreated
+          );
+
+        const accountCreated =
+          Boolean(
+            readiness
+              ?.accountCreated
+          );
+
+        const cardCreated =
+          Boolean(
+            readiness
+              ?.cardCreated
+          );
+
+        setSetupStatus(
+          accountHolderStatus,
+          accountHolderCreated
+        );
+
+        setSetupStatus(
+          accountStatus,
+          accountCreated
+        );
+
+        setSetupStatus(
+          virtualCardStatus,
+          cardCreated
+        );
+
+        if (
+          setupMessage
+        ) {
+          setupMessage.textContent =
+            readiness?.message ||
+            "Card setup status loaded.";
+        }
+
+        if (
+          setupAction
+        ) {
+          setupAction
+            .classList
+            .add(
+              "hidden"
+            );
+
+          setupAction.onclick =
+            null;
+        }
+
+        /*
+         * Provider disabled:
+         * do not show a button that can
+         * create a live financial account.
+         */
+
+        if (
+          !lithic?.enabled
+        ) {
+          if (
+            setupMessage
+          ) {
+            setupMessage.textContent =
+              "Card Leo's digital-card infrastructure is being prepared. Your allowance and rewards portal will continue working while card issuing is being connected.";
+          }
+
+          return;
+        }
+
+        if (
+          lithic?.enabled &&
+          !lithic?.configured
+        ) {
+          if (
+            setupMessage
+          ) {
+            setupMessage.textContent =
+              "Card issuing is being configured. No action is required from you yet.";
+          }
+
+          return;
+        }
+
+        if (
+          !accountHolderCreated
+        ) {
+          setupAction
+            ?.classList
+            .remove(
+              "hidden"
+            );
+
+          setupAction.textContent =
+            "Create Card Account";
+
+          setupAction.onclick =
+            () =>
+              createCardholder();
+
+          return;
+        }
+
+        if (
+          accountCreated &&
+          !cardCreated
+        ) {
+          setupAction
+            ?.classList
+            .remove(
+              "hidden"
+            );
+
+          setupAction.textContent =
+            "Create Virtual Card";
+
+          setupAction.onclick =
+            () =>
+              createVirtualCard();
+
+          return;
+        }
+
+        if (
+          cardCreated
+        ) {
+          setupPanel
+            ?.classList
+            .add(
+              "card-complete"
+            );
+        }
+      }
+
+      /* =====================================================
+         ALLOWANCE SUMMARY
+      ===================================================== */
+
+      function renderAllowance(
+        allowance
+      ) {
+        const ledger =
+          allowance
+            ?.internalLedger ||
+          {};
+
+        if (
+          totalCredited
+        ) {
+          totalCredited.textContent =
+            money(
+              ledger.totalCredited ||
+              0
+            );
+        }
+
+        if (
+          totalDebited
+        ) {
+          totalDebited.textContent =
+            money(
+              ledger.totalDebited ||
+              0
+            );
+        }
+
+        if (
+          ledgerBalance
+        ) {
+          ledgerBalance.textContent =
+            money(
+              ledger.net ||
+              0
+            );
+        }
+
+        if (
+          allowanceLedgerBadge
+        ) {
+          allowanceLedgerBadge.textContent =
+            ledger.enabled
+              ? "Active Ledger"
+              : "Preparing Ledger";
+        }
+      }
+
+      /* =====================================================
+         CARD TRANSACTIONS
+      ===================================================== */
+
+      function getMerchantName(
+        transaction
+      ) {
+        return (
+          normalizeText(
+            transaction
+              ?.merchant
+              ?.descriptor
+          ) ||
+          normalizeText(
+            transaction
+              ?.description
+          ) ||
+          "Card Activity"
+        );
+      }
+
+      function getTransactionLocation(
+        transaction
+      ) {
+        const merchant =
+          transaction
+            ?.merchant ||
+          {};
+
+        const location = [
+          merchant.city,
+          merchant.state,
+        ]
+          .map(
+            normalizeText
+          )
+          .filter(Boolean)
+          .join(", ");
+
+        return location;
+      }
+
+      function renderTransactions(
+        transactions
+      ) {
+        const rows =
+          Array.isArray(
+            transactions
+          )
+            ? transactions
+            : [];
+
+        if (
+          transactionCount
+        ) {
+          transactionCount.textContent =
+            `${rows.length} ${
+              rows.length === 1
+                ? "Transaction"
+                : "Transactions"
+            }`;
+        }
+
+        if (
+          !rows.length
+        ) {
+          transactionList
+            ?.replaceChildren();
+
+          transactionEmpty
+            ?.classList
+            .remove(
+              "hidden"
+            );
+
+          return;
+        }
+
+        transactionEmpty
+          ?.classList
+          .add(
+            "hidden"
+          );
+
+        const html =
+          rows
+            .map(
+              (
+                transaction
+              ) => {
+                const amount =
+                  Number(
+                    transaction
+                      ?.amount ||
+                    0
+                  );
+
+                const isCredit =
+                  amount < 0;
+
+                const merchant =
+                  getMerchantName(
+                    transaction
+                  );
+
+                const location =
+                  getTransactionLocation(
+                    transaction
+                  );
+
+                const date =
+                  safeDate(
+                    transaction
+                      ?.createdAt
+                  );
+
+                const subtitle =
+                  [
+                    location,
+                    date,
+                  ]
+                    .filter(Boolean)
+                    .join(
+                      " • "
+                    );
+
+                const status =
+                  titleCase(
+                    transaction
+                      ?.status ||
+                    transaction
+                      ?.result ||
+                    "Pending"
+                  );
+
+                return `
+                  <div class="transaction-row">
+
+                    <div class="transaction-icon">
+                      ${
+                        isCredit
+                          ? "+"
+                          : "◈"
+                      }
+                    </div>
+
+                    <div class="transaction-info">
+
+                      <strong>
+                        ${escapeHtml(
+                          merchant
+                        )}
+                      </strong>
+
+                      <span>
+                        ${escapeHtml(
+                          subtitle ||
+                          "Card Leo activity"
+                        )}
+                      </span>
+
+                    </div>
+
+                    <div
+                      class="transaction-amount ${
+                        isCredit
+                          ? "credit"
+                          : "debit"
+                      }"
+                    >
+                      ${
+                        isCredit
+                          ? "+"
+                          : ""
+                      }${escapeHtml(
+                        money(
+                          Math.abs(
+                            amount
+                          ),
+                          transaction
+                            ?.currency ||
+                          "USD"
+                        )
+                      )}
+
+                      <span class="transaction-status">
+                        ${escapeHtml(
+                          status
+                        )}
+                      </span>
+
+                    </div>
+
+                  </div>
+                `;
+              }
+            )
+            .join("");
+
+        transactionList.innerHTML =
+          html;
+      }
+
+      /* =====================================================
+         ALLOWANCE TRANSACTIONS
+      ===================================================== */
+
+      function renderAllowanceTransactions(
+        rows
+      ) {
+        const transactions =
+          Array.isArray(
+            rows
+          )
+            ? rows
+            : [];
+
+        if (
+          !transactions.length
+        ) {
+          allowanceTransactionList
+            ?.replaceChildren();
+
+          allowanceEmpty
+            ?.classList
+            .remove(
+              "hidden"
+            );
+
+          return;
+        }
+
+        allowanceEmpty
+          ?.classList
+          .add(
+            "hidden"
+          );
+
+        const html =
+          transactions
+            .map(
+              (
+                transaction
+              ) => {
+                const direction =
+                  normalizeStatus(
+                    transaction
+                      ?.direction
+                  );
+
+                const credit =
+                  ![
+                    "debit",
+                    "withdrawal",
+                    "spend",
+                    "purchase",
+                  ].includes(
+                    direction
+                  );
+
+                const description =
+                  normalizeText(
+                    transaction
+                      ?.description
+                  ) ||
+                  (
+                    credit
+                      ? "Card Leo Allowance"
+                      : "Allowance Activity"
+                  );
+
+                const status =
+                  titleCase(
+                    transaction
+                      ?.status ||
+                    "Pending"
+                  );
+
+                const date =
+                  safeDate(
+                    transaction
+                      ?.createdAt
+                  );
+
+                return `
+                  <div class="transaction-row">
+
+                    <div class="transaction-icon">
+                      ${
+                        credit
+                          ? "+"
+                          : "−"
+                      }
+                    </div>
+
+                    <div class="transaction-info">
+
+                      <strong>
+                        ${escapeHtml(
+                          description
+                        )}
+                      </strong>
+
+                      <span>
+                        ${escapeHtml(
+                          [
+                            transaction
+                              ?.source
+                              ? titleCase(
+                                  transaction.source
+                                )
+                              : "",
+                            date,
+                          ]
+                            .filter(Boolean)
+                            .join(
+                              " • "
+                            )
+                        )}
+                      </span>
+
+                    </div>
+
+                    <div
+                      class="transaction-amount ${
+                        credit
+                          ? "credit"
+                          : "debit"
+                      }"
+                    >
+                      ${
+                        credit
+                          ? "+"
+                          : "−"
+                      }${escapeHtml(
+                        money(
+                          Math.abs(
+                            Number(
+                              transaction
+                                ?.amount ||
+                              0
+                            )
+                          )
+                        )
+                      )}
+
+                      <span class="transaction-status">
+                        ${escapeHtml(
+                          status
+                        )}
+                      </span>
+
+                    </div>
+
+                  </div>
+                `;
+              }
+            )
+            .join("");
+
+        allowanceTransactionList.innerHTML =
+          html;
+      }
+
+      /* =====================================================
+         MAIN RENDER
+      ===================================================== */
+
+      function renderPage(
+        result
+      ) {
+        renderMember(
+          result?.member
+        );
+
+        renderCard(
+          result?.card ||
+          {}
+        );
+
+        renderBalance(
+          result?.balance ||
+          {}
+        );
+
+        renderReadiness(
+          result?.readiness ||
+          {},
+          result?.lithic ||
+          {}
+        );
+
+        renderAllowance(
+          result?.allowance ||
+          {}
+        );
+
+        renderTransactions(
+          result?.transactions
+        );
+
+        renderAllowanceTransactions(
+          result
+            ?.allowanceTransactions
+        );
+
+        /*
+         * Provider label.
+         */
+
+        if (
+          statProvider
+        ) {
+          if (
+            result
+              ?.lithic
+              ?.enabled
+          ) {
+            statProvider.textContent =
+              "Lithic";
+          } else {
+            statProvider.textContent =
+              "Preparing";
+          }
+        }
+
+        /*
+         * Non-error informational state.
+         */
+
+        const stage =
+          normalizeStatus(
+            result
+              ?.readiness
+              ?.stage
+          );
+
+        if (
+          stage ===
+          "database_required"
+        ) {
+          showNotice(
+            "Card Leo's digital-card database is still being prepared. Your membership and rewards account remain active.",
+            "info"
+          );
+        } else if (
+          stage ===
+          "provider_disabled"
+        ) {
+          showNotice(
+            "Your Card Leo card dashboard is ready. Digital card issuing will activate after the card provider connection is completed.",
+            "info"
+          );
+        } else {
+          showNotice(
+            "",
+            "info"
+          );
+        }
+      }
+
+      /* =====================================================
+         LOAD
+      ===================================================== */
+
+      async function loadCard() {
+        setLoading(
+          true
+        );
+
+        try {
+          const result =
+            await fetchJson(
+              MEMBER_CARD_ENDPOINT
+            );
+
+          renderPage(
+            result
+          );
+        } catch (
+          error
+        ) {
+          console.error(
+            "Card Leo member-card error:",
+            error
+          );
+
+          showNotice(
+            error?.message ||
+            "Unable to load your Card Leo card right now.",
+            "error"
+          );
+        } finally {
+          setLoading(
+            false
+          );
+        }
+      }
+
+      /* =====================================================
+         CREATE CARDHOLDER
+      ===================================================== */
+
+      async function createCardholder() {
+        /*
+         * Step #6 may require KYC / terms data depending
+         * on the exact Lithic program.
+         *
+         * We do not silently fabricate those values here.
+         */
+
+        showNotice(
+          "Your Card Leo card account requires the approved cardholder onboarding flow before it can be created.",
+          "info"
+        );
+
+        /*
+         * Once Lithic tells us the approved workflow,
+         * we can replace this with the appropriate secure
+         * onboarding form/modal.
+         */
+
+        console.info(
+          "Cardholder endpoint prepared:",
+          CREATE_CARDHOLDER_ENDPOINT
+        );
+      }
+
+      /* =====================================================
+         CREATE VIRTUAL CARD
+      ===================================================== */
+
+      async function createVirtualCard() {
+        const confirmed =
+          window.confirm(
+            "Create your Card Leo virtual allowance card?"
+          );
+
+        if (!confirmed) {
+          return;
+        }
+
+        setLoading(
+          true
+        );
+
+        try {
+          const result =
+            await fetchJson(
+              CREATE_VIRTUAL_CARD_ENDPOINT,
+              {
+                method:
+                  "POST",
+
+                body:
+                  JSON.stringify({
+                    issueOpen:
+                      true,
+
+                    memo:
+                      "Card Leo Rewards",
+                  }),
+              }
+            );
+
+          showNotice(
+            result?.message ||
+            "Your Card Leo virtual card was created.",
+            "success"
+          );
+
+          await loadCard();
+        } catch (
+          error
+        ) {
+          console.error(
+            "Virtual card creation error:",
+            error
+          );
+
+          showNotice(
+            error?.message ||
+            "Unable to create the virtual card right now.",
+            "error"
+          );
+        } finally {
+          setLoading(
+            false
+          );
+        }
+      }
+
+      /* =====================================================
+         REFRESH
+      ===================================================== */
+
+      refreshButton
+        ?.addEventListener(
+          "click",
+          () => {
+            loadCard();
+          }
+        );
+
+      /* =====================================================
+         NAV
+      ===================================================== */
+
+      const menuToggle =
+        document.getElementById(
+          "menuToggle"
+        );
+
+      const siteNav =
+        document.getElementById(
+          "siteNav"
+        );
+
+      function closeNavigation() {
+        siteNav
+          ?.classList
+          .remove(
+            "is-open"
+          );
+
+        menuToggle
+          ?.setAttribute(
+            "aria-expanded",
+            "false"
+          );
+
+        document.body
+          .classList
+          .remove(
+            "nav-open"
+          );
+      }
+
+      menuToggle
+        ?.addEventListener(
+          "click",
+          () => {
+            const open =
+              siteNav
+                ?.classList
+                .toggle(
+                  "is-open"
+                );
+
+            menuToggle
+              .setAttribute(
+                "aria-expanded",
+                String(
+                  Boolean(
+                    open
+                  )
+                )
+              );
+
+            document.body
+              .classList
+              .toggle(
+                "nav-open",
+                Boolean(
+                  open
+                )
+              );
+          }
+        );
+
+      siteNav
+        ?.querySelectorAll(
+          "a"
+        )
+        .forEach(
+          (link) => {
+            link
+              .addEventListener(
+                "click",
+                closeNavigation
+              );
+          }
+        );
+
+      document
+        .addEventListener(
+          "click",
+          (
+            event
+          ) => {
+            if (
+              !siteNav
+                ?.classList
+                .contains(
+                  "is-open"
+                )
+            ) {
+              return;
+            }
+
+            if (
+              siteNav
+                .contains(
+                  event.target
+                ) ||
+              menuToggle
+                ?.contains(
+                  event.target
+                )
+            ) {
+              return;
+            }
+
+            closeNavigation();
+          }
+        );
+
+      /* =====================================================
+         LOGOUT
+      ===================================================== */
+
+      const logoutLink =
+        document.getElementById(
+          "logoutLink"
+        );
+
+      logoutLink
+        ?.addEventListener(
+          "click",
+          async (
+            event
+          ) => {
+            event
+              .preventDefault();
+
+            try {
+              await fetch(
+                "/api/portal/logout",
+                {
+                  method:
+                    "POST",
+
+                  credentials:
+                    "include",
+                }
+              );
+            } catch {
+              // Continue to login.
+            }
+
+            window.location.href =
+              "/login.html";
+          }
+        );
+
+      /* =====================================================
+         YEAR
+      ===================================================== */
+
+      const year =
+        document.querySelector(
+          "[data-year]"
+        );
+
+      if (year) {
+        year.textContent =
+          new Date()
+            .getFullYear();
+      }
+
+      /* =====================================================
+         START
+      ===================================================== */
+
+      loadCard();
+
+    })();
+  </script>
+
+</body>
+</html>

@@ -3,6 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
@@ -12,8 +13,9 @@
 
     <meta
       name="description"
-      content="View your Card Leo Rewards allowance rewards, direct referral earnings, team referral earnings, growth pool credit, payout status, and membership rewards dashboard."
+      content="Track your Card Leo Rewards referral earnings, pending rewards, approved allowance, available card allowance, loaded allowance, and Growth Pool activity."
     />
+
     <meta name="theme-color" content="#030303" />
     <meta name="robots" content="noindex, nofollow" />
 
@@ -21,6 +23,7 @@
       rel="canonical"
       href="https://www.cardleorewards.com/portal/rewards.html"
     />
+
     <link rel="stylesheet" href="/style.css" />
     <link rel="stylesheet" href="/assets/css/portal.css" />
 
@@ -36,17 +39,19 @@
       :root {
         --leo-black: #030303;
         --leo-panel: rgba(9, 9, 9, 0.92);
+        --leo-panel-2: rgba(15, 15, 15, 0.94);
         --leo-line: rgba(231, 182, 79, 0.22);
         --leo-gold: #e7b64f;
         --leo-gold-2: #f7d98b;
         --leo-gold-3: #a66f10;
         --leo-white: #f8f3e7;
         --leo-muted: rgba(248, 243, 231, 0.68);
-        --leo-muted-2: rgba(248, 243, 231, 0.5);
+        --leo-muted-2: rgba(248, 243, 231, 0.48);
         --leo-green: #48f06b;
         --leo-blue: #7ec8ff;
         --leo-red: #ff7676;
         --leo-yellow: #ffd166;
+        --leo-purple: #c7a8ff;
         --leo-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
         --sidebar-width: 290px;
       }
@@ -62,13 +67,30 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
           sans-serif;
         color: var(--leo-white);
         background:
-          radial-gradient(circle at 84% 9%, rgba(231, 182, 79, 0.13), transparent 26%),
-          radial-gradient(circle at 55% 100%, rgba(231, 182, 79, 0.08), transparent 28%),
+          radial-gradient(
+            circle at 84% 9%,
+            rgba(231, 182, 79, 0.13),
+            transparent 26%
+          ),
+          radial-gradient(
+            circle at 55% 100%,
+            rgba(231, 182, 79, 0.08),
+            transparent 28%
+          ),
           linear-gradient(180deg, #030303 0%, #080808 46%, #010101 100%);
+      }
+
+      body.menu-open {
+        overflow: hidden;
       }
 
       a {
@@ -76,38 +98,56 @@
         text-decoration: none;
       }
 
-      button,
-      input,
-      textarea,
-      select {
+      button {
         font: inherit;
+        cursor: pointer;
       }
 
-      button {
-        cursor: pointer;
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.64;
       }
 
       .portal-shell {
         min-height: 100vh;
         display: grid;
-        grid-template-columns: var(--sidebar-width) 1fr;
+        grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
         background:
-          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-          radial-gradient(circle at 72% 24%, rgba(231, 182, 79, 0.07), transparent 28%);
-        background-size: 96px 96px, auto;
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.035) 1px,
+            transparent 1px
+          ),
+          radial-gradient(
+            circle at 72% 24%,
+            rgba(231, 182, 79, 0.07),
+            transparent 28%
+          );
+        background-size:
+          96px 96px,
+          auto;
       }
+
+      /* ================================================================
+         SIDEBAR
+      ================================================================ */
 
       .sidebar {
         position: sticky;
         top: 0;
         height: 100vh;
-        overflow: auto;
+        overflow-y: auto;
         padding: 30px 22px;
         border-right: 1px solid rgba(231, 182, 79, 0.18);
         background:
-          radial-gradient(circle at top, rgba(231, 182, 79, 0.12), transparent 30%),
-          rgba(0, 0, 0, 0.72);
+          radial-gradient(
+            circle at top,
+            rgba(231, 182, 79, 0.12),
+            transparent 30%
+          ),
+          rgba(0, 0, 0, 0.76);
         backdrop-filter: blur(20px);
+        z-index: 40;
       }
 
       .brand-lockup {
@@ -164,8 +204,11 @@
         color: rgba(248, 243, 231, 0.82);
         font-size: 0.98rem;
         font-weight: 700;
-        cursor: pointer;
         transition: 0.22s ease;
+      }
+
+      .logout-btn {
+        text-align: left;
       }
 
       .side-link:hover,
@@ -179,7 +222,7 @@
       .side-icon {
         width: 24px;
         text-align: center;
-        font-size: 1.08rem;
+        flex: 0 0 auto;
       }
 
       .earn-card {
@@ -188,48 +231,106 @@
         border-radius: 22px;
         border: 1px solid rgba(231, 182, 79, 0.24);
         background:
-          radial-gradient(circle at top right, rgba(231, 182, 79, 0.16), transparent 36%),
+          radial-gradient(
+            circle at top right,
+            rgba(231, 182, 79, 0.16),
+            transparent 36%
+          ),
           rgba(255, 255, 255, 0.035);
       }
 
       .earn-card h2 {
         margin: 0 0 10px;
         color: var(--leo-gold-2);
-        font-size: 1.35rem;
-        line-height: 1.05;
-        text-transform: uppercase;
+        font-size: 1.3rem;
       }
 
       .earn-card p {
         margin: 0 0 18px;
         color: var(--leo-muted);
         line-height: 1.55;
+        font-size: 0.9rem;
       }
 
       .mini-allowance-card {
         height: 96px;
         border-radius: 16px;
         background:
-          radial-gradient(circle at 82% 14%, rgba(247, 217, 139, 0.24), transparent 32%),
+          radial-gradient(
+            circle at 82% 14%,
+            rgba(247, 217, 139, 0.24),
+            transparent 32%
+          ),
           linear-gradient(145deg, #050505, #101010 46%, #000);
         border: 1px solid rgba(231, 182, 79, 0.28);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: grid;
+        place-items: center;
         color: var(--leo-gold-2);
         font-family: "Playfair Display", serif;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.36);
       }
+
+      /* ================================================================
+         MOBILE NAV
+      ================================================================ */
 
       .mobile-topbar {
         display: none;
       }
 
+      .mobile-menu {
+        display: none;
+      }
+
+      .mobile-menu-backdrop {
+        display: none;
+      }
+
+      .mobile-menu-button {
+        width: 44px;
+        height: 44px;
+        border-radius: 13px;
+        border: 1px solid rgba(231, 182, 79, 0.24);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--leo-white);
+        font-size: 1.25rem;
+      }
+
+      /* ================================================================
+         MAIN
+      ================================================================ */
+
       .main {
         min-width: 0;
         padding: 28px;
+      }
+
+      .status-banner {
+        display: none;
+        margin-bottom: 18px;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(231, 182, 79, 0.18);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--leo-muted);
+        line-height: 1.55;
+      }
+
+      .status-banner.show {
+        display: block;
+      }
+
+      .status-banner.success {
+        color: #bfffe5;
+        border-color: rgba(72, 240, 107, 0.24);
+        background: rgba(72, 240, 107, 0.1);
+      }
+
+      .status-banner.error {
+        color: #ffd2d8;
+        border-color: rgba(255, 118, 118, 0.24);
+        background: rgba(255, 118, 118, 0.1);
       }
 
       .panel {
@@ -238,8 +339,16 @@
         border-radius: 22px;
         border: 1px solid rgba(231, 182, 79, 0.24);
         background:
-          radial-gradient(circle at 90% 10%, rgba(231, 182, 79, 0.14), transparent 34%),
-          linear-gradient(180deg, rgba(19, 19, 19, 0.92), rgba(4, 4, 4, 0.94));
+          radial-gradient(
+            circle at 90% 10%,
+            rgba(231, 182, 79, 0.14),
+            transparent 34%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(19, 19, 19, 0.92),
+            rgba(4, 4, 4, 0.94)
+          );
         box-shadow: var(--leo-shadow);
       }
 
@@ -249,9 +358,13 @@
         padding: 24px;
       }
 
+      /* ================================================================
+         HERO
+      ================================================================ */
+
       .top-grid {
         display: grid;
-        grid-template-columns: 1fr minmax(280px, 420px);
+        grid-template-columns: minmax(0, 1fr) minmax(310px, 430px);
         gap: 20px;
         margin-bottom: 20px;
       }
@@ -277,8 +390,9 @@
 
       .hero-title {
         margin: 0;
-        font-size: clamp(2rem, 4vw, 3.2rem);
-        line-height: 1;
+        font-family: "Playfair Display", serif;
+        font-size: clamp(2.15rem, 4vw, 3.5rem);
+        line-height: 0.98;
         letter-spacing: -0.05em;
       }
 
@@ -287,8 +401,8 @@
       }
 
       .hero-text {
-        max-width: 760px;
-        margin: 14px 0 0;
+        max-width: 820px;
+        margin: 15px 0 0;
         color: var(--leo-muted);
         line-height: 1.75;
       }
@@ -304,28 +418,26 @@
         margin-top: 26px;
       }
 
-      .btn,
-      .status-pill,
-      .member-badge {
+      .btn {
+        min-height: 48px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 9px;
+        padding: 0 18px;
         border-radius: 999px;
         border: 1px solid transparent;
-        transition: 0.25s ease;
-        white-space: nowrap;
-      }
-
-      .btn {
-        min-height: 48px;
-        padding: 0 18px;
         font-weight: 800;
-        cursor: pointer;
+        transition: 0.22s ease;
       }
 
       .btn-primary {
-        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 52%, #8b5b0b 100%);
+        background: linear-gradient(
+          135deg,
+          #f7d98b 0%,
+          #d89a22 52%,
+          #8b5b0b 100%
+        );
         color: #080808;
         box-shadow:
           0 18px 42px rgba(216, 154, 34, 0.28),
@@ -338,45 +450,25 @@
         color: var(--leo-white);
       }
 
-      .status-pill {
-        min-height: 34px;
-        padding: 0 12px;
-        background: rgba(72, 240, 107, 0.12);
-        border-color: rgba(72, 240, 107, 0.22);
-        color: #bfffe5;
-        font-size: 0.82rem;
-        font-weight: 800;
+      .btn:hover {
+        filter: brightness(1.07);
       }
 
-      .status-pill.pending {
-        background: rgba(255, 209, 102, 0.12);
-        border-color: rgba(255, 209, 102, 0.24);
-        color: #ffeaa6;
-      }
-
-      .status-pill.error {
-        background: rgba(255, 118, 118, 0.12);
-        border-color: rgba(255, 118, 118, 0.24);
-        color: #ffd2d8;
-      }
-
-      .member-badge {
-        min-height: 36px;
-        padding: 0 14px;
-        border-color: rgba(231, 182, 79, 0.36);
-        background: rgba(231, 182, 79, 0.12);
-        color: var(--leo-gold-2);
-        font-size: 0.84rem;
-        font-weight: 900;
-      }
+      /* ================================================================
+         CARD PREVIEW
+      ================================================================ */
 
       .allowance-card-preview {
-        min-height: 255px;
+        min-height: 280px;
         border-radius: 24px;
         overflow: hidden;
         padding: 22px;
         background:
-          radial-gradient(circle at 82% 14%, rgba(247, 217, 139, 0.24), transparent 32%),
+          radial-gradient(
+            circle at 82% 14%,
+            rgba(247, 217, 139, 0.24),
+            transparent 32%
+          ),
           linear-gradient(145deg, #050505, #101010 46%, #000);
         border: 1px solid rgba(231, 182, 79, 0.28);
         box-shadow:
@@ -409,18 +501,18 @@
         width: 54px;
         height: 38px;
         border-radius: 12px;
-        background: linear-gradient(135deg, #f7d98b, #a66f10), #d89a22;
+        background: linear-gradient(135deg, #f7d98b, #a66f10);
         box-shadow: 0 12px 28px rgba(216, 154, 34, 0.28);
       }
 
       .allowance-card-middle {
-        margin-top: 2.4rem;
+        margin-top: 2.25rem;
       }
 
       .allowance-card-middle h2 {
         margin: 0;
         color: var(--leo-white);
-        font-size: clamp(1.5rem, 3vw, 2.1rem);
+        font-size: clamp(1.45rem, 3vw, 2.1rem);
         letter-spacing: -0.04em;
       }
 
@@ -429,54 +521,151 @@
         color: var(--leo-muted);
       }
 
-      .allowance-card-bottom {
-        margin-top: 2rem;
-        color: var(--leo-gold);
-        font-size: 0.78rem;
+      .allowance-card-balance {
+        margin-top: 1.3rem;
+      }
+
+      .allowance-card-balance small {
+        display: block;
+        color: var(--leo-muted-2);
+        font-size: 0.7rem;
         font-weight: 900;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
       }
 
+      .allowance-card-balance strong {
+        display: block;
+        margin-top: 0.3rem;
+        color: var(--leo-gold-2);
+        font-size: 1.75rem;
+      }
+
+      .allowance-card-bottom {
+        margin-top: 1.8rem;
+        color: var(--leo-gold);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      /* ================================================================
+         MONEY FLOW EXPLAINER
+      ================================================================ */
+
+      .money-flow {
+        margin-bottom: 20px;
+      }
+
+      .money-flow-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+
+      .flow-step {
+        position: relative;
+        padding: 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(231, 182, 79, 0.14);
+        background: rgba(255, 255, 255, 0.035);
+      }
+
+      .flow-number {
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        color: #090909;
+        background: linear-gradient(135deg, #f7d98b, #b87912);
+        font-weight: 900;
+        margin-bottom: 13px;
+      }
+
+      .flow-step h3 {
+        margin: 0;
+        font-size: 0.98rem;
+      }
+
+      .flow-step p {
+        margin: 8px 0 0;
+        color: var(--leo-muted);
+        font-size: 0.86rem;
+        line-height: 1.55;
+      }
+
+      /* ================================================================
+         STAT CARDS
+      ================================================================ */
+
       .content-grid {
         display: grid;
-        grid-template-columns: 1fr;
         gap: 20px;
       }
 
       .stat-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 16px;
       }
 
       .stat-card .panel-inner {
-        display: grid;
-        gap: 8px;
-        text-align: center;
-        min-height: 150px;
-        place-items: center;
+        min-height: 168px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .stat-icon {
+        margin-bottom: 11px;
+        font-size: 1.3rem;
       }
 
       .stat-label {
         color: var(--leo-muted-2);
-        font-size: 0.78rem;
+        font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 0.12em;
         font-weight: 900;
       }
 
       .stat-number {
+        margin-top: 8px;
         color: var(--leo-gold);
-        font-size: clamp(1.8rem, 4vw, 2.6rem);
+        font-size: clamp(1.8rem, 4vw, 2.55rem);
         line-height: 1;
         font-weight: 900;
       }
 
       .stat-note {
+        margin-top: 10px;
         color: var(--leo-muted);
-        font-size: 0.9rem;
+        font-size: 0.84rem;
         line-height: 1.45;
+      }
+
+      .stat-card.pending-stat .stat-number {
+        color: var(--leo-yellow);
+      }
+
+      .stat-card.approved-stat .stat-number {
+        color: var(--leo-green);
+      }
+
+      .stat-card.loaded-stat .stat-number {
+        color: var(--leo-blue);
+      }
+
+      /* ================================================================
+         SECTION LAYOUT
+      ================================================================ */
+
+      .rewards-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(290px, 0.7fr);
+        gap: 20px;
       }
 
       .section-title-row {
@@ -491,7 +680,7 @@
       .section-title-row h3 {
         margin: 0;
         color: var(--leo-white);
-        font-size: 1.45rem;
+        font-size: 1.42rem;
         letter-spacing: -0.03em;
       }
 
@@ -499,33 +688,60 @@
         margin: 8px 0 0;
         color: var(--leo-muted);
         line-height: 1.65;
+        font-size: 0.92rem;
       }
 
-      .rewards-layout {
-        display: grid;
-        grid-template-columns: 1.25fr 0.75fr;
-        gap: 20px;
+      .status-pill {
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(72, 240, 107, 0.22);
+        background: rgba(72, 240, 107, 0.12);
+        color: #bfffe5;
+        font-size: 0.78rem;
+        font-weight: 800;
+        white-space: nowrap;
       }
+
+      .status-pill.pending {
+        background: rgba(255, 209, 102, 0.12);
+        border-color: rgba(255, 209, 102, 0.24);
+        color: #ffeaa6;
+      }
+
+      .status-pill.error {
+        background: rgba(255, 118, 118, 0.12);
+        border-color: rgba(255, 118, 118, 0.24);
+        color: #ffd2d8;
+      }
+
+      /* ================================================================
+         REWARD CARDS
+      ================================================================ */
 
       .reward-list,
-      .notice-list,
-      .activity-list {
+      .activity-list,
+      .notice-list {
         display: grid;
         gap: 14px;
       }
 
       .reward-card,
+      .activity-card,
       .notice-card,
       .summary-row,
-      .activity-card {
+      .growth-pool-box {
         border-radius: 18px;
         border: 1px solid rgba(231, 182, 79, 0.14);
         background: rgba(255, 255, 255, 0.035);
       }
 
       .reward-card,
-      .notice-card,
-      .activity-card {
+      .activity-card,
+      .notice-card {
         padding: 18px;
       }
 
@@ -541,37 +757,36 @@
       .activity-title {
         margin: 0;
         color: var(--leo-white);
-        font-size: 1.06rem;
+        font-size: 1.03rem;
         font-weight: 900;
-        letter-spacing: -0.02em;
       }
 
       .reward-description,
       .activity-description {
-        margin: 10px 0 0;
+        margin: 9px 0 0;
         color: var(--leo-muted);
-        line-height: 1.65;
+        line-height: 1.6;
+        font-size: 0.9rem;
       }
 
       .reward-meta,
       .activity-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 9px;
         margin-top: 14px;
       }
 
       .pill {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        min-height: 32px;
-        padding: 0 12px;
+        min-height: 30px;
+        padding: 0 11px;
         border-radius: 999px;
         border: 1px solid rgba(231, 182, 79, 0.14);
         background: rgba(255, 255, 255, 0.045);
         color: var(--leo-muted);
-        font-size: 0.8rem;
+        font-size: 0.76rem;
         font-weight: 800;
       }
 
@@ -599,15 +814,25 @@
         background: linear-gradient(135deg, #ffeaa6, #ffd166);
       }
 
+      .pill.purple {
+        color: #130a22;
+        border-color: transparent;
+        background: linear-gradient(135deg, #eadfff, #c7a8ff);
+      }
+
       .pill.red {
         color: #fff0f2;
         border-color: transparent;
         background: linear-gradient(135deg, #ff8a98, #c72f45);
       }
 
+      /* ================================================================
+         SUMMARY
+      ================================================================ */
+
       .summary-grid {
         display: grid;
-        gap: 12px;
+        gap: 11px;
       }
 
       .summary-row {
@@ -619,23 +844,92 @@
 
       .summary-row span {
         color: var(--leo-muted);
+        font-size: 0.86rem;
       }
 
       .summary-row strong {
         color: var(--leo-gold-2);
         text-align: right;
+        font-size: 0.88rem;
       }
+
+      /* ================================================================
+         GROWTH POOL
+      ================================================================ */
+
+      .growth-pool-box {
+        padding: 20px;
+        background:
+          radial-gradient(
+            circle at top right,
+            rgba(247, 217, 139, 0.17),
+            transparent 35%
+          ),
+          rgba(255, 255, 255, 0.035);
+      }
+
+      .growth-pool-balance {
+        margin-top: 10px;
+        color: var(--leo-gold-2);
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 900;
+        letter-spacing: -0.04em;
+      }
+
+      .growth-pool-meta {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .growth-pool-meta div {
+        padding: 12px;
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(231, 182, 79, 0.12);
+      }
+
+      .growth-pool-meta span {
+        display: block;
+        color: var(--leo-muted-2);
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .growth-pool-meta strong {
+        display: block;
+        margin-top: 5px;
+        color: var(--leo-white);
+      }
+
+      .company-warning {
+        margin-top: 15px;
+        padding: 13px;
+        border-radius: 14px;
+        border: 1px solid rgba(126, 200, 255, 0.18);
+        background: rgba(126, 200, 255, 0.07);
+        color: #cfeaff;
+        font-size: 0.82rem;
+        line-height: 1.55;
+      }
+
+      /* ================================================================
+         NOTICES
+      ================================================================ */
 
       .notice-card h3 {
         margin: 0 0 8px;
-        color: var(--leo-white);
-        font-size: 1rem;
+        font-size: 0.98rem;
       }
 
       .notice-card p {
         margin: 0;
         color: var(--leo-muted);
         line-height: 1.6;
+        font-size: 0.88rem;
       }
 
       .status-box,
@@ -649,38 +943,16 @@
         line-height: 1.6;
       }
 
-      .status-banner {
-        display: none;
-        margin-bottom: 18px;
-        padding: 14px 16px;
-        border-radius: 16px;
-        border: 1px solid rgba(231, 182, 79, 0.18);
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--leo-muted);
-      }
-
-      .status-banner.show {
-        display: block;
-      }
-
-      .status-banner.success {
-        color: #bfffe5;
-        border-color: rgba(72, 240, 107, 0.24);
-        background: rgba(72, 240, 107, 0.1);
-      }
-
-      .status-banner.error {
-        color: #ffd2d8;
-        border-color: rgba(255, 118, 118, 0.24);
-        background: rgba(255, 118, 118, 0.1);
-      }
-
       .footer-note {
         margin-top: 22px;
         text-align: center;
         color: var(--leo-muted-2);
-        font-size: 0.86rem;
+        font-size: 0.82rem;
       }
+
+      /* ================================================================
+         RESPONSIVE
+      ================================================================ */
 
       @media (max-width: 1180px) {
         .portal-shell {
@@ -692,16 +964,19 @@
         }
 
         .mobile-topbar {
-          display: flex;
           position: sticky;
           top: 0;
-          z-index: 50;
+          z-index: 100;
+          display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 12px;
-          padding: 14px 18px;
+          padding:
+            max(12px, env(safe-area-inset-top))
+            16px
+            12px;
           border-bottom: 1px solid rgba(231, 182, 79, 0.18);
-          background: rgba(0, 0, 0, 0.82);
+          background: rgba(0, 0, 0, 0.9);
           backdrop-filter: blur(18px);
         }
 
@@ -709,23 +984,121 @@
           color: var(--leo-gold-2);
         }
 
+        .mobile-menu-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 109;
+          background: rgba(0, 0, 0, 0.72);
+          backdrop-filter: blur(3px);
+        }
+
+        .mobile-menu-backdrop.show {
+          display: block;
+        }
+
+        .mobile-menu {
+          position: fixed;
+          z-index: 110;
+          top: 0;
+          right: 0;
+          width: min(86vw, 340px);
+          height: 100vh;
+          overflow-y: auto;
+          padding:
+            max(24px, env(safe-area-inset-top))
+            18px
+            24px;
+          background:
+            radial-gradient(
+              circle at top,
+              rgba(231, 182, 79, 0.15),
+              transparent 26%
+            ),
+            #070707;
+          border-left: 1px solid rgba(231, 182, 79, 0.22);
+          box-shadow: -30px 0 80px rgba(0, 0, 0, 0.7);
+        }
+
+        .mobile-menu.show {
+          display: block;
+        }
+
+        .mobile-menu-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 18px;
+        }
+
+        .mobile-menu-header strong {
+          color: var(--leo-gold-2);
+        }
+
+        .mobile-menu-close {
+          width: 42px;
+          height: 42px;
+          border-radius: 12px;
+          border: 1px solid rgba(231, 182, 79, 0.2);
+          background: rgba(255, 255, 255, 0.04);
+          color: var(--leo-white);
+        }
+
+        .mobile-menu .side-nav {
+          display: grid;
+        }
+
         .top-grid,
         .rewards-layout {
           grid-template-columns: 1fr;
         }
 
+        .money-flow-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 900px) {
         .stat-grid {
           grid-template-columns: repeat(2, 1fr);
         }
       }
 
-      @media (max-width: 760px) {
+      @media (max-width: 640px) {
         .main {
+          padding: 14px;
+        }
+
+        .panel,
+        .allowance-card-preview {
+          border-radius: 18px;
+        }
+
+        .panel-inner {
           padding: 18px;
         }
 
+        .top-grid,
+        .content-grid,
+        .rewards-layout {
+          gap: 14px;
+        }
+
+        .money-flow-grid,
         .stat-grid {
           grid-template-columns: 1fr;
+        }
+
+        .hero-title {
+          font-size: 2.2rem;
+        }
+
+        .hero-actions {
+          display: grid;
+        }
+
+        .hero-actions .btn {
+          width: 100%;
         }
 
         .section-title-row,
@@ -740,24 +1113,140 @@
           text-align: left;
         }
 
-        .hero-actions,
-        .btn {
-          width: 100%;
+        .growth-pool-meta {
+          grid-template-columns: 1fr;
+        }
+
+        .allowance-card-preview {
+          min-height: 270px;
+        }
+      }
+
+      @media (max-width: 390px) {
+        .main {
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+
+        .panel-inner {
+          padding: 16px;
+        }
+
+        .hero-title {
+          font-size: 2rem;
         }
       }
     </style>
   </head>
 
   <body data-require-auth data-cardleo-auth-guard="auto">
+    <!-- ================================================================
+         MOBILE TOPBAR
+    ================================================================= -->
+
     <div class="mobile-topbar">
       <strong>Card Leo Rewards</strong>
-      <a href="/portal/index.html" class="member-badge">Dashboard</a>
+
+      <button
+        type="button"
+        class="mobile-menu-button"
+        id="mobileMenuButton"
+        aria-label="Open member navigation"
+        aria-expanded="false"
+      >
+        ☰
+      </button>
     </div>
 
+    <div
+      id="mobileMenuBackdrop"
+      class="mobile-menu-backdrop"
+      aria-hidden="true"
+    ></div>
+
+    <aside
+      id="mobileMenu"
+      class="mobile-menu"
+      aria-label="Mobile member navigation"
+    >
+      <div class="mobile-menu-header">
+        <strong>Member Portal</strong>
+
+        <button
+          type="button"
+          class="mobile-menu-close"
+          id="mobileMenuClose"
+          aria-label="Close navigation"
+        >
+          ✕
+        </button>
+      </div>
+
+      <nav class="side-nav">
+        <a class="side-link" href="/portal/index.html">
+          <span class="side-icon">▣</span>
+          <span>Dashboard</span>
+        </a>
+
+        <a class="side-link" href="/portal/leaderboard.html">
+          <span class="side-icon">♜</span>
+          <span>Referral Tower</span>
+        </a>
+
+        <a class="side-link" href="/portal/profile.html">
+          <span class="side-icon">♙</span>
+          <span>My Account</span>
+        </a>
+
+        <a class="side-link is-active" href="/portal/rewards.html">
+          <span class="side-icon">🎁</span>
+          <span>Rewards</span>
+        </a>
+
+        <a class="side-link" href="/portal/card.html">
+          <span class="side-icon">💳</span>
+          <span>Allowance Card</span>
+        </a>
+
+        <a class="side-link" href="/portal/benefits.html">
+          <span class="side-icon">♔</span>
+          <span>Benefits</span>
+        </a>
+
+        <a class="side-link" href="/portal/support.html">
+          <span class="side-icon">☏</span>
+          <span>Support</span>
+        </a>
+
+        <a class="side-link" href="/portal/settings.html">
+          <span class="side-icon">⚙</span>
+          <span>Settings</span>
+        </a>
+
+        <button
+          class="logout-btn"
+          type="button"
+          data-mobile-logout
+        >
+          <span class="side-icon">↪</span>
+          <span>Logout</span>
+        </button>
+      </nav>
+    </aside>
+
+    <!-- ================================================================
+         PORTAL
+    ================================================================= -->
+
     <div class="portal-shell">
+      <!-- ==============================================================
+           DESKTOP SIDEBAR
+      ============================================================== -->
+
       <aside class="sidebar">
         <div class="brand-lockup">
           <div class="lion-logo" aria-hidden="true">♛</div>
+
           <h1>Card Leo</h1>
           <span>Rewards</span>
         </div>
@@ -783,6 +1272,11 @@
             <span>Rewards</span>
           </a>
 
+          <a class="side-link" href="/portal/card.html">
+            <span class="side-icon">💳</span>
+            <span>Allowance Card</span>
+          </a>
+
           <a class="side-link" href="/portal/benefits.html">
             <span class="side-icon">♔</span>
             <span>Benefits</span>
@@ -798,128 +1292,377 @@
             <span>Settings</span>
           </a>
 
-          <button class="logout-btn" type="button" id="logoutButton" data-logout>
+          <button
+            class="logout-btn"
+            type="button"
+            id="logoutButton"
+            data-logout
+          >
             <span class="side-icon">↪</span>
             <span>Logout</span>
           </button>
         </nav>
 
         <div class="earn-card">
-          <h2>Allowance Rewards</h2>
+          <h2>Allowance Flow</h2>
+
           <p>
-            Track direct rewards, team rewards, growth pool credits, and payout timing.
+            Referral earnings move from pending to approved allowance,
+            then become available for your Card Leo allowance card.
           </p>
-          <div class="mini-allowance-card">Allowance Card</div>
+
+          <div class="mini-allowance-card">
+            Card Leo Allowance
+          </div>
         </div>
       </aside>
 
+      <!-- ==============================================================
+           MAIN
+      ============================================================== -->
+
       <main class="main">
-        <div id="statusBanner" class="status-banner"></div>
+        <div
+          id="statusBanner"
+          class="status-banner"
+          aria-live="polite"
+        ></div>
+
+        <!-- ============================================================
+             HERO
+        ============================================================ -->
 
         <section class="top-grid">
           <article class="panel">
             <div class="panel-inner">
-              <div class="eyebrow">Member Rewards</div>
+              <div class="eyebrow">
+                Member Rewards
+              </div>
 
               <h1 class="hero-title">
-                Your <span>allowance rewards.</span>
+                Know exactly where
+                <span>your rewards stand.</span>
               </h1>
 
-              <p class="hero-text" id="heroCopy">
-                View your direct referral earnings, team referral earnings,
-                growth pool credit, payout status, benefit access, and monthly
-                reward opportunities. <strong>Member A referred Member B = $7.</strong>
-                <strong>Member B referred Member C = $1 for Member A.</strong>
+              <p
+                class="hero-text"
+                id="heroCopy"
+              >
+                Track pending referral earnings, approved allowance,
+                allowance ready for card loading, and amounts already
+                loaded to your Card Leo allowance card.
+                <strong>
+                  Direct approved referral = $7.
+                </strong>
+                <strong>
+                  Qualified team referral = $1.
+                </strong>
               </p>
 
               <div class="hero-actions">
-                <a class="btn btn-primary" href="/portal/leaderboard.html">
+                <a
+                  class="btn btn-primary"
+                  href="/portal/leaderboard.html"
+                >
                   View Referral Tower
                 </a>
-                <a class="btn btn-secondary" href="/portal/benefits.html">
-                  View Benefits
+
+                <a
+                  class="btn btn-secondary"
+                  href="/portal/card.html"
+                >
+                  View Allowance Card
                 </a>
-                <a class="btn btn-secondary" href="/portal/index.html">
-                  Dashboard
+
+                <a
+                  class="btn btn-secondary"
+                  href="/portal/benefits.html"
+                >
+                  View Benefits
                 </a>
               </div>
             </div>
           </article>
 
+          <!-- ==========================================================
+               CARD
+          ========================================================== -->
+
           <aside class="allowance-card-preview">
             <div class="allowance-card-top">
-              <div class="allowance-card-logo">CL</div>
+              <div class="allowance-card-logo">
+                CL
+              </div>
+
               <div class="allowance-card-chip"></div>
             </div>
 
             <div class="allowance-card-middle">
-              <h2 id="cardMemberName">Card Leo Member</h2>
-              <p id="cardMemberTier">Allowance Card</p>
+              <h2 id="cardMemberName">
+                Card Leo Member
+              </h2>
+
+              <p id="cardMemberTier">
+                Virtual Allowance Card
+              </p>
+
+              <div class="allowance-card-balance">
+                <small>
+                  Available Allowance
+                </small>
+
+                <strong id="cardAvailableBalance">
+                  $0.00
+                </strong>
+              </div>
             </div>
 
             <div class="allowance-card-bottom">
-              <span id="cardMemberStatus">Rewards Loading</span>
-              <span id="cardRewardSnapshot">$0.00 Earned</span>
+              <span id="cardMemberStatus">
+                Loading
+              </span>
+
+              <span id="cardStatusText">
+                Card Not Created
+              </span>
             </div>
           </aside>
         </section>
 
+        <!-- ============================================================
+             HOW MONEY MOVES
+        ============================================================ -->
+
+        <section class="panel money-flow">
+          <div class="panel-inner">
+            <div class="section-title-row">
+              <div>
+                <h2>
+                  How Your Reward Money Moves
+                </h2>
+
+                <p>
+                  Each number on this page represents a different stage.
+                  Earnings are not considered card-loaded allowance
+                  until they actually reach the card-loading stage.
+                </p>
+              </div>
+            </div>
+
+            <div class="money-flow-grid">
+              <article class="flow-step">
+                <div class="flow-number">1</div>
+
+                <h3>Pending Earnings</h3>
+
+                <p>
+                  Referral activity has been recorded but is still waiting
+                  for qualification or approval.
+                </p>
+              </article>
+
+              <article class="flow-step">
+                <div class="flow-number">2</div>
+
+                <h3>Approved Allowance</h3>
+
+                <p>
+                  Qualified rewards have been approved and entered into
+                  your allowance ledger.
+                </p>
+              </article>
+
+              <article class="flow-step">
+                <div class="flow-number">3</div>
+
+                <h3>Available To Load</h3>
+
+                <p>
+                  Approved allowance is ready for the Card Leo card-loading
+                  process.
+                </p>
+              </article>
+
+              <article class="flow-step">
+                <div class="flow-number">4</div>
+
+                <h3>Loaded To Card</h3>
+
+                <p>
+                  Allowance has been successfully transferred to your
+                  Card Leo allowance card.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+
         <section class="content-grid">
+          <!-- ==========================================================
+               PRIMARY FINANCIAL STATS
+          ========================================================== -->
+
           <section class="stat-grid">
-            <article class="panel stat-card">
+            <article class="panel stat-card pending-stat">
               <div class="panel-inner">
-                <div class="stat-label">Direct Earnings</div>
-                <div class="stat-number" id="directEarnings">$0</div>
-                <div class="stat-note">Member A referred Member B = $7.</div>
+                <div class="stat-icon">⏳</div>
+
+                <div class="stat-label">
+                  Pending Earnings
+                </div>
+
+                <div
+                  class="stat-number"
+                  id="pendingEarnings"
+                >
+                  $0.00
+                </div>
+
+                <div class="stat-note">
+                  Rewards waiting for approval or qualification.
+                </div>
+              </div>
+            </article>
+
+            <article class="panel stat-card approved-stat">
+              <div class="panel-inner">
+                <div class="stat-icon">✓</div>
+
+                <div class="stat-label">
+                  Approved Allowance
+                </div>
+
+                <div
+                  class="stat-number"
+                  id="approvedAllowance"
+                >
+                  $0.00
+                </div>
+
+                <div class="stat-note">
+                  Approved rewards recorded in your allowance ledger.
+                </div>
+              </div>
+            </article>
+
+            <article class="panel stat-card approved-stat">
+              <div class="panel-inner">
+                <div class="stat-icon">⇢</div>
+
+                <div class="stat-label">
+                  Available To Load
+                </div>
+
+                <div
+                  class="stat-number"
+                  id="availableAllowance"
+                >
+                  $0.00
+                </div>
+
+                <div class="stat-note">
+                  Approved allowance currently available for card loading.
+                </div>
+              </div>
+            </article>
+
+            <article class="panel stat-card loaded-stat">
+              <div class="panel-inner">
+                <div class="stat-icon">💳</div>
+
+                <div class="stat-label">
+                  Loaded To Card
+                </div>
+
+                <div
+                  class="stat-number"
+                  id="loadedAllowance"
+                >
+                  $0.00
+                </div>
+
+                <div class="stat-note">
+                  Lifetime allowance successfully loaded to your card.
+                </div>
               </div>
             </article>
 
             <article class="panel stat-card">
               <div class="panel-inner">
-                <div class="stat-label">Team Earnings</div>
-                <div class="stat-number" id="teamEarnings">$0</div>
-                <div class="stat-note">Member B referred Member C = $1.</div>
+                <div class="stat-icon">↗</div>
+
+                <div class="stat-label">
+                  Direct Earnings
+                </div>
+
+                <div
+                  class="stat-number"
+                  id="directEarnings"
+                >
+                  $0.00
+                </div>
+
+                <div class="stat-note">
+                  $7 for each qualified direct referral.
+                </div>
               </div>
             </article>
 
             <article class="panel stat-card">
               <div class="panel-inner">
-                <div class="stat-label">Growth Pool</div>
-                <div class="stat-number" id="growthPoolCredit">$0</div>
-                <div class="stat-note">$2 growth pool credit tracked separately.</div>
-              </div>
-            </article>
+                <div class="stat-icon">♜</div>
 
-            <article class="panel stat-card">
-              <div class="panel-inner">
-                <div class="stat-label">Total Allowance</div>
-                <div class="stat-number" id="totalAllowance">$0</div>
-                <div class="stat-note">Direct + team rewards.</div>
+                <div class="stat-label">
+                  Team Earnings
+                </div>
+
+                <div
+                  class="stat-number"
+                  id="teamEarnings"
+                >
+                  $0.00
+                </div>
+
+                <div class="stat-note">
+                  $1 for each qualified team referral.
+                </div>
               </div>
             </article>
           </section>
+
+          <!-- ==========================================================
+               REWARD INVENTORY + MEMBER SUMMARY
+          ========================================================== -->
 
           <section class="rewards-layout">
             <article class="panel">
               <div class="panel-inner">
                 <div class="section-title-row">
                   <div>
-                    <h2>Allowance Reward Inventory</h2>
+                    <h2>
+                      Reward & Allowance Inventory
+                    </h2>
+
                     <p>
-                      Your reward cards are calculated from your live referral
-                      data. The leaderboard total includes direct earnings and
-                      team earnings. Growth pool credit is shown separately.
+                      A breakdown of your referral rewards and where
+                      approved allowance currently sits in the payout flow.
                     </p>
                   </div>
 
-                  <span class="status-pill pending" id="rewardStatusBadge">
+                  <span
+                    class="status-pill pending"
+                    id="rewardStatusBadge"
+                  >
                     Loading
                   </span>
                 </div>
 
-                <div id="rewardsList" class="reward-list">
+                <div
+                  id="rewardsList"
+                  class="reward-list"
+                >
                   <div class="status-box">
-                    Loading your Card Leo Rewards inventory...
+                    Loading your reward and allowance information...
                   </div>
                 </div>
               </div>
@@ -929,10 +1672,12 @@
               <div class="panel-inner">
                 <div class="section-title-row">
                   <div>
-                    <h3>Rewards Summary</h3>
+                    <h3>
+                      Member Summary
+                    </h3>
+
                     <p>
-                      Your member standing, payout timing, and referral allowance
-                      details.
+                      Your membership and reward qualification information.
                     </p>
                   </div>
                 </div>
@@ -940,47 +1685,66 @@
                 <div class="summary-grid">
                   <div class="summary-row">
                     <span>Member Name</span>
-                    <strong id="memberName">Card Leo Member</strong>
+                    <strong id="memberName">
+                      Card Leo Member
+                    </strong>
                   </div>
 
                   <div class="summary-row">
                     <span>Email</span>
-                    <strong id="memberEmail">Loading...</strong>
-                  </div>
-
-                  <div class="summary-row">
-                    <span>Card</span>
-                    <strong>Allowance Card</strong>
+                    <strong id="memberEmail">
+                      Loading...
+                    </strong>
                   </div>
 
                   <div class="summary-row">
                     <span>Membership Status</span>
-                    <strong id="membershipStatus">Checking</strong>
+                    <strong id="membershipStatus">
+                      Checking
+                    </strong>
                   </div>
 
                   <div class="summary-row">
                     <span>Payment Status</span>
-                    <strong id="paymentStatus">Checking</strong>
+                    <strong id="paymentStatus">
+                      Checking
+                    </strong>
                   </div>
 
                   <div class="summary-row">
                     <span>Direct Referrals</span>
-                    <strong id="directReferralCount">0</strong>
+                    <strong id="directReferralCount">
+                      0
+                    </strong>
                   </div>
 
                   <div class="summary-row">
                     <span>Team Referrals</span>
-                    <strong id="teamReferralCount">0</strong>
+                    <strong id="teamReferralCount">
+                      0
+                    </strong>
                   </div>
 
                   <div class="summary-row">
-                    <span>Payout Window</span>
-                    <strong>1st–3rd monthly</strong>
+                    <span>Pending Referrals</span>
+                    <strong id="pendingReferralCount">
+                      0
+                    </strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Allowance Card</span>
+                    <strong id="memberCardStatus">
+                      Not Created
+                    </strong>
                   </div>
                 </div>
 
-                <div style="margin-top: 18px;">
-                  <a class="btn btn-primary" href="/portal/leaderboard.html">
+                <div style="margin-top: 18px">
+                  <a
+                    class="btn btn-primary"
+                    href="/portal/leaderboard.html"
+                  >
                     Open Referral Tower
                   </a>
                 </div>
@@ -988,20 +1752,194 @@
             </aside>
           </section>
 
+          <!-- ==========================================================
+               GROWTH POOL
+          ========================================================== -->
+
           <section class="rewards-layout">
             <article class="panel">
               <div class="panel-inner">
                 <div class="section-title-row">
                   <div>
-                    <h2>Referral Reward Activity</h2>
+                    <h2>
+                      Card Leo Growth Pool
+                    </h2>
+
                     <p>
-                      This shows the people counted toward your $7 direct rewards
-                      and $1 team rewards.
+                      Company Growth Pool activity is displayed separately
+                      from your personal referral earnings and allowance.
+                    </p>
+                  </div>
+
+                  <span
+                    class="status-pill"
+                    id="growthPoolStatusBadge"
+                  >
+                    Loading
+                  </span>
+                </div>
+
+                <div class="growth-pool-box">
+                  <div class="stat-label">
+                    Company Growth Pool
+                  </div>
+
+                  <div
+                    class="growth-pool-balance"
+                    id="growthPoolBalance"
+                  >
+                    $0.00
+                  </div>
+
+                  <div class="growth-pool-meta">
+                    <div>
+                      <span>
+                        Members Contributed
+                      </span>
+
+                      <strong id="growthPoolMembers">
+                        0
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>
+                        Contribution Rule
+                      </span>
+
+                      <strong>
+                        $2 Per Qualified New Member
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>
+                        Your Contribution
+                      </span>
+
+                      <strong id="memberGrowthContribution">
+                        Checking
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>
+                        Last Contribution
+                      </span>
+
+                      <strong id="growthPoolLastContribution">
+                        —
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div class="company-warning">
+                    <strong>Important:</strong>
+                    the Growth Pool is company-building money.
+                    It is not personal allowance, referral earnings,
+                    or card balance. Your individual membership may
+                    contribute $2 to the Growth Pool once when your
+                    qualifying paid activation is completed.
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <aside class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h3>
+                      Allowance Card Status
+                    </h3>
+
+                    <p>
+                      Track the connection between approved rewards and
+                      your member allowance card.
                     </p>
                   </div>
                 </div>
 
-                <div id="activityList" class="activity-list">
+                <div class="summary-grid">
+                  <div class="summary-row">
+                    <span>Card Status</span>
+                    <strong id="cardDetailStatus">
+                      Not Created
+                    </strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Card Type</span>
+                    <strong id="cardType">
+                      Virtual
+                    </strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Last Four</span>
+                    <strong id="cardLastFour">
+                      —
+                    </strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Current Card Balance</span>
+                    <strong id="currentCardBalance">
+                      $0.00
+                    </strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Lifetime Loaded</span>
+                    <strong id="lifetimeLoaded">
+                      $0.00
+                    </strong>
+                  </div>
+
+                  <div class="summary-row">
+                    <span>Lifetime Spent</span>
+                    <strong id="lifetimeSpent">
+                      $0.00
+                    </strong>
+                  </div>
+                </div>
+
+                <div style="margin-top: 18px">
+                  <a
+                    class="btn btn-secondary"
+                    href="/portal/card.html"
+                  >
+                    Open Allowance Card
+                  </a>
+                </div>
+              </div>
+            </aside>
+          </section>
+
+          <!-- ==========================================================
+               ACTIVITY
+          ========================================================== -->
+
+          <section class="rewards-layout">
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="section-title-row">
+                  <div>
+                    <h2>
+                      Referral Reward Activity
+                    </h2>
+
+                    <p>
+                      See which referrals are pending, approved,
+                      or already generating allowance rewards.
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  id="activityList"
+                  class="activity-list"
+                >
                   <div class="status-box">
                     Loading referral reward activity...
                   </div>
@@ -1013,20 +1951,28 @@
               <div class="panel-inner">
                 <div class="section-title-row">
                   <div>
-                    <h3>Monthly Reward Notices</h3>
+                    <h3>
+                      Reward Notices
+                    </h3>
+
                     <p>
-                      Important updates about referral rewards, benefit access,
-                      and payout processing.
+                      Important details about how rewards become
+                      available allowance.
                     </p>
                   </div>
                 </div>
 
-                <div id="noticesList" class="notice-list">
+                <div
+                  id="noticesList"
+                  class="notice-list"
+                >
                   <article class="notice-card">
-                    <h3>Preparing reward notices...</h3>
+                    <h3>
+                      Loading reward notices...
+                    </h3>
+
                     <p>
-                      We’re loading your reward notices and account-specific
-                      information now.
+                      Your account-specific information is being prepared.
                     </p>
                   </article>
                 </div>
@@ -1036,7 +1982,7 @@
         </section>
 
         <div class="footer-note">
-          Card Leo Rewards Member Portal · Allowance Rewards Dashboard
+          Card Leo Rewards Member Portal · Reward & Allowance Dashboard
         </div>
       </main>
     </div>
@@ -1045,722 +1991,2500 @@
 
     <script>
       (() => {
+        /* ==============================================================
+           API ROUTES
+        ============================================================== */
+
         const API = {
           me: "/api/auth/me",
-          rewards: "/api/portal/rewards",
-          referrals: "/api/referrals/me",
-          logout: "/api/auth/logout",
+
+          rewards:
+            "/api/portal/rewards",
+
+          referrals:
+            "/api/referrals/me",
+
+          growthPool:
+            "/api/portal/growth-pool",
+
+          memberCard:
+            "/api/cards/member-card",
+
+          logout:
+            "/api/auth/logout",
         };
 
+        /* ==============================================================
+           ELEMENTS
+        ============================================================== */
+
         const els = {
-          statusBanner: document.getElementById("statusBanner"),
-          logoutButton: document.getElementById("logoutButton"),
+          statusBanner:
+            document.getElementById(
+              "statusBanner"
+            ),
 
-          cardMemberName: document.getElementById("cardMemberName"),
-          cardMemberTier: document.getElementById("cardMemberTier"),
-          cardMemberStatus: document.getElementById("cardMemberStatus"),
-          cardRewardSnapshot: document.getElementById("cardRewardSnapshot"),
+          logoutButton:
+            document.getElementById(
+              "logoutButton"
+            ),
 
-          heroCopy: document.getElementById("heroCopy"),
-          rewardStatusBadge: document.getElementById("rewardStatusBadge"),
+          mobileLogout:
+            document.querySelector(
+              "[data-mobile-logout]"
+            ),
 
-          directEarnings: document.getElementById("directEarnings"),
-          teamEarnings: document.getElementById("teamEarnings"),
-          growthPoolCredit: document.getElementById("growthPoolCredit"),
-          totalAllowance: document.getElementById("totalAllowance"),
+          mobileMenu:
+            document.getElementById(
+              "mobileMenu"
+            ),
 
-          rewardsList: document.getElementById("rewardsList"),
-          activityList: document.getElementById("activityList"),
-          noticesList: document.getElementById("noticesList"),
+          mobileMenuButton:
+            document.getElementById(
+              "mobileMenuButton"
+            ),
 
-          memberName: document.getElementById("memberName"),
-          memberEmail: document.getElementById("memberEmail"),
-          membershipStatus: document.getElementById("membershipStatus"),
-          paymentStatus: document.getElementById("paymentStatus"),
-          directReferralCount: document.getElementById("directReferralCount"),
-          teamReferralCount: document.getElementById("teamReferralCount"),
+          mobileMenuClose:
+            document.getElementById(
+              "mobileMenuClose"
+            ),
+
+          mobileMenuBackdrop:
+            document.getElementById(
+              "mobileMenuBackdrop"
+            ),
+
+          cardMemberName:
+            document.getElementById(
+              "cardMemberName"
+            ),
+
+          cardMemberTier:
+            document.getElementById(
+              "cardMemberTier"
+            ),
+
+          cardMemberStatus:
+            document.getElementById(
+              "cardMemberStatus"
+            ),
+
+          cardStatusText:
+            document.getElementById(
+              "cardStatusText"
+            ),
+
+          cardAvailableBalance:
+            document.getElementById(
+              "cardAvailableBalance"
+            ),
+
+          rewardStatusBadge:
+            document.getElementById(
+              "rewardStatusBadge"
+            ),
+
+          pendingEarnings:
+            document.getElementById(
+              "pendingEarnings"
+            ),
+
+          approvedAllowance:
+            document.getElementById(
+              "approvedAllowance"
+            ),
+
+          availableAllowance:
+            document.getElementById(
+              "availableAllowance"
+            ),
+
+          loadedAllowance:
+            document.getElementById(
+              "loadedAllowance"
+            ),
+
+          directEarnings:
+            document.getElementById(
+              "directEarnings"
+            ),
+
+          teamEarnings:
+            document.getElementById(
+              "teamEarnings"
+            ),
+
+          memberName:
+            document.getElementById(
+              "memberName"
+            ),
+
+          memberEmail:
+            document.getElementById(
+              "memberEmail"
+            ),
+
+          membershipStatus:
+            document.getElementById(
+              "membershipStatus"
+            ),
+
+          paymentStatus:
+            document.getElementById(
+              "paymentStatus"
+            ),
+
+          directReferralCount:
+            document.getElementById(
+              "directReferralCount"
+            ),
+
+          teamReferralCount:
+            document.getElementById(
+              "teamReferralCount"
+            ),
+
+          pendingReferralCount:
+            document.getElementById(
+              "pendingReferralCount"
+            ),
+
+          memberCardStatus:
+            document.getElementById(
+              "memberCardStatus"
+            ),
+
+          rewardsList:
+            document.getElementById(
+              "rewardsList"
+            ),
+
+          activityList:
+            document.getElementById(
+              "activityList"
+            ),
+
+          noticesList:
+            document.getElementById(
+              "noticesList"
+            ),
+
+          growthPoolBalance:
+            document.getElementById(
+              "growthPoolBalance"
+            ),
+
+          growthPoolMembers:
+            document.getElementById(
+              "growthPoolMembers"
+            ),
+
+          memberGrowthContribution:
+            document.getElementById(
+              "memberGrowthContribution"
+            ),
+
+          growthPoolLastContribution:
+            document.getElementById(
+              "growthPoolLastContribution"
+            ),
+
+          growthPoolStatusBadge:
+            document.getElementById(
+              "growthPoolStatusBadge"
+            ),
+
+          cardDetailStatus:
+            document.getElementById(
+              "cardDetailStatus"
+            ),
+
+          cardType:
+            document.getElementById(
+              "cardType"
+            ),
+
+          cardLastFour:
+            document.getElementById(
+              "cardLastFour"
+            ),
+
+          currentCardBalance:
+            document.getElementById(
+              "currentCardBalance"
+            ),
+
+          lifetimeLoaded:
+            document.getElementById(
+              "lifetimeLoaded"
+            ),
+
+          lifetimeSpent:
+            document.getElementById(
+              "lifetimeSpent"
+            ),
         };
 
         let currentMember = null;
 
-        function money(value) {
-          const number = Number(value || 0);
+        /* ==============================================================
+           BASIC HELPERS
+        ============================================================== */
 
-          return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(Number.isFinite(number) ? number : 0);
-        }
+        function normalizeText(
+          value,
+          fallback = ""
+        ) {
+          const text =
+            String(
+              value ?? ""
+            ).trim();
 
-        function escapeHtml(value) {
-          return String(value ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#39;");
-        }
-
-        function isObject(value) {
-          return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-        }
-
-        function unwrap(payload) {
-          if (!isObject(payload)) return {};
-          return isObject(payload.data) ? payload.data : payload;
-        }
-
-        function normalizeText(value, fallback = "") {
-          const text = String(value ?? "").trim();
           return text || fallback;
         }
 
-        function normalizeEmail(value) {
-          return normalizeText(value).toLowerCase();
-        }
-
-        function titleCase(value) {
-          return String(value || "")
-            .replace(/[_-]+/g, " ")
-            .split(/\s+/)
-            .filter(Boolean)
-            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-            .join(" ");
-        }
-
-        function safeNumber(value, fallback = 0) {
-          const number = Number(value);
-          return Number.isFinite(number) ? number : fallback;
-        }
-
-        async function fetchJson(url, options = {}) {
-          const response = await fetch(url, {
-            method: options.method || "GET",
-            credentials: "include",
-            headers: {
-              Accept: "application/json",
-              ...(options.body ? { "Content-Type": "application/json" } : {}),
-              ...(options.headers || {}),
-            },
-            ...options,
-          });
-
-          const payload = await response.json().catch(() => ({}));
-
-          if (response.status === 401) {
-            window.location.href =
-              "/login.html?next=" +
-              encodeURIComponent(window.location.pathname + window.location.search);
-            return null;
-          }
-
-          if (!response.ok || payload?.success === false || payload?.ok === false) {
-            const error = new Error(
-              payload?.message || payload?.error || "Request failed."
-            );
-            error.status = response.status;
-            error.payload = payload;
-            throw error;
-          }
-
-          return unwrap(payload);
-        }
-
-        function showBanner(message, type = "") {
-          if (!message) {
-            els.statusBanner.className = "status-banner";
-            els.statusBanner.textContent = "";
-            return;
-          }
-
-          els.statusBanner.textContent = message;
-          els.statusBanner.className = `status-banner show ${type}`.trim();
-        }
-
-        function getFullName(member) {
-          const full =
-            normalizeText(member?.fullName) ||
-            normalizeText(member?.full_name) ||
-            normalizeText(member?.name);
-
-          if (full) return full;
-
-          const first = normalizeText(member?.firstName || member?.first_name);
-          const last = normalizeText(member?.lastName || member?.last_name);
-
-          return [first, last].filter(Boolean).join(" ") || "Card Leo Member";
-        }
-
-        function getStatus(member) {
+        function normalizeLower(
+          value
+        ) {
           return normalizeText(
-            member?.membership_status ||
-              member?.membershipStatus ||
-              member?.status ||
-              member?.member_status ||
-              "active"
+            value
           ).toLowerCase();
         }
 
-        function getPaymentStatus(member) {
-          return normalizeText(
-            member?.payment_status || member?.paymentStatus || "paid"
-          ).toLowerCase();
-        }
-
-        function getStatusLabel(member) {
-          const status = getStatus(member);
-
-          if (status === "auto_approved") return "Auto Approved";
-          if (status === "payment_pending") return "Payment Pending";
-          if (status === "pending_payment") return "Payment Pending";
-
-          return titleCase(status || "Active");
-        }
-
-        function getPaymentLabel(member) {
-          const status = getPaymentStatus(member);
-
-          if (status === "current") return "Current";
-          if (status === "succeeded") return "Paid";
-
-          return titleCase(status || "Paid");
-        }
-
-        function isPaidActive(member) {
-          const status = getStatus(member);
-          const paymentStatus = getPaymentStatus(member);
-
-          return (
-            ["active", "approved", "auto_approved", "paid", "current"].includes(status) ||
-            ["paid", "active", "current", "succeeded", "complete"].includes(paymentStatus)
+        function normalizeEmail(
+          value
+        ) {
+          return normalizeLower(
+            value
           );
         }
 
-        function statusBadgeClass(label) {
-          const value = normalizeText(label).toLowerCase();
+        function safeNumber(
+          value,
+          fallback = 0
+        ) {
+          const number =
+            Number(value);
 
-          if (
-            value.includes("pending") ||
-            value.includes("required") ||
-            value.includes("past due") ||
-            value.includes("unpaid")
-          ) {
-            return "status-pill pending";
-          }
-
-          if (
-            value.includes("declined") ||
-            value.includes("denied") ||
-            value.includes("cancel") ||
-            value.includes("suspended")
-          ) {
-            return "status-pill error";
-          }
-
-          return "status-pill";
+          return Number.isFinite(
+            number
+          )
+            ? number
+            : fallback;
         }
 
-        function rewardPillClass(status, type = "") {
-          const value = normalizeText(status).toLowerCase();
-          const kind = normalizeText(type).toLowerCase();
-
-          if (kind === "team") return "pill blue";
-          if (kind === "direct") return "pill green";
-          if (kind === "growth") return "pill gold";
-
-          if (value === "active" || value === "approved" || value === "earned") {
-            return "pill green";
-          }
-
-          if (value === "pending" || value === "processing") {
-            return "pill yellow";
-          }
-
-          if (value === "denied" || value === "cancelled" || value === "canceled") {
-            return "pill red";
-          }
-
-          return "pill gold";
+        function centsToDollars(
+          value
+        ) {
+          return (
+            safeNumber(
+              value,
+              0
+            ) / 100
+          );
         }
 
-        function getSummaryNumber(summary, keys, fallback = 0) {
-          for (const key of keys) {
-            const value = summary?.[key];
+        function money(
+          value
+        ) {
+          return new Intl.NumberFormat(
+            "en-US",
+            {
+              style:
+                "currency",
 
-            if (value !== undefined && value !== null && value !== "") {
-              const number = Number(value);
-              return Number.isFinite(number) ? number : fallback;
+              currency:
+                "USD",
+
+              minimumFractionDigits:
+                2,
+
+              maximumFractionDigits:
+                2,
+            }
+          ).format(
+            safeNumber(
+              value,
+              0
+            )
+          );
+        }
+
+        function escapeHtml(
+          value
+        ) {
+          return String(
+            value ?? ""
+          )
+            .replaceAll(
+              "&",
+              "&amp;"
+            )
+            .replaceAll(
+              "<",
+              "&lt;"
+            )
+            .replaceAll(
+              ">",
+              "&gt;"
+            )
+            .replaceAll(
+              '"',
+              "&quot;"
+            )
+            .replaceAll(
+              "'",
+              "&#39;"
+            );
+        }
+
+        function isObject(
+          value
+        ) {
+          return (
+            Boolean(value) &&
+            typeof value ===
+              "object" &&
+            !Array.isArray(
+              value
+            )
+          );
+        }
+
+        function unwrap(
+          payload
+        ) {
+          if (
+            !isObject(payload)
+          ) {
+            return {};
+          }
+
+          return isObject(
+            payload.data
+          )
+            ? payload.data
+            : payload;
+        }
+
+        function titleCase(
+          value
+        ) {
+          return normalizeText(
+            value
+          )
+            .replace(
+              /[_-]+/g,
+              " "
+            )
+            .replace(
+              /\s+/g,
+              " "
+            )
+            .trim()
+            .replace(
+              /\b\w/g,
+              (character) =>
+                character
+                  .toUpperCase()
+            );
+        }
+
+        function formatDate(
+          value
+        ) {
+          if (!value) {
+            return "—";
+          }
+
+          const date =
+            new Date(value);
+
+          if (
+            Number.isNaN(
+              date.getTime()
+            )
+          ) {
+            return "—";
+          }
+
+          return new Intl.DateTimeFormat(
+            "en-US",
+            {
+              month:
+                "short",
+
+              day:
+                "numeric",
+
+              year:
+                "numeric",
+            }
+          ).format(date);
+        }
+
+        /* ==============================================================
+           API
+        ============================================================== */
+
+        async function fetchJson(
+          url,
+          options = {}
+        ) {
+          const response =
+            await fetch(
+              url,
+              {
+                method:
+                  options.method ||
+                  "GET",
+
+                credentials:
+                  "include",
+
+                headers: {
+                  Accept:
+                    "application/json",
+
+                  ...(options.body
+                    ? {
+                        "Content-Type":
+                          "application/json",
+                      }
+                    : {}),
+
+                  ...(options.headers ||
+                    {}),
+                },
+
+                ...options,
+              }
+            );
+
+          const payload =
+            await response
+              .json()
+              .catch(
+                () => ({})
+              );
+
+          if (
+            response.status ===
+            401
+          ) {
+            window.location.href =
+              "/login.html?next=" +
+              encodeURIComponent(
+                window.location.pathname +
+                  window.location.search
+              );
+
+            return null;
+          }
+
+          if (
+            !response.ok ||
+            payload?.success ===
+              false ||
+            payload?.ok === false
+          ) {
+            const error =
+              new Error(
+                payload?.message ||
+                  payload?.error ||
+                  "Request failed."
+              );
+
+            error.status =
+              response.status;
+
+            error.payload =
+              payload;
+
+            throw error;
+          }
+
+          return unwrap(
+            payload
+          );
+        }
+
+        /* ==============================================================
+           BANNER
+        ============================================================== */
+
+        function showBanner(
+          message,
+          type = ""
+        ) {
+          if (
+            !els.statusBanner
+          ) {
+            return;
+          }
+
+          if (!message) {
+            els.statusBanner.className =
+              "status-banner";
+
+            els.statusBanner.textContent =
+              "";
+
+            return;
+          }
+
+          els.statusBanner.textContent =
+            message;
+
+          els.statusBanner.className =
+            `status-banner show ${type}`.trim();
+        }
+
+        /* ==============================================================
+           MEMBER
+        ============================================================== */
+
+        function getFullName(
+          member
+        ) {
+          const fullName =
+            normalizeText(
+              member?.fullName
+            ) ||
+            normalizeText(
+              member?.full_name
+            ) ||
+            normalizeText(
+              member?.name
+            );
+
+          if (fullName) {
+            return fullName;
+          }
+
+          const firstName =
+            normalizeText(
+              member?.firstName ||
+                member?.first_name
+            );
+
+          const lastName =
+            normalizeText(
+              member?.lastName ||
+                member?.last_name
+            );
+
+          return (
+            [
+              firstName,
+              lastName,
+            ]
+              .filter(Boolean)
+              .join(" ") ||
+            "Card Leo Member"
+          );
+        }
+
+        function getMembershipStatus(
+          member
+        ) {
+          return normalizeLower(
+            member
+              ?.membership_status ||
+              member
+                ?.membershipStatus ||
+              member?.status ||
+              ""
+          );
+        }
+
+        function getPaymentStatus(
+          member
+        ) {
+          return normalizeLower(
+            member
+              ?.payment_status ||
+              member
+                ?.paymentStatus ||
+              ""
+          );
+        }
+
+        function isPaidActive(
+          member
+        ) {
+          const membershipStatus =
+            getMembershipStatus(
+              member
+            );
+
+          const paymentStatus =
+            getPaymentStatus(
+              member
+            );
+
+          const status =
+            normalizeLower(
+              member?.status
+            );
+
+          const active =
+            [
+              "active",
+              "approved",
+              "paid",
+              "current",
+              "completed",
+              "complete",
+              "succeeded",
+            ].includes(
+              status
+            ) ||
+            [
+              "active",
+              "activated",
+              "approved",
+              "paid",
+              "current",
+            ].includes(
+              membershipStatus
+            );
+
+          const paid =
+            [
+              "paid",
+              "active",
+              "current",
+              "completed",
+              "complete",
+              "succeeded",
+            ].includes(
+              paymentStatus
+            );
+
+          return (
+            active &&
+            paid
+          );
+        }
+
+        function renderMember(
+          member
+        ) {
+          currentMember =
+            member || {};
+
+          const name =
+            getFullName(
+              currentMember
+            );
+
+          const email =
+            normalizeEmail(
+              currentMember
+                ?.email
+            ) ||
+            "Member account";
+
+          const membership =
+            getMembershipStatus(
+              currentMember
+            );
+
+          const payment =
+            getPaymentStatus(
+              currentMember
+            );
+
+          const active =
+            isPaidActive(
+              currentMember
+            );
+
+          els.cardMemberName.textContent =
+            name;
+
+          els.cardMemberTier.textContent =
+            "Virtual Allowance Card";
+
+          els.cardMemberStatus.textContent =
+            active
+              ? "Membership Active"
+              : "Payment Required";
+
+          els.memberName.textContent =
+            name;
+
+          els.memberEmail.textContent =
+            email;
+
+          els.membershipStatus.textContent =
+            titleCase(
+              membership ||
+                normalizeText(
+                  currentMember
+                    ?.status,
+                  "Unknown"
+                )
+            );
+
+          els.paymentStatus.textContent =
+            titleCase(
+              payment ||
+                "Unknown"
+            );
+
+          els.rewardStatusBadge.textContent =
+            active
+              ? "Rewards Active"
+              : "Payment Required";
+
+          els.rewardStatusBadge.className =
+            active
+              ? "status-pill"
+              : "status-pill pending";
+        }
+
+        /* ==============================================================
+           FLEXIBLE VALUE HELPERS
+        ============================================================== */
+
+        function firstNumber(
+          objects,
+          keys,
+          fallback = 0
+        ) {
+          const sources =
+            Array.isArray(
+              objects
+            )
+              ? objects
+              : [objects];
+
+          for (
+            const source
+            of sources
+          ) {
+            if (
+              !source ||
+              typeof source !==
+                "object"
+            ) {
+              continue;
+            }
+
+            for (
+              const key
+              of keys
+            ) {
+              const value =
+                source[key];
+
+              if (
+                value !==
+                  undefined &&
+                value !==
+                  null &&
+                value !== ""
+              ) {
+                const number =
+                  Number(value);
+
+                if (
+                  Number.isFinite(
+                    number
+                  )
+                ) {
+                  return number;
+                }
+              }
             }
           }
 
           return fallback;
         }
 
-        function normalizeReferralSummary(referralsPayload = {}) {
-          const summary = referralsPayload.summary || referralsPayload.stats || {};
+        function firstText(
+          objects,
+          keys,
+          fallback = ""
+        ) {
+          const sources =
+            Array.isArray(
+              objects
+            )
+              ? objects
+              : [objects];
 
-          const directReferrals = getSummaryNumber(summary, [
-            "approvedDirectReferrals",
-            "approved_direct_referrals",
-            "directReferrals",
-            "direct_referrals",
-          ]);
+          for (
+            const source
+            of sources
+          ) {
+            if (
+              !source ||
+              typeof source !==
+                "object"
+            ) {
+              continue;
+            }
 
-          const teamReferrals = getSummaryNumber(summary, [
-            "approvedTeamReferrals",
-            "approved_team_referrals",
-            "teamReferrals",
-            "team_referrals",
-          ]);
+            for (
+              const key
+              of keys
+            ) {
+              const value =
+                normalizeText(
+                  source[key]
+                );
 
-          const directEarnings = getSummaryNumber(
-            summary,
-            ["directEarnings", "direct_earnings"],
-            directReferrals * 7
-          );
+              if (value) {
+                return value;
+              }
+            }
+          }
 
-          const teamEarnings = getSummaryNumber(
-            summary,
-            ["teamEarnings", "team_earnings"],
-            teamReferrals * 1
-          );
+          return fallback;
+        }
 
-          const growthPoolCredit = getSummaryNumber(
-            summary,
-            ["growthPoolCredit", "growth_pool_credit"],
-            teamReferrals * 2
-          );
+        /* ==============================================================
+           REFERRALS
+        ============================================================== */
 
-          const totalEarned = getSummaryNumber(
-            summary,
-            [
-              "totalEarned",
-              "total_earned",
-              "allowanceBalance",
-              "allowance_balance",
-              "rewardBalance",
-              "reward_balance",
-            ],
-            directEarnings + teamEarnings
-          );
+        function normalizeReferralSummary(
+          payload = {}
+        ) {
+          const summary =
+            payload.summary ||
+            payload.stats ||
+            payload.referralSummary ||
+            {};
 
-          const pendingReferrals = getSummaryNumber(summary, [
-            "pendingReferrals",
-            "pending_referrals",
-          ]);
+          const directReferrals =
+            firstNumber(
+              summary,
+              [
+                "approvedDirectReferrals",
+                "approved_direct_referrals",
+                "directReferrals",
+                "direct_referrals",
+              ],
+              0
+            );
 
-          const totalReferrals = getSummaryNumber(
-            summary,
-            ["totalReferrals", "total_referrals"],
-            directReferrals + teamReferrals + pendingReferrals
-          );
+          const teamReferrals =
+            firstNumber(
+              summary,
+              [
+                "approvedTeamReferrals",
+                "approved_team_referrals",
+                "teamReferrals",
+                "team_referrals",
+              ],
+              0
+            );
+
+          const pendingReferrals =
+            firstNumber(
+              summary,
+              [
+                "pendingReferrals",
+                "pending_referrals",
+                "pendingCount",
+                "pending_count",
+              ],
+              0
+            );
+
+          const directEarnings =
+            firstNumber(
+              summary,
+              [
+                "directEarnings",
+                "direct_earnings",
+              ],
+              directReferrals *
+                7
+            );
+
+          const teamEarnings =
+            firstNumber(
+              summary,
+              [
+                "teamEarnings",
+                "team_earnings",
+              ],
+              teamReferrals *
+                1
+            );
 
           return {
             directReferrals,
             teamReferrals,
             pendingReferrals,
-            totalReferrals,
             directEarnings,
             teamEarnings,
-            growthPoolCredit,
-            totalEarned,
+
+            totalReferralEarnings:
+              directEarnings +
+              teamEarnings,
           };
         }
 
-        function normalizeReferralRows(referralsPayload = {}) {
+        function normalizeReferralRows(
+          payload = {}
+        ) {
           const rows =
-            referralsPayload.referrals ||
-            referralsPayload.recentReferrals ||
-            referralsPayload.recent_referrals ||
+            payload.referrals ||
+            payload.recentReferrals ||
+            payload
+              .recent_referrals ||
+            payload.activity ||
             [];
 
-          return Array.isArray(rows) ? rows : [];
+          return Array.isArray(
+            rows
+          )
+            ? rows
+            : [];
         }
 
-        function buildRewardCards(summary, member) {
-          const paid = isPaidActive(member);
+        /* ==============================================================
+           REWARD / ALLOWANCE LEDGER
+        ============================================================== */
 
+        function normalizeAllowance(
+          rewardsData = {}
+        ) {
+          const allowance =
+            rewardsData.allowance ||
+            rewardsData
+              .allowanceSummary ||
+            rewardsData
+              .allowance_summary ||
+            rewardsData.summary ||
+            {};
+
+          const memberAllowance =
+            rewardsData.memberAllowance ||
+            rewardsData
+              .member_allowance ||
+            {};
+
+          const sources = [
+            allowance,
+            memberAllowance,
+            rewardsData,
+          ];
+
+          const pendingCents =
+            firstNumber(
+              sources,
+              [
+                "pending_earnings_cents",
+                "pendingEarningsCents",
+                "pending_reward_cents",
+                "pendingRewardCents",
+                "pending_cents",
+                "pendingCents",
+              ],
+              0
+            );
+
+          const approvedWaitingCents =
+            firstNumber(
+              sources,
+              [
+                "approved_waiting_cents",
+                "approvedWaitingCents",
+                "approved_earnings_cents",
+                "approvedEarningsCents",
+                "approved_allowance_cents",
+                "approvedAllowanceCents",
+              ],
+              0
+            );
+
+          const availableBalanceCents =
+            firstNumber(
+              sources,
+              [
+                "available_balance_cents",
+                "availableBalanceCents",
+                "available_allowance_cents",
+                "availableAllowanceCents",
+                "allowance_balance_cents",
+                "allowanceBalanceCents",
+              ],
+              0
+            );
+
+          const processingCents =
+            firstNumber(
+              sources,
+              [
+                "processing_cents",
+                "processingCents",
+                "loading_cents",
+                "loadingCents",
+              ],
+              0
+            );
+
+          const lifetimeLoadedCents =
+            firstNumber(
+              sources,
+              [
+                "lifetime_loaded_cents",
+                "lifetimeLoadedCents",
+                "total_allowance_loaded_cents",
+                "totalAllowanceLoadedCents",
+              ],
+              0
+            );
+
+          const lifetimeSpentCents =
+            firstNumber(
+              sources,
+              [
+                "lifetime_spent_cents",
+                "lifetimeSpentCents",
+              ],
+              0
+            );
+
+          return {
+            pendingCents,
+
+            approvedWaitingCents,
+
+            availableBalanceCents,
+
+            processingCents,
+
+            lifetimeLoadedCents,
+
+            lifetimeSpentCents,
+
+            pending:
+              centsToDollars(
+                pendingCents
+              ),
+
+            approvedWaiting:
+              centsToDollars(
+                approvedWaitingCents
+              ),
+
+            available:
+              centsToDollars(
+                availableBalanceCents
+              ),
+
+            processing:
+              centsToDollars(
+                processingCents
+              ),
+
+            lifetimeLoaded:
+              centsToDollars(
+                lifetimeLoadedCents
+              ),
+
+            lifetimeSpent:
+              centsToDollars(
+                lifetimeSpentCents
+              ),
+          };
+        }
+
+        /* ==============================================================
+           CARD
+        ============================================================== */
+
+        function normalizeCard(
+          cardData = {},
+          allowance = {}
+        ) {
+          const card =
+            cardData.card ||
+            cardData.memberCard ||
+            cardData.member_card ||
+            cardData ||
+            {};
+
+          const balanceCents =
+            firstNumber(
+              [
+                card,
+                cardData,
+              ],
+              [
+                "allowance_balance_cents",
+                "allowanceBalanceCents",
+                "balance_cents",
+                "balanceCents",
+                "available_balance_cents",
+                "availableBalanceCents",
+              ],
+              allowance
+                .availableBalanceCents ||
+                0
+            );
+
+          return {
+            status:
+              firstText(
+                [
+                  card,
+                  cardData,
+                ],
+                [
+                  "card_status",
+                  "cardStatus",
+                  "status",
+                ],
+                "not_created"
+              ),
+
+            type:
+              firstText(
+                [
+                  card,
+                  cardData,
+                ],
+                [
+                  "card_type",
+                  "cardType",
+                  "type",
+                ],
+                "virtual"
+              ),
+
+            lastFour:
+              firstText(
+                [
+                  card,
+                  cardData,
+                ],
+                [
+                  "last_four",
+                  "lastFour",
+                ],
+                ""
+              ),
+
+            paused:
+              Boolean(
+                card.card_paused ||
+                card.cardPaused
+              ),
+
+            balanceCents,
+
+            balance:
+              centsToDollars(
+                balanceCents
+              ),
+          };
+        }
+
+        /* ==============================================================
+           GROWTH POOL
+        ============================================================== */
+
+        function normalizeGrowthPool(
+          data = {}
+        ) {
+          const pool =
+            data.growthPool ||
+            data.growth_pool ||
+            {};
+
+          const ledger =
+            data.ledger ||
+            {};
+
+          const memberContribution =
+            data.memberContribution ||
+            data
+              .member_contribution ||
+            {};
+
+          return {
+            balance:
+              firstNumber(
+                pool,
+                [
+                  "balance",
+                ],
+                0
+              ),
+
+            balanceCents:
+              firstNumber(
+                pool,
+                [
+                  "balanceCents",
+                  "balance_cents",
+                ],
+                0
+              ),
+
+            totalMembers:
+              firstNumber(
+                pool,
+                [
+                  "totalMembersContributed",
+                  "total_members_contributed",
+                ],
+                0
+              ),
+
+            contributionAmount:
+              firstNumber(
+                pool,
+                [
+                  "contributionAmount",
+                  "contribution_amount",
+                ],
+                2
+              ),
+
+            memberContributed:
+              Boolean(
+                memberContribution
+                  .contributed
+              ),
+
+            memberContributionAmount:
+              firstNumber(
+                memberContribution,
+                [
+                  "amount",
+                ],
+                0
+              ),
+
+            lastContributionAt:
+              ledger
+                .lastContributionAt ||
+              ledger
+                .last_contribution_at ||
+              null,
+
+            reconciliation:
+              data.reconciliation ||
+              {},
+          };
+        }
+
+        /* ==============================================================
+           RENDER STATS
+        ============================================================== */
+
+        function renderStats(
+          referral,
+          allowance
+        ) {
+          els.pendingEarnings.textContent =
+            money(
+              allowance.pending
+            );
+
+          els.approvedAllowance.textContent =
+            money(
+              allowance
+                .approvedWaiting
+            );
+
+          els.availableAllowance.textContent =
+            money(
+              allowance.available
+            );
+
+          els.loadedAllowance.textContent =
+            money(
+              allowance
+                .lifetimeLoaded
+            );
+
+          els.directEarnings.textContent =
+            money(
+              referral
+                .directEarnings
+            );
+
+          els.teamEarnings.textContent =
+            money(
+              referral
+                .teamEarnings
+            );
+
+          els.directReferralCount.textContent =
+            String(
+              referral
+                .directReferrals
+            );
+
+          els.teamReferralCount.textContent =
+            String(
+              referral
+                .teamReferrals
+            );
+
+          els.pendingReferralCount.textContent =
+            String(
+              referral
+                .pendingReferrals
+            );
+        }
+
+        /* ==============================================================
+           REWARD INVENTORY
+        ============================================================== */
+
+        function buildRewardCards(
+          referral,
+          allowance
+        ) {
           return [
             {
-              id: "direct-referral-earnings",
-              title: "Direct Referral Earnings",
+              title:
+                "Pending Referral Earnings",
+
               description:
-                "Member A referred Member B earns $7 after Member B is active and approved.",
-              status: paid ? "active" : "pending",
-              statusLabel: paid ? "Active" : "Pending",
-              category: "Direct Referral",
-              type: "direct",
-              amount: summary.directEarnings,
-              meta: `${summary.directReferrals} direct approved referral${
-                summary.directReferrals === 1 ? "" : "s"
-              }`,
+                "Referral rewards that have been recorded but are still waiting for qualification or approval.",
+
+              amount:
+                allowance.pending,
+
+              status:
+                allowance.pending >
+                0
+                  ? "Pending"
+                  : "Clear",
+
+              className:
+                allowance.pending >
+                0
+                  ? "yellow"
+                  : "green",
+
+              meta:
+                `${referral.pendingReferrals} pending referral${
+                  referral
+                    .pendingReferrals ===
+                  1
+                    ? ""
+                    : "s"
+                }`,
             },
+
             {
-              id: "team-referral-earnings",
-              title: "Team Referral Earnings",
+              title:
+                "Direct Referral Earnings",
+
               description:
-                "When Member B referred Member C and Member C is approved, Member A can receive a $1 team reward.",
-              status: paid ? "active" : "pending",
-              statusLabel: paid ? "Active" : "Pending",
-              category: "Team Referral",
-              type: "team",
-              amount: summary.teamEarnings,
-              meta: `${summary.teamReferrals} team approved referral${
-                summary.teamReferrals === 1 ? "" : "s"
-              }`,
+                "You earn $7 when a qualifying direct referral completes the requirements for an approved reward.",
+
+              amount:
+                referral
+                  .directEarnings,
+
+              status:
+                "Tracked",
+
+              className:
+                "green",
+
+              meta:
+                `${referral.directReferrals} approved direct referral${
+                  referral
+                    .directReferrals ===
+                  1
+                    ? ""
+                    : "s"
+                }`,
             },
+
             {
-              id: "growth-pool-credit",
-              title: "Growth Pool Credit",
+              title:
+                "Team Referral Earnings",
+
               description:
-                "Growth pool credit is tracked separately from personal leaderboard earnings.",
-              status: "tracking",
-              statusLabel: "Tracking",
-              category: "Growth Pool",
-              type: "growth",
-              amount: summary.growthPoolCredit,
-              meta: "$2 growth pool credit per approved team referral",
+                "You earn $1 from qualifying team referral activity under the Card Leo referral structure.",
+
+              amount:
+                referral
+                  .teamEarnings,
+
+              status:
+                "Tracked",
+
+              className:
+                "blue",
+
+              meta:
+                `${referral.teamReferrals} approved team referral${
+                  referral
+                    .teamReferrals ===
+                  1
+                    ? ""
+                    : "s"
+                }`,
             },
+
             {
-              id: "total-allowance",
-              title: "Total Allowance",
+              title:
+                "Approved Allowance",
+
               description:
-                "Your leaderboard allowance total is direct referral earnings plus team referral earnings.",
-              status: "active",
-              statusLabel: "Active",
-              category: "Allowance",
-              type: "direct",
-              amount: summary.totalEarned,
-              meta: "Direct + team rewards",
+                "Rewards that passed qualification and are now approved in your allowance ledger.",
+
+              amount:
+                allowance
+                  .approvedWaiting,
+
+              status:
+                allowance
+                  .approvedWaiting >
+                0
+                  ? "Approved"
+                  : "Waiting",
+
+              className:
+                allowance
+                  .approvedWaiting >
+                0
+                  ? "green"
+                  : "yellow",
+
+              meta:
+                "Approved reward stage",
             },
+
             {
-              id: "payout-window",
-              title: "Monthly Payout Window",
+              title:
+                "Available To Load",
+
               description:
-                "Eligible allowances are dispersed on the 1st and 3rd of every month.",
-              status: "processing",
-              statusLabel: "Processing",
-              category: "Payout Timing",
-              type: "timing",
-              amount: 0,
-              meta: "1st–3rd monthly",
+                "Approved allowance currently available for the Card Leo card-loading process.",
+
+              amount:
+                allowance.available,
+
+              status:
+                allowance.available >
+                0
+                  ? "Available"
+                  : "Waiting",
+
+              className:
+                allowance.available >
+                0
+                  ? "green"
+                  : "yellow",
+
+              meta:
+                "Ready for card workflow",
+            },
+
+            {
+              title:
+                "Card Load Processing",
+
+              description:
+                "Allowance currently moving through the card-loading process.",
+
+              amount:
+                allowance.processing,
+
+              status:
+                allowance.processing >
+                0
+                  ? "Processing"
+                  : "Clear",
+
+              className:
+                allowance.processing >
+                0
+                  ? "purple"
+                  : "green",
+
+              meta:
+                "Card loading stage",
+            },
+
+            {
+              title:
+                "Lifetime Loaded To Card",
+
+              description:
+                "Total allowance that has successfully completed the Card Leo card-loading process.",
+
+              amount:
+                allowance
+                  .lifetimeLoaded,
+
+              status:
+                "Loaded",
+
+              className:
+                "blue",
+
+              meta:
+                "Lifetime card loads",
             },
           ];
         }
 
-        function buildNotices(summary, member) {
-          const paid = isPaidActive(member);
-
-          return [
-            {
-              title: "Allowance payout timing",
-              body:
-                "Eligible allowances are dispersed on the 1st and 3rd of every month after rewards are reviewed.",
-            },
-            {
-              title: "Direct referral rule",
-              body:
-                "Member A referred Member B earns $7 after Member B is active, paid, and approved.",
-            },
-            {
-              title: "Team referral rule",
-              body:
-                "Member B referred Member C can create a $1 team reward for Member A after Member C is active and approved.",
-            },
-            {
-              title: "Growth pool tracking",
-              body:
-                "The $2 growth pool credit is tracked separately and should not be added into personal leaderboard earnings unless you choose to display it that way.",
-            },
-            {
-              title: paid ? "Membership active" : "Payment required",
-              body: paid
-                ? "Your membership is active, so your reward tools and benefit access can remain unlocked."
-                : "Complete your membership payment to unlock full rewards access.",
-            },
-          ];
-        }
-
-        function renderMember(member) {
-          currentMember = member;
-
-          const fullName = getFullName(member);
-          const email = normalizeText(member?.email, "Member account");
-          const statusLabel = getStatusLabel(member);
-          const paymentLabel = getPaymentLabel(member);
-          const paid = isPaidActive(member);
-
-          els.cardMemberName.textContent = fullName;
-          els.cardMemberTier.textContent = "Allowance Card";
-          els.cardMemberStatus.textContent = paid ? "Rewards Active" : "Payment Required";
-
-          els.memberName.textContent = fullName;
-          els.memberEmail.textContent = email;
-          els.membershipStatus.textContent = statusLabel;
-          els.paymentStatus.textContent = paymentLabel;
-
-          els.rewardStatusBadge.textContent = paid ? "Rewards Active" : "Payment Required";
-          els.rewardStatusBadge.className = statusBadgeClass(
-            paid ? "Rewards Active" : "Payment Required"
-          );
-
-          els.heroCopy.innerHTML = paid
-            ? 'Your Card Leo Rewards membership is active. View your direct referral earnings, team referral earnings, growth pool credit, payout timing, and benefit access. <strong>Member A referred Member B = $7.</strong> <strong>Member B referred Member C = $1 for Member A.</strong>'
-            : 'Your rewards are limited until membership payment is complete. Activate your account to unlock full reward access.';
-        }
-
-        function renderStats(summary) {
-          els.directEarnings.textContent = money(summary.directEarnings);
-          els.teamEarnings.textContent = money(summary.teamEarnings);
-          els.growthPoolCredit.textContent = money(summary.growthPoolCredit);
-          els.totalAllowance.textContent = money(summary.totalEarned);
-
-          els.directReferralCount.textContent = String(summary.directReferrals);
-          els.teamReferralCount.textContent = String(summary.teamReferrals);
-
-          els.cardRewardSnapshot.textContent = `${money(summary.totalEarned)} Earned`;
-        }
-
-        function renderRewards(rewards) {
-          if (!rewards.length) {
+        function renderRewards(
+          rewards
+        ) {
+          if (
+            !Array.isArray(
+              rewards
+            ) ||
+            !rewards.length
+          ) {
             els.rewardsList.innerHTML = `
               <div class="empty-box">
-                No rewards are currently visible on this account. As your membership
-                and referrals grow, rewards will appear here.
+                No reward information is currently available.
               </div>
             `;
+
             return;
           }
 
-          els.rewardsList.innerHTML = rewards
-            .map((reward) => {
-              const amountPill =
-                reward.amount > 0
-                  ? `<span class="pill ${reward.type === "team" ? "blue" : "green"}">${escapeHtml(
-                      money(reward.amount)
-                    )}</span>`
-                  : "";
+          els.rewardsList.innerHTML =
+            rewards
+              .map(
+                (reward) => `
+                  <article class="reward-card">
+                    <div class="reward-top">
+                      <div>
+                        <h3 class="reward-title">
+                          ${escapeHtml(
+                            reward.title
+                          )}
+                        </h3>
 
-              const metaPill = reward.meta
-                ? `<span class="pill">${escapeHtml(reward.meta)}</span>`
-                : "";
+                        <p class="reward-description">
+                          ${escapeHtml(
+                            reward.description
+                          )}
+                        </p>
+                      </div>
 
-              return `
-                <article class="reward-card">
-                  <div class="reward-top">
-                    <div>
-                      <h3 class="reward-title">${escapeHtml(reward.title)}</h3>
-                      <p class="reward-description">${escapeHtml(reward.description)}</p>
+                      <span class="pill ${escapeHtml(
+                        reward.className
+                      )}">
+                        ${escapeHtml(
+                          reward.status
+                        )}
+                      </span>
                     </div>
-                    <span class="${rewardPillClass(reward.status, reward.type)}">
-                      ${escapeHtml(reward.statusLabel)}
-                    </span>
-                  </div>
 
-                  <div class="reward-meta">
-                    <span class="pill gold">${escapeHtml(reward.category)}</span>
-                    ${amountPill}
-                    ${metaPill}
-                  </div>
-                </article>
-              `;
-            })
-            .join("");
+                    <div class="reward-meta">
+                      <span class="pill gold">
+                        ${escapeHtml(
+                          money(
+                            reward.amount
+                          )
+                        )}
+                      </span>
+
+                      <span class="pill">
+                        ${escapeHtml(
+                          reward.meta
+                        )}
+                      </span>
+                    </div>
+                  </article>
+                `
+              )
+              .join("");
         }
 
-        function renderActivity(rows) {
-          if (!rows.length) {
+        /* ==============================================================
+           CARD RENDER
+        ============================================================== */
+
+        function renderCard(
+          card,
+          allowance
+        ) {
+          const status =
+            normalizeLower(
+              card.status
+            );
+
+          const statusLabel =
+            titleCase(
+              status ||
+                "not_created"
+            );
+
+          els.cardStatusText.textContent =
+            statusLabel;
+
+          els.memberCardStatus.textContent =
+            statusLabel;
+
+          els.cardDetailStatus.textContent =
+            statusLabel;
+
+          els.cardType.textContent =
+            titleCase(
+              card.type ||
+                "virtual"
+            );
+
+          els.cardLastFour.textContent =
+            card.lastFour
+              ? `•••• ${card.lastFour}`
+              : "—";
+
+          els.currentCardBalance.textContent =
+            money(
+              card.balance
+            );
+
+          els.cardAvailableBalance.textContent =
+            money(
+              allowance.available
+            );
+
+          els.lifetimeLoaded.textContent =
+            money(
+              allowance
+                .lifetimeLoaded
+            );
+
+          els.lifetimeSpent.textContent =
+            money(
+              allowance
+                .lifetimeSpent
+            );
+        }
+
+        /* ==============================================================
+           GROWTH POOL RENDER
+        ============================================================== */
+
+        function renderGrowthPool(
+          growthPool
+        ) {
+          els.growthPoolBalance.textContent =
+            money(
+              growthPool.balance
+            );
+
+          els.growthPoolMembers.textContent =
+            String(
+              growthPool
+                .totalMembers
+            );
+
+          els.memberGrowthContribution.textContent =
+            growthPool
+              .memberContributed
+              ? `${money(
+                  growthPool
+                    .memberContributionAmount ||
+                    growthPool
+                      .contributionAmount
+                )} Contributed`
+              : "Not Yet Contributed";
+
+          els.growthPoolLastContribution.textContent =
+            formatDate(
+              growthPool
+                .lastContributionAt
+            );
+
+          const reconciliationMatches =
+            growthPool
+              ?.reconciliation
+              ?.summaryMatchesLedger ??
+            growthPool
+              ?.reconciliation
+              ?.matches;
+
+          if (
+            reconciliationMatches ===
+            false
+          ) {
+            els.growthPoolStatusBadge.textContent =
+              "Reconciling";
+
+            els.growthPoolStatusBadge.className =
+              "status-pill pending";
+          } else {
+            els.growthPoolStatusBadge.textContent =
+              "Current";
+
+            els.growthPoolStatusBadge.className =
+              "status-pill";
+          }
+        }
+
+        /* ==============================================================
+           ACTIVITY
+        ============================================================== */
+
+        function renderActivity(
+          rows
+        ) {
+          if (
+            !Array.isArray(
+              rows
+            ) ||
+            !rows.length
+          ) {
             els.activityList.innerHTML = `
               <div class="empty-box">
-                No referral reward activity yet. Share your referral link to begin
-                building direct and team rewards.
+                No referral reward activity yet.
+                Share your personal referral link to begin building rewards.
               </div>
             `;
+
             return;
           }
 
-          els.activityList.innerHTML = rows
-            .slice(0, 20)
-            .map((row) => {
-              const type = normalizeText(row.level || row.type || "direct").toLowerCase();
-              const isTeam = type === "team";
-              const label = isTeam ? "Member B referred Member C" : "Member A referred Member B";
-              const name = normalizeText(row.name || row.full_name || row.email, "Referral Member");
-              const email = normalizeEmail(row.email);
-              const status = normalizeText(row.statusLabel || row.status, "Pending");
-              const amount = safeNumber(row.amount || row.reward_amount || row.earned, 0);
-              const note = normalizeText(row.note || row.referred_through_email || "");
+          els.activityList.innerHTML =
+            rows
+              .slice(
+                0,
+                25
+              )
+              .map(
+                (row) => {
+                  const type =
+                    normalizeLower(
+                      row.level ||
+                        row.type ||
+                        row.referral_type ||
+                        "direct"
+                    );
 
-              return `
-                <article class="activity-card">
-                  <div class="activity-top">
-                    <div>
-                      <h3 class="activity-title">${escapeHtml(label)}</h3>
-                      <p class="activity-description">
-                        ${escapeHtml(name)}
-                        ${email ? ` · ${escapeHtml(email)}` : ""}
-                        ${note ? `<br />${escapeHtml(note)}` : ""}
-                      </p>
-                    </div>
-                    <span class="${rewardPillClass(status, type)}">
-                      ${escapeHtml(titleCase(status))}
-                    </span>
-                  </div>
+                  const isTeam =
+                    type.includes(
+                      "team"
+                    );
 
-                  <div class="activity-meta">
-                    <span class="pill ${isTeam ? "blue" : "green"}">
-                      ${escapeHtml(isTeam ? "Team Reward" : "Direct Reward")}
-                    </span>
-                    <span class="pill ${isTeam ? "blue" : "green"}">
-                      ${escapeHtml(amount > 0 ? money(amount) : "Pending")}
-                    </span>
-                  </div>
-                </article>
-              `;
-            })
-            .join("");
+                  const name =
+                    normalizeText(
+                      row.name ||
+                        row.full_name ||
+                        row.fullName ||
+                        row.email,
+                      "Referral Member"
+                    );
+
+                  const email =
+                    normalizeEmail(
+                      row.email
+                    );
+
+                  const status =
+                    normalizeText(
+                      row.statusLabel ||
+                        row.status ||
+                        "Pending"
+                    );
+
+                  const amount =
+                    safeNumber(
+                      row.amount ||
+                        row
+                          .reward_amount ||
+                        row
+                          .rewardAmount ||
+                        row.earned,
+                      isTeam
+                        ? 1
+                        : 7
+                    );
+
+                  const approved =
+                    [
+                      "approved",
+                      "active",
+                      "paid",
+                      "completed",
+                      "earned",
+                    ].includes(
+                      normalizeLower(
+                        status
+                      )
+                    );
+
+                  return `
+                    <article class="activity-card">
+                      <div class="activity-top">
+                        <div>
+                          <h3 class="activity-title">
+                            ${
+                              isTeam
+                                ? "Team Referral"
+                                : "Direct Referral"
+                            }
+                          </h3>
+
+                          <p class="activity-description">
+                            ${escapeHtml(
+                              name
+                            )}
+                            ${
+                              email
+                                ? ` · ${escapeHtml(
+                                    email
+                                  )}`
+                                : ""
+                            }
+                          </p>
+                        </div>
+
+                        <span class="pill ${
+                          approved
+                            ? "green"
+                            : "yellow"
+                        }">
+                          ${escapeHtml(
+                            titleCase(
+                              status
+                            )
+                          )}
+                        </span>
+                      </div>
+
+                      <div class="activity-meta">
+                        <span class="pill ${
+                          isTeam
+                            ? "blue"
+                            : "green"
+                        }">
+                          ${
+                            isTeam
+                              ? "Team Reward"
+                              : "Direct Reward"
+                          }
+                        </span>
+
+                        <span class="pill ${
+                          approved
+                            ? "gold"
+                            : "yellow"
+                        }">
+                          ${
+                            approved
+                              ? escapeHtml(
+                                  money(
+                                    amount
+                                  )
+                                )
+                              : "Pending"
+                          }
+                        </span>
+                      </div>
+                    </article>
+                  `;
+                }
+              )
+              .join("");
         }
 
-        function renderNotices(notices) {
-          els.noticesList.innerHTML = notices
-            .map(
-              (notice) => `
-                <article class="notice-card">
-                  <h3>${escapeHtml(notice.title)}</h3>
-                  <p>${escapeHtml(notice.body)}</p>
-                </article>
-              `
-            )
-            .join("");
+        /* ==============================================================
+           NOTICES
+        ============================================================== */
+
+        function renderNotices(
+          member,
+          referral,
+          allowance,
+          growthPool
+        ) {
+          const active =
+            isPaidActive(
+              member
+            );
+
+          const notices = [
+            {
+              title:
+                "Pending is not loaded allowance",
+
+              body:
+                "Pending referral earnings are shown separately until the referral qualifies and the reward is approved.",
+            },
+
+            {
+              title:
+                "Approved allowance",
+
+              body:
+                "Approved rewards enter your allowance ledger before they can move into the Card Leo card-loading process.",
+            },
+
+            {
+              title:
+                "Direct referral reward",
+
+              body:
+                "A qualifying direct referral can generate a $7 reward after the referral satisfies the required activation and approval conditions.",
+            },
+
+            {
+              title:
+                "Team referral reward",
+
+              body:
+                "Qualifying team referral activity can generate a $1 team reward according to the Card Leo referral structure.",
+            },
+
+            {
+              title:
+                "Growth Pool is separate",
+
+              body:
+                `The company Growth Pool currently shows ${money(
+                  growthPool.balance
+                )}. This amount is not part of your personal allowance balance.`,
+            },
+
+            {
+              title:
+                active
+                  ? "Membership active"
+                  : "Payment required",
+
+              body:
+                active
+                  ? "Your paid membership is active, allowing eligible referral rewards and allowance features to remain available."
+                  : "Your membership must be paid and active before eligible rewards can fully move through the allowance process.",
+            },
+          ];
+
+          els.noticesList.innerHTML =
+            notices
+              .map(
+                (notice) => `
+                  <article class="notice-card">
+                    <h3>
+                      ${escapeHtml(
+                        notice.title
+                      )}
+                    </h3>
+
+                    <p>
+                      ${escapeHtml(
+                        notice.body
+                      )}
+                    </p>
+                  </article>
+                `
+              )
+              .join("");
         }
+
+        /* ==============================================================
+           SESSION
+        ============================================================== */
 
         async function loadSession() {
-          const data = await fetchJson(API.me);
-          if (!data) return null;
+          const data =
+            await fetchJson(
+              API.me
+            );
 
-          if (data.authenticated === false) {
-            window.location.href =
-              "/login.html?next=" +
-              encodeURIComponent(window.location.pathname + window.location.search);
+          if (!data) {
             return null;
           }
 
-          return data.member || data.profile || data.user || null;
+          if (
+            data.authenticated ===
+            false
+          ) {
+            window.location.href =
+              "/login.html?next=" +
+              encodeURIComponent(
+                window.location.pathname +
+                  window.location.search
+              );
+
+            return null;
+          }
+
+          return (
+            data.member ||
+            data.profile ||
+            data.user ||
+            null
+          );
         }
+
+        /* ==============================================================
+           LOAD EVERYTHING
+        ============================================================== */
 
         async function loadRewards() {
           showBanner("");
 
           try {
-            const authMember = await loadSession();
+            const authMember =
+              await loadSession();
 
-            if (authMember) {
-              renderMember(authMember);
+            if (
+              authMember
+            ) {
+              renderMember(
+                authMember
+              );
             }
 
-            const [referralsResult, rewardsResult] = await Promise.allSettled([
-              fetchJson(API.referrals),
-              fetchJson(API.rewards),
-            ]);
+            const [
+              rewardsResult,
+              referralsResult,
+              growthPoolResult,
+              cardResult,
+            ] =
+              await Promise.allSettled([
+                fetchJson(
+                  API.rewards
+                ),
 
-            const referralsData =
-              referralsResult.status === "fulfilled" && referralsResult.value
-                ? referralsResult.value
-                : {};
+                fetchJson(
+                  API.referrals
+                ),
+
+                fetchJson(
+                  API.growthPool
+                ),
+
+                fetchJson(
+                  API.memberCard
+                ),
+              ]);
 
             const rewardsData =
-              rewardsResult.status === "fulfilled" && rewardsResult.value
+              rewardsResult.status ===
+                "fulfilled" &&
+              rewardsResult.value
                 ? rewardsResult.value
                 : {};
 
+            const referralsData =
+              referralsResult.status ===
+                "fulfilled" &&
+              referralsResult.value
+                ? referralsResult.value
+                : {};
+
+            const growthPoolData =
+              growthPoolResult.status ===
+                "fulfilled" &&
+              growthPoolResult.value
+                ? growthPoolResult.value
+                : {};
+
+            const cardData =
+              cardResult.status ===
+                "fulfilled" &&
+              cardResult.value
+                ? cardResult.value
+                : {};
+
             const member =
-              referralsData.member ||
               rewardsData.member ||
-              rewardsData.profile ||
-              rewardsData.user ||
+              referralsData.member ||
+              growthPoolData.member ||
+              cardData.member ||
               authMember ||
               {};
 
-            const summary = normalizeReferralSummary(referralsData);
-            const rows = normalizeReferralRows(referralsData);
-            const rewards = buildRewardCards(summary, member);
-            const notices = buildNotices(summary, member);
+            const referral =
+              normalizeReferralSummary(
+                referralsData
+              );
 
-            renderMember(member);
-            renderStats(summary);
-            renderRewards(rewards);
-            renderActivity(rows);
-            renderNotices(notices);
+            const allowance =
+              normalizeAllowance(
+                rewardsData
+              );
 
-            showBanner("Your allowance rewards have been loaded successfully.", "success");
-          } catch (error) {
-            console.error("[portal/rewards] load error:", error);
+            const card =
+              normalizeCard(
+                cardData,
+                allowance
+              );
 
-            const member = currentMember || {};
-            const fallbackSummary = {
+            const growthPool =
+              normalizeGrowthPool(
+                growthPoolData
+              );
+
+            const referralRows =
+              normalizeReferralRows(
+                referralsData
+              );
+
+            renderMember(
+              member
+            );
+
+            renderStats(
+              referral,
+              allowance
+            );
+
+            renderRewards(
+              buildRewardCards(
+                referral,
+                allowance
+              )
+            );
+
+            renderCard(
+              card,
+              allowance
+            );
+
+            renderGrowthPool(
+              growthPool
+            );
+
+            renderActivity(
+              referralRows
+            );
+
+            renderNotices(
+              member,
+              referral,
+              allowance,
+              growthPool
+            );
+
+            const partialFailures =
+              [
+                rewardsResult,
+                referralsResult,
+                growthPoolResult,
+                cardResult,
+              ].filter(
+                (result) =>
+                  result.status ===
+                  "rejected"
+              );
+
+            if (
+              partialFailures.length
+            ) {
+              console.warn(
+                "[portal/rewards] some optional data sources failed:",
+                partialFailures
+              );
+
+              showBanner(
+                "Your rewards page loaded, but some card or account details are still being synchronized.",
+                ""
+              );
+            } else {
+              showBanner(
+                "Your reward and allowance information is current.",
+                "success"
+              );
+            }
+          } catch (
+            error
+          ) {
+            console.error(
+              "[portal/rewards] load error:",
+              error
+            );
+
+            showBanner(
+              error?.message ||
+                "Unable to load your rewards right now.",
+              "error"
+            );
+
+            renderMember(
+              currentMember ||
+                {}
+            );
+
+            const emptyReferral = {
               directReferrals: 0,
               teamReferrals: 0,
               pendingReferrals: 0,
-              totalReferrals: 0,
               directEarnings: 0,
               teamEarnings: 0,
-              growthPoolCredit: 0,
-              totalEarned: 0,
             };
 
-            renderMember(member);
-            renderStats(fallbackSummary);
-            renderRewards(buildRewardCards(fallbackSummary, member));
-            renderActivity([]);
-            renderNotices(buildNotices(fallbackSummary, member));
+            const emptyAllowance = {
+              pending: 0,
+              approvedWaiting: 0,
+              available: 0,
+              processing: 0,
+              lifetimeLoaded: 0,
+              lifetimeSpent: 0,
+              availableBalanceCents: 0,
+            };
 
-            showBanner(
-              error?.message || "Unable to load your allowance rewards right now.",
-              "error"
+            renderStats(
+              emptyReferral,
+              emptyAllowance
+            );
+
+            renderRewards(
+              buildRewardCards(
+                emptyReferral,
+                emptyAllowance
+              )
+            );
+
+            renderActivity(
+              []
+            );
+
+            renderGrowthPool({
+              balance: 0,
+              totalMembers: 0,
+              memberContributed: false,
+              memberContributionAmount: 0,
+              contributionAmount: 2,
+              lastContributionAt: null,
+              reconciliation: {},
+            });
+
+            renderCard(
+              {
+                status:
+                  "not_created",
+
+                type:
+                  "virtual",
+
+                lastFour:
+                  "",
+
+                balance:
+                  0,
+              },
+              emptyAllowance
+            );
+
+            renderNotices(
+              currentMember ||
+                {},
+              emptyReferral,
+              emptyAllowance,
+              {
+                balance: 0,
+              }
             );
           }
         }
 
-        async function handleLogout() {
-          if (!els.logoutButton) return;
+        /* ==============================================================
+           LOGOUT
+        ============================================================== */
 
-          const originalText = els.logoutButton.textContent;
-          els.logoutButton.disabled = true;
-          els.logoutButton.textContent = "Logging out...";
+        async function handleLogout(
+          button
+        ) {
+          const logoutButton =
+            button ||
+            els.logoutButton;
+
+          if (!logoutButton) {
+            return;
+          }
+
+          const originalText =
+            logoutButton.textContent;
+
+          logoutButton.disabled =
+            true;
+
+          logoutButton.textContent =
+            "Logging out...";
 
           try {
-            await fetch(API.logout, {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                Accept: "application/json",
-              },
-            });
+            await fetch(
+              API.logout,
+              {
+                method:
+                  "POST",
 
-            window.location.href = "/login.html";
-          } catch (error) {
-            console.error("[portal/rewards] logout error:", error);
-            els.logoutButton.disabled = false;
-            els.logoutButton.textContent = originalText;
-            alert("We couldn't log you out right now. Please try again.");
+                credentials:
+                  "include",
+
+                headers: {
+                  Accept:
+                    "application/json",
+                },
+              }
+            );
+
+            window.location.href =
+              "/login.html";
+          } catch (
+            error
+          ) {
+            console.error(
+              "[portal/rewards] logout error:",
+              error
+            );
+
+            logoutButton.disabled =
+              false;
+
+            logoutButton.textContent =
+              originalText;
+
+            alert(
+              "We couldn't log you out right now. Please try again."
+            );
           }
         }
 
-        els.logoutButton?.addEventListener("click", handleLogout);
+        els.logoutButton?.addEventListener(
+          "click",
+          () =>
+            handleLogout(
+              els.logoutButton
+            )
+        );
 
-        window.addEventListener("cardleo:auth-ready", (event) => {
-          const member = event?.detail?.member;
+        els.mobileLogout?.addEventListener(
+          "click",
+          () =>
+            handleLogout(
+              els.mobileLogout
+            )
+        );
 
-          if (member && !currentMember) {
-            renderMember(member);
+        /* ==============================================================
+           MOBILE MENU
+        ============================================================== */
+
+        function openMobileMenu() {
+          els.mobileMenu?.classList.add(
+            "show"
+          );
+
+          els.mobileMenuBackdrop?.classList.add(
+            "show"
+          );
+
+          els.mobileMenuButton?.setAttribute(
+            "aria-expanded",
+            "true"
+          );
+
+          document.body.classList.add(
+            "menu-open"
+          );
+        }
+
+        function closeMobileMenu() {
+          els.mobileMenu?.classList.remove(
+            "show"
+          );
+
+          els.mobileMenuBackdrop?.classList.remove(
+            "show"
+          );
+
+          els.mobileMenuButton?.setAttribute(
+            "aria-expanded",
+            "false"
+          );
+
+          document.body.classList.remove(
+            "menu-open"
+          );
+        }
+
+        els.mobileMenuButton?.addEventListener(
+          "click",
+          openMobileMenu
+        );
+
+        els.mobileMenuClose?.addEventListener(
+          "click",
+          closeMobileMenu
+        );
+
+        els.mobileMenuBackdrop?.addEventListener(
+          "click",
+          closeMobileMenu
+        );
+
+        els.mobileMenu
+          ?.querySelectorAll(
+            "a"
+          )
+          .forEach(
+            (link) => {
+              link.addEventListener(
+                "click",
+                closeMobileMenu
+              );
+            }
+          );
+
+        window.addEventListener(
+          "keydown",
+          (event) => {
+            if (
+              event.key ===
+              "Escape"
+            ) {
+              closeMobileMenu();
+            }
           }
-        });
+        );
 
-        window.addEventListener("cardleo:auth-failed", () => {
-          window.location.href =
-            "/login.html?next=" +
-            encodeURIComponent(window.location.pathname + window.location.search);
-        });
+        /* ==============================================================
+           AUTH EVENTS
+        ============================================================== */
+
+        window.addEventListener(
+          "cardleo:auth-ready",
+          (event) => {
+            const member =
+              event?.detail
+                ?.member;
+
+            if (
+              member &&
+              !currentMember
+            ) {
+              renderMember(
+                member
+              );
+            }
+          }
+        );
+
+        window.addEventListener(
+          "cardleo:auth-failed",
+          () => {
+            window.location.href =
+              "/login.html?next=" +
+              encodeURIComponent(
+                window.location.pathname +
+                  window.location.search
+              );
+          }
+        );
+
+        /* ==============================================================
+           START
+        ============================================================== */
 
         loadRewards();
       })();

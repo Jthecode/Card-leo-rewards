@@ -10,11 +10,70 @@ import {
   buildMemberCustomerIdentifier,
 } from "../../lib/access-amt.js";
 
+import {
+  GROWTH_POOL_CONTRIBUTION_CENTS,
+  centsToDollars,
+  processGrowthPoolMemberActivation,
+} from "../../lib/growth-pool.js";
+
+/* ==========================================================================
+   CARD LEO REWARDS
+   STRIPE WEBHOOK
+   STEP #23
+
+   PURPOSE
+   -------
+   Handles Card Leo Stripe billing events.
+
+   RESPONSIBILITIES
+   ----------------
+   - Verify Stripe webhook signatures
+   - Activate paid Card Leo memberships
+   - Save Stripe customer/subscription/session IDs
+   - Create missing signup records when necessary
+   - Keep active recurring members active
+   - Mark failed/cancelled memberships inactive
+   - Keep Access AMT membership synchronized
+   - OPEN Access AMT for active members
+   - SUSPEND Access AMT for inactive members
+   - Add EXACTLY ONE $2.00 company Growth Pool contribution
+     for a qualifying NEW paid member activation
+
+   IMPORTANT GROWTH POOL RULE
+   --------------------------
+   Growth Pool accounting now lives in:
+
+     lib/growth-pool.js
+
+   This webhook MUST NOT manually insert Growth Pool transactions.
+
+   Initial paid membership:
+     +$2 Growth Pool
+
+   Recurring $20 monthly invoice:
+     +$0 Growth Pool
+
+   Stripe retries:
+     +$0 duplicate Growth Pool
+
+   Second checkout for existing member:
+     +$0 duplicate Growth Pool
+
+============================================================================ */
+
+/* ==========================================================================
+   NEXT.JS / VERCEL WEBHOOK CONFIG
+============================================================================ */
+
 export const config = {
   api: {
     bodyParser: false,
   },
 };
+
+/* ==========================================================================
+   STRIPE
+============================================================================ */
 
 const STRIPE_SECRET_KEY =
   process.env.STRIPE_SECRET_KEY || "";
@@ -28,26 +87,9 @@ const stripe = STRIPE_SECRET_KEY
     })
   : null;
 
-/*
-|--------------------------------------------------------------------------
-| CARD LEO GROWTH POOL
-|--------------------------------------------------------------------------
-|
-| Every successfully activated NEW Card Leo member contributes $2.00
-| to the company Growth Pool.
-|
-| IMPORTANT:
-|
-| - The member still pays the normal $25 activation fee.
-| - The $2 is NOT deducted from the $25.
-| - The $2 is a company-side Growth Pool allocation.
-| - The $2 is recorded only after checkout.session.completed.
-| - Recurring $20 monthly payments do NOT create another $2 contribution.
-| - Each member can only create ONE "member_join" contribution.
-|
-*/
-
-const GROWTH_POOL_CONTRIBUTION = 2.0;
+/* ==========================================================================
+   MEMBER STATUS
+============================================================================ */
 
 const ACTIVE_STATUSES = new Set([
   "active",
@@ -57,20 +99,24 @@ const ACTIVE_STATUSES = new Set([
   "complete",
   "completed",
   "succeeded",
+  "auto_approved",
 ]);
 
-/*
-|--------------------------------------------------------------------------
-| RESPONSE
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   RESPONSE
+============================================================================ */
 
-function sendJson(res, statusCode, payload) {
-  res.statusCode = statusCode;
+function sendJson(
+  res,
+  statusCode,
+  payload
+) {
+  res.statusCode =
+    statusCode;
 
   res.setHeader(
     "Content-Type",
-    "application/json"
+    "application/json; charset=utf-8"
   );
 
   res.setHeader(
@@ -79,264 +125,707 @@ function sendJson(res, statusCode, payload) {
   );
 
   return res.end(
-    JSON.stringify(payload)
+    JSON.stringify(
+      payload
+    )
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| NORMALIZATION
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   NORMALIZATION
+============================================================================ */
 
-function normalizeString(value) {
-  return String(value ?? "").trim();
+function normalizeString(
+  value
+) {
+  return String(
+    value ?? ""
+  ).trim();
 }
 
-function normalizeEmail(value) {
-  return normalizeString(value).toLowerCase();
+function normalizeLower(
+  value
+) {
+  return normalizeString(
+    value
+  ).toLowerCase();
 }
 
-function isValidEmail(value) {
+function normalizeEmail(
+  value
+) {
+  return normalizeLower(
+    value
+  );
+}
+
+function normalizeBoolean(
+  value,
+  fallback = false
+) {
+  if (
+    typeof value === "boolean"
+  ) {
+    return value;
+  }
+
+  if (
+    typeof value === "number"
+  ) {
+    return value !== 0;
+  }
+
+  const normalized =
+    normalizeLower(
+      value
+    );
+
+  if (
+    [
+      "true",
+      "1",
+      "yes",
+      "y",
+      "on",
+    ].includes(
+      normalized
+    )
+  ) {
+    return true;
+  }
+
+  if (
+    [
+      "false",
+      "0",
+      "no",
+      "n",
+      "off",
+    ].includes(
+      normalized
+    )
+  ) {
+    return false;
+  }
+
+  return fallback;
+}
+
+function normalizeNumber(
+  value,
+  fallback = 0
+) {
+  const parsed =
+    Number(value);
+
+  return Number.isFinite(
+    parsed
+  )
+    ? parsed
+    : fallback;
+}
+
+function isValidEmail(
+  value
+) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-    normalizeEmail(value)
+    normalizeEmail(
+      value
+    )
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| RAW BODY
-|--------------------------------------------------------------------------
-*/
+function nowIso() {
+  return new Date()
+    .toISOString();
+}
 
-async function readRawBody(req) {
+/* ==========================================================================
+   RAW STRIPE BODY
+============================================================================ */
+
+async function readRawBody(
+  req
+) {
   const chunks = [];
 
-  for await (const chunk of req) {
+  for await (
+    const chunk
+    of req
+  ) {
     chunks.push(
-      Buffer.isBuffer(chunk)
+      Buffer.isBuffer(
+        chunk
+      )
         ? chunk
-        : Buffer.from(chunk)
+        : Buffer.from(
+            chunk
+          )
     );
   }
 
-  return Buffer.concat(chunks);
+  return Buffer.concat(
+    chunks
+  );
 }
 
-/*
-|--------------------------------------------------------------------------
-| DATABASE ERROR HELPERS
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   DATABASE ERRORS
+============================================================================ */
 
-function isMissingOptionalColumn(error) {
-  const code = String(
-    error?.code || ""
-  );
+function isMissingOptionalColumn(
+  error
+) {
+  const code =
+    String(
+      error?.code ||
+      ""
+    );
 
-  const message = String(
-    error?.message || ""
-  ).toLowerCase();
+  const message =
+    String(
+      error?.message ||
+      ""
+    ).toLowerCase();
 
-  const details = String(
-    error?.details || ""
-  ).toLowerCase();
+  const details =
+    String(
+      error?.details ||
+      ""
+    ).toLowerCase();
 
   return (
     code === "42703" ||
     code === "PGRST204" ||
     code === "PGRST205" ||
-    message.includes("does not exist") ||
-    message.includes("schema cache") ||
-    message.includes("could not find") ||
-    details.includes("does not exist") ||
-    details.includes("schema cache") ||
-    details.includes("could not find")
+
+    message.includes(
+      "does not exist"
+    ) ||
+
+    message.includes(
+      "schema cache"
+    ) ||
+
+    message.includes(
+      "could not find"
+    ) ||
+
+    details.includes(
+      "does not exist"
+    ) ||
+
+    details.includes(
+      "schema cache"
+    ) ||
+
+    details.includes(
+      "could not find"
+    )
   );
 }
 
-function isDuplicateError(error) {
-  const code = String(
-    error?.code || ""
-  );
+function isDuplicateError(
+  error
+) {
+  const code =
+    String(
+      error?.code ||
+      ""
+    );
 
-  const message = String(
-    error?.message || ""
-  ).toLowerCase();
+  const message =
+    String(
+      error?.message ||
+      ""
+    ).toLowerCase();
 
   return (
     code === "23505" ||
-    message.includes("duplicate") ||
-    message.includes("unique constraint")
+    message.includes(
+      "duplicate"
+    ) ||
+    message.includes(
+      "unique constraint"
+    )
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| STRIPE OBJECT HELPERS
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   STRIPE ID HELPERS
+============================================================================ */
+
+function extractStripeId(
+  value
+) {
+  if (!value) {
+    return "";
+  }
+
+  if (
+    typeof value ===
+    "string"
+  ) {
+    return normalizeString(
+      value
+    );
+  }
+
+  if (
+    typeof value ===
+      "object" &&
+    value.id
+  ) {
+    return normalizeString(
+      value.id
+    );
+  }
+
+  return "";
+}
+
+/* ==========================================================================
+   STRIPE CUSTOMER
+============================================================================ */
 
 function getStripeCustomerIdFromEventObject(
   object = {}
 ) {
-  return normalizeString(
-    object.customer ||
+  return (
+    extractStripeId(
+      object.customer
+    ) ||
+    normalizeString(
       object.customer_id ||
       object.customerId ||
-      object.data?.object?.customer ||
-      ""
+      object.data
+        ?.object
+        ?.customer
+    )
   );
 }
+
+/* ==========================================================================
+   STRIPE SUBSCRIPTION
+============================================================================ */
 
 function getStripeSubscriptionIdFromEventObject(
   object = {}
 ) {
-  return normalizeString(
-    object.subscription ||
+  const explicit =
+    extractStripeId(
+      object.subscription
+    ) ||
+    normalizeString(
       object.subscription_id ||
-      object.subscriptionId ||
-      object.id ||
-      ""
+      object.subscriptionId
+    );
+
+  if (explicit) {
+    return explicit;
+  }
+
+  /*
+   * Only use object.id itself when this object is actually
+   * a Stripe subscription.
+   *
+   * This prevents invoice IDs from accidentally being stored
+   * as stripe_subscription_id.
+   */
+
+  if (
+    normalizeString(
+      object.object
+    ) ===
+    "subscription"
+  ) {
+    return normalizeString(
+      object.id
+    );
+  }
+
+  return "";
+}
+
+/* ==========================================================================
+   STRIPE CHECKOUT SESSION
+============================================================================ */
+
+function getStripeCheckoutSessionIdFromEventObject(
+  object = {}
+) {
+  if (
+    normalizeString(
+      object.object
+    ) ===
+    "checkout.session"
+  ) {
+    return normalizeString(
+      object.id
+    );
+  }
+
+  return normalizeString(
+    object
+      .metadata
+      ?.stripe_checkout_session_id ||
+    object
+      .metadata
+      ?.checkout_session_id ||
+    object
+      .metadata
+      ?.checkoutSessionId
   );
 }
+
+/* ==========================================================================
+   STRIPE INVOICE
+============================================================================ */
+
+function getStripeInvoiceIdFromEventObject(
+  object = {}
+) {
+  if (
+    normalizeString(
+      object.object
+    ) ===
+    "invoice"
+  ) {
+    return normalizeString(
+      object.id
+    );
+  }
+
+  return normalizeString(
+    object.invoice
+  );
+}
+
+function getInvoiceBillingReason(
+  invoice = {}
+) {
+  return normalizeString(
+    invoice.billing_reason ||
+    invoice.billingReason
+  );
+}
+
+/* ==========================================================================
+   STRIPE PAYMENT INTENT
+============================================================================ */
+
+function getStripePaymentIntentIdFromEventObject(
+  object = {}
+) {
+  return (
+    extractStripeId(
+      object.payment_intent
+    ) ||
+    normalizeString(
+      object.payment_intent_id ||
+      object.paymentIntentId
+    )
+  );
+}
+
+/* ==========================================================================
+   EMAIL
+============================================================================ */
 
 function getEmailFromEventObject(
   object = {}
 ) {
   return normalizeEmail(
-    object.customer_details?.email ||
-      object.customer_email ||
-      object.receipt_email ||
-      object.billing_details?.email ||
-      object.metadata?.email ||
-      object.metadata?.member_email ||
-      object.metadata?.signup_email ||
-      ""
+    object
+      .customer_details
+      ?.email ||
+
+    object
+      .customer_email ||
+
+    object
+      .receipt_email ||
+
+    object
+      .billing_details
+      ?.email ||
+
+    object
+      .metadata
+      ?.email ||
+
+    object
+      .metadata
+      ?.member_email ||
+
+    object
+      .metadata
+      ?.signup_email ||
+
+    ""
   );
 }
+
+/* ==========================================================================
+   SIGNUP / MEMBER ID
+============================================================================ */
 
 function getSignupIdFromEventObject(
   object = {}
 ) {
   return normalizeString(
-    object.metadata?.signup_id ||
-      object.metadata?.signupId ||
-      object.metadata?.member_id ||
-      object.metadata?.memberId ||
-      object.client_reference_id ||
-      ""
+    object
+      .metadata
+      ?.signup_id ||
+
+    object
+      .metadata
+      ?.signupId ||
+
+    object
+      .metadata
+      ?.member_id ||
+
+    object
+      .metadata
+      ?.memberId ||
+
+    object
+      .client_reference_id ||
+
+    ""
   );
 }
+
+/* ==========================================================================
+   STRIPE METADATA
+============================================================================ */
+
+function getStripeMetadata(
+  object = {}
+) {
+  return (
+    object &&
+    typeof object.metadata ===
+      "object" &&
+    object.metadata !==
+      null
+  )
+    ? object.metadata
+    : {};
+}
+
+/* ==========================================================================
+   CUSTOMER NAME
+============================================================================ */
 
 function getNamePartsFromStripeObject(
   object = {}
 ) {
-  const fullName = normalizeString(
-    object.customer_details?.name ||
-      object.billing_details?.name ||
-      object.metadata?.full_name ||
-      object.metadata?.fullName ||
-      object.metadata?.name ||
-      ""
-  );
+  const fullName =
+    normalizeString(
+      object
+        .customer_details
+        ?.name ||
 
-  const firstName = normalizeString(
-    object.metadata?.first_name ||
-      object.metadata?.firstName ||
-      ""
-  );
+      object
+        .billing_details
+        ?.name ||
 
-  const lastName = normalizeString(
-    object.metadata?.last_name ||
-      object.metadata?.lastName ||
-      ""
-  );
+      object
+        .metadata
+        ?.full_name ||
 
-  if (firstName || lastName) {
+      object
+        .metadata
+        ?.fullName ||
+
+      object
+        .metadata
+        ?.name ||
+
+      ""
+    );
+
+  const firstName =
+    normalizeString(
+      object
+        .metadata
+        ?.first_name ||
+
+      object
+        .metadata
+        ?.firstName ||
+
+      ""
+    );
+
+  const lastName =
+    normalizeString(
+      object
+        .metadata
+        ?.last_name ||
+
+      object
+        .metadata
+        ?.lastName ||
+
+      ""
+    );
+
+  if (
+    firstName ||
+    lastName
+  ) {
     return {
-      first_name: firstName,
-      last_name: lastName,
-      full_name: [
+      first_name:
         firstName,
+
+      last_name:
         lastName,
-      ]
-        .filter(Boolean)
-        .join(" "),
+
+      full_name:
+        [
+          firstName,
+          lastName,
+        ]
+          .filter(Boolean)
+          .join(" "),
     };
   }
 
-  const parts = fullName
-    .split(/\s+/)
-    .filter(Boolean);
+  const parts =
+    fullName
+      .split(/\s+/)
+      .filter(Boolean);
 
-  if (parts.length >= 2) {
+  if (
+    parts.length >=
+    2
+  ) {
     return {
-      first_name: parts[0],
-      last_name: parts.slice(1).join(" "),
-      full_name: fullName,
+      first_name:
+        parts[0],
+
+      last_name:
+        parts
+          .slice(1)
+          .join(" "),
+
+      full_name:
+        fullName,
     };
   }
 
-  if (parts.length === 1) {
+  if (
+    parts.length ===
+    1
+  ) {
     return {
-      first_name: parts[0],
-      last_name: "",
-      full_name: fullName,
+      first_name:
+        parts[0],
+
+      last_name:
+        "",
+
+      full_name:
+        fullName,
     };
   }
 
   return {
-    first_name: "",
-    last_name: "",
-    full_name: "",
+    first_name:
+      "",
+
+    last_name:
+      "",
+
+    full_name:
+      "",
   };
 }
 
-/*
-|--------------------------------------------------------------------------
-| MEMBER STATUS
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   ACTIVE MEMBER STATUS
+============================================================================ */
 
-function isActiveStatus(member = {}) {
+function isActiveStatus(
+  member = {}
+) {
   const status =
-    normalizeString(
+    normalizeLower(
       member.status
-    ).toLowerCase();
+    );
 
   const paymentStatus =
-    normalizeString(
-      member.payment_status
-    ).toLowerCase();
+    normalizeLower(
+      member
+        .payment_status
+    );
 
   const membershipStatus =
-    normalizeString(
-      member.membership_status
-    ).toLowerCase();
+    normalizeLower(
+      member
+        .membership_status
+    );
 
   const approvalStatus =
-    normalizeString(
-      member.approval_status
-    ).toLowerCase();
+    normalizeLower(
+      member
+        .approval_status
+    );
 
   return (
-    ACTIVE_STATUSES.has(status) ||
-    ACTIVE_STATUSES.has(paymentStatus) ||
-    ACTIVE_STATUSES.has(membershipStatus) ||
-    ACTIVE_STATUSES.has(approvalStatus)
+    ACTIVE_STATUSES.has(
+      status
+    ) ||
+
+    ACTIVE_STATUSES.has(
+      paymentStatus
+    ) ||
+
+    ACTIVE_STATUSES.has(
+      membershipStatus
+    ) ||
+
+    ACTIVE_STATUSES.has(
+      approvalStatus
+    )
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| SIGNUP LOOKUPS
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   CHECKOUT PAYMENT STATUS
+============================================================================ */
 
-async function findSignupById(id) {
+function isCheckoutPaid(
+  session = {}
+) {
+  const paymentStatus =
+    normalizeLower(
+      session.payment_status
+    );
+
+  return (
+    paymentStatus ===
+      "paid" ||
+
+    paymentStatus ===
+      "no_payment_required"
+  );
+}
+
+/* ==========================================================================
+   SIGNUP LOOKUPS
+============================================================================ */
+
+async function findSignupById(
+  id
+) {
   const safeId =
-    normalizeString(id);
+    normalizeString(
+      id
+    );
 
   if (!safeId) {
     return null;
@@ -345,11 +834,17 @@ async function findSignupById(id) {
   const {
     data,
     error,
-  } = await supabaseAdmin
-    .from("signups")
-    .select("*")
-    .eq("id", safeId)
-    .maybeSingle();
+  } =
+    await supabaseAdmin
+      .from(
+        "signups"
+      )
+      .select("*")
+      .eq(
+        "id",
+        safeId
+      )
+      .maybeSingle();
 
   if (error) {
     throw error;
@@ -360,13 +855,23 @@ async function findSignupById(id) {
     : null;
 }
 
-async function findSignupByEmail(email) {
+/* --------------------------------------------------------------------------
+   EMAIL
+--------------------------------------------------------------------------- */
+
+async function findSignupByEmail(
+  email
+) {
   const safeEmail =
-    normalizeEmail(email);
+    normalizeEmail(
+      email
+    );
 
   if (
     !safeEmail ||
-    !isValidEmail(safeEmail)
+    !isValidEmail(
+      safeEmail
+    )
   ) {
     return null;
   }
@@ -374,11 +879,17 @@ async function findSignupByEmail(email) {
   const {
     data,
     error,
-  } = await supabaseAdmin
-    .from("signups")
-    .select("*")
-    .ilike("email", safeEmail)
-    .maybeSingle();
+  } =
+    await supabaseAdmin
+      .from(
+        "signups"
+      )
+      .select("*")
+      .ilike(
+        "email",
+        safeEmail
+      )
+      .maybeSingle();
 
   if (error) {
     throw error;
@@ -389,11 +900,17 @@ async function findSignupByEmail(email) {
     : null;
 }
 
+/* --------------------------------------------------------------------------
+   STRIPE CUSTOMER
+--------------------------------------------------------------------------- */
+
 async function findSignupByStripeCustomer(
   customerId
 ) {
   const safeCustomerId =
-    normalizeString(customerId);
+    normalizeString(
+      customerId
+    );
 
   if (!safeCustomerId) {
     return null;
@@ -401,7 +918,9 @@ async function findSignupByStripeCustomer(
 
   const result =
     await supabaseAdmin
-      .from("signups")
+      .from(
+        "signups"
+      )
       .select("*")
       .eq(
         "stripe_customer_id",
@@ -418,7 +937,9 @@ async function findSignupByStripeCustomer(
     return null;
   }
 
-  if (result.error) {
+  if (
+    result.error
+  ) {
     throw result.error;
   }
 
@@ -427,11 +948,17 @@ async function findSignupByStripeCustomer(
     : null;
 }
 
+/* --------------------------------------------------------------------------
+   STRIPE SUBSCRIPTION
+--------------------------------------------------------------------------- */
+
 async function findSignupByStripeSubscription(
   subscriptionId
 ) {
   const safeSubscriptionId =
-    normalizeString(subscriptionId);
+    normalizeString(
+      subscriptionId
+    );
 
   if (!safeSubscriptionId) {
     return null;
@@ -439,7 +966,9 @@ async function findSignupByStripeSubscription(
 
   const result =
     await supabaseAdmin
-      .from("signups")
+      .from(
+        "signups"
+      )
       .select("*")
       .eq(
         "stripe_subscription_id",
@@ -456,7 +985,9 @@ async function findSignupByStripeSubscription(
     return null;
   }
 
-  if (result.error) {
+  if (
+    result.error
+  ) {
     throw result.error;
   }
 
@@ -464,6 +995,58 @@ async function findSignupByStripeSubscription(
     ? result.data
     : null;
 }
+
+/* --------------------------------------------------------------------------
+   CHECKOUT SESSION
+--------------------------------------------------------------------------- */
+
+async function findSignupByCheckoutSession(
+  sessionId
+) {
+  const safeSessionId =
+    normalizeString(
+      sessionId
+    );
+
+  if (!safeSessionId) {
+    return null;
+  }
+
+  const result =
+    await supabaseAdmin
+      .from(
+        "signups"
+      )
+      .select("*")
+      .eq(
+        "stripe_checkout_session_id",
+        safeSessionId
+      )
+      .maybeSingle();
+
+  if (
+    result.error &&
+    isMissingOptionalColumn(
+      result.error
+    )
+  ) {
+    return null;
+  }
+
+  if (
+    result.error
+  ) {
+    throw result.error;
+  }
+
+  return result.data?.id
+    ? result.data
+    : null;
+}
+
+/* ==========================================================================
+   FIND MEMBER FROM STRIPE EVENT OBJECT
+============================================================================ */
 
 async function findSignupFromStripeObject(
   object = {}
@@ -488,61 +1071,97 @@ async function findSignupFromStripeObject(
       object
     );
 
+  const checkoutSessionId =
+    getStripeCheckoutSessionIdFromEventObject(
+      object
+    );
+
   if (signupId) {
-    const byId =
+    const member =
       await findSignupById(
         signupId
       );
 
-    if (byId?.id) {
-      return byId;
+    if (
+      member?.id
+    ) {
+      return member;
+    }
+  }
+
+  if (
+    checkoutSessionId
+  ) {
+    const member =
+      await findSignupByCheckoutSession(
+        checkoutSessionId
+      );
+
+    if (
+      member?.id
+    ) {
+      return member;
     }
   }
 
   if (customerId) {
-    const byCustomer =
+    const member =
       await findSignupByStripeCustomer(
         customerId
       );
 
-    if (byCustomer?.id) {
-      return byCustomer;
+    if (
+      member?.id
+    ) {
+      return member;
     }
   }
 
-  if (subscriptionId) {
-    const bySubscription =
+  if (
+    subscriptionId
+  ) {
+    const member =
       await findSignupByStripeSubscription(
         subscriptionId
       );
 
-    if (bySubscription?.id) {
-      return bySubscription;
+    if (
+      member?.id
+    ) {
+      return member;
     }
   }
 
   if (email) {
-    const byEmail =
+    const member =
       await findSignupByEmail(
         email
       );
 
-    if (byEmail?.id) {
-      return byEmail;
+    if (
+      member?.id
+    ) {
+      return member;
     }
   }
 
   return null;
 }
 
-/*
-|--------------------------------------------------------------------------
-| CREATE SIGNUP FROM STRIPE
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   CREATE MEMBER FROM STRIPE
+
+   This is a safety fallback.
+
+   Normally /api/signup creates the signup BEFORE Stripe Checkout.
+
+============================================================================ */
 
 async function createSignupFromStripeObject(
-  object = {}
+  object = {},
+  {
+    activate = true,
+  } = {}
 ) {
   const email =
     getEmailFromEventObject(
@@ -551,9 +1170,22 @@ async function createSignupFromStripeObject(
 
   if (
     !email ||
-    !isValidEmail(email)
+    !isValidEmail(
+      email
+    )
   ) {
     return null;
+  }
+
+  const existing =
+    await findSignupByEmail(
+      email
+    );
+
+  if (
+    existing?.id
+  ) {
+    return existing;
   }
 
   const names =
@@ -562,112 +1194,154 @@ async function createSignupFromStripeObject(
     );
 
   const now =
-    new Date().toISOString();
+    nowIso();
+
+  const customerId =
+    getStripeCustomerIdFromEventObject(
+      object
+    );
+
+  const subscriptionId =
+    getStripeSubscriptionIdFromEventObject(
+      object
+    );
+
+  const checkoutSessionId =
+    getStripeCheckoutSessionIdFromEventObject(
+      object
+    );
 
   const insertPayload = {
     email,
 
     first_name:
-      names.first_name || "",
+      names.first_name ||
+      "",
 
     last_name:
-      names.last_name || "",
+      names.last_name ||
+      "",
 
     full_name:
-      names.full_name || "",
+      names.full_name ||
+      "",
 
     phone:
       normalizeString(
-        object.customer_details?.phone ||
-          object.metadata?.phone ||
-          ""
+        object
+          .customer_details
+          ?.phone ||
+
+        object
+          .metadata
+          ?.phone ||
+
+        ""
       ),
 
-    status: "active",
+    status:
+      activate
+        ? "active"
+        : "payment_pending",
 
-    payment_status: "paid",
+    payment_status:
+      activate
+        ? "paid"
+        : "unpaid",
 
-    membership_status: "active",
+    membership_status:
+      activate
+        ? "active"
+        : "payment_pending",
 
-    approval_status: "approved",
+    approval_status:
+      activate
+        ? "approved"
+        : "payment_pending",
 
     activation_fee_amount:
-      Number(
-        object.metadata
-          ?.activation_fee_amount ||
-          25
+      normalizeNumber(
+        object
+          .metadata
+          ?.activation_fee_amount,
+        25
       ),
 
     monthly_fee_amount:
-      Number(
-        object.metadata
-          ?.monthly_fee_amount ||
-          20
+      normalizeNumber(
+        object
+          .metadata
+          ?.monthly_fee_amount,
+        20
       ),
 
     billing_day:
-      Number(
-        object.metadata
-          ?.billing_day ||
-          10
+      normalizeNumber(
+        object
+          .metadata
+          ?.billing_day,
+        10
       ),
 
     stripe_customer_id:
-      getStripeCustomerIdFromEventObject(
-        object
-      ),
+      customerId ||
+      null,
 
     stripe_subscription_id:
-      normalizeString(
-        object.subscription ||
-          ""
-      ),
+      subscriptionId ||
+      null,
 
     stripe_checkout_session_id:
-      normalizeString(
-        object.id || ""
-      ),
+      checkoutSessionId ||
+      null,
 
     portal_login_url:
       "/portal/index.html",
 
-    created_at: now,
+    created_at:
+      now,
 
-    updated_at: now,
+    updated_at:
+      now,
   };
 
   let result =
     await supabaseAdmin
-      .from("signups")
-      .insert(insertPayload)
+      .from(
+        "signups"
+      )
+      .insert(
+        insertPayload
+      )
       .select("*")
       .maybeSingle();
 
-  if (!result.error) {
-    return result.data || null;
+  if (
+    !result.error
+  ) {
+    return (
+      result.data ||
+      null
+    );
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | DUPLICATE SIGNUP
-  |--------------------------------------------------------------------------
-  */
+  /* ========================================================================
+     DUPLICATE
+  ======================================================================== */
 
   if (
     isDuplicateError(
       result.error
     )
   ) {
-    return await findSignupFromStripeObject(
-      object
+    return findSignupByEmail(
+      email
     );
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | FALLBACK IF OPTIONAL COLUMNS ARE NOT PRESENT
-  |--------------------------------------------------------------------------
-  */
+  /* ========================================================================
+     FALLBACK FOR OLDER SIGNUPS SCHEMA
+  ======================================================================== */
 
   if (
     !isMissingOptionalColumn(
@@ -681,63 +1355,190 @@ async function createSignupFromStripeObject(
     email,
 
     first_name:
-      names.first_name || "",
+      names.first_name ||
+      "",
 
     last_name:
-      names.last_name || "",
+      names.last_name ||
+      "",
 
     phone:
       normalizeString(
-        object.customer_details?.phone ||
-          object.metadata?.phone ||
-          ""
+        object
+          .customer_details
+          ?.phone ||
+
+        object
+          .metadata
+          ?.phone ||
+
+        ""
       ),
 
-    status: "active",
+    status:
+      activate
+        ? "active"
+        : "pending",
 
-    created_at: now,
+    created_at:
+      now,
 
-    updated_at: now,
+    updated_at:
+      now,
   };
 
   result =
     await supabaseAdmin
-      .from("signups")
+      .from(
+        "signups"
+      )
       .insert(
         fallbackPayload
       )
       .select("*")
       .maybeSingle();
 
-  if (result.error) {
+  if (
+    result.error
+  ) {
     if (
       isDuplicateError(
         result.error
       )
     ) {
-      return await findSignupFromStripeObject(
-        object
+      return findSignupByEmail(
+        email
       );
     }
 
     throw result.error;
   }
 
-  return result.data || null;
+  return (
+    result.data ||
+    null
+  );
 }
 
-/*
-|--------------------------------------------------------------------------
-| UPDATE MEMBER ACTIVE
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   UPDATE STRIPE LINKAGE WITHOUT ACTIVATING
+
+   Used when checkout.session.completed arrives but payment_status
+   is still unpaid for an asynchronous payment method.
+============================================================================ */
+
+async function updateSignupStripeLinkage(
+  member,
+  object = {}
+) {
+  if (
+    !member?.id
+  ) {
+    return member;
+  }
+
+  const now =
+    nowIso();
+
+  const payload = {
+    stripe_customer_id:
+      getStripeCustomerIdFromEventObject(
+        object
+      ) ||
+      member.stripe_customer_id ||
+      null,
+
+    stripe_subscription_id:
+      getStripeSubscriptionIdFromEventObject(
+        object
+      ) ||
+      member.stripe_subscription_id ||
+      null,
+
+    stripe_checkout_session_id:
+      getStripeCheckoutSessionIdFromEventObject(
+        object
+      ) ||
+      member.stripe_checkout_session_id ||
+      null,
+
+    updated_at:
+      now,
+  };
+
+  let result =
+    await supabaseAdmin
+      .from(
+        "signups"
+      )
+      .update(
+        payload
+      )
+      .eq(
+        "id",
+        member.id
+      )
+      .select("*")
+      .maybeSingle();
+
+  if (
+    !result.error
+  ) {
+    return (
+      result.data ||
+      {
+        ...member,
+        ...payload,
+      }
+    );
+  }
+
+  if (
+    !isMissingOptionalColumn(
+      result.error
+    )
+  ) {
+    throw result.error;
+  }
+
+  result =
+    await supabaseAdmin
+      .from(
+        "signups"
+      )
+      .update({
+        updated_at:
+          now,
+      })
+      .eq(
+        "id",
+        member.id
+      )
+      .select("*")
+      .maybeSingle();
+
+  if (
+    result.error
+  ) {
+    throw result.error;
+  }
+
+  return (
+    result.data ||
+    member
+  );
+}
+
+/* ==========================================================================
+   ACTIVATE MEMBER
+============================================================================ */
 
 async function updateSignupActive(
   member,
   object = {}
 ) {
   const now =
-    new Date().toISOString();
+    nowIso();
 
   const names =
     getNamePartsFromStripeObject(
@@ -750,25 +1551,27 @@ async function updateSignupActive(
     );
 
   const subscriptionId =
-    normalizeString(
-      object.subscription
-    ) ||
-    normalizeString(
-      object.id &&
-        object.object ===
-          "subscription"
-        ? object.id
-        : ""
+    getStripeSubscriptionIdFromEventObject(
+      object
+    );
+
+  const checkoutSessionId =
+    getStripeCheckoutSessionIdFromEventObject(
+      object
     );
 
   const fullPayload = {
-    status: "active",
+    status:
+      "active",
 
-    payment_status: "paid",
+    payment_status:
+      "paid",
 
-    membership_status: "active",
+    membership_status:
+      "active",
 
-    approval_status: "approved",
+    approval_status:
+      "approved",
 
     portal_login_url:
       "/portal/index.html",
@@ -776,41 +1579,49 @@ async function updateSignupActive(
     stripe_customer_id:
       customerId ||
       member.stripe_customer_id ||
-      "",
+      null,
 
     stripe_subscription_id:
       subscriptionId ||
       member.stripe_subscription_id ||
-      "",
+      null,
 
     stripe_checkout_session_id:
-      object.object ===
-      "checkout.session"
-        ? normalizeString(
-            object.id
-          )
-        : member.stripe_checkout_session_id ||
-          "",
+      checkoutSessionId ||
+      member.stripe_checkout_session_id ||
+      null,
 
     activation_fee_amount:
-      Number(
-        member.activation_fee_amount ||
-          25
+      normalizeNumber(
+        member
+          .activation_fee_amount ||
+        object
+          .metadata
+          ?.activation_fee_amount,
+        25
       ),
 
     monthly_fee_amount:
-      Number(
-        member.monthly_fee_amount ||
-          20
+      normalizeNumber(
+        member
+          .monthly_fee_amount ||
+        object
+          .metadata
+          ?.monthly_fee_amount,
+        20
       ),
 
     billing_day:
-      Number(
+      normalizeNumber(
         member.billing_day ||
-          10
+        object
+          .metadata
+          ?.billing_day,
+        10
       ),
 
-    updated_at: now,
+    updated_at:
+      now,
   };
 
   if (
@@ -839,15 +1650,25 @@ async function updateSignupActive(
 
   let result =
     await supabaseAdmin
-      .from("signups")
-      .update(fullPayload)
-      .eq("id", member.id)
+      .from(
+        "signups"
+      )
+      .update(
+        fullPayload
+      )
+      .eq(
+        "id",
+        member.id
+      )
       .select("*")
       .maybeSingle();
 
-  if (!result.error) {
+  if (
+    !result.error
+  ) {
     return (
-      result.data || {
+      result.data ||
+      {
         ...member,
         ...fullPayload,
       }
@@ -863,44 +1684,53 @@ async function updateSignupActive(
   }
 
   const fallbackPayload = {
-    status: "active",
-    updated_at: now,
+    status:
+      "active",
+
+    updated_at:
+      now,
   };
 
   result =
     await supabaseAdmin
-      .from("signups")
+      .from(
+        "signups"
+      )
       .update(
         fallbackPayload
       )
-      .eq("id", member.id)
+      .eq(
+        "id",
+        member.id
+      )
       .select("*")
       .maybeSingle();
 
-  if (result.error) {
+  if (
+    result.error
+  ) {
     throw result.error;
   }
 
   return (
-    result.data || {
+    result.data ||
+    {
       ...member,
       ...fallbackPayload,
     }
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| UPDATE MEMBER INACTIVE
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   INACTIVATE MEMBER
+============================================================================ */
 
 async function updateSignupPastDueOrInactive(
   member,
   statusPayload = {}
 ) {
   const now =
-    new Date().toISOString();
+    nowIso();
 
   const fullPayload = {
     status:
@@ -908,33 +1738,48 @@ async function updateSignupPastDueOrInactive(
       "inactive",
 
     payment_status:
-      statusPayload.payment_status ||
+      statusPayload
+        .payment_status ||
       "past_due",
 
     membership_status:
-      statusPayload.membership_status ||
+      statusPayload
+        .membership_status ||
       "inactive",
 
     approval_status:
-      statusPayload.approval_status ||
+      statusPayload
+        .approval_status ||
       "payment_required",
 
-    access_perks_ready: false,
+    access_perks_ready:
+      false,
 
-    updated_at: now,
+    updated_at:
+      now,
   };
 
   let result =
     await supabaseAdmin
-      .from("signups")
-      .update(fullPayload)
-      .eq("id", member.id)
+      .from(
+        "signups"
+      )
+      .update(
+        fullPayload
+      )
+      .eq(
+        "id",
+        member.id
+      )
       .select("*")
       .maybeSingle();
 
-  if (!result.error) {
+  if (
+    !result.error
+  ) {
     return (
-      result.data || {
+      result.data ||
+      {
         ...member,
         ...fullPayload,
       }
@@ -954,358 +1799,43 @@ async function updateSignupPastDueOrInactive(
       statusPayload.status ||
       "inactive",
 
-    updated_at: now,
+    updated_at:
+      now,
   };
 
   result =
     await supabaseAdmin
-      .from("signups")
+      .from(
+        "signups"
+      )
       .update(
         fallbackPayload
       )
-      .eq("id", member.id)
+      .eq(
+        "id",
+        member.id
+      )
       .select("*")
       .maybeSingle();
 
-  if (result.error) {
+  if (
+    result.error
+  ) {
     throw result.error;
   }
 
   return (
-    result.data || {
+    result.data ||
+    {
       ...member,
       ...fallbackPayload,
     }
   );
 }
 
-/*
-|--------------------------------------------------------------------------
-| GROWTH POOL
-|--------------------------------------------------------------------------
-|
-| ONE $2 CONTRIBUTION PER NEW MEMBER.
-|
-| The primary protection is member_id.
-|
-| We first check whether this member already has a
-| "member_join" contribution.
-|
-| A unique database constraint should also exist on member_id
-| for transaction_type = "member_join".
-|
-| Stripe event ID is additionally stored for webhook idempotency.
-|
-*/
-
-async function recordGrowthPoolContribution({
-  member,
-  session,
-  event,
-}) {
-  if (!member?.id) {
-    return {
-      success: false,
-      added: false,
-      amount: 0,
-      reason: "member_not_found",
-    };
-  }
-
-  const stripeEventId =
-    normalizeString(
-      event?.id
-    );
-
-  const checkoutSessionId =
-    normalizeString(
-      session?.id
-    );
-
-  const stripeCustomerId =
-    getStripeCustomerIdFromEventObject(
-      session
-    );
-
-  const stripeSubscriptionId =
-    normalizeString(
-      session?.subscription
-    );
-
-  if (!stripeEventId) {
-    return {
-      success: false,
-      added: false,
-      amount: 0,
-      reason:
-        "missing_stripe_event_id",
-    };
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | CHECK MEMBER FIRST
-  |--------------------------------------------------------------------------
-  |
-  | This prevents a second checkout from adding another $2 for
-  | an existing member.
-  |
-  */
-
-  let memberContributionQuery =
-    await supabaseAdmin
-      .from(
-        "growth_pool_transactions"
-      )
-      .select(
-        "id, amount, stripe_event_id"
-      )
-      .eq(
-        "member_id",
-        member.id
-      )
-      .eq(
-        "transaction_type",
-        "member_join"
-      )
-      .limit(1)
-      .maybeSingle();
-
-  if (
-    memberContributionQuery.error &&
-    isMissingOptionalColumn(
-      memberContributionQuery.error
-    )
-  ) {
-    /*
-    If the table itself/columns are missing, return a clear error
-    instead of pretending the contribution was recorded.
-    */
-
-    return {
-      success: false,
-      added: false,
-      amount: 0,
-      reason:
-        "growth_pool_schema_missing",
-      error:
-        memberContributionQuery.error
-          .message,
-    };
-  }
-
-  if (
-    memberContributionQuery.error
-  ) {
-    throw memberContributionQuery.error;
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | MEMBER ALREADY CONTRIBUTED
-  |--------------------------------------------------------------------------
-  */
-
-  if (
-    memberContributionQuery.data
-      ?.id
-  ) {
-    return {
-      success: true,
-      added: false,
-      duplicate: true,
-      amount: 0,
-      transaction_id:
-        memberContributionQuery
-          .data.id,
-      reason:
-        "member_already_contributed",
-    };
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | CHECK STRIPE EVENT
-  |--------------------------------------------------------------------------
-  |
-  | This protects against Stripe retrying the exact same webhook event.
-  |
-  */
-
-  const existingEvent =
-    await supabaseAdmin
-      .from(
-        "growth_pool_transactions"
-      )
-      .select(
-        "id, amount, member_id"
-      )
-      .eq(
-        "stripe_event_id",
-        stripeEventId
-      )
-      .maybeSingle();
-
-  if (
-    existingEvent.error &&
-    !isMissingOptionalColumn(
-      existingEvent.error
-    )
-  ) {
-    throw existingEvent.error;
-  }
-
-  if (
-    existingEvent.data?.id
-  ) {
-    return {
-      success: true,
-      added: false,
-      duplicate: true,
-      amount: 0,
-      transaction_id:
-        existingEvent.data.id,
-      reason:
-        "stripe_event_already_recorded",
-    };
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | CREATE $2 GROWTH POOL TRANSACTION
-  |--------------------------------------------------------------------------
-  */
-
-  const transactionPayload = {
-    member_id: member.id,
-
-    signup_id: member.id,
-
-    amount:
-      GROWTH_POOL_CONTRIBUTION,
-
-    transaction_type:
-      "member_join",
-
-    stripe_event_id:
-      stripeEventId,
-
-    stripe_checkout_session_id:
-      checkoutSessionId || null,
-
-    stripe_customer_id:
-      stripeCustomerId || null,
-
-    stripe_subscription_id:
-      stripeSubscriptionId || null,
-
-    description:
-      "Growth Pool contribution for new Card Leo member.",
-
-    created_at:
-      new Date().toISOString(),
-  };
-
-  const insertResult =
-    await supabaseAdmin
-      .from(
-        "growth_pool_transactions"
-      )
-      .insert(
-        transactionPayload
-      )
-      .select("*")
-      .maybeSingle();
-
-  /*
-  |--------------------------------------------------------------------------
-  | DUPLICATE PROTECTION
-  |--------------------------------------------------------------------------
-  */
-
-  if (
-    insertResult.error &&
-    isDuplicateError(
-      insertResult.error
-    )
-  ) {
-    return {
-      success: true,
-      added: false,
-      duplicate: true,
-      amount: 0,
-      reason:
-        "growth_pool_duplicate_protected",
-    };
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | MISSING TABLE / SCHEMA
-  |--------------------------------------------------------------------------
-  */
-
-  if (insertResult.error) {
-    if (
-      isMissingOptionalColumn(
-        insertResult.error
-      )
-    ) {
-      console.error(
-        "Growth Pool table/schema is missing:",
-        insertResult.error
-      );
-
-      return {
-        success: false,
-        added: false,
-        amount: 0,
-        reason:
-          "growth_pool_schema_missing",
-        error:
-          insertResult.error.message,
-      };
-    }
-
-    throw insertResult.error;
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | SUCCESS
-  |--------------------------------------------------------------------------
-  */
-
-  return {
-    success: true,
-
-    added: true,
-
-    duplicate: false,
-
-    amount:
-      GROWTH_POOL_CONTRIBUTION,
-
-    transaction_id:
-      insertResult.data?.id ||
-      null,
-
-    stripe_event_id:
-      stripeEventId,
-
-    member_id:
-      member.id,
-
-    reason:
-      "growth_pool_contribution_recorded",
-  };
-}
-
-/*
-|--------------------------------------------------------------------------
-| ACCESS AMT
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   ACCESS AMT DATABASE SUCCESS
+============================================================================ */
 
 async function saveAccessSuccess(
   member,
@@ -1313,11 +1843,12 @@ async function saveAccessSuccess(
   status = "OPEN"
 ) {
   const now =
-    new Date().toISOString();
+    nowIso();
 
   const fullPayload = {
     access_member_identifier:
-      accessResult.access_member_identifier ||
+      accessResult
+        ?.access_member_identifier ||
       buildMemberCustomerIdentifier(
         member
       ),
@@ -1332,42 +1863,120 @@ async function saveAccessSuccess(
       null,
 
     access_last_payload:
-      accessResult.access_payload ||
-      accessResult.payload ||
+      accessResult
+        ?.access_payload ||
+      accessResult
+        ?.payload ||
       null,
 
     access_last_response:
-      accessResult.access_response ||
-      accessResult.response ||
+      accessResult
+        ?.access_response ||
+      accessResult
+        ?.response ||
       null,
 
     access_perks_ready:
-      status === "OPEN",
+      status ===
+      "OPEN",
 
-    updated_at: now,
+    updated_at:
+      now,
   };
 
-  const result =
-    await supabaseAdmin
-      .from("signups")
-      .update(fullPayload)
-      .eq("id", member.id);
+  if (
+    status ===
+    "SUSPEND"
+  ) {
+    fullPayload.access_suspended_at =
+      now;
+  } else {
+    fullPayload.access_suspended_at =
+      null;
+  }
 
-  if (!result.error) {
+  let result =
+    await supabaseAdmin
+      .from(
+        "signups"
+      )
+      .update(
+        fullPayload
+      )
+      .eq(
+        "id",
+        member.id
+      );
+
+  if (
+    !result.error
+  ) {
     return;
   }
 
+  /*
+   * Retry without access_suspended_at in case that optional
+   * column has not been added yet.
+   */
+
   if (
-    !isMissingOptionalColumn(
+    isMissingOptionalColumn(
       result.error
     )
   ) {
-    console.error(
-      "Access success save failed:",
-      result.error
-    );
+    const fallbackPayload = {
+      access_member_identifier:
+        fullPayload
+          .access_member_identifier,
+
+      access_member_status:
+        fullPayload
+          .access_member_status,
+
+      access_synced_at:
+        fullPayload
+          .access_synced_at,
+
+      access_sync_error:
+        null,
+
+      access_perks_ready:
+        fullPayload
+          .access_perks_ready,
+
+      updated_at:
+        now,
+    };
+
+    result =
+      await supabaseAdmin
+        .from(
+          "signups"
+        )
+        .update(
+          fallbackPayload
+        )
+        .eq(
+          "id",
+          member.id
+        );
+
+    if (
+      !result.error
+    ) {
+      return;
+    }
   }
+
+  console.error(
+    "Access success save failed:",
+    result.error
+  );
 }
+
+/* ==========================================================================
+   ACCESS AMT DATABASE FAILURE
+============================================================================ */
 
 async function saveAccessFailure(
   member,
@@ -1375,7 +1984,7 @@ async function saveAccessFailure(
   status = "sync_failed"
 ) {
   const now =
-    new Date().toISOString();
+    nowIso();
 
   const fullPayload = {
     access_member_identifier:
@@ -1401,16 +2010,26 @@ async function saveAccessFailure(
     access_perks_ready:
       false,
 
-    updated_at: now,
+    updated_at:
+      now,
   };
 
   const result =
     await supabaseAdmin
-      .from("signups")
-      .update(fullPayload)
-      .eq("id", member.id);
+      .from(
+        "signups"
+      )
+      .update(
+        fullPayload
+      )
+      .eq(
+        "id",
+        member.id
+      );
 
-  if (!result.error) {
+  if (
+    !result.error
+  ) {
     return;
   }
 
@@ -1426,18 +2045,40 @@ async function saveAccessFailure(
   }
 }
 
+/* ==========================================================================
+   ACCESS OPEN
+============================================================================ */
+
 async function syncActiveMemberToAccess(
   member
 ) {
-  if (!member?.id) {
+  if (
+    !member?.id
+  ) {
     return null;
   }
 
   if (
-    !isAccessActiveMember(member) &&
-    !isActiveStatus(member)
+    !isAccessActiveMember(
+      member
+    ) &&
+    !isActiveStatus(
+      member
+    )
   ) {
-    return null;
+    return {
+      success:
+        false,
+
+      skipped:
+        true,
+
+      status:
+        "not_active",
+
+      reason:
+        "member_not_active",
+    };
   }
 
   const accessMemberIdentifier =
@@ -1463,34 +2104,62 @@ async function syncActiveMemberToAccess(
 
     await saveAccessSuccess(
       member,
+
       accessResult,
+
       "OPEN"
     );
 
     return {
-      success: true,
-      status: "OPEN",
-      result: accessResult,
+      success:
+        true,
+
+      status:
+        "OPEN",
+
+      memberIdentifier:
+        accessMemberIdentifier,
+
+      result:
+        accessResult,
     };
-  } catch (error) {
+  } catch (
+    error
+  ) {
     console.error(
       "Access AMT active sync failed:",
       {
-        memberId: member.id,
-        email: member.email,
+        memberId:
+          member.id,
+
+        email:
+          member.email,
+
         error,
       }
     );
 
     await saveAccessFailure(
       member,
+
       error,
+
       "sync_failed"
     );
 
+    /*
+     * Membership/payment itself succeeded.
+     *
+     * Access can be retried separately via /api/access/sync-member.
+     */
+
     return {
-      success: false,
-      status: "sync_failed",
+      success:
+        false,
+
+      status:
+        "sync_failed",
+
       error:
         error?.message ||
         "Access sync failed.",
@@ -1498,10 +2167,16 @@ async function syncActiveMemberToAccess(
   }
 }
 
+/* ==========================================================================
+   ACCESS SUSPEND
+============================================================================ */
+
 async function suspendMemberFromAccess(
   member
 ) {
-  if (!member?.id) {
+  if (
+    !member?.id
+  ) {
     return null;
   }
 
@@ -1528,34 +2203,56 @@ async function suspendMemberFromAccess(
 
     await saveAccessSuccess(
       member,
+
       accessResult,
+
       "SUSPEND"
     );
 
     return {
-      success: true,
-      status: "SUSPEND",
-      result: accessResult,
+      success:
+        true,
+
+      status:
+        "SUSPEND",
+
+      memberIdentifier:
+        accessMemberIdentifier,
+
+      result:
+        accessResult,
     };
-  } catch (error) {
+  } catch (
+    error
+  ) {
     console.error(
       "Access AMT suspend failed:",
       {
-        memberId: member.id,
-        email: member.email,
+        memberId:
+          member.id,
+
+        email:
+          member.email,
+
         error,
       }
     );
 
     await saveAccessFailure(
       member,
+
       error,
+
       "suspend_failed"
     );
 
     return {
-      success: false,
-      status: "suspend_failed",
+      success:
+        false,
+
+      status:
+        "suspend_failed",
+
       error:
         error?.message ||
         "Access suspend failed.",
@@ -1563,14 +2260,134 @@ async function suspendMemberFromAccess(
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| CHECKOUT COMPLETED
-|--------------------------------------------------------------------------
-|
-| THIS IS THE ONLY PLACE WHERE THE $2 NEW-MEMBER CONTRIBUTION IS CREATED.
-|
-*/
+/* ==========================================================================
+   CENTRAL GROWTH POOL PROCESSING
+
+   THIS IS THE ONLY GROWTH POOL ENTRY POINT IN THIS WEBHOOK.
+
+   All duplicate protection and accounting are handled by:
+
+     lib/growth-pool.js
+
+============================================================================ */
+
+async function processGrowthPool({
+  member,
+  object,
+  event,
+} = {}) {
+  if (
+    !member?.id
+  ) {
+    return {
+      success:
+        false,
+
+      created:
+        false,
+
+      skipped:
+        true,
+
+      reason:
+        "member_not_found",
+    };
+  }
+
+  const checkoutSessionId =
+    getStripeCheckoutSessionIdFromEventObject(
+      object
+    );
+
+  const invoiceId =
+    getStripeInvoiceIdFromEventObject(
+      object
+    );
+
+  const invoiceBillingReason =
+    getInvoiceBillingReason(
+      object
+    );
+
+  const subscriptionId =
+    getStripeSubscriptionIdFromEventObject(
+      object
+    );
+
+  const customerId =
+    getStripeCustomerIdFromEventObject(
+      object
+    );
+
+  const paymentIntentId =
+    getStripePaymentIntentIdFromEventObject(
+      object
+    );
+
+  const metadata =
+    getStripeMetadata(
+      object
+    );
+
+  const result =
+    await processGrowthPoolMemberActivation({
+      member,
+
+      stripeEventId:
+        normalizeString(
+          event?.id
+        ),
+
+      stripeEventType:
+        normalizeString(
+          event?.type
+        ),
+
+      checkoutSessionId,
+
+      invoiceId,
+
+      invoiceBillingReason,
+
+      subscriptionId,
+
+      subscriptionStatus:
+        normalizeString(
+          object?.status
+        ),
+
+      customerId,
+
+      paymentIntentId,
+
+      metadata,
+    });
+
+  return {
+    ...result,
+
+    configuredContributionCents:
+      GROWTH_POOL_CONTRIBUTION_CENTS,
+
+    configuredContribution:
+      centsToDollars(
+        GROWTH_POOL_CONTRIBUTION_CENTS
+      ),
+  };
+}
+
+/* ==========================================================================
+   CHECKOUT COMPLETED
+
+   checkout.session.completed does NOT always mean the payment
+   has fully settled for every payment method.
+
+   If payment_status is unpaid:
+     - preserve/link member
+     - wait for async_payment_succeeded
+     - do NOT activate
+     - do NOT credit Growth Pool
+============================================================================ */
 
 async function handleCheckoutCompleted(
   session,
@@ -1581,32 +2398,104 @@ async function handleCheckoutCompleted(
       session
     );
 
-  /*
-  |--------------------------------------------------------------------------
-  | CREATE MEMBER IF NECESSARY
-  |--------------------------------------------------------------------------
-  */
+  const paid =
+    isCheckoutPaid(
+      session
+    );
 
-  if (!member?.id) {
+  /* ========================================================================
+     CREATE FALLBACK MEMBER IF NEEDED
+  ======================================================================== */
+
+  if (
+    !member?.id
+  ) {
     member =
       await createSignupFromStripeObject(
-        session
+        session,
+        {
+          activate:
+            paid,
+        }
       );
   }
 
-  if (!member?.id) {
+  if (
+    !member?.id
+  ) {
     return {
-      handled: false,
+      handled:
+        false,
+
       reason:
         "signup_not_found_or_created",
     };
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | ACTIVATE MEMBER
-  |--------------------------------------------------------------------------
-  */
+  /* ========================================================================
+     ASYNC PAYMENT STILL PENDING
+  ======================================================================== */
+
+  if (!paid) {
+    const linkedMember =
+      await updateSignupStripeLinkage(
+        member,
+        session
+      );
+
+    return {
+      handled:
+        true,
+
+      member_id:
+        linkedMember.id,
+
+      email:
+        linkedMember.email,
+
+      status:
+        "payment_pending",
+
+      payment_status:
+        normalizeString(
+          session
+            .payment_status ||
+          "unpaid"
+        ),
+
+      growth_pool: {
+        success:
+          true,
+
+        created:
+          false,
+
+        skipped:
+          true,
+
+        amount:
+          0,
+
+        reason:
+          "checkout_payment_not_settled",
+      },
+
+      accessSync: {
+        success:
+          false,
+
+        skipped:
+          true,
+
+        reason:
+          "payment_not_settled",
+      },
+    };
+  }
+
+  /* ========================================================================
+     ACTIVATE
+  ======================================================================== */
 
   const updatedMember =
     await updateSignupActive(
@@ -1614,41 +2503,29 @@ async function handleCheckoutCompleted(
       session
     );
 
-  /*
-  |--------------------------------------------------------------------------
-  | GROWTH POOL
-  |--------------------------------------------------------------------------
-  |
-  | IMPORTANT:
-  |
-  | We do NOT use "wasAlreadyActive" here.
-  |
-  | Instead, recordGrowthPoolContribution()
-  | checks the actual Growth Pool ledger.
-  |
-  | This is much safer because:
-  |
-  | 1. Existing members cannot generate another $2.
-  | 2. Stripe retries cannot generate another $2.
-  | 3. A new member created directly by the webhook still gets $2.
-  |
-  */
+  /* ========================================================================
+     GROWTH POOL
+
+     Central helper protects against:
+     - duplicate Stripe event
+     - duplicate Checkout Session
+     - duplicate member activation
+  ======================================================================== */
 
   const growthPool =
-    await recordGrowthPoolContribution({
+    await processGrowthPool({
       member:
         updatedMember,
 
-      session,
+      object:
+        session,
 
       event,
     });
 
-  /*
-  |--------------------------------------------------------------------------
-  | ACCESS AMT
-  |--------------------------------------------------------------------------
-  */
+  /* ========================================================================
+     ACCESS
+  ======================================================================== */
 
   const accessSync =
     await syncActiveMemberToAccess(
@@ -1656,7 +2533,8 @@ async function handleCheckoutCompleted(
     );
 
   return {
-    handled: true,
+    handled:
+      true,
 
     member_id:
       updatedMember.id,
@@ -1664,7 +2542,11 @@ async function handleCheckoutCompleted(
     email:
       updatedMember.email,
 
-    status: "active",
+    status:
+      "active",
+
+    payment_status:
+      "paid",
 
     growth_pool:
       growthPool,
@@ -1673,38 +2555,63 @@ async function handleCheckoutCompleted(
   };
 }
 
-/*
-|--------------------------------------------------------------------------
-| INVOICE PAID
-|--------------------------------------------------------------------------
-|
-| NO $2 CONTRIBUTION HERE.
-|
-| invoice.paid also fires for recurring $20 membership payments.
-|
-*/
+/* ==========================================================================
+   ASYNC CHECKOUT PAYMENT SUCCEEDED
 
-async function handleInvoicePaid(
-  invoice
+   Some payment methods complete checkout before payment settles.
+   This event is the paid activation fallback.
+============================================================================ */
+
+async function handleCheckoutAsyncPaymentSucceeded(
+  session,
+  event
 ) {
-  const member =
+  let member =
     await findSignupFromStripeObject(
-      invoice
+      session
     );
 
-  if (!member?.id) {
+  if (
+    !member?.id
+  ) {
+    member =
+      await createSignupFromStripeObject(
+        session,
+        {
+          activate:
+            true,
+        }
+      );
+  }
+
+  if (
+    !member?.id
+  ) {
     return {
-      handled: false,
+      handled:
+        false,
+
       reason:
-        "signup_not_found",
+        "signup_not_found_or_created",
     };
   }
 
   const updatedMember =
     await updateSignupActive(
       member,
-      invoice
+      session
     );
+
+  const growthPool =
+    await processGrowthPool({
+      member:
+        updatedMember,
+
+      object:
+        session,
+
+      event,
+    });
 
   const accessSync =
     await syncActiveMemberToAccess(
@@ -1712,7 +2619,8 @@ async function handleInvoicePaid(
     );
 
   return {
-    handled: true,
+    handled:
+      true,
 
     member_id:
       updatedMember.id,
@@ -1720,185 +2628,38 @@ async function handleInvoicePaid(
     email:
       updatedMember.email,
 
-    status: "active",
+    status:
+      "active",
 
-    growth_pool: {
-      added: false,
-      amount: 0,
-      reason:
-        "invoice_payment_no_growth_pool_contribution",
-    },
+    payment_status:
+      "paid",
+
+    growth_pool:
+      growthPool,
 
     accessSync,
   };
 }
 
-/*
-|--------------------------------------------------------------------------
-| SUBSCRIPTION UPDATED
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   ASYNC CHECKOUT PAYMENT FAILED
+============================================================================ */
 
-async function handleSubscriptionUpdated(
-  subscription
+async function handleCheckoutAsyncPaymentFailed(
+  session
 ) {
   const member =
     await findSignupFromStripeObject(
-      subscription
+      session
     );
 
-  if (!member?.id) {
-    return {
-      handled: false,
-      reason:
-        "signup_not_found",
-    };
-  }
-
-  const stripeStatus =
-    normalizeString(
-      subscription.status
-    ).toLowerCase();
-
-  /*
-  |--------------------------------------------------------------------------
-  | ACTIVE / TRIALING
-  |--------------------------------------------------------------------------
-  */
-
   if (
-    ["active", "trialing"].includes(
-      stripeStatus
-    )
+    !member?.id
   ) {
-    const updatedMember =
-      await updateSignupActive(
-        member,
-        subscription
-      );
-
-    const accessSync =
-      await syncActiveMemberToAccess(
-        updatedMember
-      );
-
     return {
-      handled: true,
+      handled:
+        false,
 
-      member_id:
-        updatedMember.id,
-
-      email:
-        updatedMember.email,
-
-      status: "active",
-
-      stripe_status:
-        stripeStatus,
-
-      growth_pool: {
-        added: false,
-        amount: 0,
-        reason:
-          "subscription_update_no_growth_pool_contribution",
-      },
-
-      accessSync,
-    };
-  }
-
-  /*
-  |--------------------------------------------------------------------------
-  | INACTIVE / FAILED
-  |--------------------------------------------------------------------------
-  */
-
-  if (
-    [
-      "past_due",
-      "unpaid",
-      "canceled",
-      "cancelled",
-      "incomplete",
-      "incomplete_expired",
-    ].includes(
-      stripeStatus
-    )
-  ) {
-    const updatedMember =
-      await updateSignupPastDueOrInactive(
-        member,
-        {
-          status: "inactive",
-
-          payment_status:
-            stripeStatus,
-
-          membership_status:
-            "inactive",
-
-          approval_status:
-            "payment_required",
-        }
-      );
-
-    const accessSync =
-      await suspendMemberFromAccess(
-        updatedMember
-      );
-
-    return {
-      handled: true,
-
-      member_id:
-        updatedMember.id,
-
-      email:
-        updatedMember.email,
-
-      status: "inactive",
-
-      stripe_status:
-        stripeStatus,
-
-      accessSync,
-    };
-  }
-
-  return {
-    handled: true,
-
-    member_id:
-      member.id,
-
-    email:
-      member.email,
-
-    status:
-      "ignored_subscription_status",
-
-    stripe_status:
-      stripeStatus,
-  };
-}
-
-/*
-|--------------------------------------------------------------------------
-| INVOICE PAYMENT FAILED
-|--------------------------------------------------------------------------
-*/
-
-async function handleInvoicePaymentFailed(
-  invoice
-) {
-  const member =
-    await findSignupFromStripeObject(
-      invoice
-    );
-
-  if (!member?.id) {
-    return {
-      handled: false,
       reason:
         "signup_not_found",
     };
@@ -1908,7 +2669,190 @@ async function handleInvoicePaymentFailed(
     await updateSignupPastDueOrInactive(
       member,
       {
-        status: "inactive",
+        status:
+          "payment_pending",
+
+        payment_status:
+          "payment_failed",
+
+        membership_status:
+          "payment_pending",
+
+        approval_status:
+          "payment_required",
+      }
+    );
+
+  const accessSync =
+    await suspendMemberFromAccess(
+      updatedMember
+    );
+
+  return {
+    handled:
+      true,
+
+    member_id:
+      updatedMember.id,
+
+    email:
+      updatedMember.email,
+
+    status:
+      "payment_failed",
+
+    growth_pool: {
+      success:
+        true,
+
+      created:
+        false,
+
+      skipped:
+        true,
+
+      amount:
+        0,
+
+      reason:
+        "checkout_payment_failed",
+    },
+
+    accessSync,
+  };
+}
+
+/* ==========================================================================
+   INVOICE PAID
+
+   IMPORTANT
+   ---------
+   #22 now checks invoice.billing_reason.
+
+   subscription_create:
+     May qualify as fallback initial activation.
+
+   subscription_cycle:
+     NEVER adds another $2.
+
+   Member-level duplicate protection also ensures that if
+   checkout.session.completed already added the $2, this invoice
+   cannot add another $2.
+============================================================================ */
+
+async function handleInvoicePaid(
+  invoice,
+  event
+) {
+  const member =
+    await findSignupFromStripeObject(
+      invoice
+    );
+
+  if (
+    !member?.id
+  ) {
+    return {
+      handled:
+        false,
+
+      reason:
+        "signup_not_found",
+    };
+  }
+
+  const updatedMember =
+    await updateSignupActive(
+      member,
+      invoice
+    );
+
+  /*
+   * Safe to call for every successful invoice.
+   *
+   * lib/growth-pool.js will return:
+   *
+   * subscription_create → initial activation fallback
+   * subscription_cycle  → skipped
+   * already credited    → duplicate prevented
+   */
+
+  const growthPool =
+    await processGrowthPool({
+      member:
+        updatedMember,
+
+      object:
+        invoice,
+
+      event,
+    });
+
+  const accessSync =
+    await syncActiveMemberToAccess(
+      updatedMember
+    );
+
+  return {
+    handled:
+      true,
+
+    member_id:
+      updatedMember.id,
+
+    email:
+      updatedMember.email,
+
+    status:
+      "active",
+
+    invoice_id:
+      getStripeInvoiceIdFromEventObject(
+        invoice
+      ),
+
+    billing_reason:
+      getInvoiceBillingReason(
+        invoice
+      ),
+
+    growth_pool:
+      growthPool,
+
+    accessSync,
+  };
+}
+
+/* ==========================================================================
+   INVOICE PAYMENT FAILED
+============================================================================ */
+
+async function handleInvoicePaymentFailed(
+  invoice
+) {
+  const member =
+    await findSignupFromStripeObject(
+      invoice
+    );
+
+  if (
+    !member?.id
+  ) {
+    return {
+      handled:
+        false,
+
+      reason:
+        "signup_not_found",
+    };
+  }
+
+  const updatedMember =
+    await updateSignupPastDueOrInactive(
+      member,
+      {
+        status:
+          "inactive",
 
         payment_status:
           "past_due",
@@ -1927,7 +2871,8 @@ async function handleInvoicePaymentFailed(
     );
 
   return {
-    handled: true,
+    handled:
+      true,
 
     member_id:
       updatedMember.id,
@@ -1935,17 +2880,234 @@ async function handleInvoicePaymentFailed(
     email:
       updatedMember.email,
 
-    status: "past_due",
+    status:
+      "past_due",
+
+    growth_pool: {
+      success:
+        true,
+
+      created:
+        false,
+
+      skipped:
+        true,
+
+      amount:
+        0,
+
+      reason:
+        "failed_invoice_never_credits_growth_pool",
+    },
 
     accessSync,
   };
 }
 
-/*
-|--------------------------------------------------------------------------
-| SUBSCRIPTION DELETED
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   SUBSCRIPTION CREATED / UPDATED
+============================================================================ */
+
+async function handleSubscriptionUpdated(
+  subscription
+) {
+  const member =
+    await findSignupFromStripeObject(
+      subscription
+    );
+
+  if (
+    !member?.id
+  ) {
+    return {
+      handled:
+        false,
+
+      reason:
+        "signup_not_found",
+    };
+  }
+
+  const stripeStatus =
+    normalizeLower(
+      subscription.status
+    );
+
+  /* ========================================================================
+     ACTIVE
+  ======================================================================== */
+
+  if (
+    [
+      "active",
+      "trialing",
+    ].includes(
+      stripeStatus
+    )
+  ) {
+    const updatedMember =
+      await updateSignupActive(
+        member,
+        subscription
+      );
+
+    const accessSync =
+      await syncActiveMemberToAccess(
+        updatedMember
+      );
+
+    return {
+      handled:
+        true,
+
+      member_id:
+        updatedMember.id,
+
+      email:
+        updatedMember.email,
+
+      status:
+        "active",
+
+      stripe_status:
+        stripeStatus,
+
+      growth_pool: {
+        success:
+          true,
+
+        created:
+          false,
+
+        skipped:
+          true,
+
+        amount:
+          0,
+
+        reason:
+          "subscription_status_event_does_not_credit_growth_pool",
+      },
+
+      accessSync,
+    };
+  }
+
+  /* ========================================================================
+     INACTIVE
+  ======================================================================== */
+
+  if (
+    [
+      "past_due",
+      "unpaid",
+      "canceled",
+      "cancelled",
+      "incomplete",
+      "incomplete_expired",
+      "paused",
+    ].includes(
+      stripeStatus
+    )
+  ) {
+    const updatedMember =
+      await updateSignupPastDueOrInactive(
+        member,
+        {
+          status:
+            "inactive",
+
+          payment_status:
+            stripeStatus,
+
+          membership_status:
+            "inactive",
+
+          approval_status:
+            "payment_required",
+        }
+      );
+
+    const accessSync =
+      await suspendMemberFromAccess(
+        updatedMember
+      );
+
+    return {
+      handled:
+        true,
+
+      member_id:
+        updatedMember.id,
+
+      email:
+        updatedMember.email,
+
+      status:
+        "inactive",
+
+      stripe_status:
+        stripeStatus,
+
+      growth_pool: {
+        success:
+          true,
+
+        created:
+          false,
+
+        skipped:
+          true,
+
+        amount:
+          0,
+
+        reason:
+          "inactive_subscription_never_credits_growth_pool",
+      },
+
+      accessSync,
+    };
+  }
+
+  return {
+    handled:
+      true,
+
+    member_id:
+      member.id,
+
+    email:
+      member.email,
+
+    status:
+      "ignored_subscription_status",
+
+    stripe_status:
+      stripeStatus,
+
+    growth_pool: {
+      success:
+        true,
+
+      created:
+        false,
+
+      skipped:
+        true,
+
+      amount:
+        0,
+
+      reason:
+        "subscription_status_not_qualifying",
+    },
+  };
+}
+
+/* ==========================================================================
+   SUBSCRIPTION DELETED
+============================================================================ */
 
 async function handleSubscriptionDeleted(
   subscription
@@ -1955,9 +3117,13 @@ async function handleSubscriptionDeleted(
       subscription
     );
 
-  if (!member?.id) {
+  if (
+    !member?.id
+  ) {
     return {
-      handled: false,
+      handled:
+        false,
+
       reason:
         "signup_not_found",
     };
@@ -1967,7 +3133,8 @@ async function handleSubscriptionDeleted(
     await updateSignupPastDueOrInactive(
       member,
       {
-        status: "inactive",
+        status:
+          "inactive",
 
         payment_status:
           "canceled",
@@ -1986,7 +3153,8 @@ async function handleSubscriptionDeleted(
     );
 
   return {
-    handled: true,
+    handled:
+      true,
 
     member_id:
       updatedMember.id,
@@ -1994,23 +3162,107 @@ async function handleSubscriptionDeleted(
     email:
       updatedMember.email,
 
-    status: "canceled",
+    status:
+      "canceled",
+
+    growth_pool: {
+      success:
+        true,
+
+      created:
+        false,
+
+      skipped:
+        true,
+
+      amount:
+        0,
+
+      reason:
+        "subscription_deleted_never_credits_growth_pool",
+    },
 
     accessSync,
   };
 }
 
-/*
-|--------------------------------------------------------------------------
-| MAIN WEBHOOK HANDLER
-|--------------------------------------------------------------------------
-*/
+/* ==========================================================================
+   SAFE EVENT SUMMARY
+============================================================================ */
+
+function buildEventSummary(
+  event
+) {
+  const object =
+    event
+      ?.data
+      ?.object ||
+    {};
+
+  return {
+    event_id:
+      normalizeString(
+        event?.id
+      ),
+
+    event_type:
+      normalizeString(
+        event?.type
+      ),
+
+    object_type:
+      normalizeString(
+        object.object
+      ),
+
+    customer_id:
+      getStripeCustomerIdFromEventObject(
+        object
+      ),
+
+    subscription_id:
+      getStripeSubscriptionIdFromEventObject(
+        object
+      ),
+
+    checkout_session_id:
+      getStripeCheckoutSessionIdFromEventObject(
+        object
+      ),
+
+    invoice_id:
+      getStripeInvoiceIdFromEventObject(
+        object
+      ),
+
+    billing_reason:
+      getInvoiceBillingReason(
+        object
+      ),
+
+    email:
+      getEmailFromEventObject(
+        object
+      ),
+  };
+}
+
+/* ==========================================================================
+   MAIN WEBHOOK
+============================================================================ */
 
 export default async function handler(
   req,
   res
 ) {
-  if (req.method !== "POST") {
+  /* ========================================================================
+     METHOD
+  ======================================================================== */
+
+  if (
+    req.method !==
+    "POST"
+  ) {
     res.setHeader(
       "Allow",
       "POST"
@@ -2020,8 +3272,11 @@ export default async function handler(
       res,
       405,
       {
-        success: false,
-        ok: false,
+        success:
+          false,
+
+        ok:
+          false,
 
         message:
           "Method not allowed. Use POST.",
@@ -2029,19 +3284,20 @@ export default async function handler(
     );
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | STRIPE CONFIGURATION
-  |--------------------------------------------------------------------------
-  */
+  /* ========================================================================
+     STRIPE SECRET KEY
+  ======================================================================== */
 
   if (!stripe) {
     return sendJson(
       res,
       500,
       {
-        success: false,
-        ok: false,
+        success:
+          false,
+
+        ok:
+          false,
 
         message:
           "Missing STRIPE_SECRET_KEY environment variable.",
@@ -2049,13 +3305,22 @@ export default async function handler(
     );
   }
 
-  if (!STRIPE_WEBHOOK_SECRET) {
+  /* ========================================================================
+     WEBHOOK SECRET
+  ======================================================================== */
+
+  if (
+    !STRIPE_WEBHOOK_SECRET
+  ) {
     return sendJson(
       res,
       500,
       {
-        success: false,
-        ok: false,
+        success:
+          false,
+
+        ok:
+          false,
 
         message:
           "Missing STRIPE_WEBHOOK_SECRET environment variable.",
@@ -2065,15 +3330,15 @@ export default async function handler(
 
   let event;
 
-  /*
-  |--------------------------------------------------------------------------
-  | VERIFY STRIPE SIGNATURE
-  |--------------------------------------------------------------------------
-  */
+  /* ========================================================================
+     VERIFY STRIPE SIGNATURE
+  ======================================================================== */
 
   try {
     const rawBody =
-      await readRawBody(req);
+      await readRawBody(
+        req
+      );
 
     const signature =
       req.headers[
@@ -2085,8 +3350,11 @@ export default async function handler(
         res,
         400,
         {
-          success: false,
-          ok: false,
+          success:
+            false,
+
+          ok:
+            false,
 
           message:
             "Missing Stripe signature.",
@@ -2095,12 +3363,18 @@ export default async function handler(
     }
 
     event =
-      stripe.webhooks.constructEvent(
-        rawBody,
-        signature,
-        STRIPE_WEBHOOK_SECRET
-      );
-  } catch (error) {
+      stripe
+        .webhooks
+        .constructEvent(
+          rawBody,
+
+          signature,
+
+          STRIPE_WEBHOOK_SECRET
+        );
+  } catch (
+    error
+  ) {
     console.error(
       "Stripe webhook signature verification failed:",
       error
@@ -2110,8 +3384,11 @@ export default async function handler(
       res,
       400,
       {
-        success: false,
-        ok: false,
+        success:
+          false,
+
+        ok:
+          false,
 
         message:
           `Webhook signature verification failed: ${
@@ -2122,29 +3399,31 @@ export default async function handler(
     );
   }
 
-  /*
-  |--------------------------------------------------------------------------
-  | PROCESS EVENT
-  |--------------------------------------------------------------------------
-  */
+  /* ========================================================================
+     PROCESS EVENT
+  ======================================================================== */
 
   try {
     const object =
-      event.data?.object || {};
+      event
+        .data
+        ?.object ||
+      {};
 
     let result = {
-      handled: false,
+      handled:
+        false,
 
       reason:
         "event_not_handled",
     };
 
-    switch (event.type) {
-      /*
-      |--------------------------------------------------------------------------
-      | NEW MEMBER
-      |--------------------------------------------------------------------------
-      */
+    switch (
+      event.type
+    ) {
+      /* ====================================================================
+         CHECKOUT COMPLETED
+      ==================================================================== */
 
       case "checkout.session.completed": {
         result =
@@ -2156,28 +3435,56 @@ export default async function handler(
         break;
       }
 
-      /*
-      |--------------------------------------------------------------------------
-      | RECURRING PAYMENT
-      |--------------------------------------------------------------------------
-      */
+      /* ====================================================================
+         ASYNC CHECKOUT PAYMENT SUCCEEDED
+      ==================================================================== */
 
-      case "invoice.paid":
-
-      case "invoice.payment_succeeded": {
+      case "checkout.session.async_payment_succeeded": {
         result =
-          await handleInvoicePaid(
+          await handleCheckoutAsyncPaymentSucceeded(
+            object,
+            event
+          );
+
+        break;
+      }
+
+      /* ====================================================================
+         ASYNC CHECKOUT PAYMENT FAILED
+      ==================================================================== */
+
+      case "checkout.session.async_payment_failed": {
+        result =
+          await handleCheckoutAsyncPaymentFailed(
             object
           );
 
         break;
       }
 
-      /*
-      |--------------------------------------------------------------------------
-      | FAILED PAYMENT
-      |--------------------------------------------------------------------------
-      */
+      /* ====================================================================
+         INVOICE PAID
+
+         #22 determines whether this is:
+           subscription_create → possible first activation
+           subscription_cycle  → no Growth Pool
+      ==================================================================== */
+
+      case "invoice.paid":
+
+      case "invoice.payment_succeeded": {
+        result =
+          await handleInvoicePaid(
+            object,
+            event
+          );
+
+        break;
+      }
+
+      /* ====================================================================
+         INVOICE FAILED
+      ==================================================================== */
 
       case "invoice.payment_failed": {
         result =
@@ -2188,11 +3495,9 @@ export default async function handler(
         break;
       }
 
-      /*
-      |--------------------------------------------------------------------------
-      | SUBSCRIPTION CREATED / UPDATED
-      |--------------------------------------------------------------------------
-      */
+      /* ====================================================================
+         SUBSCRIPTION CREATED / UPDATED
+      ==================================================================== */
 
       case "customer.subscription.created":
 
@@ -2205,11 +3510,9 @@ export default async function handler(
         break;
       }
 
-      /*
-      |--------------------------------------------------------------------------
-      | SUBSCRIPTION CANCELED
-      |--------------------------------------------------------------------------
-      */
+      /* ====================================================================
+         SUBSCRIPTION DELETED
+      ==================================================================== */
 
       case "customer.subscription.deleted": {
         result =
@@ -2220,15 +3523,14 @@ export default async function handler(
         break;
       }
 
-      /*
-      |--------------------------------------------------------------------------
-      | OTHER STRIPE EVENTS
-      |--------------------------------------------------------------------------
-      */
+      /* ====================================================================
+         UNSUPPORTED
+      ==================================================================== */
 
       default: {
         result = {
-          handled: false,
+          handled:
+            false,
 
           reason:
             "unsupported_event_type",
@@ -2241,21 +3543,22 @@ export default async function handler(
       }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SUCCESSFUL WEBHOOK RESPONSE
-    |--------------------------------------------------------------------------
-    */
+    /* ======================================================================
+       SUCCESS
+    ====================================================================== */
 
     return sendJson(
       res,
       200,
       {
-        success: true,
+        success:
+          true,
 
-        ok: true,
+        ok:
+          true,
 
-        received: true,
+        received:
+          true,
 
         type:
           event.type,
@@ -2263,10 +3566,17 @@ export default async function handler(
         event_id:
           event.id,
 
+        event:
+          buildEventSummary(
+            event
+          ),
+
         result,
       }
     );
-  } catch (error) {
+  } catch (
+    error
+  ) {
     console.error(
       "Card Leo Stripe webhook error:",
       {
@@ -2276,35 +3586,54 @@ export default async function handler(
         event_id:
           event?.id,
 
+        event:
+          buildEventSummary(
+            event
+          ),
+
         error,
       }
     );
 
     /*
-    |--------------------------------------------------------------------------
-    | RETURNING 500 TELLS STRIPE TO RETRY
-    |--------------------------------------------------------------------------
-    */
+     * IMPORTANT:
+     *
+     * Returning HTTP 500 tells Stripe that processing was incomplete.
+     *
+     * Stripe may retry the event.
+     *
+     * Growth Pool retries are safe because lib/growth-pool.js provides
+     * event, checkout-session, and member-level idempotency.
+     */
 
     return sendJson(
       res,
       500,
       {
-        success: false,
+        success:
+          false,
 
-        ok: false,
+        ok:
+          false,
 
-        received: true,
+        received:
+          true,
 
         type:
-          event?.type || "",
+          event?.type ||
+          "",
 
         event_id:
-          event?.id || "",
+          event?.id ||
+          "",
 
         message:
           error?.message ||
           "Stripe webhook processing failed.",
+
+        code:
+          error?.code ||
+          null,
       }
     );
   }

@@ -409,11 +409,17 @@
       display:
         flex;
 
+      flex-direction:
+        column;
+
       align-items:
         center;
 
       justify-content:
         center;
+
+      gap:
+        6px;
 
       color:
         var(--leo-gold-2);
@@ -431,6 +437,534 @@
       box-shadow:
         0 18px 42px
         rgba(0, 0, 0, 0.36);
+    }
+
+    .mini-allowance-card small {
+      color:
+        var(--leo-muted);
+
+      font-family:
+        Inter,
+        sans-serif;
+
+      font-size:
+        0.68rem;
+
+      font-weight:
+        800;
+
+      letter-spacing:
+        0.02em;
+
+      text-transform:
+        none;
+    }
+
+    .mini-allowance-card:hover {
+      border-color:
+        rgba(247, 217, 139, 0.48);
+
+      transform:
+        translateY(-1px);
+    }
+
+    /* =========================================================
+       MY CARD PREVIEW
+    ========================================================= */
+
+    .my-card-preview {
+      margin-bottom:
+        20px;
+
+      border-color:
+        rgba(247, 217, 139, 0.34);
+
+      background:
+        radial-gradient(
+          circle at 88% 10%,
+          rgba(247, 217, 139, 0.2),
+          transparent 30%
+        ),
+        radial-gradient(
+          circle at 10% 100%,
+          rgba(166, 111, 16, 0.12),
+          transparent 30%
+        ),
+        linear-gradient(
+          135deg,
+          rgba(17, 17, 17, 0.97),
+          rgba(3, 3, 3, 0.97) 52%,
+          rgba(20, 14, 3, 0.97)
+        );
+    }
+
+    .my-card-preview .panel-inner {
+      padding:
+        20px;
+    }
+
+    .my-card-preview-grid {
+      display:
+        grid;
+
+      grid-template-columns:
+        minmax(290px, 0.9fr)
+        minmax(0, 1.1fr)
+        auto;
+
+      gap:
+        20px;
+
+      align-items:
+        center;
+    }
+
+    .my-card-mini {
+      position:
+        relative;
+
+      overflow:
+        hidden;
+
+      min-height:
+        176px;
+
+      padding:
+        18px;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      justify-content:
+        space-between;
+
+      border-radius:
+        22px;
+
+      border:
+        1px solid rgba(247, 217, 139, 0.3);
+
+      background:
+        radial-gradient(
+          circle at 90% 12%,
+          rgba(247, 217, 139, 0.28),
+          transparent 30%
+        ),
+        linear-gradient(
+          145deg,
+          #111,
+          #030303 50%,
+          #1a1102
+        );
+
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.42);
+    }
+
+    .my-card-mini::after {
+      content:
+        "";
+
+      position:
+        absolute;
+
+      width:
+        190px;
+
+      height:
+        190px;
+
+      right:
+        -80px;
+
+      bottom:
+        -100px;
+
+      border:
+        1px solid rgba(247, 217, 139, 0.12);
+
+      border-radius:
+        50%;
+
+      pointer-events:
+        none;
+    }
+
+    .my-card-mini-top,
+    .my-card-mini-bottom {
+      position:
+        relative;
+
+      z-index:
+        1;
+
+      display:
+        flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        space-between;
+
+      gap:
+        12px;
+    }
+
+    .my-card-brand {
+      min-width:
+        0;
+    }
+
+    .my-card-brand strong {
+      display:
+        block;
+
+      color:
+        var(--leo-white);
+
+      font-size:
+        0.9rem;
+    }
+
+    .my-card-brand span {
+      display:
+        block;
+
+      margin-top:
+        3px;
+
+      color:
+        var(--leo-gold);
+
+      font-size:
+        0.64rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.1em;
+
+      text-transform:
+        uppercase;
+    }
+
+    .my-card-status-pill {
+      min-height:
+        28px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      padding:
+        0 10px;
+
+      border-radius:
+        999px;
+
+      border:
+        1px solid rgba(255, 209, 102, 0.24);
+
+      background:
+        rgba(255, 209, 102, 0.1);
+
+      color:
+        var(--leo-yellow);
+
+      font-size:
+        0.68rem;
+
+      font-weight:
+        900;
+
+      text-transform:
+        uppercase;
+    }
+
+    .my-card-status-pill.active {
+      color:
+        #d9ffe2;
+
+      background:
+        rgba(72, 240, 107, 0.12);
+
+      border-color:
+        rgba(72, 240, 107, 0.24);
+    }
+
+    .my-card-number {
+      position:
+        relative;
+
+      z-index:
+        1;
+
+      margin:
+        20px 0 16px;
+
+      color:
+        var(--leo-white);
+
+      font-size:
+        clamp(1.1rem, 2.4vw, 1.5rem);
+
+      font-weight:
+        800;
+
+      letter-spacing:
+        0.1em;
+
+      white-space:
+        nowrap;
+    }
+
+    .my-card-holder {
+      min-width:
+        0;
+    }
+
+    .my-card-holder span {
+      display:
+        block;
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.6rem;
+
+      font-weight:
+        900;
+
+      letter-spacing:
+        0.1em;
+
+      text-transform:
+        uppercase;
+    }
+
+    .my-card-holder strong {
+      display:
+        block;
+
+      margin-top:
+        3px;
+
+      overflow:
+        hidden;
+
+      white-space:
+        nowrap;
+
+      text-overflow:
+        ellipsis;
+
+      font-size:
+        0.82rem;
+    }
+
+    .my-card-leo-mark {
+      color:
+        var(--leo-gold-2);
+
+      font-family:
+        "Playfair Display",
+        serif;
+
+      font-size:
+        1.25rem;
+
+      font-weight:
+        900;
+    }
+
+    .my-card-copy h3 {
+      margin:
+        0;
+
+      color:
+        var(--leo-gold-2);
+
+      font-size:
+        1.3rem;
+    }
+
+    .my-card-copy p {
+      margin:
+        7px 0 0;
+
+      color:
+        var(--leo-muted);
+
+      line-height:
+        1.55;
+    }
+
+    .my-card-balance-row {
+      display:
+        flex;
+
+      flex-wrap:
+        wrap;
+
+      align-items:
+        baseline;
+
+      gap:
+        10px 16px;
+
+      margin-top:
+        16px;
+    }
+
+    .my-card-balance-row strong {
+      color:
+        var(--leo-gold-2);
+
+      font-family:
+        "Playfair Display",
+        serif;
+
+      font-size:
+        clamp(2rem, 4vw, 3rem);
+
+      line-height:
+        1;
+    }
+
+    .my-card-balance-row span {
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.82rem;
+
+      font-weight:
+        800;
+    }
+
+    .my-card-meta {
+      margin-top:
+        12px;
+
+      display:
+        flex;
+
+      flex-wrap:
+        wrap;
+
+      gap:
+        8px;
+    }
+
+    .my-card-meta span {
+      min-height:
+        30px;
+
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      padding:
+        0 11px;
+
+      border-radius:
+        999px;
+
+      border:
+        1px solid rgba(231, 182, 79, 0.17);
+
+      background:
+        rgba(255, 255, 255, 0.035);
+
+      color:
+        var(--leo-muted);
+
+      font-size:
+        0.72rem;
+
+      font-weight:
+        800;
+    }
+
+    .my-card-actions {
+      min-width:
+        190px;
+
+      display:
+        grid;
+
+      gap:
+        8px;
+    }
+
+    .my-card-note {
+      margin-top:
+        10px;
+
+      color:
+        var(--leo-muted-2);
+
+      font-size:
+        0.76rem;
+
+      line-height:
+        1.45;
+    }
+
+    @media (max-width: 900px) {
+      .my-card-preview-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .my-card-actions {
+        min-width:
+          0;
+
+        grid-template-columns:
+          1fr 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .my-card-preview .panel-inner {
+        padding:
+          14px;
+      }
+
+      .my-card-mini {
+        min-height:
+          162px;
+
+        padding:
+          15px;
+      }
+
+      .my-card-number {
+        font-size:
+          1rem;
+
+        letter-spacing:
+          0.07em;
+      }
+
+      .my-card-actions {
+        grid-template-columns:
+          1fr;
+      }
     }
 
     /* =========================================================
@@ -2268,6 +2802,19 @@
 
         <a
           class="side-link"
+          href="/portal/card.html"
+        >
+          <span class="side-icon">
+            💳
+          </span>
+
+          <span>
+            My Card
+          </span>
+        </a>
+
+        <a
+          class="side-link"
           href="/portal/leaderboard.html"
         >
           <span class="side-icon">
@@ -2372,9 +2919,14 @@
           build your Card Leo Rewards allowance progress.
         </p>
 
-        <div class="mini-allowance-card">
-          Allowance Card
-        </div>
+        <a
+          class="mini-allowance-card"
+          href="/portal/card.html"
+          aria-label="Open my Card Leo digital allowance card"
+        >
+          <span>Allowance Card</span>
+          <small>Open My Card →</small>
+        </a>
 
       </div>
 
@@ -2556,6 +3108,139 @@
 
         </div>
 
+      </section>
+
+      <!-- ===================================================
+           MY DIGITAL CARD
+      ==================================================== -->
+
+      <section
+        class="panel my-card-preview"
+        id="myCardPreview"
+      >
+        <div class="panel-inner">
+
+          <div class="my-card-preview-grid">
+
+            <a
+              class="my-card-mini"
+              href="/portal/card.html"
+              aria-label="Open my Card Leo digital allowance card"
+            >
+
+              <div class="my-card-mini-top">
+
+                <div class="my-card-brand">
+                  <strong>
+                    Card Leo Rewards
+                  </strong>
+
+                  <span>
+                    Digital Allowance Card
+                  </span>
+                </div>
+
+                <span
+                  class="my-card-status-pill"
+                  id="myCardStatusPill"
+                >
+                  Preparing
+                </span>
+
+              </div>
+
+              <div
+                class="my-card-number"
+                id="myCardMaskedNumber"
+              >
+                •••• •••• •••• ••••
+              </div>
+
+              <div class="my-card-mini-bottom">
+
+                <div class="my-card-holder">
+                  <span>
+                    Cardholder
+                  </span>
+
+                  <strong id="myCardHolderName">
+                    Card Leo Member
+                  </strong>
+                </div>
+
+                <div class="my-card-leo-mark">
+                  LEO
+                </div>
+
+              </div>
+
+            </a>
+
+            <div class="my-card-copy">
+
+              <h3>
+                My Card Leo Allowance Card
+              </h3>
+
+              <p id="myCardPreviewMessage">
+                Your digital allowance card puts your approved Card Leo allowance and card activity in one place.
+              </p>
+
+              <div class="my-card-balance-row">
+                <strong id="myCardAvailableBalance">
+                  $0.00
+                </strong>
+
+                <span>
+                  Available Allowance
+                </span>
+              </div>
+
+              <div class="my-card-meta">
+                <span id="myCardPendingBalance">
+                  Pending: $0.00
+                </span>
+
+                <span id="myCardTypeMeta">
+                  Card: Preparing
+                </span>
+
+                <span id="myCardProviderMeta">
+                  Provider: Preparing
+                </span>
+              </div>
+
+              <div
+                class="my-card-note"
+                id="myCardPreviewNote"
+              >
+                Card issuing stays disabled until the approved Lithic program is connected. Your Card Leo rewards and allowance records remain available.
+              </div>
+
+            </div>
+
+            <div class="my-card-actions">
+
+              <a
+                class="btn btn-primary"
+                href="/portal/card.html"
+                id="openMyCardButton"
+              >
+                Open My Card →
+              </a>
+
+              <a
+                class="btn btn-secondary"
+                href="/portal/rewards.html"
+              >
+                View Rewards
+              </a>
+
+            </div>
+
+          </div>
+
+        </div>
       </section>
 
       <!-- ===================================================
@@ -3072,7 +3757,10 @@
           "/api/auth/logout",
 
         billingPortal:
-          "/api/billing/portal"
+          "/api/billing/portal",
+
+        memberCard:
+          "/api/cards/member-card"
       };
 
       /* =====================================================
@@ -3228,6 +3916,61 @@
         openBenefitsButton:
           document.getElementById(
             "openBenefitsButton"
+          ),
+
+        myCardPreview:
+          document.getElementById(
+            "myCardPreview"
+          ),
+
+        myCardStatusPill:
+          document.getElementById(
+            "myCardStatusPill"
+          ),
+
+        myCardMaskedNumber:
+          document.getElementById(
+            "myCardMaskedNumber"
+          ),
+
+        myCardHolderName:
+          document.getElementById(
+            "myCardHolderName"
+          ),
+
+        myCardAvailableBalance:
+          document.getElementById(
+            "myCardAvailableBalance"
+          ),
+
+        myCardPendingBalance:
+          document.getElementById(
+            "myCardPendingBalance"
+          ),
+
+        myCardTypeMeta:
+          document.getElementById(
+            "myCardTypeMeta"
+          ),
+
+        myCardProviderMeta:
+          document.getElementById(
+            "myCardProviderMeta"
+          ),
+
+        myCardPreviewMessage:
+          document.getElementById(
+            "myCardPreviewMessage"
+          ),
+
+        myCardPreviewNote:
+          document.getElementById(
+            "myCardPreviewNote"
+          ),
+
+        openMyCardButton:
+          document.getElementById(
+            "openMyCardButton"
           )
       };
 
@@ -3246,6 +3989,9 @@
           null,
 
         leaderboardPayload:
+          null,
+
+        memberCardPayload:
           null,
 
         isRedirecting:
@@ -5729,6 +6475,299 @@
       }
 
       /* =====================================================
+         MY DIGITAL CARD PREVIEW
+      ===================================================== */
+
+      function renderMemberCardPreview(
+        payload = {}
+      ) {
+        state.memberCardPayload =
+          payload;
+
+        const member =
+          payload.member ||
+          state.member ||
+          {};
+
+        const card =
+          payload.card ||
+          {};
+
+        const balance =
+          payload.balance ||
+          payload.allowance ||
+          {};
+
+        const readiness =
+          payload.readiness ||
+          {};
+
+        const lithic =
+          payload.lithic ||
+          {};
+
+        const fullName =
+          getFullName(
+            member
+          );
+
+        if (
+          els.myCardHolderName
+        ) {
+          els.myCardHolderName.textContent =
+            fullName.toUpperCase();
+        }
+
+        const lastFour =
+          normalizeText(
+            card.lastFour ||
+              card.last_four
+          );
+
+        const masked =
+          normalizeText(
+            card.maskedNumber ||
+              card.masked_number
+          ) ||
+          (lastFour
+            ? `•••• •••• •••• ${lastFour}`
+            : "•••• •••• •••• ••••");
+
+        if (
+          els.myCardMaskedNumber
+        ) {
+          els.myCardMaskedNumber.textContent =
+            masked;
+        }
+
+        const rawStatus =
+          normalizeText(
+            card.cardStatus ||
+              card.card_status ||
+              readiness.stage ||
+              "preparing"
+          );
+
+        const normalizedStatus =
+          rawStatus.toLowerCase();
+
+        const cardIsActive =
+          [
+            "open",
+            "active",
+            "card_created"
+          ].includes(
+            normalizedStatus
+          ) ||
+          readiness.cardCreated ===
+            true;
+
+        if (
+          els.myCardStatusPill
+        ) {
+          els.myCardStatusPill.className =
+            "my-card-status-pill";
+
+          if (
+            cardIsActive
+          ) {
+            els.myCardStatusPill.classList.add(
+              "active"
+            );
+
+            els.myCardStatusPill.textContent =
+              "Active";
+          } else {
+            els.myCardStatusPill.textContent =
+              readiness.stage ===
+                "ready_for_card"
+                ? "Ready"
+                : titleCase(
+                    rawStatus ||
+                      "Preparing"
+                  );
+          }
+        }
+
+        const currency =
+          normalizeText(
+            balance.currency,
+            "USD"
+          );
+
+        const available =
+          Number(
+            balance.available ??
+              payload.allowance
+                ?.available ??
+              0
+          );
+
+        const pending =
+          Number(
+            balance.pending ??
+              payload.allowance
+                ?.pending ??
+              0
+          );
+
+        if (
+          els.myCardAvailableBalance
+        ) {
+          els.myCardAvailableBalance.textContent =
+            new Intl.NumberFormat(
+              "en-US",
+              {
+                style:
+                  "currency",
+                currency:
+                  currency ||
+                  "USD"
+              }
+            ).format(
+              Number.isFinite(
+                available
+              )
+                ? available
+                : 0
+            );
+        }
+
+        if (
+          els.myCardPendingBalance
+        ) {
+          els.myCardPendingBalance.textContent =
+            `Pending: ${money(
+              Number.isFinite(
+                pending
+              )
+                ? pending
+                : 0
+            )}`;
+        }
+
+        const cardType =
+          normalizeText(
+            card.cardType ||
+              card.card_type
+          );
+
+        if (
+          els.myCardTypeMeta
+        ) {
+          els.myCardTypeMeta.textContent =
+            cardType
+              ? `Card: ${titleCase(
+                  cardType
+                )}`
+              : readiness.cardCreated
+                ? "Card: Virtual"
+                : "Card: Preparing";
+        }
+
+        if (
+          els.myCardProviderMeta
+        ) {
+          els.myCardProviderMeta.textContent =
+            lithic.enabled
+              ? "Provider: Lithic"
+              : "Provider: Preparing";
+        }
+
+        if (
+          els.myCardPreviewMessage
+        ) {
+          els.myCardPreviewMessage.textContent =
+            readiness.message ||
+            (readiness.cardCreated
+              ? "Your Card Leo digital allowance card is ready. Open My Card to view your live allowance and recent activity."
+              : "Your Card Leo digital allowance card will connect approved allowance rewards to one private member card dashboard.");
+        }
+
+        if (
+          els.myCardPreviewNote
+        ) {
+          if (
+            readiness.cardCreated
+          ) {
+            els.myCardPreviewNote.textContent =
+              "Open My Card for your masked card details, available allowance, pending balance, and recent activity.";
+          } else if (
+            !lithic.enabled
+          ) {
+            els.myCardPreviewNote.textContent =
+              "Card issuing is not live yet. Your member rewards and allowance records continue to work while the approved card program is being connected.";
+          } else {
+            els.myCardPreviewNote.textContent =
+              "Open My Card to review your current setup stage and continue when your account becomes eligible.";
+          }
+        }
+      }
+
+      async function loadMemberCardPreview() {
+        try {
+          const payload =
+            await fetchJson(
+              API.memberCard
+            );
+
+          renderMemberCardPreview(
+            payload
+          );
+        } catch (error) {
+          console.error(
+            "[portal/index] Member card preview error:",
+            error
+          );
+
+          if (
+            error?.status ===
+              401 ||
+            error?.status ===
+              403
+          ) {
+            return;
+          }
+
+          renderMemberCardPreview({
+            member:
+              state.member ||
+              {},
+
+            balance: {
+              available:
+                0,
+
+              pending:
+                0,
+
+              currency:
+                "USD"
+            },
+
+            readiness: {
+              stage:
+                "preparing",
+
+              cardCreated:
+                false,
+
+              message:
+                "Your Card Leo card dashboard is available, but live card data could not load right now."
+            },
+
+            lithic: {
+              enabled:
+                false,
+
+              configured:
+                false
+            }
+          });
+        }
+      }
+
+      /* =====================================================
          BILLING
       ===================================================== */
 
@@ -5929,7 +6968,8 @@
 
             await Promise.allSettled([
               loadOverview(),
-              loadReferralDashboard()
+              loadReferralDashboard(),
+              loadMemberCardPreview()
             ]);
           }
         }
@@ -6038,7 +7078,8 @@
 
             await Promise.allSettled([
               loadOverview(),
-              loadReferralDashboard()
+              loadReferralDashboard(),
+              loadMemberCardPreview()
             ]);
           }
         } catch (

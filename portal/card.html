@@ -3463,6 +3463,9 @@
          CONFIG
       ===================================================== */
 
+      const AUTH_ME_ENDPOINT =
+        "/api/auth/me";
+
       const MEMBER_CARD_ENDPOINT =
         "/api/cards/member-card";
 
@@ -3870,6 +3873,11 @@
         url,
         options = {}
       ) {
+        const {
+          redirectOn401 = false,
+          ...fetchOptions
+        } = options;
+
         const response =
           await fetch(
             url,
@@ -3877,12 +3885,15 @@
               credentials:
                 "include",
 
+              cache:
+                "no-store",
+
               headers: {
                 Accept:
                   "application/json",
 
                 ...(
-                  options.body
+                  fetchOptions.body
                     ? {
                         "Content-Type":
                           "application/json",
@@ -3891,12 +3902,12 @@
                 ),
 
                 ...(
-                  options.headers ||
+                  fetchOptions.headers ||
                   {}
                 ),
               },
 
-              ...options,
+              ...fetchOptions,
             }
           );
 
@@ -3920,13 +3931,17 @@
 
         if (
           response.status ===
-          401
+          401 &&
+          redirectOn401
         ) {
-          window.location.href =
-            "/login.html";
+          const next =
+            encodeURIComponent(
+              window.location.pathname +
+              window.location.search
+            );
 
-          throw new Error(
-            "Session expired."
+          window.location.replace(
+            `/login.html?next=${next}`
           );
         }
 
@@ -3949,10 +3964,413 @@
           error.status =
             response.status;
 
+          error.url =
+            url;
+
           throw error;
         }
 
         return result;
+      }
+
+      function getAuthRedirect(
+        authResult
+      ) {
+        const requiresPayment =
+          Boolean(
+            authResult
+              ?.requiresPayment ||
+            authResult
+              ?.requires_payment ||
+            authResult
+              ?.paymentRequired ||
+            authResult
+              ?.payment_required
+          );
+
+        if (requiresPayment) {
+          return (
+            normalizeText(
+              authResult
+                ?.redirectTo
+            ) ||
+            "/signup.html?status=payment_required"
+          );
+        }
+
+        const next =
+          encodeURIComponent(
+            window.location.pathname +
+            window.location.search
+          );
+
+        return `/login.html?next=${next}`;
+      }
+
+      async function verifyMemberSession() {
+        let authResult;
+
+        try {
+          authResult =
+            await fetchJson(
+              AUTH_ME_ENDPOINT,
+              {
+                redirectOn401:
+                  false,
+              }
+            );
+        } catch (error) {
+          /*
+           * A network/API problem is not proof that the member logged out.
+           * Keep the member on the card page and show the error instead of
+           * bouncing them between the dashboard and login page.
+           */
+          console.error(
+            "Card Leo auth verification error:",
+            error
+          );
+
+          throw new Error(
+            "We could not verify your member session right now. Please refresh the page in a moment."
+          );
+        }
+
+        if (
+          authResult
+            ?.authenticated !==
+          true
+        ) {
+          const destination =
+            getAuthRedirect(
+              authResult
+            );
+
+          window.location.replace(
+            destination
+          );
+
+          return null;
+        }
+
+        return authResult;
+      }
+
+      function buildAuthFallbackResult(
+        authResult
+      ) {
+        const member =
+          authResult?.member ||
+          authResult?.profile ||
+          {};
+
+        const authCard =
+          authResult?.card ||
+          member?.card ||
+          {};
+
+        const authAllowance =
+          authResult?.allowance ||
+          member?.allowance ||
+          {};
+
+        const availableCents =
+          Number(
+            authAllowance
+              ?.availableBalanceCents ??
+            authAllowance
+              ?.available_balance_cents ??
+            authCard
+              ?.allowanceBalanceCents ??
+            authCard
+              ?.allowance_balance_cents ??
+            0
+          );
+
+        const pendingCents =
+          Number(
+            authAllowance
+              ?.pendingEarningsCents ??
+            authAllowance
+              ?.pending_earnings_cents ??
+            0
+          );
+
+        const cardExists =
+          Boolean(
+            authCard?.exists ||
+            authCard?.id
+          );
+
+        const cardReady =
+          Boolean(
+            authCard?.ready ||
+            authResult
+              ?.readiness
+              ?.cardReady ||
+            authResult
+              ?.readiness
+              ?.card_ready
+          );
+
+        const cardStatus =
+          normalizeText(
+            authCard?.cardStatus ||
+            authCard?.card_status ||
+            authCard?.status
+          ) ||
+          (
+            cardExists
+              ? "pending"
+              : "not_created"
+          );
+
+        const cardType =
+          normalizeText(
+            authCard?.cardType ||
+            authCard?.card_type
+          ) ||
+          "virtual";
+
+        const lastFour =
+          normalizeText(
+            authCard?.lastFour ||
+            authCard?.last_four
+          );
+
+        const totalLoadedCents =
+          Number(
+            authAllowance
+              ?.lifetimeLoadedCents ??
+            authAllowance
+              ?.lifetime_loaded_cents ??
+            authCard
+              ?.totalAllowanceLoadedCents ??
+            authCard
+              ?.total_allowance_loaded_cents ??
+            0
+          );
+
+        return {
+          success:
+            true,
+
+          ok:
+            true,
+
+          authenticated:
+            true,
+
+          member,
+
+          card: {
+            ...authCard,
+
+            exists:
+              cardExists,
+
+            ready:
+              cardReady,
+
+            cardStatus,
+
+            cardType,
+
+            lastFour,
+
+            maskedNumber:
+              lastFour
+                ? `•••• •••• •••• ${lastFour}`
+                : "•••• •••• •••• ••••",
+
+            provider:
+              normalizeText(
+                authCard?.provider
+              ) ||
+              "Card Leo",
+          },
+
+          balance: {
+            available:
+              Number.isFinite(
+                availableCents
+              )
+                ? availableCents / 100
+                : 0,
+
+            pending:
+              Number.isFinite(
+                pendingCents
+              )
+                ? pendingCents / 100
+                : 0,
+
+            currency:
+              "USD",
+
+            source:
+              "card_leo_member",
+
+            live:
+              cardReady,
+          },
+
+          readiness: {
+            stage:
+              cardReady
+                ? "card_ready"
+                : cardExists
+                  ? "card_pending"
+                  : "card_not_created",
+
+            accountHolderCreated:
+              cardExists,
+
+            accountCreated:
+              cardExists,
+
+            cardCreated:
+              cardExists,
+
+            message:
+              cardReady
+                ? "Your Card Leo allowance card is ready."
+                : cardExists
+                  ? "Your Card Leo allowance card is still being prepared."
+                  : "Your member account is active. Your Card Leo allowance card has not been created yet.",
+          },
+
+          lithic: {
+            enabled:
+              false,
+
+            configured:
+              false,
+          },
+
+          allowance: {
+            ...authAllowance,
+
+            internalLedger: {
+              enabled:
+                Boolean(
+                  authAllowance?.exists
+                ),
+
+              totalCredited:
+                Number.isFinite(
+                  totalLoadedCents
+                )
+                  ? totalLoadedCents / 100
+                  : 0,
+
+              totalDebited:
+                Number(
+                  authAllowance
+                    ?.lifetimeSpentCents ??
+                  authAllowance
+                    ?.lifetime_spent_cents ??
+                  0
+                ) / 100,
+
+              net:
+                Number.isFinite(
+                  availableCents
+                )
+                  ? availableCents / 100
+                  : 0,
+            },
+          },
+
+          transactions:
+            [],
+
+          allowanceTransactions:
+            [],
+        };
+      }
+
+      function mergeMemberCardResult(
+        authResult,
+        cardResult
+      ) {
+        const fallback =
+          buildAuthFallbackResult(
+            authResult
+          );
+
+        if (
+          !cardResult ||
+          typeof cardResult !==
+            "object"
+        ) {
+          return fallback;
+        }
+
+        return {
+          ...fallback,
+          ...cardResult,
+
+          member:
+            cardResult?.member ||
+            fallback.member,
+
+          card: {
+            ...fallback.card,
+            ...(
+              cardResult?.card ||
+              {}
+            ),
+          },
+
+          balance: {
+            ...fallback.balance,
+            ...(
+              cardResult?.balance ||
+              {}
+            ),
+          },
+
+          readiness: {
+            ...fallback.readiness,
+            ...(
+              cardResult?.readiness ||
+              {}
+            ),
+          },
+
+          lithic: {
+            ...fallback.lithic,
+            ...(
+              cardResult?.lithic ||
+              {}
+            ),
+          },
+
+          allowance: {
+            ...fallback.allowance,
+            ...(
+              cardResult?.allowance ||
+              {}
+            ),
+          },
+
+          transactions:
+            Array.isArray(
+              cardResult?.transactions
+            )
+              ? cardResult.transactions
+              : fallback.transactions,
+
+          allowanceTransactions:
+            Array.isArray(
+              cardResult
+                ?.allowanceTransactions
+            )
+              ? cardResult
+                  .allowanceTransactions
+              : fallback
+                  .allowanceTransactions,
+        };
       }
 
       /* =====================================================
@@ -4962,20 +5380,87 @@
           true
         );
 
+        let authResult =
+          null;
+
         try {
-          const result =
-            await fetchJson(
-              MEMBER_CARD_ENDPOINT
+          /*
+           * AUTH IS THE SOURCE OF TRUTH FOR NAVIGATION.
+           *
+           * Do not let the card API decide that an otherwise authenticated
+           * member should be sent back to login or the dashboard.
+           */
+          authResult =
+            await verifyMemberSession();
+
+          if (!authResult) {
+            return;
+          }
+
+          /*
+           * Immediately render a safe member/card fallback from /api/auth/me.
+           * This keeps the My Card page usable even when Lithic/card tables
+           * are not ready yet.
+           */
+          renderPage(
+            buildAuthFallbackResult(
+              authResult
+            )
+          );
+
+          try {
+            const cardResult =
+              await fetchJson(
+                MEMBER_CARD_ENDPOINT,
+                {
+                  redirectOn401:
+                    false,
+                }
+              );
+
+            renderPage(
+              mergeMemberCardResult(
+                authResult,
+                cardResult
+              )
+            );
+          } catch (
+            cardError
+          ) {
+            console.error(
+              "Card Leo member-card API error:",
+              cardError
             );
 
-          renderPage(
-            result
-          );
+            if (
+              cardError?.status ===
+                401 ||
+              cardError?.status ===
+                403
+            ) {
+              /*
+               * /api/auth/me just confirmed the member is signed in.
+               * Therefore a 401/403 from the card-specific endpoint is a
+               * card-endpoint compatibility/configuration problem, not a
+               * reason to navigate the browser away from this page.
+               */
+              showNotice(
+                "Your Card Leo member session is active. Your card service is still syncing with the current member account, so we are showing your saved allowance-card status instead of signing you out.",
+                "info"
+              );
+            } else {
+              showNotice(
+                cardError?.message ||
+                "Your member account is active, but live card details could not be refreshed right now.",
+                "info"
+              );
+            }
+          }
         } catch (
           error
         ) {
           console.error(
-            "Card Leo member-card error:",
+            "Card Leo card-page error:",
             error
           );
 

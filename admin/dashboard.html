@@ -1,0 +1,5421 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <title>Admin Dashboard | Card Leo Rewards</title>
+
+    <meta
+      name="description"
+      content="Card Leo Rewards administration dashboard for members, payments, referrals, rewards, allowance cards, Growth Pool, Access Perks, support, and platform operations."
+    />
+
+    <meta name="theme-color" content="#030303" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link rel="stylesheet" href="/style.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --admin-black: #030303;
+        --admin-bg: #070707;
+        --admin-panel: rgba(14, 14, 14, 0.94);
+        --admin-panel-2: rgba(20, 20, 20, 0.92);
+
+        --admin-gold: #e7b64f;
+        --admin-gold-2: #f7d98b;
+        --admin-gold-3: #a66f10;
+
+        --admin-white: #f8f3e7;
+        --admin-muted: rgba(248, 243, 231, 0.68);
+        --admin-muted-2: rgba(248, 243, 231, 0.46);
+
+        --admin-line: rgba(231, 182, 79, 0.18);
+        --admin-line-soft: rgba(255, 255, 255, 0.08);
+
+        --admin-green: #48f06b;
+        --admin-red: #ff7676;
+        --admin-blue: #7ec8ff;
+        --admin-yellow: #ffd166;
+        --admin-purple: #c7a8ff;
+
+        --admin-shadow: 0 30px 90px rgba(0, 0, 0, 0.62);
+
+        --sidebar-width: 284px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+
+        min-height: 100vh;
+
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+
+        color: var(--admin-white);
+
+        background:
+          radial-gradient(
+            circle at 83% 7%,
+            rgba(231, 182, 79, 0.13),
+            transparent 26%
+          ),
+          radial-gradient(
+            circle at 40% 100%,
+            rgba(126, 200, 255, 0.07),
+            transparent 28%
+          ),
+          linear-gradient(
+            180deg,
+            #030303 0%,
+            #080808 48%,
+            #010101 100%
+          );
+      }
+
+      body.menu-open {
+        overflow: hidden;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.62;
+      }
+
+      /* ================================================================
+         APP SHELL
+      ================================================================ */
+
+      .admin-shell {
+        min-height: 100vh;
+
+        display: grid;
+
+        grid-template-columns:
+          var(--sidebar-width)
+          minmax(0, 1fr);
+
+        background:
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.026) 1px,
+            transparent 1px
+          ),
+          radial-gradient(
+            circle at 70% 30%,
+            rgba(231, 182, 79, 0.055),
+            transparent 30%
+          );
+
+        background-size:
+          94px 94px,
+          auto;
+      }
+
+      /* ================================================================
+         SIDEBAR
+      ================================================================ */
+
+      .admin-sidebar {
+        position: sticky;
+        top: 0;
+
+        height: 100vh;
+
+        overflow-y: auto;
+
+        padding: 26px 18px;
+
+        border-right: 1px solid var(--admin-line);
+
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(231, 182, 79, 0.13),
+            transparent 30%
+          ),
+          rgba(0, 0, 0, 0.82);
+
+        backdrop-filter: blur(20px);
+
+        z-index: 50;
+      }
+
+      .admin-brand {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+
+        padding: 4px 7px 24px;
+      }
+
+      .admin-brand-mark {
+        width: 52px;
+        height: 52px;
+
+        flex: 0 0 auto;
+
+        display: grid;
+        place-items: center;
+
+        border-radius: 17px;
+
+        border: 1px solid rgba(231, 182, 79, 0.34);
+
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(247, 217, 139, 0.25),
+            transparent 48%
+          ),
+          linear-gradient(
+            145deg,
+            #101010,
+            #000
+          );
+
+        color: var(--admin-gold-2);
+
+        font-weight: 900;
+        letter-spacing: 0.08em;
+
+        box-shadow:
+          0 0 26px rgba(231, 182, 79, 0.16);
+      }
+
+      .admin-brand-copy {
+        min-width: 0;
+      }
+
+      .admin-brand-copy strong {
+        display: block;
+
+        color: var(--admin-white);
+
+        font-family:
+          "Playfair Display",
+          Georgia,
+          serif;
+
+        font-size: 1.08rem;
+
+        line-height: 1.05;
+      }
+
+      .admin-brand-copy span {
+        display: block;
+
+        margin-top: 5px;
+
+        color: var(--admin-gold);
+
+        font-size: 0.68rem;
+
+        font-weight: 900;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.14em;
+      }
+
+      .nav-heading {
+        margin:
+          16px
+          10px
+          8px;
+
+        color: var(--admin-muted-2);
+
+        font-size: 0.68rem;
+
+        font-weight: 900;
+
+        letter-spacing: 0.15em;
+
+        text-transform: uppercase;
+      }
+
+      .admin-nav {
+        display: grid;
+        gap: 5px;
+      }
+
+      .admin-nav-link,
+      .admin-logout {
+        width: 100%;
+
+        min-height: 48px;
+
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        padding:
+          0
+          14px;
+
+        border-radius: 13px;
+
+        border: 1px solid transparent;
+
+        background: transparent;
+
+        color:
+          rgba(
+            248,
+            243,
+            231,
+            0.78
+          );
+
+        font-weight: 750;
+
+        text-align: left;
+
+        transition:
+          background 0.2s ease,
+          color 0.2s ease,
+          border-color 0.2s ease;
+      }
+
+      .admin-nav-link:hover,
+      .admin-logout:hover {
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.045
+          );
+
+        border-color:
+          rgba(
+            231,
+            182,
+            79,
+            0.14
+          );
+
+        color:
+          var(
+            --admin-gold-2
+          );
+      }
+
+      .admin-nav-link.is-active {
+        color: #070707;
+
+        background:
+          linear-gradient(
+            135deg,
+            #f7d98b 0%,
+            #d89a22 55%,
+            #99640b 100%
+          );
+
+        box-shadow:
+          0 15px 38px
+          rgba(
+            216,
+            154,
+            34,
+            0.24
+          );
+      }
+
+      .nav-icon {
+        width: 22px;
+
+        flex: 0 0 auto;
+
+        text-align: center;
+      }
+
+      .sidebar-status {
+        margin-top: 24px;
+
+        padding: 16px;
+
+        border-radius: 18px;
+
+        border:
+          1px
+          solid
+          rgba(
+            231,
+            182,
+            79,
+            0.17
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.035
+          );
+      }
+
+      .sidebar-status span {
+        display: block;
+
+        color:
+          var(
+            --admin-muted-2
+          );
+
+        font-size: 0.68rem;
+
+        font-weight: 900;
+
+        letter-spacing: 0.12em;
+
+        text-transform: uppercase;
+      }
+
+      .sidebar-status strong {
+        display: block;
+
+        margin-top: 7px;
+
+        color:
+          var(
+            --admin-gold-2
+          );
+
+        font-size: 0.98rem;
+      }
+
+      .sidebar-status p {
+        margin:
+          8px
+          0
+          0;
+
+        color:
+          var(
+            --admin-muted
+          );
+
+        font-size: 0.78rem;
+
+        line-height: 1.5;
+      }
+
+      /* ================================================================
+         MOBILE HEADER
+      ================================================================ */
+
+      .mobile-topbar {
+        display: none;
+      }
+
+      .mobile-nav {
+        display: none;
+      }
+
+      .mobile-backdrop {
+        display: none;
+      }
+
+      /* ================================================================
+         MAIN
+      ================================================================ */
+
+      .admin-main {
+        min-width: 0;
+
+        padding:
+          26px
+          28px
+          48px;
+      }
+
+      .admin-container {
+        width: min(
+          100%,
+          1500px
+        );
+
+        margin: 0 auto;
+      }
+
+      /* ================================================================
+         TOP HEADER
+      ================================================================ */
+
+      .main-header {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 16px;
+
+        margin-bottom: 22px;
+      }
+
+      .main-header-copy {
+        min-width: 0;
+      }
+
+      .main-header-copy span {
+        display: block;
+
+        color:
+          var(
+            --admin-gold
+          );
+
+        font-size: 0.72rem;
+
+        font-weight: 900;
+
+        letter-spacing: 0.14em;
+
+        text-transform: uppercase;
+      }
+
+      .main-header-copy h1 {
+        margin:
+          6px
+          0
+          0;
+
+        font-family:
+          "Playfair Display",
+          Georgia,
+          serif;
+
+        font-size:
+          clamp(
+            1.8rem,
+            4vw,
+            2.75rem
+          );
+
+        line-height: 1;
+
+        letter-spacing: -0.045em;
+      }
+
+      .main-header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      /* ================================================================
+         BUTTONS
+      ================================================================ */
+
+      .btn {
+        min-height: 44px;
+
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 8px;
+
+        padding:
+          0
+          16px;
+
+        border-radius: 999px;
+
+        border:
+          1px
+          solid
+          rgba(
+            231,
+            182,
+            79,
+            0.19
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.04
+          );
+
+        color:
+          var(
+            --admin-white
+          );
+
+        font-weight: 800;
+
+        transition: 0.2s ease;
+      }
+
+      .btn:hover {
+        border-color:
+          rgba(
+            247,
+            217,
+            139,
+            0.4
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.065
+          );
+      }
+
+      .btn-primary {
+        color: #080808;
+
+        border-color: transparent;
+
+        background:
+          linear-gradient(
+            135deg,
+            #f7d98b 0%,
+            #d89a22 52%,
+            #8b5b0b 100%
+          );
+
+        box-shadow:
+          0 16px 40px
+          rgba(
+            216,
+            154,
+            34,
+            0.22
+          );
+      }
+
+      /* ================================================================
+         NOTICE
+      ================================================================ */
+
+      .status-banner {
+        display: none;
+
+        margin-bottom: 18px;
+
+        padding:
+          14px
+          16px;
+
+        border-radius: 16px;
+
+        border:
+          1px
+          solid
+          var(
+            --admin-line
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.035
+          );
+
+        color:
+          var(
+            --admin-muted
+          );
+
+        line-height: 1.55;
+      }
+
+      .status-banner.show {
+        display: block;
+      }
+
+      .status-banner.success {
+        color: #c9ffdf;
+
+        border-color:
+          rgba(
+            72,
+            240,
+            107,
+            0.22
+          );
+
+        background:
+          rgba(
+            72,
+            240,
+            107,
+            0.08
+          );
+      }
+
+      .status-banner.error {
+        color: #ffd2d8;
+
+        border-color:
+          rgba(
+            255,
+            118,
+            118,
+            0.22
+          );
+
+        background:
+          rgba(
+            255,
+            118,
+            118,
+            0.08
+          );
+      }
+
+      /* ================================================================
+         PANEL
+      ================================================================ */
+
+      .panel {
+        border-radius: 24px;
+
+        border:
+          1px
+          solid
+          var(
+            --admin-line
+          );
+
+        background:
+          radial-gradient(
+            circle at top right,
+            rgba(
+              231,
+              182,
+              79,
+              0.09
+            ),
+            transparent 34%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(
+              18,
+              18,
+              18,
+              0.95
+            ),
+            rgba(
+              4,
+              4,
+              4,
+              0.96
+            )
+          );
+
+        box-shadow:
+          var(
+            --admin-shadow
+          );
+      }
+
+      .panel-inner {
+        padding: 22px;
+      }
+
+      /* ================================================================
+         HERO
+      ================================================================ */
+
+      .hero {
+        margin-bottom: 20px;
+      }
+
+      .hero-grid {
+        display: grid;
+
+        grid-template-columns:
+          minmax(0, 1.45fr)
+          minmax(300px, 0.55fr);
+
+        gap: 20px;
+
+        align-items: stretch;
+      }
+
+      .hero-main {
+        min-height: 300px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        justify-content: center;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 9px;
+
+        width: fit-content;
+
+        margin-bottom: 15px;
+
+        color:
+          var(
+            --admin-gold
+          );
+
+        font-size: 0.72rem;
+
+        font-weight: 900;
+
+        letter-spacing: 0.16em;
+
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        content: "";
+
+        width: 30px;
+
+        height: 1px;
+
+        background:
+          linear-gradient(
+            90deg,
+            var(
+              --admin-gold
+            ),
+            transparent
+          );
+      }
+
+      .hero-main h2 {
+        margin: 0;
+
+        max-width: 820px;
+
+        font-family:
+          "Playfair Display",
+          Georgia,
+          serif;
+
+        font-size:
+          clamp(
+            2.3rem,
+            5vw,
+            4.15rem
+          );
+
+        line-height: 0.97;
+
+        letter-spacing: -0.055em;
+      }
+
+      .hero-main h2 span {
+        color:
+          var(
+            --admin-gold
+          );
+      }
+
+      .hero-main p {
+        max-width: 820px;
+
+        margin:
+          16px
+          0
+          0;
+
+        color:
+          var(
+            --admin-muted
+          );
+
+        line-height: 1.7;
+      }
+
+      .hero-actions {
+        display: flex;
+
+        flex-wrap: wrap;
+
+        gap: 10px;
+
+        margin-top: 24px;
+      }
+
+      .command-status {
+        display: grid;
+
+        grid-template-columns:
+          1fr;
+
+        gap: 12px;
+      }
+
+      .command-status-card {
+        padding: 17px;
+
+        border-radius: 17px;
+
+        border:
+          1px
+          solid
+          var(
+            --admin-line-soft
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.035
+          );
+      }
+
+      .command-status-card small {
+        display: block;
+
+        color:
+          var(
+            --admin-muted-2
+          );
+
+        font-size: 0.67rem;
+
+        font-weight: 900;
+
+        letter-spacing: 0.12em;
+
+        text-transform: uppercase;
+      }
+
+      .command-status-card strong {
+        display: block;
+
+        margin-top: 7px;
+
+        color:
+          var(
+            --admin-white
+          );
+      }
+
+      /* ================================================================
+         SECTION HEADING
+      ================================================================ */
+
+      .section-heading {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: flex-end;
+
+        gap: 15px;
+
+        margin:
+          26px
+          0
+          14px;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+
+        font-size: 1.18rem;
+
+        letter-spacing: -0.025em;
+      }
+
+      .section-heading p {
+        margin:
+          6px
+          0
+          0;
+
+        color:
+          var(
+            --admin-muted
+          );
+
+        font-size: 0.88rem;
+      }
+
+      /* ================================================================
+         KPI GRID
+      ================================================================ */
+
+      .kpi-grid {
+        display: grid;
+
+        grid-template-columns:
+          repeat(
+            4,
+            minmax(
+              0,
+              1fr
+            )
+          );
+
+        gap: 14px;
+      }
+
+      .kpi-card {
+        min-height: 166px;
+
+        padding: 19px;
+
+        border-radius: 20px;
+
+        border:
+          1px
+          solid
+          var(
+            --admin-line
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.035
+          );
+
+        position: relative;
+
+        overflow: hidden;
+      }
+
+      .kpi-card::after {
+        content: "";
+
+        position: absolute;
+
+        width: 100px;
+
+        height: 100px;
+
+        right: -40px;
+
+        top: -40px;
+
+        border-radius: 999px;
+
+        background:
+          rgba(
+            231,
+            182,
+            79,
+            0.08
+          );
+      }
+
+      .kpi-top {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 10px;
+      }
+
+      .kpi-label {
+        color:
+          var(
+            --admin-muted
+          );
+
+        font-size: 0.83rem;
+
+        font-weight: 750;
+      }
+
+      .kpi-value {
+        margin-top: 20px;
+
+        font-size:
+          clamp(
+            1.8rem,
+            4vw,
+            2.6rem
+          );
+
+        line-height: 1;
+
+        font-weight: 900;
+
+        letter-spacing: -0.045em;
+      }
+
+      .kpi-subtext {
+        margin-top: 10px;
+
+        color:
+          var(
+            --admin-muted-2
+          );
+
+        font-size: 0.78rem;
+
+        line-height: 1.5;
+      }
+
+      .pill {
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        min-height: 29px;
+
+        padding:
+          0
+          10px;
+
+        border-radius: 999px;
+
+        font-size: 0.68rem;
+
+        font-weight: 900;
+
+        letter-spacing: 0.07em;
+
+        text-transform: uppercase;
+      }
+
+      .pill.gold {
+        color:
+          var(
+            --admin-gold-2
+          );
+
+        background:
+          rgba(
+            231,
+            182,
+            79,
+            0.12
+          );
+      }
+
+      .pill.green {
+        color: #baffd1;
+
+        background:
+          rgba(
+            72,
+            240,
+            107,
+            0.1
+          );
+      }
+
+      .pill.red {
+        color: #ffd0d7;
+
+        background:
+          rgba(
+            255,
+            118,
+            118,
+            0.1
+          );
+      }
+
+      .pill.blue {
+        color: #c9e9ff;
+
+        background:
+          rgba(
+            126,
+            200,
+            255,
+            0.1
+          );
+      }
+
+      .pill.yellow {
+        color: #ffeaa9;
+
+        background:
+          rgba(
+            255,
+            209,
+            102,
+            0.1
+          );
+      }
+
+      .pill.purple {
+        color: #eadfff;
+
+        background:
+          rgba(
+            199,
+            168,
+            255,
+            0.1
+          );
+      }
+
+      /* ================================================================
+         TWO COLUMN SECTIONS
+      ================================================================ */
+
+      .dashboard-grid {
+        display: grid;
+
+        grid-template-columns:
+          minmax(0, 1.2fr)
+          minmax(320px, 0.8fr);
+
+        gap: 16px;
+      }
+
+      .card-header {
+        display: flex;
+
+        align-items: flex-start;
+
+        justify-content: space-between;
+
+        gap: 14px;
+
+        margin-bottom: 16px;
+      }
+
+      .card-header h3 {
+        margin: 0;
+
+        font-size: 1.04rem;
+      }
+
+      .card-header p {
+        margin:
+          6px
+          0
+          0;
+
+        color:
+          var(
+            --admin-muted
+          );
+
+        font-size: 0.84rem;
+
+        line-height: 1.55;
+      }
+
+      /* ================================================================
+         LISTS
+      ================================================================ */
+
+      .data-list {
+        display: grid;
+
+        gap: 10px;
+      }
+
+      .data-row {
+        display: grid;
+
+        grid-template-columns:
+          minmax(0, 1fr)
+          auto;
+
+        gap: 14px;
+
+        padding: 14px;
+
+        border-radius: 15px;
+
+        border:
+          1px
+          solid
+          var(
+            --admin-line-soft
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.026
+          );
+      }
+
+      .data-row-main {
+        min-width: 0;
+      }
+
+      .data-row-title {
+        margin: 0;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+
+        color:
+          var(
+            --admin-white
+          );
+
+        font-size: 0.89rem;
+
+        font-weight: 800;
+      }
+
+      .data-row-meta {
+        margin:
+          6px
+          0
+          0;
+
+        color:
+          var(
+            --admin-muted
+          );
+
+        font-size: 0.75rem;
+
+        line-height: 1.55;
+
+        word-break: break-word;
+      }
+
+      .empty-state {
+        padding:
+          28px
+          18px;
+
+        border-radius: 15px;
+
+        border:
+          1px
+          dashed
+          rgba(
+            255,
+            255,
+            255,
+            0.13
+          );
+
+        color:
+          var(
+            --admin-muted
+          );
+
+        text-align: center;
+
+        line-height: 1.6;
+      }
+
+      /* ================================================================
+         SYSTEM HEALTH
+      ================================================================ */
+
+      .health-list {
+        display: grid;
+
+        gap: 10px;
+      }
+
+      .health-row {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 12px;
+
+        padding: 13px;
+
+        border-radius: 14px;
+
+        border:
+          1px
+          solid
+          var(
+            --admin-line-soft
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.027
+          );
+      }
+
+      .health-row span {
+        color:
+          var(
+            --admin-muted
+          );
+
+        font-size: 0.83rem;
+      }
+
+      .health-row strong {
+        text-align: right;
+
+        font-size: 0.8rem;
+      }
+
+      .health-good {
+        color:
+          var(
+            --admin-green
+          );
+      }
+
+      .health-warning {
+        color:
+          var(
+            --admin-yellow
+          );
+      }
+
+      .health-error {
+        color:
+          var(
+            --admin-red
+          );
+      }
+
+      /* ================================================================
+         QUICK ACTIONS
+      ================================================================ */
+
+      .quick-grid {
+        display: grid;
+
+        grid-template-columns:
+          repeat(
+            4,
+            minmax(
+              0,
+              1fr
+            )
+          );
+
+        gap: 13px;
+      }
+
+      .quick-card {
+        min-height: 190px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        justify-content: space-between;
+
+        gap: 20px;
+
+        padding: 18px;
+
+        border-radius: 19px;
+
+        border:
+          1px
+          solid
+          var(
+            --admin-line
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.033
+          );
+      }
+
+      .quick-icon {
+        width: 40px;
+
+        height: 40px;
+
+        display: grid;
+
+        place-items: center;
+
+        border-radius: 13px;
+
+        background:
+          rgba(
+            231,
+            182,
+            79,
+            0.1
+          );
+
+        color:
+          var(
+            --admin-gold-2
+          );
+
+        font-weight: 900;
+      }
+
+      .quick-card h3 {
+        margin:
+          13px
+          0
+          0;
+
+        font-size: 0.95rem;
+      }
+
+      .quick-card p {
+        margin:
+          7px
+          0
+          0;
+
+        color:
+          var(
+            --admin-muted
+          );
+
+        font-size: 0.8rem;
+
+        line-height: 1.6;
+      }
+
+      /* ================================================================
+         LOADING
+      ================================================================ */
+
+      .is-loading {
+        position: relative;
+
+        overflow: hidden;
+      }
+
+      .is-loading::after {
+        content: "";
+
+        position: absolute;
+
+        inset: 0;
+
+        transform:
+          translateX(
+            -100%
+          );
+
+        background:
+          linear-gradient(
+            90deg,
+            transparent,
+            rgba(
+              255,
+              255,
+              255,
+              0.035
+            ),
+            transparent
+          );
+
+        animation:
+          adminShimmer
+          1.2s
+          infinite;
+      }
+
+      @keyframes adminShimmer {
+        to {
+          transform:
+            translateX(
+              100%
+            );
+        }
+      }
+
+      /* ================================================================
+         FOOTER
+      ================================================================ */
+
+      .admin-footer {
+        padding:
+          32px
+          0
+          8px;
+
+        color:
+          var(
+            --admin-muted-2
+          );
+
+        text-align: center;
+
+        font-size: 0.75rem;
+      }
+
+      /* ================================================================
+         RESPONSIVE
+      ================================================================ */
+
+      @media (
+        max-width: 1250px
+      ) {
+        .kpi-grid {
+          grid-template-columns:
+            repeat(
+              2,
+              minmax(
+                0,
+                1fr
+              )
+            );
+        }
+
+        .quick-grid {
+          grid-template-columns:
+            repeat(
+              2,
+              minmax(
+                0,
+                1fr
+              )
+            );
+        }
+      }
+
+      @media (
+        max-width: 1080px
+      ) {
+        .admin-shell {
+          grid-template-columns:
+            1fr;
+        }
+
+        .admin-sidebar {
+          display: none;
+        }
+
+        .mobile-topbar {
+          position: sticky;
+
+          top: 0;
+
+          z-index: 100;
+
+          display: flex;
+
+          align-items: center;
+
+          justify-content: space-between;
+
+          gap: 12px;
+
+          min-height: 68px;
+
+          padding:
+            max(
+              10px,
+              env(
+                safe-area-inset-top
+              )
+            )
+            16px
+            10px;
+
+          border-bottom:
+            1px
+            solid
+            var(
+              --admin-line
+            );
+
+          background:
+            rgba(
+              0,
+              0,
+              0,
+              0.92
+            );
+
+          backdrop-filter:
+            blur(
+              18px
+            );
+        }
+
+        .mobile-brand {
+          display: flex;
+
+          align-items: center;
+
+          gap: 10px;
+        }
+
+        .mobile-brand-mark {
+          width: 40px;
+          height: 40px;
+
+          display: grid;
+          place-items: center;
+
+          border-radius: 13px;
+
+          border:
+            1px
+            solid
+            rgba(
+              231,
+              182,
+              79,
+              0.27
+            );
+
+          color:
+            var(
+              --admin-gold-2
+            );
+
+          font-weight: 900;
+
+          background:
+            rgba(
+              255,
+              255,
+              255,
+              0.035
+            );
+        }
+
+        .mobile-brand strong {
+          font-size: 0.9rem;
+        }
+
+        .mobile-menu-button {
+          width: 43px;
+          height: 43px;
+
+          border-radius: 13px;
+
+          border:
+            1px
+            solid
+            var(
+              --admin-line
+            );
+
+          background:
+            rgba(
+              255,
+              255,
+              255,
+              0.035
+            );
+
+          color:
+            var(
+              --admin-white
+            );
+        }
+
+        .mobile-backdrop {
+          position: fixed;
+
+          inset: 0;
+
+          z-index: 109;
+
+          background:
+            rgba(
+              0,
+              0,
+              0,
+              0.74
+            );
+
+          backdrop-filter:
+            blur(
+              4px
+            );
+        }
+
+        .mobile-backdrop.show {
+          display: block;
+        }
+
+        .mobile-nav {
+          position: fixed;
+
+          top: 0;
+          right: 0;
+
+          z-index: 110;
+
+          width:
+            min(
+              86vw,
+              340px
+            );
+
+          height: 100vh;
+
+          overflow-y: auto;
+
+          padding:
+            max(
+              22px,
+              env(
+                safe-area-inset-top
+              )
+            )
+            17px
+            28px;
+
+          border-left:
+            1px
+            solid
+            var(
+              --admin-line
+            );
+
+          background:
+            radial-gradient(
+              circle at top,
+              rgba(
+                231,
+                182,
+                79,
+                0.13
+              ),
+              transparent 27%
+            ),
+            #060606;
+
+          box-shadow:
+            -30px
+            0
+            80px
+            rgba(
+              0,
+              0,
+              0,
+              0.65
+            );
+        }
+
+        .mobile-nav.show {
+          display: block;
+        }
+
+        .mobile-nav-header {
+          display: flex;
+
+          align-items: center;
+
+          justify-content: space-between;
+
+          gap: 10px;
+
+          margin-bottom: 20px;
+        }
+
+        .mobile-nav-header strong {
+          color:
+            var(
+              --admin-gold-2
+            );
+        }
+
+        .mobile-nav-close {
+          width: 40px;
+          height: 40px;
+
+          border-radius: 12px;
+
+          border:
+            1px
+            solid
+            var(
+              --admin-line
+            );
+
+          background:
+            rgba(
+              255,
+              255,
+              255,
+              0.035
+            );
+
+          color:
+            var(
+              --admin-white
+            );
+        }
+
+        .hero-grid,
+        .dashboard-grid {
+          grid-template-columns:
+            1fr;
+        }
+      }
+
+      @media (
+        max-width: 720px
+      ) {
+        .admin-main {
+          padding:
+            15px
+            12px
+            36px;
+        }
+
+        .main-header {
+          align-items:
+            flex-start;
+
+          flex-direction:
+            column;
+        }
+
+        .main-header-actions {
+          width: 100%;
+        }
+
+        .main-header-actions .btn {
+          flex: 1;
+        }
+
+        .panel {
+          border-radius: 19px;
+        }
+
+        .panel-inner {
+          padding: 17px;
+        }
+
+        .hero-main {
+          min-height: auto;
+        }
+
+        .hero-main h2 {
+          font-size: 2.25rem;
+        }
+
+        .hero-actions {
+          display: grid;
+        }
+
+        .hero-actions .btn {
+          width: 100%;
+        }
+
+        .kpi-grid,
+        .quick-grid {
+          grid-template-columns:
+            1fr;
+        }
+
+        .section-heading {
+          align-items:
+            flex-start;
+
+          flex-direction:
+            column;
+        }
+
+        .data-row {
+          grid-template-columns:
+            1fr;
+        }
+      }
+
+      @media (
+        max-width: 390px
+      ) {
+        .admin-main {
+          padding-left: 9px;
+          padding-right: 9px;
+        }
+
+        .panel-inner {
+          padding: 15px;
+        }
+
+        .hero-main h2 {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ================================================================
+         MOBILE TOPBAR
+    ================================================================= -->
+
+    <header class="mobile-topbar">
+      <div class="mobile-brand">
+        <div class="mobile-brand-mark">
+          CL
+        </div>
+
+        <strong>
+          Card Leo Admin
+        </strong>
+      </div>
+
+      <button
+        type="button"
+        class="mobile-menu-button"
+        id="mobileMenuButton"
+        aria-label="Open admin navigation"
+        aria-expanded="false"
+      >
+        ☰
+      </button>
+    </header>
+
+    <div
+      id="mobileBackdrop"
+      class="mobile-backdrop"
+      aria-hidden="true"
+    ></div>
+
+    <aside
+      id="mobileNav"
+      class="mobile-nav"
+      aria-label="Mobile administration navigation"
+    >
+      <div class="mobile-nav-header">
+        <strong>
+          Admin Portal
+        </strong>
+
+        <button
+          type="button"
+          id="mobileNavClose"
+          class="mobile-nav-close"
+          aria-label="Close navigation"
+        >
+          ✕
+        </button>
+      </div>
+
+      <nav class="admin-nav">
+        <a
+          class="admin-nav-link is-active"
+          href="/admin/dashboard.html"
+        >
+          <span class="nav-icon">▣</span>
+          Dashboard
+        </a>
+
+        <a
+          class="admin-nav-link"
+          href="/admin/signups.html"
+        >
+          <span class="nav-icon">＋</span>
+          Signups
+        </a>
+
+        <a
+          class="admin-nav-link"
+          href="/admin/members.html"
+        >
+          <span class="nav-icon">♙</span>
+          Members
+        </a>
+
+        <a
+          class="admin-nav-link"
+          href="/admin/referrals.html"
+        >
+          <span class="nav-icon">♜</span>
+          Referrals
+        </a>
+
+        <a
+          class="admin-nav-link"
+          href="/admin/rewards.html"
+        >
+          <span class="nav-icon">◆</span>
+          Rewards & Allowance
+        </a>
+
+        <a
+          class="admin-nav-link"
+          href="/admin/cards.html"
+        >
+          <span class="nav-icon">▰</span>
+          Member Cards
+        </a>
+
+        <a
+          class="admin-nav-link"
+          href="/admin/growth-pool.html"
+        >
+          <span class="nav-icon">◎</span>
+          Growth Pool
+        </a>
+
+        <a
+          class="admin-nav-link"
+          href="/admin/access-perks.html"
+        >
+          <span class="nav-icon">♔</span>
+          Access Perks
+        </a>
+
+        <a
+          class="admin-nav-link"
+          href="/admin/activity.html"
+        >
+          <span class="nav-icon">☷</span>
+          Activity
+        </a>
+
+        <a
+          class="admin-nav-link"
+          href="/admin/support.html"
+        >
+          <span class="nav-icon">☏</span>
+          Support
+        </a>
+
+        <a
+          class="admin-nav-link"
+          href="/"
+        >
+          <span class="nav-icon">↗</span>
+          Main Website
+        </a>
+
+        <button
+          class="admin-logout"
+          type="button"
+          id="mobileLogoutButton"
+        >
+          <span class="nav-icon">↪</span>
+          Log Out
+        </button>
+      </nav>
+    </aside>
+
+    <!-- ================================================================
+         ADMIN SHELL
+    ================================================================= -->
+
+    <div class="admin-shell">
+      <!-- ==============================================================
+           DESKTOP SIDEBAR
+      ============================================================== -->
+
+      <aside class="admin-sidebar">
+        <a
+          class="admin-brand"
+          href="/admin/dashboard.html"
+        >
+          <div class="admin-brand-mark">
+            CL
+          </div>
+
+          <div class="admin-brand-copy">
+            <strong>
+              Card Leo Rewards
+            </strong>
+
+            <span>
+              Admin Command
+            </span>
+          </div>
+        </a>
+
+        <div class="nav-heading">
+          Operations
+        </div>
+
+        <nav class="admin-nav">
+          <a
+            class="admin-nav-link is-active"
+            href="/admin/dashboard.html"
+          >
+            <span class="nav-icon">▣</span>
+            Dashboard
+          </a>
+
+          <a
+            class="admin-nav-link"
+            href="/admin/signups.html"
+          >
+            <span class="nav-icon">＋</span>
+            Signups
+          </a>
+
+          <a
+            class="admin-nav-link"
+            href="/admin/members.html"
+          >
+            <span class="nav-icon">♙</span>
+            Members
+          </a>
+
+          <a
+            class="admin-nav-link"
+            href="/admin/referrals.html"
+          >
+            <span class="nav-icon">♜</span>
+            Referrals
+          </a>
+
+          <a
+            class="admin-nav-link"
+            href="/admin/rewards.html"
+          >
+            <span class="nav-icon">◆</span>
+            Rewards & Allowance
+          </a>
+
+          <a
+            class="admin-nav-link"
+            href="/admin/cards.html"
+          >
+            <span class="nav-icon">▰</span>
+            Member Cards
+          </a>
+
+          <a
+            class="admin-nav-link"
+            href="/admin/growth-pool.html"
+          >
+            <span class="nav-icon">◎</span>
+            Growth Pool
+          </a>
+
+          <a
+            class="admin-nav-link"
+            href="/admin/access-perks.html"
+          >
+            <span class="nav-icon">♔</span>
+            Access Perks
+          </a>
+
+          <a
+            class="admin-nav-link"
+            href="/admin/activity.html"
+          >
+            <span class="nav-icon">☷</span>
+            Activity
+          </a>
+
+          <a
+            class="admin-nav-link"
+            href="/admin/support.html"
+          >
+            <span class="nav-icon">☏</span>
+            Support
+          </a>
+        </nav>
+
+        <div class="nav-heading">
+          Platform
+        </div>
+
+        <nav class="admin-nav">
+          <a
+            class="admin-nav-link"
+            href="/"
+          >
+            <span class="nav-icon">↗</span>
+            Main Website
+          </a>
+
+          <a
+            class="admin-nav-link"
+            href="/portal/index.html"
+          >
+            <span class="nav-icon">◈</span>
+            Member Portal
+          </a>
+
+          <button
+            class="admin-logout"
+            type="button"
+            id="desktopLogoutButton"
+          >
+            <span class="nav-icon">↪</span>
+            Log Out
+          </button>
+        </nav>
+
+        <div class="sidebar-status">
+          <span>
+            Platform Status
+          </span>
+
+          <strong id="sidebarPlatformStatus">
+            Loading...
+          </strong>
+
+          <p id="sidebarPlatformDescription">
+            Checking Card Leo services.
+          </p>
+        </div>
+      </aside>
+
+      <!-- ==============================================================
+           MAIN
+      ============================================================== -->
+
+      <main class="admin-main">
+        <div class="admin-container">
+          <!-- ==========================================================
+               HEADER
+          ========================================================== -->
+
+          <header class="main-header">
+            <div class="main-header-copy">
+              <span>
+                Card Leo Operations
+              </span>
+
+              <h1>
+                Admin Command Center
+              </h1>
+            </div>
+
+            <div class="main-header-actions">
+              <button
+                class="btn"
+                id="refreshButton"
+                type="button"
+              >
+                ↻ Refresh
+              </button>
+
+              <a
+                class="btn btn-primary"
+                href="/admin/members.html"
+              >
+                Manage Members
+              </a>
+            </div>
+          </header>
+
+          <div
+            id="statusBanner"
+            class="status-banner"
+            aria-live="polite"
+          ></div>
+
+          <!-- ==========================================================
+               HERO
+          ========================================================== -->
+
+          <section class="panel hero">
+            <div class="panel-inner hero-grid">
+              <div class="hero-main">
+                <div class="eyebrow">
+                  Executive Operations
+                </div>
+
+                <h2>
+                  Run the entire
+                  <span>
+                    Card Leo ecosystem
+                  </span>
+                  from one place.
+                </h2>
+
+                <p>
+                  Monitor paid members, pending payments,
+                  referrals, rewards, allowance balances,
+                  Card Leo virtual cards, Access Perks,
+                  Growth Pool activity, support operations,
+                  and platform health from one command center.
+                </p>
+
+                <div class="hero-actions">
+                  <a
+                    class="btn btn-primary"
+                    href="/admin/members.html"
+                  >
+                    Open Members
+                  </a>
+
+                  <a
+                    class="btn"
+                    href="/admin/growth-pool.html"
+                  >
+                    Growth Pool
+                  </a>
+
+                  <a
+                    class="btn"
+                    href="/admin/cards.html"
+                  >
+                    Member Cards
+                  </a>
+                </div>
+              </div>
+
+              <aside class="command-status">
+                <article class="command-status-card">
+                  <small>
+                    Signed In As
+                  </small>
+
+                  <strong id="adminName">
+                    Loading...
+                  </strong>
+                </article>
+
+                <article class="command-status-card">
+                  <small>
+                    Admin Access
+                  </small>
+
+                  <strong id="adminAccess">
+                    Checking permissions...
+                  </strong>
+                </article>
+
+                <article class="command-status-card">
+                  <small>
+                    Last Refresh
+                  </small>
+
+                  <strong id="lastRefresh">
+                    —
+                  </strong>
+                </article>
+
+                <article class="command-status-card">
+                  <small>
+                    Dashboard Status
+                  </small>
+
+                  <strong id="dashboardStatus">
+                    Loading services...
+                  </strong>
+                </article>
+              </aside>
+            </div>
+          </section>
+
+          <!-- ==========================================================
+               MEMBERSHIP KPIS
+          ========================================================== -->
+
+          <div class="section-heading">
+            <div>
+              <h2>
+                Membership & Revenue
+              </h2>
+
+              <p>
+                Core membership health and billing visibility.
+              </p>
+            </div>
+          </div>
+
+          <section class="kpi-grid">
+            <article
+              class="kpi-card is-loading"
+              id="totalMembersCard"
+            >
+              <div class="kpi-top">
+                <span class="kpi-label">
+                  Total Members
+                </span>
+
+                <span class="pill gold">
+                  Members
+                </span>
+              </div>
+
+              <div
+                class="kpi-value"
+                id="totalMembers"
+              >
+                —
+              </div>
+
+              <div
+                class="kpi-subtext"
+                id="totalMembersSubtext"
+              >
+                Loading member records...
+              </div>
+            </article>
+
+            <article
+              class="kpi-card is-loading"
+              id="activeMembersCard"
+            >
+              <div class="kpi-top">
+                <span class="kpi-label">
+                  Active Paid
+                </span>
+
+                <span class="pill green">
+                  Live
+                </span>
+              </div>
+
+              <div
+                class="kpi-value"
+                id="activeMembers"
+              >
+                —
+              </div>
+
+              <div
+                class="kpi-subtext"
+                id="activeMembersSubtext"
+              >
+                Checking membership status...
+              </div>
+            </article>
+
+            <article
+              class="kpi-card is-loading"
+              id="pendingPaymentsCard"
+            >
+              <div class="kpi-top">
+                <span class="kpi-label">
+                  Pending Payment
+                </span>
+
+                <span class="pill yellow">
+                  Action
+                </span>
+              </div>
+
+              <div
+                class="kpi-value"
+                id="pendingPayments"
+              >
+                —
+              </div>
+
+              <div
+                class="kpi-subtext"
+                id="pendingPaymentsSubtext"
+              >
+                Checking unpaid members...
+              </div>
+            </article>
+
+            <article
+              class="kpi-card is-loading"
+              id="monthlyRevenueCard"
+            >
+              <div class="kpi-top">
+                <span class="kpi-label">
+                  Est. Monthly Membership
+                </span>
+
+                <span class="pill blue">
+                  Revenue
+                </span>
+              </div>
+
+              <div
+                class="kpi-value"
+                id="monthlyRevenue"
+              >
+                —
+              </div>
+
+              <div
+                class="kpi-subtext"
+                id="monthlyRevenueSubtext"
+              >
+                Estimating recurring membership revenue...
+              </div>
+            </article>
+          </section>
+
+          <!-- ==========================================================
+               FINANCIAL / PLATFORM KPIS
+          ========================================================== -->
+
+          <div class="section-heading">
+            <div>
+              <h2>
+                Rewards, Cards & Growth
+              </h2>
+
+              <p>
+                Company Growth Pool, member allowance,
+                card and benefit readiness.
+              </p>
+            </div>
+          </div>
+
+          <section class="kpi-grid">
+            <article
+              class="kpi-card is-loading"
+              id="growthPoolCard"
+            >
+              <div class="kpi-top">
+                <span class="kpi-label">
+                  Growth Pool
+                </span>
+
+                <span class="pill gold">
+                  Company
+                </span>
+              </div>
+
+              <div
+                class="kpi-value"
+                id="growthPoolBalance"
+              >
+                —
+              </div>
+
+              <div
+                class="kpi-subtext"
+                id="growthPoolSubtext"
+              >
+                Loading Growth Pool...
+              </div>
+            </article>
+
+            <article
+              class="kpi-card is-loading"
+              id="allowanceCard"
+            >
+              <div class="kpi-top">
+                <span class="kpi-label">
+                  Member Allowance
+                </span>
+
+                <span class="pill purple">
+                  Rewards
+                </span>
+              </div>
+
+              <div
+                class="kpi-value"
+                id="allowanceOutstanding"
+              >
+                —
+              </div>
+
+              <div
+                class="kpi-subtext"
+                id="allowanceSubtext"
+              >
+                Loading allowance totals...
+              </div>
+            </article>
+
+            <article
+              class="kpi-card is-loading"
+              id="cardsIssuedCard"
+            >
+              <div class="kpi-top">
+                <span class="kpi-label">
+                  Cards Issued
+                </span>
+
+                <span class="pill blue">
+                  Lithic
+                </span>
+              </div>
+
+              <div
+                class="kpi-value"
+                id="cardsIssued"
+              >
+                —
+              </div>
+
+              <div
+                class="kpi-subtext"
+                id="cardsIssuedSubtext"
+              >
+                Loading card readiness...
+              </div>
+            </article>
+
+            <article
+              class="kpi-card is-loading"
+              id="accessPerksCard"
+            >
+              <div class="kpi-top">
+                <span class="kpi-label">
+                  Access Perks Ready
+                </span>
+
+                <span class="pill green">
+                  Benefits
+                </span>
+              </div>
+
+              <div
+                class="kpi-value"
+                id="accessPerksReady"
+              >
+                —
+              </div>
+
+              <div
+                class="kpi-subtext"
+                id="accessPerksSubtext"
+              >
+                Loading Access membership...
+              </div>
+            </article>
+          </section>
+
+          <!-- ==========================================================
+               SIGNUPS / SUPPORT
+          ========================================================== -->
+
+          <div class="section-heading">
+            <div>
+              <h2>
+                Live Operations
+              </h2>
+
+              <p>
+                New members and support activity requiring attention.
+              </p>
+            </div>
+          </div>
+
+          <section class="dashboard-grid">
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="card-header">
+                  <div>
+                    <h3>
+                      Latest Signups
+                    </h3>
+
+                    <p>
+                      New registrations, payment status,
+                      and membership readiness.
+                    </p>
+                  </div>
+
+                  <a
+                    class="btn"
+                    href="/admin/signups.html"
+                  >
+                    View All
+                  </a>
+                </div>
+
+                <div
+                  id="latestSignups"
+                  class="data-list"
+                >
+                  <div class="empty-state">
+                    Loading recent signups...
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="card-header">
+                  <div>
+                    <h3>
+                      Support Queue
+                    </h3>
+
+                    <p>
+                      Open, urgent and recently updated member tickets.
+                    </p>
+                  </div>
+
+                  <a
+                    class="btn"
+                    href="/admin/support.html"
+                  >
+                    View All
+                  </a>
+                </div>
+
+                <div
+                  id="supportQueue"
+                  class="data-list"
+                >
+                  <div class="empty-state">
+                    Loading support tickets...
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- ==========================================================
+               REFERRALS / HEALTH
+          ========================================================== -->
+
+          <div class="section-heading">
+            <div>
+              <h2>
+                Referral & Platform Health
+              </h2>
+
+              <p>
+                Referral performance and system readiness.
+              </p>
+            </div>
+          </div>
+
+          <section class="dashboard-grid">
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="card-header">
+                  <div>
+                    <h3>
+                      Referral Snapshot
+                    </h3>
+
+                    <p>
+                      Direct, team and pending referral activity.
+                    </p>
+                  </div>
+
+                  <a
+                    class="btn"
+                    href="/admin/referrals.html"
+                  >
+                    Referral Admin
+                  </a>
+                </div>
+
+                <div class="health-list">
+                  <div class="health-row">
+                    <span>
+                      Direct Referrals
+                    </span>
+
+                    <strong
+                      id="directReferrals"
+                    >
+                      —
+                    </strong>
+                  </div>
+
+                  <div class="health-row">
+                    <span>
+                      Team Referrals
+                    </span>
+
+                    <strong
+                      id="teamReferrals"
+                    >
+                      —
+                    </strong>
+                  </div>
+
+                  <div class="health-row">
+                    <span>
+                      Pending Referral Rewards
+                    </span>
+
+                    <strong
+                      id="pendingReferralRewards"
+                    >
+                      —
+                    </strong>
+                  </div>
+
+                  <div class="health-row">
+                    <span>
+                      Estimated Referral Rewards
+                    </span>
+
+                    <strong
+                      id="referralRewardTotal"
+                    >
+                      —
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel">
+              <div class="panel-inner">
+                <div class="card-header">
+                  <div>
+                    <h3>
+                      Platform Health
+                    </h3>
+
+                    <p>
+                      Current status of major Card Leo systems.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="health-list">
+                  <div class="health-row">
+                    <span>
+                      Admin APIs
+                    </span>
+
+                    <strong
+                      class="health-warning"
+                      id="healthAdmin"
+                    >
+                      Checking
+                    </strong>
+                  </div>
+
+                  <div class="health-row">
+                    <span>
+                      Growth Pool
+                    </span>
+
+                    <strong
+                      class="health-warning"
+                      id="healthGrowthPool"
+                    >
+                      Checking
+                    </strong>
+                  </div>
+
+                  <div class="health-row">
+                    <span>
+                      Access Perks
+                    </span>
+
+                    <strong
+                      class="health-warning"
+                      id="healthAccess"
+                    >
+                      Checking
+                    </strong>
+                  </div>
+
+                  <div class="health-row">
+                    <span>
+                      Card Issuing
+                    </span>
+
+                    <strong
+                      class="health-warning"
+                      id="healthCards"
+                    >
+                      Checking
+                    </strong>
+                  </div>
+
+                  <div class="health-row">
+                    <span>
+                      Support
+                    </span>
+
+                    <strong
+                      class="health-warning"
+                      id="healthSupport"
+                    >
+                      Checking
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <!-- ==========================================================
+               QUICK ACTIONS
+          ========================================================== -->
+
+          <div class="section-heading">
+            <div>
+              <h2>
+                Quick Actions
+              </h2>
+
+              <p>
+                Jump directly into the most important admin workflows.
+              </p>
+            </div>
+          </div>
+
+          <section class="quick-grid">
+            <article class="quick-card">
+              <div>
+                <div class="quick-icon">
+                  ♙
+                </div>
+
+                <h3>
+                  Manage Members
+                </h3>
+
+                <p>
+                  Review status, billing, Access Perks,
+                  card readiness and member access.
+                </p>
+              </div>
+
+              <a
+                class="btn btn-primary"
+                href="/admin/members.html"
+              >
+                Open Members
+              </a>
+            </article>
+
+            <article class="quick-card">
+              <div>
+                <div class="quick-icon">
+                  ◎
+                </div>
+
+                <h3>
+                  Growth Pool
+                </h3>
+
+                <p>
+                  Review company Growth Pool balance,
+                  member contributions and reconciliation.
+                </p>
+              </div>
+
+              <a
+                class="btn btn-primary"
+                href="/admin/growth-pool.html"
+              >
+                Open Growth Pool
+              </a>
+            </article>
+
+            <article class="quick-card">
+              <div>
+                <div class="quick-icon">
+                  ▰
+                </div>
+
+                <h3>
+                  Member Cards
+                </h3>
+
+                <p>
+                  Review virtual card status, issuance,
+                  allowance loads and card readiness.
+                </p>
+              </div>
+
+              <a
+                class="btn btn-primary"
+                href="/admin/cards.html"
+              >
+                Open Cards
+              </a>
+            </article>
+
+            <article class="quick-card">
+              <div>
+                <div class="quick-icon">
+                  ♔
+                </div>
+
+                <h3>
+                  Access Perks
+                </h3>
+
+                <p>
+                  Monitor member synchronization,
+                  Access status and benefit readiness.
+                </p>
+              </div>
+
+              <a
+                class="btn btn-primary"
+                href="/admin/access-perks.html"
+              >
+                Open Access
+              </a>
+            </article>
+
+            <article class="quick-card">
+              <div>
+                <div class="quick-icon">
+                  ♜
+                </div>
+
+                <h3>
+                  Referrals
+                </h3>
+
+                <p>
+                  Review direct and team referrals,
+                  qualifications and reward activity.
+                </p>
+              </div>
+
+              <a
+                class="btn btn-primary"
+                href="/admin/referrals.html"
+              >
+                Open Referrals
+              </a>
+            </article>
+
+            <article class="quick-card">
+              <div>
+                <div class="quick-icon">
+                  ◆
+                </div>
+
+                <h3>
+                  Rewards & Allowance
+                </h3>
+
+                <p>
+                  Track pending earnings, approved
+                  allowance and loaded card value.
+                </p>
+              </div>
+
+              <a
+                class="btn btn-primary"
+                href="/admin/rewards.html"
+              >
+                Open Rewards
+              </a>
+            </article>
+
+            <article class="quick-card">
+              <div>
+                <div class="quick-icon">
+                  ☏
+                </div>
+
+                <h3>
+                  Support
+                </h3>
+
+                <p>
+                  Review open tickets, urgent issues,
+                  member requests and follow-ups.
+                </p>
+              </div>
+
+              <a
+                class="btn btn-primary"
+                href="/admin/support.html"
+              >
+                Open Support
+              </a>
+            </article>
+
+            <article class="quick-card">
+              <div>
+                <div class="quick-icon">
+                  ☷
+                </div>
+
+                <h3>
+                  Activity
+                </h3>
+
+                <p>
+                  Review member and company activity
+                  across all Card Leo systems.
+                </p>
+              </div>
+
+              <a
+                class="btn btn-primary"
+                href="/admin/activity.html"
+              >
+                Open Activity
+              </a>
+            </article>
+          </section>
+
+          <footer class="admin-footer">
+            ©
+            <span data-year></span>
+            Card Leo Rewards · Administration Portal
+          </footer>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        /* ==============================================================
+           API ROUTES
+
+           Core routes are required for administrator authorization
+           and primary dashboard data.
+
+           Extended module endpoints remain optional so one unavailable
+           module does not take down the entire command center.
+        ============================================================== */
+
+        const API = {
+          adminMe:
+            "/api/admin/auth/me",
+
+          signups:
+            "/api/admin/signups?limit=8&status=all&sort=newest",
+
+          members:
+            "/api/admin/members?limit=200&status=all&sort=newest",
+
+          support:
+            "/api/admin/support?limit=8&status=all&sort=updated",
+
+          overview:
+            "/api/admin/overview",
+
+          growthPool:
+            "/api/admin/growth-pool",
+
+          cards:
+            "/api/admin/cards?limit=200",
+
+          access:
+            "/api/admin/access-perks?limit=200",
+
+          referrals:
+            "/api/admin/referrals?limit=200",
+
+          rewards:
+            "/api/admin/rewards",
+
+          logout:
+            "/api/auth/logout",
+        };
+
+        /* ==============================================================
+           STATE
+        ============================================================== */
+
+        const state = {
+          me: null,
+
+          signups: null,
+
+          members: null,
+
+          support: null,
+
+          overview: null,
+
+          growthPool: null,
+
+          cards: null,
+
+          access: null,
+
+          referrals: null,
+
+          rewards: null,
+
+          optionalFailures: [],
+        };
+
+        /* ==============================================================
+           DOM
+        ============================================================== */
+
+        const $ = (
+          id
+        ) =>
+          document.getElementById(
+            id
+          );
+
+        function setText(
+          id,
+          value
+        ) {
+          const element =
+            $(id);
+
+          if (element) {
+            element.textContent =
+              value;
+          }
+        }
+
+        function setHtml(
+          id,
+          value
+        ) {
+          const element =
+            $(id);
+
+          if (element) {
+            element.innerHTML =
+              value;
+          }
+        }
+
+        /* ==============================================================
+           HELPERS
+        ============================================================== */
+
+        function normalizeText(
+          value
+        ) {
+          return String(
+            value ?? ""
+          ).trim();
+        }
+
+        function normalizeLower(
+          value
+        ) {
+          return normalizeText(
+            value
+          ).toLowerCase();
+        }
+
+        function normalizeEmail(
+          value
+        ) {
+          return normalizeLower(
+            value
+          );
+        }
+
+        function safeNumber(
+          value,
+          fallback = 0
+        ) {
+          const number =
+            Number(value);
+
+          return Number.isFinite(
+            number
+          )
+            ? number
+            : fallback;
+        }
+
+        function formatCount(
+          value
+        ) {
+          return safeNumber(
+            value,
+            0
+          ).toLocaleString(
+            "en-US"
+          );
+        }
+
+        function money(
+          value
+        ) {
+          return new Intl
+            .NumberFormat(
+              "en-US",
+              {
+                style:
+                  "currency",
+
+                currency:
+                  "USD",
+
+                minimumFractionDigits:
+                  2,
+
+                maximumFractionDigits:
+                  2,
+              }
+            )
+            .format(
+              safeNumber(
+                value,
+                0
+              )
+            );
+        }
+
+        function titleCase(
+          value
+        ) {
+          return normalizeText(
+            value
+          )
+            .replace(
+              /[_-]+/g,
+              " "
+            )
+            .replace(
+              /\s+/g,
+              " "
+            )
+            .trim()
+            .replace(
+              /\b\w/g,
+              (
+                character
+              ) =>
+                character
+                  .toUpperCase()
+            );
+        }
+
+        function escapeHtml(
+          value
+        ) {
+          return String(
+            value ?? ""
+          )
+            .replaceAll(
+              "&",
+              "&amp;"
+            )
+            .replaceAll(
+              "<",
+              "&lt;"
+            )
+            .replaceAll(
+              ">",
+              "&gt;"
+            )
+            .replaceAll(
+              '"',
+              "&quot;"
+            )
+            .replaceAll(
+              "'",
+              "&#39;"
+            );
+        }
+
+        function formatDate(
+          value
+        ) {
+          if (!value) {
+            return "—";
+          }
+
+          const date =
+            new Date(
+              value
+            );
+
+          if (
+            Number.isNaN(
+              date.getTime()
+            )
+          ) {
+            return "—";
+          }
+
+          return new Intl
+            .DateTimeFormat(
+              "en-US",
+              {
+                month:
+                  "short",
+
+                day:
+                  "numeric",
+
+                year:
+                  "numeric",
+
+                hour:
+                  "numeric",
+
+                minute:
+                  "2-digit",
+              }
+            )
+            .format(
+              date
+            );
+        }
+
+        function isObject(
+          value
+        ) {
+          return (
+            Boolean(
+              value
+            ) &&
+            typeof value ===
+              "object" &&
+            !Array.isArray(
+              value
+            )
+          );
+        }
+
+        function unwrap(
+          payload
+        ) {
+          if (
+            !isObject(
+              payload
+            )
+          ) {
+            return {};
+          }
+
+          if (
+            isObject(
+              payload.data
+            )
+          ) {
+            return payload.data;
+          }
+
+          return payload;
+        }
+
+        function firstNumber(
+          objects,
+          keys,
+          fallback = 0
+        ) {
+          const sources =
+            Array.isArray(
+              objects
+            )
+              ? objects
+              : [
+                  objects,
+                ];
+
+          for (
+            const source
+            of sources
+          ) {
+            if (
+              !source ||
+              typeof source !==
+                "object"
+            ) {
+              continue;
+            }
+
+            for (
+              const key
+              of keys
+            ) {
+              const value =
+                source[
+                  key
+                ];
+
+              if (
+                value !==
+                  undefined &&
+                value !==
+                  null &&
+                value !== ""
+              ) {
+                const number =
+                  Number(
+                    value
+                  );
+
+                if (
+                  Number.isFinite(
+                    number
+                  )
+                ) {
+                  return number;
+                }
+              }
+            }
+          }
+
+          return fallback;
+        }
+
+        /* ==============================================================
+           STATUS BANNER
+        ============================================================== */
+
+        function showBanner(
+          message,
+          type = ""
+        ) {
+          const banner =
+            $(
+              "statusBanner"
+            );
+
+          if (!banner) {
+            return;
+          }
+
+          if (!message) {
+            banner.className =
+              "status-banner";
+
+            banner.textContent =
+              "";
+
+            return;
+          }
+
+          banner.className =
+            `status-banner show ${type}`
+              .trim();
+
+          banner.textContent =
+            message;
+        }
+
+        /* ==============================================================
+           API
+        ============================================================== */
+
+        function getAdminAccessToken() {
+          return (
+            sessionStorage.getItem(
+              "cardleo_admin_access_token"
+            ) ||
+            localStorage.getItem(
+              "cardleo_admin_access_token"
+            ) ||
+            ""
+          );
+        }
+
+        async function requestJson(
+          url,
+          options = {}
+        ) {
+          const accessToken =
+            getAdminAccessToken();
+
+          const response =
+            await fetch(
+              url,
+              {
+                credentials:
+                  "include",
+
+                headers: {
+                  Accept:
+                    "application/json",
+
+                  ...(options.body
+                    ? {
+                        "Content-Type":
+                          "application/json",
+                      }
+                    : {}),
+
+                  ...(accessToken
+                    ? {
+                        Authorization:
+                          `Bearer ${accessToken}`,
+                      }
+                    : {}),
+
+                  ...(options.headers ||
+                    {}),
+                },
+
+                ...options,
+              }
+            );
+
+          const contentType =
+            response.headers.get(
+              "content-type"
+            ) ||
+            "";
+
+          let body = {};
+
+          if (
+            contentType.includes(
+              "application/json"
+            )
+          ) {
+            body =
+              await response
+                .json()
+                .catch(
+                  () => ({})
+                );
+          }
+
+          if (
+            !response.ok ||
+            body?.success ===
+              false ||
+            body?.ok ===
+              false
+          ) {
+            const error =
+              new Error(
+                body?.message ||
+                body?.error ||
+                `Request failed with status ${response.status}.`
+              );
+
+            error.status =
+              response.status;
+
+            error.payload =
+              body;
+
+            throw error;
+          }
+
+          return body;
+        }
+
+        async function optionalRequest(
+          name,
+          url
+        ) {
+          try {
+            const result =
+              await requestJson(
+                url
+              );
+
+            return {
+              available:
+                true,
+
+              data:
+                unwrap(
+                  result
+                ),
+            };
+          } catch (
+            error
+          ) {
+            console.warn(
+              `[admin] optional endpoint unavailable: ${name}`,
+              error
+            );
+
+            state
+              .optionalFailures
+              .push(
+                name
+              );
+
+            return {
+              available:
+                false,
+
+              data:
+                null,
+
+              error,
+            };
+          }
+        }
+
+        /* ==============================================================
+           ADMIN AUTH
+
+           The dashboard now requires the dedicated admin session endpoint.
+
+           A regular Card Leo member session is NOT accepted here.
+        ============================================================== */
+
+        async function loadAdminSession() {
+          const result =
+            await requestJson(
+              API.adminMe
+            );
+
+          const data =
+            unwrap(
+              result
+            );
+
+          if (
+            data?.authenticated !==
+              true ||
+            !data?.admin
+          ) {
+            const error =
+              new Error(
+                "Administrator session required."
+              );
+
+            error.status =
+              401;
+
+            throw error;
+          }
+
+          return data;
+        }
+
+        /* ==============================================================
+           MEMBER NORMALIZATION
+        ============================================================== */
+
+        function getMemberRows() {
+          return (
+            state.members
+              ?.members ||
+            state.members
+              ?.data
+              ?.members ||
+            []
+          );
+        }
+
+        function getSignupRows() {
+          return (
+            state.signups
+              ?.signups ||
+            state.signups
+              ?.data
+              ?.signups ||
+            []
+          );
+        }
+
+        function getSupportRows() {
+          return (
+            state.support
+              ?.tickets ||
+            state.support
+              ?.data
+              ?.tickets ||
+            []
+          );
+        }
+
+        function memberIsPaid(
+          member
+        ) {
+          return [
+            "paid",
+            "active",
+            "current",
+            "complete",
+            "completed",
+            "succeeded",
+          ].includes(
+            normalizeLower(
+              member
+                ?.payment_status ||
+              member
+                ?.paymentStatus
+            )
+          );
+        }
+
+        function memberIsActive(
+          member
+        ) {
+          const status =
+            normalizeLower(
+              member
+                ?.status
+            );
+
+          const membership =
+            normalizeLower(
+              member
+                ?.membership_status ||
+              member
+                ?.membershipStatus
+            );
+
+          return (
+            [
+              "active",
+              "approved",
+              "paid",
+              "current",
+              "complete",
+              "completed",
+              "succeeded",
+            ].includes(
+              status
+            ) ||
+            [
+              "active",
+              "activated",
+              "approved",
+              "paid",
+              "current",
+            ].includes(
+              membership
+            )
+          );
+        }
+
+        function memberNeedsPayment(
+          member
+        ) {
+          const payment =
+            normalizeLower(
+              member
+                ?.payment_status ||
+              member
+                ?.paymentStatus
+            );
+
+          return ![
+            "paid",
+            "active",
+            "current",
+            "complete",
+            "completed",
+            "succeeded",
+          ].includes(
+            payment
+          );
+        }
+
+        /* ==============================================================
+           ADMIN HEADER
+        ============================================================== */
+
+        function renderAdminHeader() {
+          const possibleAdmin =
+            state
+              .signups
+              ?.admin ||
+            state
+              .members
+              ?.admin ||
+            state
+              .support
+              ?.admin ||
+            state
+              .me
+              ?.admin ||
+            state
+              .me
+              ?.member ||
+            state
+              .me
+              ?.profile ||
+            state
+              .me
+              ?.user ||
+            {};
+
+          const adminName =
+            normalizeText(
+              possibleAdmin
+                ?.fullName ||
+              possibleAdmin
+                ?.full_name ||
+              possibleAdmin
+                ?.name ||
+              possibleAdmin
+                ?.email
+            ) ||
+            "Card Leo Admin";
+
+          setText(
+            "adminName",
+            adminName
+          );
+
+          const permissions =
+            [];
+
+          const signupsAdmin =
+            state
+              .signups
+              ?.admin ||
+            {};
+
+          const membersAdmin =
+            state
+              .members
+              ?.admin ||
+            {};
+
+          const supportAdmin =
+            state
+              .support
+              ?.admin ||
+            {};
+
+          if (
+            signupsAdmin
+              ?.canManageMembers
+          ) {
+            permissions.push(
+              "Members"
+            );
+          }
+
+          if (
+            supportAdmin
+              ?.canManageSupport
+          ) {
+            permissions.push(
+              "Support"
+            );
+          }
+
+          if (
+            membersAdmin
+              ?.isSuperAdmin
+          ) {
+            permissions.push(
+              "Super Admin"
+            );
+          }
+
+          setText(
+            "adminAccess",
+            permissions.length
+              ? permissions.join(
+                  " • "
+                )
+              : "Verified Admin"
+          );
+
+          setText(
+            "lastRefresh",
+            formatDate(
+              new Date()
+                .toISOString()
+            )
+          );
+        }
+
+        /* ==============================================================
+           MEMBER KPI
+        ============================================================== */
+
+        function renderMembershipKpis() {
+          const members =
+            getMemberRows();
+
+          const memberSummary =
+            state
+              .members
+              ?.summary ||
+            {};
+
+          const total =
+            firstNumber(
+              memberSummary,
+              [
+                "total",
+                "totalMembers",
+                "total_members",
+              ],
+              members.length
+            );
+
+          const activeFallback =
+            members.filter(
+              (
+                member
+              ) =>
+                memberIsPaid(
+                  member
+                ) &&
+                memberIsActive(
+                  member
+                )
+            ).length;
+
+          const active =
+            firstNumber(
+              memberSummary,
+              [
+                "activeMembers",
+                "active_members",
+                "active",
+              ],
+              activeFallback
+            );
+
+          const pendingPayments =
+            members.filter(
+              memberNeedsPayment
+            ).length;
+
+          setText(
+            "totalMembers",
+            formatCount(
+              total
+            )
+          );
+
+          setText(
+            "totalMembersSubtext",
+            `${formatCount(
+              active
+            )} active paid`
+          );
+
+          setText(
+            "activeMembers",
+            formatCount(
+              active
+            )
+          );
+
+          setText(
+            "activeMembersSubtext",
+            `${formatCount(
+              total
+            )} total member records`
+          );
+
+          setText(
+            "pendingPayments",
+            formatCount(
+              pendingPayments
+            )
+          );
+
+          setText(
+            "pendingPaymentsSubtext",
+            pendingPayments
+              ? "Members still requiring payment"
+              : "No pending payments detected"
+          );
+
+          const monthlyRevenue =
+            active *
+            20;
+
+          setText(
+            "monthlyRevenue",
+            money(
+              monthlyRevenue
+            )
+          );
+
+          setText(
+            "monthlyRevenueSubtext",
+            `${formatCount(
+              active
+            )} active × $20 monthly`
+          );
+        }
+
+        /* ==============================================================
+           GROWTH POOL
+        ============================================================== */
+
+        function renderGrowthPool() {
+          const data =
+            state.growthPool ||
+            state.overview
+              ?.growthPool ||
+            {};
+
+          const balance =
+            firstNumber(
+              [
+                data,
+                data
+                  ?.growthPool,
+              ],
+              [
+                "balance",
+                "total",
+                "totalContributed",
+                "total_contributed",
+              ],
+              0
+            );
+
+          const members =
+            firstNumber(
+              [
+                data,
+                data
+                  ?.growthPool,
+              ],
+              [
+                "totalMembersContributed",
+                "total_members_contributed",
+                "memberCount",
+                "uniqueMembers",
+              ],
+              0
+            );
+
+          setText(
+            "growthPoolBalance",
+            money(
+              balance
+            )
+          );
+
+          setText(
+            "growthPoolSubtext",
+            `${formatCount(
+              members
+            )} qualifying member contribution${
+              members === 1
+                ? ""
+                : "s"
+            }`
+          );
+        }
+
+        /* ==============================================================
+           ALLOWANCE
+        ============================================================== */
+
+        function renderAllowance() {
+          const rewards =
+            state.rewards ||
+            state.overview
+              ?.rewards ||
+            {};
+
+          const cents =
+            firstNumber(
+              [
+                rewards,
+                rewards
+                  ?.allowance,
+              ],
+              [
+                "available_balance_cents",
+                "availableBalanceCents",
+                "allowance_outstanding_cents",
+                "allowanceOutstandingCents",
+              ],
+              0
+            );
+
+          const amount =
+            cents
+              ? cents / 100
+              : firstNumber(
+                  rewards,
+                  [
+                    "allowanceOutstanding",
+                    "allowance_outstanding",
+                    "availableAllowance",
+                  ],
+                  0
+                );
+
+          setText(
+            "allowanceOutstanding",
+            money(
+              amount
+            )
+          );
+
+          setText(
+            "allowanceSubtext",
+            amount >
+              0
+              ? "Approved allowance currently outstanding"
+              : "No outstanding allowance returned yet"
+          );
+        }
+
+        /* ==============================================================
+           CARDS
+        ============================================================== */
+
+        function renderCards() {
+          const cards =
+            state.cards ||
+            state.overview
+              ?.cards ||
+            {};
+
+          const rows =
+            cards.cards ||
+            cards.memberCards ||
+            [];
+
+          const count =
+            firstNumber(
+              cards,
+              [
+                "issued",
+                "issuedCards",
+                "issued_cards",
+                "total",
+              ],
+              Array.isArray(
+                rows
+              )
+                ? rows.filter(
+                    (
+                      card
+                    ) =>
+                      [
+                        "active",
+                        "open",
+                        "created",
+                      ].includes(
+                        normalizeLower(
+                          card
+                            ?.card_status ||
+                          card
+                            ?.status
+                        )
+                      )
+                  ).length
+                : 0
+            );
+
+          setText(
+            "cardsIssued",
+            formatCount(
+              count
+            )
+          );
+
+          setText(
+            "cardsIssuedSubtext",
+            state.cards
+              ? "Card issuing data loaded"
+              : "Card admin API will be connected in a later step"
+          );
+        }
+
+        /* ==============================================================
+           ACCESS
+        ============================================================== */
+
+        function renderAccess() {
+          const access =
+            state.access ||
+            state.overview
+              ?.access ||
+            {};
+
+          const members =
+            getMemberRows();
+
+          const readyFallback =
+            members.filter(
+              (
+                member
+              ) =>
+                Boolean(
+                  member
+                    ?.access_perks_ready
+                ) ||
+                normalizeLower(
+                  member
+                    ?.access_member_status
+                ) ===
+                  "open"
+            ).length;
+
+          const ready =
+            firstNumber(
+              access,
+              [
+                "ready",
+                "readyMembers",
+                "ready_members",
+                "openMembers",
+                "open_members",
+              ],
+              readyFallback
+            );
+
+          setText(
+            "accessPerksReady",
+            formatCount(
+              ready
+            )
+          );
+
+          setText(
+            "accessPerksSubtext",
+            `${formatCount(
+              ready
+            )} member${
+              ready === 1
+                ? ""
+                : "s"
+            } synced or OPEN`
+          );
+        }
+
+        /* ==============================================================
+           REFERRALS
+        ============================================================== */
+
+        function renderReferrals() {
+          const referrals =
+            state.referrals ||
+            state.overview
+              ?.referrals ||
+            {};
+
+          const direct =
+            firstNumber(
+              referrals,
+              [
+                "directReferrals",
+                "direct_referrals",
+                "approvedDirectReferrals",
+              ],
+              0
+            );
+
+          const team =
+            firstNumber(
+              referrals,
+              [
+                "teamReferrals",
+                "team_referrals",
+                "approvedTeamReferrals",
+              ],
+              0
+            );
+
+          const pending =
+            firstNumber(
+              referrals,
+              [
+                "pendingReferrals",
+                "pending_referrals",
+                "pendingRewards",
+              ],
+              0
+            );
+
+          const estimatedReward =
+            direct *
+              7 +
+            team *
+              1;
+
+          setText(
+            "directReferrals",
+            formatCount(
+              direct
+            )
+          );
+
+          setText(
+            "teamReferrals",
+            formatCount(
+              team
+            )
+          );
+
+          setText(
+            "pendingReferralRewards",
+            formatCount(
+              pending
+            )
+          );
+
+          setText(
+            "referralRewardTotal",
+            money(
+              estimatedReward
+            )
+          );
+        }
+
+        /* ==============================================================
+           SIGNUPS
+        ============================================================== */
+
+        function renderSignups() {
+          const rows =
+            getSignupRows();
+
+          if (
+            !rows.length
+          ) {
+            setHtml(
+              "latestSignups",
+              `
+                <div class="empty-state">
+                  No signup records returned.
+                </div>
+              `
+            );
+
+            return;
+          }
+
+          setHtml(
+            "latestSignups",
+
+            rows
+              .slice(
+                0,
+                7
+              )
+              .map(
+                (
+                  member
+                ) => {
+                  const name =
+                    normalizeText(
+                      member
+                        ?.fullName ||
+                      member
+                        ?.full_name
+                    ) ||
+                    normalizeEmail(
+                      member
+                        ?.email
+                    ) ||
+                    "Signup";
+
+                  const status =
+                    normalizeText(
+                      member
+                        ?.statusLabel ||
+                      member
+                        ?.membership_status ||
+                      member
+                        ?.status ||
+                      "New"
+                    );
+
+                  const payment =
+                    normalizeText(
+                      member
+                        ?.payment_status ||
+                      member
+                        ?.paymentStatus ||
+                      "Unknown"
+                    );
+
+                  const date =
+                    member
+                      ?.createdAt ||
+                    member
+                      ?.created_at;
+
+                  return `
+                    <article class="data-row">
+                      <div class="data-row-main">
+                        <p class="data-row-title">
+                          ${escapeHtml(
+                            name
+                          )}
+                        </p>
+
+                        <p class="data-row-meta">
+                          ${escapeHtml(
+                            normalizeEmail(
+                              member
+                                ?.email
+                            ) ||
+                            "No email"
+                          )}
+                          • Payment:
+                          ${escapeHtml(
+                            titleCase(
+                              payment
+                            )
+                          )}
+                          •
+                          ${escapeHtml(
+                            formatDate(
+                              date
+                            )
+                          )}
+                        </p>
+                      </div>
+
+                      <span class="pill ${
+                        memberIsPaid(
+                          member
+                        )
+                          ? "green"
+                          : "yellow"
+                      }">
+                        ${escapeHtml(
+                          titleCase(
+                            status
+                          )
+                        )}
+                      </span>
+                    </article>
+                  `;
+                }
+              )
+              .join("")
+          );
+        }
+
+        /* ==============================================================
+           SUPPORT
+        ============================================================== */
+
+        function renderSupport() {
+          const tickets =
+            getSupportRows();
+
+          if (
+            !tickets.length
+          ) {
+            setHtml(
+              "supportQueue",
+              `
+                <div class="empty-state">
+                  No support tickets returned.
+                </div>
+              `
+            );
+
+            return;
+          }
+
+          setHtml(
+            "supportQueue",
+
+            tickets
+              .slice(
+                0,
+                7
+              )
+              .map(
+                (
+                  ticket
+                ) => {
+                  const subject =
+                    normalizeText(
+                      ticket
+                        ?.subject
+                    ) ||
+                    normalizeText(
+                      ticket
+                        ?.ticketNumber ||
+                      ticket
+                        ?.ticket_number
+                    ) ||
+                    "Support Ticket";
+
+                  const priority =
+                    normalizeText(
+                      ticket
+                        ?.priorityLabel ||
+                      ticket
+                        ?.priority ||
+                      "Normal"
+                    );
+
+                  const status =
+                    normalizeText(
+                      ticket
+                        ?.statusLabel ||
+                      ticket
+                        ?.status ||
+                      "Open"
+                    );
+
+                  const date =
+                    ticket
+                      ?.lastMessageAt ||
+                    ticket
+                      ?.last_message_at ||
+                    ticket
+                      ?.updated_at ||
+                    ticket
+                      ?.created_at;
+
+                  return `
+                    <article class="data-row">
+                      <div class="data-row-main">
+                        <p class="data-row-title">
+                          ${escapeHtml(
+                            subject
+                          )}
+                        </p>
+
+                        <p class="data-row-meta">
+                          ${escapeHtml(
+                            titleCase(
+                              status
+                            )
+                          )}
+                          •
+                          ${escapeHtml(
+                            formatDate(
+                              date
+                            )
+                          )}
+                        </p>
+                      </div>
+
+                      <span class="pill ${
+                        normalizeLower(
+                          priority
+                        ) ===
+                          "urgent"
+                          ? "red"
+                          : "blue"
+                      }">
+                        ${escapeHtml(
+                          titleCase(
+                            priority
+                          )
+                        )}
+                      </span>
+                    </article>
+                  `;
+                }
+              )
+              .join("")
+          );
+        }
+
+        /* ==============================================================
+           PLATFORM HEALTH
+        ============================================================== */
+
+        function setHealth(
+          id,
+          label,
+          type = "good"
+        ) {
+          const element =
+            $(id);
+
+          if (!element) {
+            return;
+          }
+
+          element.textContent =
+            label;
+
+          element.classList.remove(
+            "health-good",
+            "health-warning",
+            "health-error"
+          );
+
+          element.classList.add(
+            type ===
+              "good"
+              ? "health-good"
+              : type ===
+                  "error"
+                ? "health-error"
+                : "health-warning"
+          );
+        }
+
+        function renderHealth() {
+          setHealth(
+            "healthAdmin",
+            state.members &&
+              state.signups
+              ? "Online"
+              : "Partial",
+            state.members &&
+              state.signups
+              ? "good"
+              : "warning"
+          );
+
+          setHealth(
+            "healthSupport",
+            state.support
+              ? "Online"
+              : "Unavailable",
+            state.support
+              ? "good"
+              : "warning"
+          );
+
+          setHealth(
+            "healthGrowthPool",
+            state.growthPool
+              ? "Online"
+              : "API Pending",
+            state.growthPool
+              ? "good"
+              : "warning"
+          );
+
+          setHealth(
+            "healthAccess",
+            state.access
+              ? "Online"
+              : "API Pending",
+            state.access
+              ? "good"
+              : "warning"
+          );
+
+          setHealth(
+            "healthCards",
+            state.cards
+              ? "Online"
+              : "API Pending",
+            state.cards
+              ? "good"
+              : "warning"
+          );
+
+          const coreReady =
+            Boolean(
+              state.members &&
+              state.signups &&
+              state.support
+            );
+
+          setText(
+            "sidebarPlatformStatus",
+            coreReady
+              ? "Core Systems Online"
+              : "Partial Connectivity"
+          );
+
+          setText(
+            "sidebarPlatformDescription",
+            coreReady
+              ? "Members, signups and support APIs are responding."
+              : "Some admin services are still being connected."
+          );
+
+          setText(
+            "dashboardStatus",
+            state
+              .optionalFailures
+              .length
+              ? `${state.optionalFailures.length} future module${
+                  state
+                    .optionalFailures
+                    .length ===
+                  1
+                    ? ""
+                    : "s"
+                } pending`
+              : "All requested modules online"
+          );
+        }
+
+        /* ==============================================================
+           LOADING
+        ============================================================== */
+
+        function removeLoading() {
+          [
+            "totalMembersCard",
+            "activeMembersCard",
+            "pendingPaymentsCard",
+            "monthlyRevenueCard",
+            "growthPoolCard",
+            "allowanceCard",
+            "cardsIssuedCard",
+            "accessPerksCard",
+          ].forEach(
+            (
+              id
+            ) => {
+              $(
+                id
+              )?.classList.remove(
+                "is-loading"
+              );
+            }
+          );
+        }
+
+        function addLoading() {
+          [
+            "totalMembersCard",
+            "activeMembersCard",
+            "pendingPaymentsCard",
+            "monthlyRevenueCard",
+            "growthPoolCard",
+            "allowanceCard",
+            "cardsIssuedCard",
+            "accessPerksCard",
+          ].forEach(
+            (
+              id
+            ) => {
+              $(
+                id
+              )?.classList.add(
+                "is-loading"
+              );
+            }
+          );
+        }
+
+        /* ==============================================================
+           RENDER ALL
+        ============================================================== */
+
+        function renderAll() {
+          renderAdminHeader();
+
+          renderMembershipKpis();
+
+          renderGrowthPool();
+
+          renderAllowance();
+
+          renderCards();
+
+          renderAccess();
+
+          renderReferrals();
+
+          renderSignups();
+
+          renderSupport();
+
+          renderHealth();
+
+          removeLoading();
+        }
+
+        /* ==============================================================
+           LOAD CORE ADMIN DATA
+        ============================================================== */
+
+        async function loadCoreAdminData() {
+          const [
+            signups,
+            members,
+            support,
+          ] =
+            await Promise.all([
+              requestJson(
+                API.signups
+              ),
+
+              requestJson(
+                API.members
+              ),
+
+              requestJson(
+                API.support
+              ),
+            ]);
+
+          state.signups =
+            unwrap(
+              signups
+            );
+
+          state.members =
+            unwrap(
+              members
+            );
+
+          state.support =
+            unwrap(
+              support
+            );
+        }
+
+        /* ==============================================================
+           LOAD OPTIONAL NEW MODULES
+        ============================================================== */
+
+        async function loadOptionalModules() {
+          state
+            .optionalFailures =
+            [];
+
+          const [
+            overview,
+            growthPool,
+            cards,
+            access,
+            referrals,
+            rewards,
+          ] =
+            await Promise.all([
+              optionalRequest(
+                "overview",
+                API.overview
+              ),
+
+              optionalRequest(
+                "growth-pool",
+                API.growthPool
+              ),
+
+              optionalRequest(
+                "cards",
+                API.cards
+              ),
+
+              optionalRequest(
+                "access-perks",
+                API.access
+              ),
+
+              optionalRequest(
+                "referrals",
+                API.referrals
+              ),
+
+              optionalRequest(
+                "rewards",
+                API.rewards
+              ),
+            ]);
+
+          state.overview =
+            overview.data;
+
+          state.growthPool =
+            growthPool.data;
+
+          state.cards =
+            cards.data;
+
+          state.access =
+            access.data;
+
+          state.referrals =
+            referrals.data;
+
+          state.rewards =
+            rewards.data;
+        }
+
+        /* ==============================================================
+           DASHBOARD LOAD
+        ============================================================== */
+
+        async function loadDashboard() {
+          showBanner("");
+
+          addLoading();
+
+          try {
+            state.me =
+              await loadAdminSession();
+          } catch (
+            error
+          ) {
+            console.error(
+              "[admin] auth error:",
+              error
+            );
+
+            if (
+              error?.status ===
+                401 ||
+              error?.status ===
+                403
+            ) {
+              const next =
+                encodeURIComponent(
+                  "/admin/dashboard.html"
+                );
+
+              window.location.href =
+                `/admin/?next=${next}`;
+
+              return;
+            }
+
+            showBanner(
+              error?.message ||
+                "Unable to verify your admin session.",
+              "error"
+            );
+
+            removeLoading();
+
+            return;
+          }
+
+          try {
+            await loadCoreAdminData();
+          } catch (
+            error
+          ) {
+            console.error(
+              "[admin] core admin load error:",
+              error
+            );
+
+            removeLoading();
+
+            if (
+              error?.status ===
+                401
+            ) {
+              const next =
+                encodeURIComponent(
+                  "/admin/dashboard.html"
+                );
+
+              window.location.href =
+                `/admin/?next=${next}`;
+
+              return;
+            }
+
+            if (
+              error?.status ===
+                403
+            ) {
+              window.location.href =
+                "/admin/?error=unauthorized";
+
+              return;
+            }
+
+            showBanner(
+              error?.message ||
+                "Unable to load core administration data.",
+              "error"
+            );
+
+            return;
+          }
+
+          await loadOptionalModules();
+
+          renderAll();
+
+          if (
+            state
+              .optionalFailures
+              .length
+          ) {
+            showBanner(
+              "Core admin systems are online. Some new dashboard modules will activate as their admin APIs are added in the next steps.",
+              ""
+            );
+          } else {
+            showBanner(
+              "Admin dashboard refreshed successfully.",
+              "success"
+            );
+          }
+        }
+
+        /* ==============================================================
+           LOGOUT
+        ============================================================== */
+
+        async function logout() {
+          try {
+            await requestJson(
+              API.logout,
+              {
+                method:
+                  "POST",
+              }
+            );
+          } catch (
+            error
+          ) {
+            console.warn(
+              "[admin] logout request failed:",
+              error
+            );
+          } finally {
+            sessionStorage.removeItem(
+              "cardleo_admin_access_token"
+            );
+
+            sessionStorage.removeItem(
+              "cardleo_admin_refresh_token"
+            );
+
+            sessionStorage.removeItem(
+              "cardleo_admin_expires_at"
+            );
+
+            sessionStorage.removeItem(
+              "cardleo_admin_profile"
+            );
+
+            localStorage.removeItem(
+              "cardleo_admin_access_token"
+            );
+
+            localStorage.removeItem(
+              "cardleo_admin_refresh_token"
+            );
+
+            localStorage.removeItem(
+              "cardleo_admin_expires_at"
+            );
+
+            localStorage.removeItem(
+              "cardleo_admin_profile"
+            );
+          }
+
+          window.location.href =
+            "/admin/";
+        }
+
+        /* ==============================================================
+           MOBILE NAV
+        ============================================================== */
+
+        const mobileNav =
+          $(
+            "mobileNav"
+          );
+
+        const mobileBackdrop =
+          $(
+            "mobileBackdrop"
+          );
+
+        const mobileButton =
+          $(
+            "mobileMenuButton"
+          );
+
+        function openMobileNav() {
+          mobileNav
+            ?.classList.add(
+              "show"
+            );
+
+          mobileBackdrop
+            ?.classList.add(
+              "show"
+            );
+
+          mobileButton
+            ?.setAttribute(
+              "aria-expanded",
+              "true"
+            );
+
+          document.body
+            .classList.add(
+              "menu-open"
+            );
+        }
+
+        function closeMobileNav() {
+          mobileNav
+            ?.classList.remove(
+              "show"
+            );
+
+          mobileBackdrop
+            ?.classList.remove(
+              "show"
+            );
+
+          mobileButton
+            ?.setAttribute(
+              "aria-expanded",
+              "false"
+            );
+
+          document.body
+            .classList.remove(
+              "menu-open"
+            );
+        }
+
+        /* ==============================================================
+           EVENTS
+        ============================================================== */
+
+        function bindEvents() {
+          $(
+            "refreshButton"
+          )?.addEventListener(
+            "click",
+            loadDashboard
+          );
+
+          $(
+            "desktopLogoutButton"
+          )?.addEventListener(
+            "click",
+            logout
+          );
+
+          $(
+            "mobileLogoutButton"
+          )?.addEventListener(
+            "click",
+            logout
+          );
+
+          $(
+            "mobileMenuButton"
+          )?.addEventListener(
+            "click",
+            openMobileNav
+          );
+
+          $(
+            "mobileNavClose"
+          )?.addEventListener(
+            "click",
+            closeMobileNav
+          );
+
+          mobileBackdrop
+            ?.addEventListener(
+              "click",
+              closeMobileNav
+            );
+
+          mobileNav
+            ?.querySelectorAll(
+              "a"
+            )
+            .forEach(
+              (
+                link
+              ) => {
+                link.addEventListener(
+                  "click",
+                  closeMobileNav
+                );
+              }
+            );
+
+          document
+            .addEventListener(
+              "keydown",
+              (
+                event
+              ) => {
+                if (
+                  event.key ===
+                  "Escape"
+                ) {
+                  closeMobileNav();
+                }
+              }
+            );
+        }
+
+        /* ==============================================================
+           YEAR
+        ============================================================== */
+
+        document
+          .querySelectorAll(
+            "[data-year]"
+          )
+          .forEach(
+            (
+              element
+            ) => {
+              element.textContent =
+                new Date()
+                  .getFullYear();
+            }
+          );
+
+        /* ==============================================================
+           START
+        ============================================================== */
+
+        if (
+          document.readyState ===
+          "loading"
+        ) {
+          document
+            .addEventListener(
+              "DOMContentLoaded",
+              () => {
+                bindEvents();
+
+                loadDashboard();
+              },
+              {
+                once:
+                  true,
+              }
+            );
+        } else {
+          bindEvents();
+
+          loadDashboard();
+        }
+      })();
+    </script>
+  </body>
+</html>

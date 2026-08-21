@@ -2,41 +2,62 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <title>Card Leo Rewards Admin</title>
+
+    <title>Admin Sign In | Card Leo Rewards</title>
+
     <meta
       name="description"
-      content="Card Leo Rewards admin dashboard for signups, members, support, and rewards operations."
+      content="Secure administrator sign in for the Card Leo Rewards administration portal."
     />
-    <meta name="theme-color" content="#0b1020" />
+
+    <meta name="theme-color" content="#030303" />
     <meta name="robots" content="noindex, nofollow" />
+
+    <link rel="stylesheet" href="/style.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
 
     <style>
       :root {
-        --bg: #070b14;
-        --bg-soft: #0d1424;
-        --panel: rgba(17, 24, 39, 0.78);
-        --panel-strong: rgba(11, 17, 32, 0.92);
-        --panel-border: rgba(255, 255, 255, 0.08);
-        --text: #eef4ff;
-        --muted: #99a7c2;
-        --muted-2: #72819f;
-        --line: rgba(255, 255, 255, 0.08);
-        --gold: #f5c15d;
-        --gold-2: #ffd98a;
-        --green: #3dd598;
-        --red: #ff6b81;
-        --blue: #65a8ff;
-        --amber: #ffbb55;
-        --shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
-        --radius-xl: 28px;
-        --radius-lg: 22px;
-        --radius-md: 16px;
-        --radius-sm: 12px;
-        --max-width: 1320px;
+        --admin-black: #030303;
+        --admin-bg: #070707;
+
+        --admin-panel: rgba(14, 14, 14, 0.96);
+        --admin-panel-2: rgba(20, 20, 20, 0.94);
+
+        --admin-gold: #e7b64f;
+        --admin-gold-2: #f7d98b;
+        --admin-gold-3: #a66f10;
+
+        --admin-white: #f8f3e7;
+
+        --admin-muted: rgba(248, 243, 231, 0.68);
+        --admin-muted-2: rgba(248, 243, 231, 0.46);
+
+        --admin-line: rgba(231, 182, 79, 0.18);
+        --admin-line-soft: rgba(255, 255, 255, 0.08);
+
+        --admin-green: #48f06b;
+        --admin-red: #ff7676;
+        --admin-yellow: #ffd166;
+
+        --admin-shadow:
+          0 35px 100px rgba(0, 0, 0, 0.7);
       }
 
       * {
@@ -44,19 +65,72 @@
       }
 
       html {
-        scroll-behavior: smooth;
+        min-height: 100%;
       }
 
       body {
         margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-          "Segoe UI", sans-serif;
-        background:
-          radial-gradient(circle at top left, rgba(245, 193, 93, 0.12), transparent 28%),
-          radial-gradient(circle at top right, rgba(101, 168, 255, 0.12), transparent 22%),
-          linear-gradient(180deg, #09101e 0%, #050912 100%);
-        color: var(--text);
+
         min-height: 100vh;
+        min-height: 100dvh;
+
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+
+        color: var(--admin-white);
+
+        background:
+          radial-gradient(
+            circle at 82% 8%,
+            rgba(231, 182, 79, 0.17),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 12% 90%,
+            rgba(126, 200, 255, 0.055),
+            transparent 27%
+          ),
+          linear-gradient(
+            180deg,
+            #030303 0%,
+            #080808 52%,
+            #010101 100%
+          );
+      }
+
+      body::before {
+        content: "";
+
+        position: fixed;
+        inset: 0;
+
+        pointer-events: none;
+
+        background-image:
+          linear-gradient(
+            rgba(255, 255, 255, 0.018) 1px,
+            transparent 1px
+          ),
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.018) 1px,
+            transparent 1px
+          );
+
+        background-size:
+          80px 80px;
+
+        mask-image:
+          linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.8),
+            transparent
+          );
       }
 
       a {
@@ -69,973 +143,1838 @@
         font: inherit;
       }
 
-      .shell {
-        width: min(var(--max-width), calc(100% - 32px));
-        margin: 0 auto;
+      button {
+        cursor: pointer;
       }
 
-      .topbar {
-        position: sticky;
-        top: 0;
-        z-index: 30;
-        backdrop-filter: blur(16px);
-        background: rgba(7, 11, 20, 0.72);
-        border-bottom: 1px solid var(--line);
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.62;
       }
 
-      .topbar-inner {
-        width: min(var(--max-width), calc(100% - 32px));
-        margin: 0 auto;
-        min-height: 78px;
+      /* ================================================================
+         PAGE
+      ================================================================ */
+
+      .admin-login-page {
+        position: relative;
+
+        z-index: 1;
+
+        min-height: 100vh;
+        min-height: 100dvh;
+
+        display: grid;
+        place-items: center;
+
+        padding:
+          max(
+            22px,
+            env(safe-area-inset-top)
+          )
+          22px
+          max(
+            22px,
+            env(safe-area-inset-bottom)
+          );
+      }
+
+      .admin-login-shell {
+        width: min(
+          100%,
+          1120px
+        );
+
+        display: grid;
+
+        grid-template-columns:
+          minmax(0, 1.15fr)
+          minmax(380px, 0.85fr);
+
+        gap: 22px;
+      }
+
+      /* ================================================================
+         PANELS
+      ================================================================ */
+
+      .panel {
+        position: relative;
+
+        overflow: hidden;
+
+        border-radius: 28px;
+
+        border:
+          1px solid
+          var(--admin-line);
+
+        background:
+          radial-gradient(
+            circle at top right,
+            rgba(231, 182, 79, 0.1),
+            transparent 34%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(18, 18, 18, 0.97),
+            rgba(4, 4, 4, 0.98)
+          );
+
+        box-shadow:
+          var(--admin-shadow);
+      }
+
+      /* ================================================================
+         LEFT SIDE
+      ================================================================ */
+
+      .admin-intro {
+        min-height: 620px;
+
         display: flex;
-        align-items: center;
+
+        flex-direction: column;
+
         justify-content: space-between;
-        gap: 18px;
+
+        padding: 42px;
       }
 
       .brand {
         display: flex;
+
         align-items: center;
+
         gap: 14px;
       }
 
       .brand-mark {
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
+        width: 58px;
+        height: 58px;
+
+        flex: 0 0 auto;
+
         display: grid;
         place-items: center;
+
+        border-radius: 18px;
+
+        border:
+          1px solid
+          rgba(231, 182, 79, 0.36);
+
         background:
-          linear-gradient(135deg, rgba(245, 193, 93, 0.22), rgba(255, 217, 138, 0.08)),
-          rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(245, 193, 93, 0.28);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-        font-weight: 800;
-        color: var(--gold-2);
+          radial-gradient(
+            circle at top,
+            rgba(247, 217, 139, 0.27),
+            transparent 50%
+          ),
+          linear-gradient(
+            145deg,
+            #111111,
+            #000000
+          );
+
+        color:
+          var(--admin-gold-2);
+
+        font-weight: 900;
+
+        letter-spacing: 0.08em;
+
+        box-shadow:
+          0 0 28px
+          rgba(231, 182, 79, 0.15);
       }
 
-      .brand-copy h1 {
-        margin: 0;
-        font-size: 1.02rem;
-        letter-spacing: 0.02em;
+      .brand-copy {
+        min-width: 0;
       }
 
-      .brand-copy p {
-        margin: 3px 0 0;
-        color: var(--muted);
-        font-size: 0.9rem;
+      .brand-copy strong {
+        display: block;
+
+        font-family:
+          "Playfair Display",
+          Georgia,
+          serif;
+
+        font-size: 1.12rem;
+
+        line-height: 1.05;
       }
 
-      .top-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
+      .brand-copy span {
+        display: block;
+
+        margin-top: 5px;
+
+        color:
+          var(--admin-gold);
+
+        font-size: 0.68rem;
+
+        font-weight: 900;
+
+        letter-spacing: 0.15em;
+
+        text-transform: uppercase;
       }
 
-      .top-link,
-      .btn {
-        border: 1px solid var(--panel-border);
-        background: rgba(255, 255, 255, 0.03);
-        color: var(--text);
-        padding: 11px 14px;
-        border-radius: 999px;
-        transition: 0.2s ease;
-        cursor: pointer;
-      }
-
-      .top-link:hover,
-      .btn:hover {
-        transform: translateY(-1px);
-        border-color: rgba(245, 193, 93, 0.3);
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .btn-primary {
-        background: linear-gradient(135deg, #f5c15d, #ffd98a);
-        color: #1a1204;
-        font-weight: 700;
-        border-color: transparent;
-      }
-
-      .hero {
-        padding: 34px 0 24px;
-      }
-
-      .hero-card {
-        position: relative;
-        overflow: hidden;
-        background:
-          radial-gradient(circle at top left, rgba(245, 193, 93, 0.18), transparent 26%),
-          radial-gradient(circle at right center, rgba(101, 168, 255, 0.12), transparent 24%),
-          linear-gradient(180deg, rgba(17, 24, 39, 0.92), rgba(9, 14, 27, 0.95));
-        border: 1px solid var(--panel-border);
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow);
-        padding: 30px;
-      }
-
-      .hero-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background:
-          linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.03) 48%, transparent 100%);
-        pointer-events: none;
+      .admin-intro-content {
+        margin:
+          70px
+          0;
       }
 
       .eyebrow {
-        display: inline-flex;
+        display: flex;
+
         align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        border: 1px solid rgba(245, 193, 93, 0.2);
-        background: rgba(245, 193, 93, 0.08);
-        color: var(--gold-2);
-        font-size: 0.85rem;
-        font-weight: 700;
-        letter-spacing: 0.03em;
+
+        gap: 10px;
+
+        margin-bottom: 18px;
+
+        color:
+          var(--admin-gold);
+
+        font-size: 0.72rem;
+
+        font-weight: 900;
+
+        letter-spacing: 0.16em;
+
         text-transform: uppercase;
       }
 
-      .hero-grid {
-        margin-top: 18px;
-        display: grid;
-        grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.9fr);
-        gap: 24px;
+      .eyebrow::before {
+        content: "";
+
+        width: 34px;
+
+        height: 1px;
+
+        background:
+          linear-gradient(
+            90deg,
+            var(--admin-gold),
+            transparent
+          );
       }
 
-      .hero-copy h2 {
-        margin: 0 0 14px;
-        font-size: clamp(2rem, 4vw, 3.25rem);
-        line-height: 1.02;
-        letter-spacing: -0.04em;
-      }
-
-      .hero-copy p {
+      .admin-intro h1 {
         margin: 0;
-        color: var(--muted);
-        font-size: 1.02rem;
+
+        max-width: 650px;
+
+        font-family:
+          "Playfair Display",
+          Georgia,
+          serif;
+
+        font-size:
+          clamp(
+            3rem,
+            6vw,
+            5.2rem
+          );
+
+        line-height: 0.93;
+
+        letter-spacing: -0.06em;
+      }
+
+      .admin-intro h1 span {
+        color:
+          var(--admin-gold);
+      }
+
+      .admin-intro-description {
+        max-width: 650px;
+
+        margin:
+          20px
+          0
+          0;
+
+        color:
+          var(--admin-muted);
+
+        font-size: 0.98rem;
+
         line-height: 1.75;
-        max-width: 760px;
       }
 
-      .hero-meta {
+      /* ================================================================
+         FEATURE GRID
+      ================================================================ */
+
+      .feature-grid {
         display: grid;
-        gap: 14px;
+
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0, 1fr)
+          );
+
+        gap: 10px;
+
+        margin-top: 28px;
       }
 
-      .meta-panel {
-        border: 1px solid var(--panel-border);
-        border-radius: var(--radius-lg);
-        background: rgba(255, 255, 255, 0.03);
-        padding: 18px;
+      .feature-card {
+        padding: 15px;
+
+        border-radius: 15px;
+
+        border:
+          1px solid
+          var(--admin-line-soft);
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.03
+          );
       }
 
-      .meta-label {
-        margin: 0 0 8px;
-        color: var(--muted);
-        font-size: 0.84rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
+      .feature-card strong {
+        display: block;
+
+        color:
+          var(--admin-gold-2);
+
+        font-size: 0.79rem;
       }
 
-      .meta-value {
+      .feature-card span {
+        display: block;
+
+        margin-top: 6px;
+
+        color:
+          var(--admin-muted);
+
+        font-size: 0.72rem;
+
+        line-height: 1.5;
+      }
+
+      .intro-footer {
+        color:
+          var(--admin-muted-2);
+
+        font-size: 0.72rem;
+
+        line-height: 1.5;
+      }
+
+      /* ================================================================
+         LOGIN PANEL
+      ================================================================ */
+
+      .admin-login-panel {
+        align-self: center;
+
+        padding: 35px;
+      }
+
+      .login-icon {
+        width: 64px;
+        height: 64px;
+
+        display: grid;
+        place-items: center;
+
+        margin-bottom: 22px;
+
+        border-radius: 19px;
+
+        border:
+          1px solid
+          rgba(231, 182, 79, 0.33);
+
+        background:
+          rgba(
+            231,
+            182,
+            79,
+            0.09
+          );
+
+        color:
+          var(--admin-gold-2);
+
+        font-size: 1.45rem;
+      }
+
+      .admin-login-panel h2 {
         margin: 0;
-        font-size: 1.15rem;
-        font-weight: 700;
+
+        font-family:
+          "Playfair Display",
+          Georgia,
+          serif;
+
+        font-size: 2rem;
+
+        letter-spacing: -0.035em;
       }
 
-      .section {
-        padding: 12px 0 0;
+      .login-description {
+        margin:
+          10px
+          0
+          0;
+
+        color:
+          var(--admin-muted);
+
+        font-size: 0.87rem;
+
+        line-height: 1.65;
       }
 
-      .section-title-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 16px;
-      }
+      /* ================================================================
+         FORM
+      ================================================================ */
 
-      .section-title-row h3 {
-        margin: 0;
-        font-size: 1.18rem;
-        letter-spacing: -0.02em;
-      }
-
-      .section-title-row p {
-        margin: 4px 0 0;
-        color: var(--muted);
-        font-size: 0.94rem;
-      }
-
-      .stats-grid {
+      .admin-login-form {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+
         gap: 16px;
+
+        margin-top: 26px;
       }
 
-      .stat-card,
-      .card,
-      .quick-card {
-        background: var(--panel);
-        border: 1px solid var(--panel-border);
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow);
-      }
-
-      .stat-card {
-        padding: 20px;
-        min-height: 154px;
+      .field {
         display: grid;
-        gap: 12px;
+
+        gap: 8px;
       }
 
-      .stat-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
+      .field label {
+        color:
+          rgba(
+            248,
+            243,
+            231,
+            0.88
+          );
 
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 999px;
-        font-size: 0.76rem;
-        font-weight: 700;
-        padding: 7px 10px;
-        letter-spacing: 0.03em;
-        text-transform: uppercase;
-      }
+        font-size: 0.75rem;
 
-      .pill.gold {
-        background: rgba(245, 193, 93, 0.12);
-        color: var(--gold-2);
-      }
-
-      .pill.blue {
-        background: rgba(101, 168, 255, 0.12);
-        color: #b8d5ff;
-      }
-
-      .pill.green {
-        background: rgba(61, 213, 152, 0.12);
-        color: #9af1cb;
-      }
-
-      .pill.red {
-        background: rgba(255, 107, 129, 0.12);
-        color: #ffc1cb;
-      }
-
-      .stat-label {
-        color: var(--muted);
-        font-size: 0.95rem;
-      }
-
-      .stat-value {
-        font-size: clamp(2rem, 3vw, 2.55rem);
-        line-height: 1;
-        letter-spacing: -0.04em;
         font-weight: 800;
       }
 
-      .stat-subtext {
-        color: var(--muted);
-        font-size: 0.9rem;
+      .field input {
+        width: 100%;
+
+        min-height: 52px;
+
+        padding:
+          0
+          14px;
+
+        border-radius: 14px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.18
+          );
+
+        outline: none;
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.04
+          );
+
+        color:
+          var(--admin-white);
+
+        transition:
+          border-color 0.2s ease,
+          box-shadow 0.2s ease,
+          background 0.2s ease;
       }
 
-      .content-grid {
-        margin-top: 16px;
-        display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
-        gap: 16px;
+      .field input::placeholder {
+        color:
+          rgba(
+            248,
+            243,
+            231,
+            0.3
+          );
       }
 
-      .card {
-        padding: 22px;
+      .field input:focus {
+        border-color:
+          rgba(
+            247,
+            217,
+            139,
+            0.56
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.055
+          );
+
+        box-shadow:
+          0 0 0 3px
+          rgba(
+            231,
+            182,
+            79,
+            0.08
+          );
       }
 
-      .card-header {
+      .password-field {
+        position: relative;
+      }
+
+      .password-field input {
+        padding-right: 74px;
+      }
+
+      .password-toggle {
+        position: absolute;
+
+        top: 50%;
+        right: 10px;
+
+        transform:
+          translateY(-50%);
+
+        padding:
+          7px
+          8px;
+
+        border: 0;
+
+        background:
+          transparent;
+
+        color:
+          var(--admin-gold-2);
+
+        font-size: 0.72rem;
+
+        font-weight: 900;
+      }
+
+      .remember-row {
         display: flex;
+
         align-items: flex-start;
-        justify-content: space-between;
-        gap: 14px;
-        margin-bottom: 16px;
+
+        gap: 10px;
+
+        color:
+          var(--admin-muted);
+
+        font-size: 0.75rem;
+
+        line-height: 1.5;
       }
 
-      .card-header h4 {
-        margin: 0;
-        font-size: 1.02rem;
+      .remember-row input {
+        width: 16px;
+        height: 16px;
+
+        margin-top: 2px;
+
+        accent-color:
+          var(--admin-gold);
       }
 
-      .card-header p {
-        margin: 6px 0 0;
-        color: var(--muted);
-        font-size: 0.92rem;
+      /* ================================================================
+         STATUS
+      ================================================================ */
+
+      .status-message {
+        display: none;
+
+        padding:
+          13px
+          14px;
+
+        border-radius: 13px;
+
+        border:
+          1px solid
+          var(--admin-line);
+
+        font-size: 0.77rem;
+
+        line-height: 1.5;
       }
 
-      .list {
-        display: grid;
-        gap: 12px;
+      .status-message.show {
+        display: block;
       }
 
-      .list-item {
-        border: 1px solid var(--line);
-        border-radius: var(--radius-md);
-        background: rgba(255, 255, 255, 0.025);
-        padding: 14px;
+      .status-message.error {
+        color: #ffd6dc;
+
+        border-color:
+          rgba(
+            255,
+            118,
+            118,
+            0.25
+          );
+
+        background:
+          rgba(
+            255,
+            118,
+            118,
+            0.08
+          );
       }
 
-      .list-row {
-        display: flex;
+      .status-message.success {
+        color: #d3ffe0;
+
+        border-color:
+          rgba(
+            72,
+            240,
+            107,
+            0.24
+          );
+
+        background:
+          rgba(
+            72,
+            240,
+            107,
+            0.08
+          );
+      }
+
+      .status-message.warning {
+        color: #fff0bd;
+
+        border-color:
+          rgba(
+            255,
+            209,
+            102,
+            0.24
+          );
+
+        background:
+          rgba(
+            255,
+            209,
+            102,
+            0.08
+          );
+      }
+
+      /* ================================================================
+         BUTTON
+      ================================================================ */
+
+      .login-button {
+        width: 100%;
+
+        min-height: 53px;
+
+        display: inline-flex;
+
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
+
+        justify-content: center;
+
+        gap: 9px;
+
+        padding:
+          0
+          18px;
+
+        border: 0;
+
+        border-radius: 14px;
+
+        color: #080808;
+
+        background:
+          linear-gradient(
+            135deg,
+            #f7d98b 0%,
+            #d89a22 52%,
+            #8b5b0b 100%
+          );
+
+        box-shadow:
+          0 16px 40px
+          rgba(
+            216,
+            154,
+            34,
+            0.22
+          );
+
+        font-weight: 900;
+
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
       }
 
-      .list-title {
-        margin: 0;
-        font-size: 0.98rem;
-        font-weight: 700;
+      .login-button:not(:disabled):hover {
+        transform:
+          translateY(-1px);
+
+        box-shadow:
+          0 20px 48px
+          rgba(
+            216,
+            154,
+            34,
+            0.28
+          );
       }
 
-      .list-meta {
-        margin: 6px 0 0;
-        color: var(--muted);
-        font-size: 0.88rem;
+      /* ================================================================
+         SECURITY
+      ================================================================ */
+
+      .security-notice {
+        margin-top: 22px;
+
+        padding-top: 18px;
+
+        border-top:
+          1px solid
+          var(--admin-line-soft);
+
+        color:
+          var(--admin-muted-2);
+
+        font-size: 0.72rem;
+
         line-height: 1.6;
       }
 
-      .empty {
-        border: 1px dashed var(--line);
-        border-radius: var(--radius-md);
-        padding: 20px;
-        color: var(--muted);
-        text-align: center;
+      .security-notice strong {
+        color:
+          var(--admin-muted);
       }
 
-      .quick-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 16px;
+      .return-link {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        margin-top: 17px;
+
+        color:
+          var(--admin-gold);
+
+        font-size: 0.77rem;
+
+        font-weight: 850;
       }
 
-      .quick-card {
-        padding: 20px;
-        min-height: 196px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
+      /* ================================================================
+         RESPONSIVE
+      ================================================================ */
 
-      .quick-card h5 {
-        margin: 0 0 10px;
-        font-size: 1.05rem;
-      }
+      @media (max-width: 900px) {
+        .admin-login-shell {
+          grid-template-columns:
+            1fr;
+        }
 
-      .quick-card p {
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.7;
-        font-size: 0.95rem;
-      }
+        .admin-intro {
+          min-height: auto;
 
-      .quick-card .btn {
-        margin-top: 16px;
-        width: fit-content;
-      }
+          padding: 30px;
+        }
 
-      .footer-space {
-        height: 40px;
-      }
+        .admin-intro-content {
+          margin:
+            55px
+            0
+            25px;
+        }
 
-      .status-banner {
-        display: none;
-        margin: 16px 0 0;
-        padding: 14px 16px;
-        border-radius: 16px;
-        border: 1px solid rgba(255, 107, 129, 0.22);
-        background: rgba(255, 107, 129, 0.08);
-        color: #ffd5dc;
-      }
+        .admin-intro h1 {
+          font-size:
+            clamp(
+              2.8rem,
+              10vw,
+              4.4rem
+            );
+        }
 
-      .loading {
-        position: relative;
-        overflow: hidden;
-      }
-
-      .loading::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        transform: translateX(-100%);
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.05),
-          transparent
-        );
-        animation: shimmer 1.2s infinite;
-      }
-
-      @keyframes shimmer {
-        100% {
-          transform: translateX(100%);
+        .admin-login-panel {
+          padding: 30px;
         }
       }
 
-      @media (max-width: 1120px) {
-        .stats-grid,
-        .quick-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+      @media (max-width: 600px) {
+        .admin-login-page {
+          padding:
+            10px;
         }
 
-        .content-grid,
-        .hero-grid {
-          grid-template-columns: 1fr;
+        .panel {
+          border-radius: 21px;
+        }
+
+        .admin-intro {
+          padding: 23px;
+        }
+
+        .admin-intro-content {
+          margin:
+            45px
+            0
+            20px;
+        }
+
+        .admin-intro h1 {
+          font-size: 2.55rem;
+        }
+
+        .feature-grid {
+          grid-template-columns:
+            1fr;
+        }
+
+        .admin-login-panel {
+          padding: 23px;
         }
       }
 
-      @media (max-width: 720px) {
-        .topbar-inner {
-          padding: 12px 0;
-          align-items: flex-start;
-          flex-direction: column;
+      @media (max-width: 390px) {
+        .admin-intro h1 {
+          font-size: 2.25rem;
         }
 
-        .stats-grid,
-        .quick-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .hero-card,
-        .card,
-        .stat-card,
-        .quick-card {
-          padding: 18px;
-        }
-
-        .hero {
-          padding-top: 20px;
+        .admin-login-panel h2 {
+          font-size: 1.75rem;
         }
       }
     </style>
   </head>
+
   <body>
-    <header class="topbar">
-      <div class="topbar-inner">
-        <div class="brand">
-          <div class="brand-mark">CL</div>
-          <div class="brand-copy">
-            <h1>Card Leo Rewards Admin</h1>
-            <p>Operations dashboard for members, support, and rewards</p>
-          </div>
-        </div>
+    <main class="admin-login-page">
+      <div class="admin-login-shell">
+        <!-- ============================================================
+             INTRO
+        ============================================================= -->
 
-        <div class="top-actions">
-          <a class="top-link" href="/">Website</a>
-          <a class="top-link" href="/portal/index.html">Member Portal</a>
-          <button class="btn" id="refreshBtn" type="button">Refresh</button>
-          <button class="btn btn-primary" id="logoutBtn" type="button">Log Out</button>
-        </div>
+        <section class="panel admin-intro">
+          <div class="brand">
+            <div class="brand-mark">
+              CL
+            </div>
+
+            <div class="brand-copy">
+              <strong>
+                Card Leo Rewards
+              </strong>
+
+              <span>
+                Administration
+              </span>
+            </div>
+          </div>
+
+          <div class="admin-intro-content">
+            <div class="eyebrow">
+              Executive Operations
+            </div>
+
+            <h1>
+              Admin
+              <span>
+                Command Center.
+              </span>
+            </h1>
+
+            <p class="admin-intro-description">
+              Secure administrator access for managing the Card Leo
+              Rewards ecosystem, including memberships, payments,
+              referrals, rewards, allowance cards, Growth Pool activity,
+              Access Perks, support and platform operations.
+            </p>
+
+            <div class="feature-grid">
+              <article class="feature-card">
+                <strong>
+                  Member Operations
+                </strong>
+
+                <span>
+                  Review memberships, payment status and account
+                  readiness.
+                </span>
+              </article>
+
+              <article class="feature-card">
+                <strong>
+                  Rewards & Cards
+                </strong>
+
+                <span>
+                  Monitor member rewards, allowance balances and cards.
+                </span>
+              </article>
+
+              <article class="feature-card">
+                <strong>
+                  Access Perks
+                </strong>
+
+                <span>
+                  Review benefit enrollment and synchronization status.
+                </span>
+              </article>
+
+              <article class="feature-card">
+                <strong>
+                  Growth Pool
+                </strong>
+
+                <span>
+                  Monitor company Growth Pool contributions and activity.
+                </span>
+              </article>
+            </div>
+          </div>
+
+          <footer class="intro-footer">
+            Authorized Personnel Only
+            ·
+            Card Leo Rewards
+            ·
+            <span id="currentYear"></span>
+          </footer>
+        </section>
+
+        <!-- ============================================================
+             LOGIN
+        ============================================================= -->
+
+        <section class="panel admin-login-panel">
+          <div class="login-icon">
+            ♛
+          </div>
+
+          <h2>
+            Administrator Sign In
+          </h2>
+
+          <p class="login-description">
+            Enter the email and password associated with your
+            authorized Card Leo administrator account.
+          </p>
+
+          <form
+            id="adminLoginForm"
+            class="admin-login-form"
+            novalidate
+          >
+            <div
+              id="statusMessage"
+              class="status-message"
+              role="status"
+              aria-live="polite"
+            ></div>
+
+            <div class="field">
+              <label for="adminEmail">
+                Administrator Email
+              </label>
+
+              <input
+                id="adminEmail"
+                name="email"
+                type="email"
+                autocomplete="username"
+                inputmode="email"
+                placeholder="admin@cardleorewards.com"
+                required
+              />
+            </div>
+
+            <div class="field">
+              <label for="adminPassword">
+                Password
+              </label>
+
+              <div class="password-field">
+                <input
+                  id="adminPassword"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="Enter your password"
+                  required
+                />
+
+                <button
+                  id="passwordToggle"
+                  class="password-toggle"
+                  type="button"
+                  aria-label="Show password"
+                >
+                  Show
+                </button>
+              </div>
+            </div>
+
+            <label class="remember-row">
+              <input
+                id="rememberAdmin"
+                type="checkbox"
+              />
+
+              <span>
+                Keep this administrator session on this device.
+                Leave this unchecked when using a shared device.
+              </span>
+            </label>
+
+            <button
+              id="loginButton"
+              class="login-button"
+              type="submit"
+            >
+              Sign In To Admin
+            </button>
+          </form>
+
+          <div class="security-notice">
+            <strong>
+              Protected administrator area.
+            </strong>
+
+            Valid Card Leo member credentials alone do not grant
+            administrator access.
+          </div>
+
+          <a
+            class="return-link"
+            href="/"
+          >
+            ← Return To Card Leo Rewards
+          </a>
+        </section>
       </div>
-    </header>
-
-    <main class="shell">
-      <section class="hero">
-        <div class="hero-card">
-          <div class="eyebrow">Admin Command Center</div>
-
-          <div class="hero-grid">
-            <div class="hero-copy">
-              <h2>Run Card Leo Rewards from one elite dashboard.</h2>
-              <p>
-                Review incoming signups, monitor active members, manage support,
-                and keep the rewards engine moving with full operational visibility.
-              </p>
-
-              <div id="statusBanner" class="status-banner"></div>
-            </div>
-
-            <div class="hero-meta">
-              <div class="meta-panel">
-                <p class="meta-label">Signed in as</p>
-                <p class="meta-value" id="adminName">Loading...</p>
-              </div>
-
-              <div class="meta-panel">
-                <p class="meta-label">Role access</p>
-                <p class="meta-value" id="adminAccess">Checking permissions...</p>
-              </div>
-
-              <div class="meta-panel">
-                <p class="meta-label">Last refresh</p>
-                <p class="meta-value" id="lastRefresh">—</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-title-row">
-          <div>
-            <h3>Operational Snapshot</h3>
-            <p>Live summary pulled from signups, members, and support.</p>
-          </div>
-        </div>
-
-        <div class="stats-grid">
-          <article class="stat-card loading" id="signupsCard">
-            <div class="stat-top">
-              <span class="pill gold">Signups</span>
-              <a href="/admin/signups.html" class="top-link">Open</a>
-            </div>
-            <div class="stat-label">Pending review</div>
-            <div class="stat-value" id="signupsValue">—</div>
-            <div class="stat-subtext" id="signupsSubtext">Loading signup data...</div>
-          </article>
-
-          <article class="stat-card loading" id="membersCard">
-            <div class="stat-top">
-              <span class="pill blue">Members</span>
-              <a href="/admin/members.html" class="top-link">Open</a>
-            </div>
-            <div class="stat-label">Active members</div>
-            <div class="stat-value" id="membersValue">—</div>
-            <div class="stat-subtext" id="membersSubtext">Loading member data...</div>
-          </article>
-
-          <article class="stat-card loading" id="supportCard">
-            <div class="stat-top">
-              <span class="pill red">Support</span>
-              <a href="/admin/support.html" class="top-link">Open</a>
-            </div>
-            <div class="stat-label">Open or in progress</div>
-            <div class="stat-value" id="supportValue">—</div>
-            <div class="stat-subtext" id="supportSubtext">Loading support data...</div>
-          </article>
-
-          <article class="stat-card loading" id="rewardsCard">
-            <div class="stat-top">
-              <span class="pill green">Rewards</span>
-              <span class="top-link" style="pointer-events: none;">Live</span>
-            </div>
-            <div class="stat-label">VIP + admin operators</div>
-            <div class="stat-value" id="rewardsValue">—</div>
-            <div class="stat-subtext" id="rewardsSubtext">Loading operator insight...</div>
-          </article>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="content-grid">
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <h4>Latest Signups</h4>
-                <p>Newest leads and member approvals waiting for action.</p>
-              </div>
-              <a href="/admin/signups.html" class="top-link">View all</a>
-            </div>
-
-            <div id="latestSignups" class="list">
-              <div class="empty">Loading recent signups...</div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <h4>Support Queue</h4>
-                <p>Recent tickets that need review, routing, or follow-up.</p>
-              </div>
-              <a href="/admin/support.html" class="top-link">View all</a>
-            </div>
-
-            <div id="supportQueue" class="list">
-              <div class="empty">Loading recent tickets...</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h4>Quick Actions</h4>
-              <p>Jump straight into the most important admin workflows.</p>
-            </div>
-          </div>
-
-          <div class="quick-grid">
-            <article class="quick-card">
-              <div>
-                <h5>Review Signups</h5>
-                <p>
-                  Inspect new lead submissions, approve qualified members, and
-                  move people from signup to live portal access.
-                </p>
-              </div>
-              <a class="btn btn-primary" href="/admin/signups.html">Open Signups</a>
-            </article>
-
-            <article class="quick-card">
-              <div>
-                <h5>Manage Members</h5>
-                <p>
-                  View active member records, tier status, onboarding progress,
-                  portal access, and rewards standing across the platform.
-                </p>
-              </div>
-              <a class="btn btn-primary" href="/admin/members.html">Open Members</a>
-            </article>
-
-            <article class="quick-card">
-              <div>
-                <h5>Run Support Ops</h5>
-                <p>
-                  Monitor open tickets, check assignees, and keep the member
-                  experience tight with fast operational response.
-                </p>
-              </div>
-              <a class="btn btn-primary" href="/admin/support.html">Open Support</a>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <div class="footer-space"></div>
     </main>
 
     <script>
-      (function () {
-        const state = {
-          me: null,
-          signups: null,
-          members: null,
-          support: null,
+      (() => {
+        "use strict";
+
+        /* ==============================================================
+           CONFIG
+        ============================================================== */
+
+        const API = {
+          login:
+            "/api/admin/login",
+
+          me:
+            "/api/admin/auth/me",
+
+          logout:
+            "/api/admin/logout",
         };
 
-        function $(id) {
-          return document.getElementById(id);
+        const DEFAULT_DASHBOARD =
+          "/admin/dashboard.html";
+
+        const STORAGE_KEYS = {
+          accessToken:
+            "cardleo_admin_access_token",
+
+          refreshToken:
+            "cardleo_admin_refresh_token",
+
+          expiresAt:
+            "cardleo_admin_expires_at",
+
+          profile:
+            "cardleo_admin_profile",
+        };
+
+        /* ==============================================================
+           ELEMENTS
+        ============================================================== */
+
+        const form =
+          document.getElementById(
+            "adminLoginForm"
+          );
+
+        const emailInput =
+          document.getElementById(
+            "adminEmail"
+          );
+
+        const passwordInput =
+          document.getElementById(
+            "adminPassword"
+          );
+
+        const rememberInput =
+          document.getElementById(
+            "rememberAdmin"
+          );
+
+        const loginButton =
+          document.getElementById(
+            "loginButton"
+          );
+
+        const statusMessage =
+          document.getElementById(
+            "statusMessage"
+          );
+
+        const passwordToggle =
+          document.getElementById(
+            "passwordToggle"
+          );
+
+        const currentYear =
+          document.getElementById(
+            "currentYear"
+          );
+
+        /* ==============================================================
+           HELPERS
+        ============================================================== */
+
+        function normalizeString(
+          value
+        ) {
+          return String(
+            value ?? ""
+          ).trim();
         }
 
-        function setText(id, value) {
-          const el = $(id);
-          if (el) el.textContent = value;
+        function normalizeEmail(
+          value
+        ) {
+          return normalizeString(
+            value
+          ).toLowerCase();
         }
 
-        function setHtml(id, value) {
-          const el = $(id);
-          if (el) el.innerHTML = value;
+        function isValidEmail(
+          value
+        ) {
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+            normalizeEmail(
+              value
+            )
+          );
         }
 
-        function showBanner(message) {
-          const el = $("statusBanner");
-          if (!el) return;
-          el.textContent = message || "";
-          el.style.display = message ? "block" : "none";
-        }
-
-        function escapeHtml(value) {
-          return String(value ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#39;");
-        }
-
-        function titleCase(value) {
-          return String(value || "")
-            .split(/[\s_-]+/)
-            .filter(Boolean)
-            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-            .join(" ");
-        }
-
-        function formatDate(value) {
-          if (!value) return "—";
-          const date = new Date(value);
-          if (Number.isNaN(date.getTime())) return "—";
-
-          return new Intl.DateTimeFormat("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-          }).format(date);
-        }
-
-        function formatCount(value) {
-          const num = Number(value || 0);
-          return Number.isFinite(num) ? num.toLocaleString() : "0";
-        }
-
-        async function api(url, options = {}) {
-          const response = await fetch(url, {
-            credentials: "include",
-            headers: {
-              Accept: "application/json",
-              ...(options.headers || {}),
-            },
-            ...options,
-          });
-
-          const contentType = response.headers.get("content-type") || "";
-          const body = contentType.includes("application/json")
-            ? await response.json()
-            : { success: false, message: "Unexpected server response." };
-
-          if (!response.ok || body?.success === false) {
-            const error = new Error(body?.message || "Request failed.");
-            error.status = response.status;
-            error.payload = body;
-            throw error;
+        function unwrap(
+          payload
+        ) {
+          if (
+            payload &&
+            typeof payload ===
+              "object" &&
+            payload.data &&
+            typeof payload.data ===
+              "object"
+          ) {
+            return payload.data;
           }
 
-          return body;
+          return payload;
         }
 
-        function stripLoading() {
-          ["signupsCard", "membersCard", "supportCard", "rewardsCard"].forEach((id) => {
-            const el = $(id);
-            if (el) el.classList.remove("loading");
-          });
-        }
+        function showStatus(
+          message,
+          type = ""
+        ) {
+          const cleanMessage =
+            normalizeString(
+              message
+            );
 
-        function renderAdminHeader() {
-          const adminName =
-            state.signups?.data?.admin?.fullName ||
-            state.members?.data?.admin?.fullName ||
-            state.support?.data?.admin?.fullName ||
-            state.me?.data?.user?.email ||
-            "Admin";
+          statusMessage.textContent =
+            cleanMessage;
 
-          setText("adminName", adminName);
+          statusMessage.className =
+            "status-message";
 
-          const access = [];
-          if (state.signups?.data?.admin?.canManageMembers) access.push("Members");
-          if (state.support?.data?.admin?.canManageSupport) access.push("Support");
-          if (state.members?.data?.admin?.isSuperAdmin) access.push("Super Admin");
-
-          setText("adminAccess", access.length ? access.join(" • ") : "Verified Admin");
-          setText("lastRefresh", formatDate(new Date().toISOString()));
-        }
-
-        function renderSnapshot() {
-          const signupSummary = state.signups?.data?.summary || {};
-          const memberSummary = state.members?.data?.summary || {};
-          const supportSummary = state.support?.data?.summary || {};
-
-          const pendingSignups =
-            Number(signupSummary.statusCounts?.new || 0) +
-            Number(signupSummary.statusCounts?.reviewing || 0);
-
-          setText("signupsValue", formatCount(pendingSignups));
-          setText(
-            "signupsSubtext",
-            `${formatCount(signupSummary.total || 0)} total • ${formatCount(
-              signupSummary.active || 0
-            )} active`
-          );
-
-          setText("membersValue", formatCount(memberSummary.activeMembers || 0));
-          setText(
-            "membersSubtext",
-            `${formatCount(memberSummary.total || 0)} total • ${formatCount(
-              memberSummary.adminOperators || 0
-            )} admins`
-          );
-
-          const liveSupport =
-            Number(supportSummary.open || 0) +
-            Number(supportSummary.inProgress || 0) +
-            Number(supportSummary.waitingOnMember || 0);
-
-          setText("supportValue", formatCount(liveSupport));
-          setText(
-            "supportSubtext",
-            `${formatCount(supportSummary.urgent || 0)} urgent • ${formatCount(
-              supportSummary.total || 0
-            )} total`
-          );
-
-          const vipCount = (state.members?.data?.members || []).filter(
-            (member) => String(member.tier || "").toLowerCase() === "vip"
-          ).length;
-
-          const operatorCount =
-            Number(memberSummary.adminOperators || 0) +
-            Number(memberSummary.supportOperators || 0);
-
-          setText("rewardsValue", formatCount(vipCount + operatorCount));
-          setText(
-            "rewardsSubtext",
-            `${formatCount(vipCount)} VIP visible • ${formatCount(operatorCount)} operators`
-          );
-        }
-
-        function renderSignups() {
-          const list = state.signups?.data?.signups || [];
-          if (!list.length) {
-            setHtml("latestSignups", `<div class="empty">No signup records found.</div>`);
+          if (!cleanMessage) {
             return;
           }
 
-          setHtml(
-            "latestSignups",
-            list
-              .slice(0, 5)
-              .map(
-                (item) => `
-                  <article class="list-item">
-                    <div class="list-row">
-                      <p class="list-title">${escapeHtml(item.fullName || item.email || "Signup")}</p>
-                      <span class="pill gold">${escapeHtml(item.statusLabel || "New")}</span>
-                    </div>
-                    <p class="list-meta">
-                      ${escapeHtml(item.email || "No email")} •
-                      ${escapeHtml(item.sourceLabel || "Website")} •
-                      ${escapeHtml(formatDate(item.createdAt))}
-                    </p>
-                  </article>
-                `
-              )
-              .join("")
+          statusMessage.classList.add(
+            "show"
           );
+
+          if (type) {
+            statusMessage.classList.add(
+              type
+            );
+          }
         }
 
-        function renderSupport() {
-          const tickets = state.support?.data?.tickets || [];
-          if (!tickets.length) {
-            setHtml("supportQueue", `<div class="empty">No support tickets found.</div>`);
+        function setLoading(
+          loading
+        ) {
+          loginButton.disabled =
+            loading;
+
+          emailInput.disabled =
+            loading;
+
+          passwordInput.disabled =
+            loading;
+
+          rememberInput.disabled =
+            loading;
+
+          loginButton.textContent =
+            loading
+              ? "Verifying Administrator..."
+              : "Sign In To Admin";
+        }
+
+        /* ==============================================================
+           STORAGE
+        ============================================================== */
+
+        function removeStorageKey(
+          storage,
+          key
+        ) {
+          try {
+            storage.removeItem(
+              key
+            );
+          } catch {
+            // Ignore unavailable storage.
+          }
+        }
+
+        function setStorageValue(
+          storage,
+          key,
+          value
+        ) {
+          const cleanValue =
+            normalizeString(
+              value
+            );
+
+          if (!cleanValue) {
             return;
           }
-
-          setHtml(
-            "supportQueue",
-            tickets
-              .slice(0, 5)
-              .map(
-                (item) => `
-                  <article class="list-item">
-                    <div class="list-row">
-                      <p class="list-title">${escapeHtml(item.subject || item.ticketNumber || "Support Ticket")}</p>
-                      <span class="pill red">${escapeHtml(item.priorityLabel || "Normal")}</span>
-                    </div>
-                    <p class="list-meta">
-                      ${escapeHtml(item.ticketNumber || "No ticket number")} •
-                      ${escapeHtml(item.statusLabel || "Open")} •
-                      ${escapeHtml(formatDate(item.lastMessageAt || item.createdAt))}
-                    </p>
-                  </article>
-                `
-              )
-              .join("")
-          );
-        }
-
-        async function loadDashboard() {
-          showBanner("");
 
           try {
-            state.me = await api("/api/auth/me");
-          } catch (error) {
-            if (error?.status === 401) {
-              const next = encodeURIComponent("/admin/index.html");
-              window.location.href = `/login.html?next=${next}`;
+            storage.setItem(
+              key,
+              cleanValue
+            );
+          } catch {
+            // Ignore unavailable storage.
+          }
+        }
+
+        function clearAdminStorage() {
+          const storages = [
+            sessionStorage,
+            localStorage,
+          ];
+
+          const keys =
+            Object.values(
+              STORAGE_KEYS
+            );
+
+          for (
+            const storage
+            of storages
+          ) {
+            for (
+              const key
+              of keys
+            ) {
+              removeStorageKey(
+                storage,
+                key
+              );
+            }
+          }
+        }
+
+        function getStoredAccessToken() {
+          try {
+            return (
+              normalizeString(
+                sessionStorage.getItem(
+                  STORAGE_KEYS.accessToken
+                )
+              ) ||
+              normalizeString(
+                localStorage.getItem(
+                  STORAGE_KEYS.accessToken
+                )
+              )
+            );
+          } catch {
+            return "";
+          }
+        }
+
+        function storeAdminSession(
+          result
+        ) {
+          clearAdminStorage();
+
+          const session =
+            result?.session ||
+            {};
+
+          const accessToken =
+            normalizeString(
+              session.accessToken ||
+                session.access_token
+            );
+
+          const refreshToken =
+            normalizeString(
+              session.refreshToken ||
+                session.refresh_token
+            );
+
+          const expiresAt =
+            normalizeString(
+              session.expiresAt ||
+                session.expires_at
+            );
+
+          const storage =
+            rememberInput.checked
+              ? localStorage
+              : sessionStorage;
+
+          if (accessToken) {
+            setStorageValue(
+              storage,
+              STORAGE_KEYS.accessToken,
+              accessToken
+            );
+          }
+
+          if (refreshToken) {
+            setStorageValue(
+              storage,
+              STORAGE_KEYS.refreshToken,
+              refreshToken
+            );
+          }
+
+          if (expiresAt) {
+            setStorageValue(
+              storage,
+              STORAGE_KEYS.expiresAt,
+              expiresAt
+            );
+          }
+
+          if (result?.admin) {
+            try {
+              storage.setItem(
+                STORAGE_KEYS.profile,
+                JSON.stringify(
+                  result.admin
+                )
+              );
+            } catch {
+              // Profile caching is optional.
+            }
+          }
+        }
+
+        /* ==============================================================
+           REDIRECT
+        ============================================================== */
+
+        function getSafeNextUrl() {
+          const params =
+            new URLSearchParams(
+              window.location.search
+            );
+
+          const requested =
+            normalizeString(
+              params.get(
+                "next"
+              )
+            );
+
+          if (!requested) {
+            return DEFAULT_DASHBOARD;
+          }
+
+          if (
+            !requested.startsWith(
+              "/admin/"
+            )
+          ) {
+            return DEFAULT_DASHBOARD;
+          }
+
+          if (
+            requested.startsWith(
+              "//"
+            )
+          ) {
+            return DEFAULT_DASHBOARD;
+          }
+
+          const blocked = new Set([
+            "/admin/",
+            "/admin/index.html",
+            "/admin/login.html",
+          ]);
+
+          if (
+            blocked.has(
+              requested
+            )
+          ) {
+            return DEFAULT_DASHBOARD;
+          }
+
+          return requested;
+        }
+
+        function goToDashboard() {
+          window.location.replace(
+            getSafeNextUrl()
+          );
+        }
+
+        /* ==============================================================
+           EXISTING SESSION CHECK
+        ============================================================== */
+
+        async function checkExistingSession() {
+          const accessToken =
+            getStoredAccessToken();
+
+          if (!accessToken) {
+            return;
+          }
+
+          try {
+            const response =
+              await fetch(
+                API.me,
+                {
+                  method:
+                    "GET",
+
+                  credentials:
+                    "include",
+
+                  headers: {
+                    Accept:
+                      "application/json",
+
+                    Authorization:
+                      `Bearer ${accessToken}`,
+                  },
+
+                  cache:
+                    "no-store",
+                }
+              );
+
+            const payload =
+              await response
+                .json()
+                .catch(
+                  () => ({})
+                );
+
+            const result =
+              unwrap(
+                payload
+              );
+
+            if (
+              response.ok &&
+              result?.authenticated ===
+                true &&
+              result?.admin
+            ) {
+              goToDashboard();
+
               return;
             }
 
-            showBanner(error?.message || "Unable to verify your session.");
-            stripLoading();
-            return;
-          }
-
-          try {
-            const [signups, members, support] = await Promise.all([
-              api("/api/admin/signups?limit=5&status=all&sort=newest"),
-              api("/api/admin/members?limit=8&status=all&sort=newest"),
-              api("/api/admin/support?limit=5&status=all&sort=updated"),
-            ]);
-
-            state.signups = signups;
-            state.members = members;
-            state.support = support;
-
-            renderAdminHeader();
-            renderSnapshot();
-            renderSignups();
-            renderSupport();
-            stripLoading();
-          } catch (error) {
-            stripLoading();
-
-            if (error?.status === 403) {
-              window.location.href = "/unauthorized.html";
-              return;
-            }
-
-            showBanner(error?.message || "Unable to load admin dashboard data.");
+            clearAdminStorage();
+          } catch (
+            error
+          ) {
+            console.warn(
+              "[Card Leo Admin] Existing session check failed:",
+              error
+            );
           }
         }
 
-        async function handleLogout() {
+        /* ==============================================================
+           LOGIN
+        ============================================================== */
+
+        async function handleLogin(
+          event
+        ) {
+          event.preventDefault();
+
+          showStatus(
+            ""
+          );
+
+          const email =
+            normalizeEmail(
+              emailInput.value
+            );
+
+          const password =
+            normalizeString(
+              passwordInput.value
+            );
+
+          if (
+            !email ||
+            !isValidEmail(
+              email
+            )
+          ) {
+            showStatus(
+              "Enter a valid administrator email address.",
+              "error"
+            );
+
+            emailInput.focus();
+
+            return;
+          }
+
+          if (!password) {
+            showStatus(
+              "Enter your administrator password.",
+              "error"
+            );
+
+            passwordInput.focus();
+
+            return;
+          }
+
+          setLoading(
+            true
+          );
+
           try {
-            await api("/api/auth/logout", {
-              method: "POST",
-            });
-          } catch (_) {
+            const response =
+              await fetch(
+                API.login,
+                {
+                  method:
+                    "POST",
+
+                  credentials:
+                    "include",
+
+                  headers: {
+                    Accept:
+                      "application/json",
+
+                    "Content-Type":
+                      "application/json",
+                  },
+
+                  body:
+                    JSON.stringify({
+                      email,
+                      password,
+                    }),
+                }
+              );
+
+            const payload =
+              await response
+                .json()
+                .catch(
+                  () => ({})
+                );
+
+            const result =
+              unwrap(
+                payload
+              );
+
+            if (
+              !response.ok ||
+              payload?.success ===
+                false ||
+              payload?.ok ===
+                false
+            ) {
+              const error =
+                new Error(
+                  payload?.message ||
+                    payload?.error ||
+                    result?.message ||
+                    result?.error ||
+                    `Administrator sign in failed with status ${response.status}.`
+                );
+
+              error.status =
+                response.status;
+
+              throw error;
+            }
+
+            if (
+              result?.authenticated !==
+                true
+            ) {
+              const error =
+                new Error(
+                  "Administrator authentication was not completed."
+                );
+
+              error.status =
+                401;
+
+              throw error;
+            }
+
+            if (
+              !result?.admin
+            ) {
+              const error =
+                new Error(
+                  "Administrator profile was not returned."
+                );
+
+              error.status =
+                403;
+
+              throw error;
+            }
+
+            storeAdminSession(
+              result
+            );
+
+            showStatus(
+              "Administrator verified. Opening the command center...",
+              "success"
+            );
+
+            window.setTimeout(
+              () => {
+                goToDashboard();
+              },
+              300
+            );
+          } catch (
+            error
+          ) {
+            console.error(
+              "[Card Leo Admin] Login failed:",
+              error
+            );
+
+            clearAdminStorage();
+
+            if (
+              error?.status ===
+                403
+            ) {
+              showStatus(
+                "This account is not authorized for Card Leo administrator access.",
+                "error"
+              );
+            } else if (
+              error?.status ===
+                401
+            ) {
+              showStatus(
+                "Invalid administrator email or password.",
+                "error"
+              );
+            } else if (
+              error?.status ===
+                429
+            ) {
+              showStatus(
+                "Too many sign-in attempts. Please wait before trying again.",
+                "warning"
+              );
+            } else {
+              showStatus(
+                error?.message ||
+                  "Unable to sign in to the Card Leo administration portal.",
+                "error"
+              );
+            }
+
+            passwordInput.value =
+              "";
+
+            passwordInput.focus();
           } finally {
-            window.location.href = "/login.html";
+            setLoading(
+              false
+            );
           }
         }
 
-        function bindEvents() {
-          const refreshBtn = $("refreshBtn");
-          const logoutBtn = $("logoutBtn");
+        /* ==============================================================
+           PASSWORD TOGGLE
+        ============================================================== */
 
-          if (refreshBtn) {
-            refreshBtn.addEventListener("click", () => {
-              ["signupsCard", "membersCard", "supportCard", "rewardsCard"].forEach((id) => {
-                const el = $(id);
-                if (el) el.classList.add("loading");
-              });
+        function togglePassword() {
+          const isVisible =
+            passwordInput.type ===
+            "text";
 
-              setHtml("latestSignups", `<div class="empty">Refreshing signups...</div>`);
-              setHtml("supportQueue", `<div class="empty">Refreshing tickets...</div>`);
-              loadDashboard();
-            });
-          }
+          passwordInput.type =
+            isVisible
+              ? "password"
+              : "text";
 
-          if (logoutBtn) {
-            logoutBtn.addEventListener("click", handleLogout);
-          }
-        }
+          passwordToggle.textContent =
+            isVisible
+              ? "Show"
+              : "Hide";
 
-        if (document.readyState === "loading") {
-          document.addEventListener(
-            "DOMContentLoaded",
-            function () {
-              bindEvents();
-              loadDashboard();
-            },
-            { once: true }
+          passwordToggle.setAttribute(
+            "aria-label",
+            isVisible
+              ? "Show password"
+              : "Hide password"
           );
-        } else {
-          bindEvents();
-          loadDashboard();
         }
+
+        /* ==============================================================
+           QUERY ERRORS
+        ============================================================== */
+
+        function handleQueryMessages() {
+          const params =
+            new URLSearchParams(
+              window.location.search
+            );
+
+          const error =
+            normalizeString(
+              params.get(
+                "error"
+              )
+            ).toLowerCase();
+
+          if (
+            error ===
+              "unauthorized"
+          ) {
+            showStatus(
+              "Your account does not have permission to access that administrator area.",
+              "error"
+            );
+          }
+
+          if (
+            error ===
+              "session_expired"
+          ) {
+            showStatus(
+              "Your administrator session expired. Sign in again to continue.",
+              "warning"
+            );
+          }
+
+          if (
+            error ===
+              "logged_out"
+          ) {
+            showStatus(
+              "You have been signed out of the administrator portal.",
+              "success"
+            );
+          }
+        }
+
+        /* ==============================================================
+           INIT
+        ============================================================== */
+
+        function init() {
+          if (
+            currentYear
+          ) {
+            currentYear.textContent =
+              new Date()
+                .getFullYear();
+          }
+
+          handleQueryMessages();
+
+          form.addEventListener(
+            "submit",
+            handleLogin
+          );
+
+          passwordToggle.addEventListener(
+            "click",
+            togglePassword
+          );
+
+          checkExistingSession();
+        }
+
+        init();
       })();
     </script>
   </body>
-</html> 
+</html>

@@ -1,9 +1,13 @@
 // api/cards/create-cardholder.js
 
-import { supabaseAdmin } from "../../lib/supabase-admin.js";
+import crypto from "node:crypto";
 
 import {
-  lithicRequest,
+  supabaseAdmin,
+} from "../../lib/supabase-admin.js";
+
+import {
+  createLithicAccountHolder,
   isLithicEnabled,
   isLithicConfigured,
   getLithicEnvironment,
@@ -20,7 +24,6 @@ import {
 } from "../../lib/lithic.js";
 
 import {
-  safeJsonParse,
   getSessionCookieName,
   clearAuthCookies,
 } from "../../lib/cookies.js";
@@ -45,42 +48,38 @@ import {
 
    PURPOSE
    -------
-   1. Authenticate Card Leo member
-   2. Confirm member is paid + active
-   3. Confirm Lithic integration is enabled
-   4. Validate required cardholder information
-   5. Prevent duplicate Lithic account-holder creation
-   6. Create Lithic account holder
-   7. Capture:
-        - Lithic account holder token
-        - Lithic account token
-        - Lithic onboarding status
-   8. Store tokens safely in Supabase member_cards
-   9. Return ONLY safe information to browser
+   1. Authenticate the Card Leo member.
+   2. Resolve the real member from Supabase.
+   3. Confirm membership/payment eligibility.
+   4. Confirm Lithic is enabled/configured.
+   5. Prevent duplicate account-holder creation.
+   6. Validate the exact Lithic onboarding information.
+   7. Create the Lithic account holder.
+   8. Capture the Lithic account-holder/account relationship.
+   9. Store SAFE identifiers/status in member_cards.
+   10. Return only safe readiness information to the browser.
 
    IMPORTANT
    ---------
-   This route does NOT create the actual virtual card.
+   This route DOES NOT create the virtual card.
 
-   That happens in:
+   Virtual-card issuance happens in:
 
-   api/cards/create-virtual-card.js
+     /api/cards/create-virtual-card
 
-   This route creates the account holder/account relationship needed first.
+   SECURITY
+   --------
+   - Government ID / SSN is NEVER stored here.
+   - Government ID / SSN is NEVER logged here.
+   - Full Lithic account/card tokens are NEVER returned to the browser.
+   - Do not invent KYC information.
+   - Lithic workflow must be explicitly configured for Card Leo.
 
 ============================================================================ */
 
 /* ==========================================================================
    CONFIG
 ============================================================================ */
-
-const SESSION_COOKIE_NAMES = [
-  "cardleo_session",
-  "card_leo_session",
-  "member_session",
-  "portal_session",
-  "session",
-];
 
 const MEMBER_CARDS_TABLE =
   "member_cards";
@@ -90,6 +89,29 @@ const DEFAULT_COUNTRY =
 
 const DEFAULT_WORKFLOW =
   "";
+
+const SESSION_COOKIE_NAMES = [
+  "cardleo_session",
+  "cardleo_auth",
+  "cardleo_portal_session",
+  "card_leo_session",
+  "member_session",
+  "portal_session",
+  "session",
+];
+
+const SESSION_TOKEN_COOKIE_NAMES = [
+  "cardleo_session_token",
+  "session_token",
+  "auth_token",
+  "login_token",
+  "portal_token",
+  "token",
+];
+
+/* ==========================================================================
+   MEMBER STATUS RULES
+============================================================================ */
 
 const ACTIVE_PAYMENT_STATUSES =
   new Set([
@@ -122,6 +144,17 @@ const ACTIVE_APPROVAL_STATUSES =
     "auto_approved",
   ]);
 
+const BLOCKED_STATUSES =
+  new Set([
+    "disabled",
+    "suspended",
+    "paused",
+    "denied",
+    "closed",
+    "cancelled",
+    "canceled",
+  ]);
+
 /* ==========================================================================
    RESPONSE HELPERS
 ============================================================================ */
@@ -140,15 +173,20 @@ function successResponse(
   res,
   data = {},
   message =
-    "Lithic account holder created successfully."
+    "Card Leo card account created successfully."
 ) {
   return sendJson(
     res,
     200,
     {
-      success: true,
-      ok: true,
+      success:
+        true,
+
+      ok:
+        true,
+
       message,
+
       ...data,
     }
   );
@@ -163,9 +201,14 @@ function badRequest(
     res,
     400,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
       ...extra,
     }
   );
@@ -180,8 +223,15 @@ function unauthorized(
     res,
     401,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
+      authenticated:
+        false,
+
       message,
     }
   );
@@ -189,15 +239,22 @@ function unauthorized(
 
 function forbidden(
   res,
-  message
+  message,
+  extra = {}
 ) {
   return sendJson(
     res,
     403,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
+      ...extra,
     }
   );
 }
@@ -211,9 +268,14 @@ function conflict(
     res,
     409,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
       ...extra,
     }
   );
@@ -228,9 +290,14 @@ function serviceUnavailable(
     res,
     503,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
       ...extra,
     }
   );
@@ -246,9 +313,14 @@ function serverError(
     res,
     500,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
       ...extra,
     }
   );
@@ -258,10 +330,13 @@ function serverError(
    GENERIC HELPERS
 ============================================================================ */
 
-function isObject(value) {
+function isObject(
+  value
+) {
   return (
     Boolean(value) &&
-    typeof value === "object" &&
+    typeof value ===
+      "object" &&
     !Array.isArray(value)
   );
 }
@@ -345,7 +420,9 @@ function normalizeDate(
   }
 
   const date =
-    new Date(clean);
+    new Date(
+      clean
+    );
 
   if (
     Number.isNaN(
@@ -357,7 +434,10 @@ function normalizeDate(
 
   return date
     .toISOString()
-    .slice(0, 10);
+    .slice(
+      0,
+      10
+    );
 }
 
 function normalizeTimestamp(
@@ -373,7 +453,9 @@ function normalizeTimestamp(
   }
 
   const date =
-    new Date(clean);
+    new Date(
+      clean
+    );
 
   if (
     Number.isNaN(
@@ -383,7 +465,8 @@ function normalizeTimestamp(
     return "";
   }
 
-  return date.toISOString();
+  return date
+    .toISOString();
 }
 
 function normalizePhone(
@@ -399,7 +482,9 @@ function normalizePhone(
   }
 
   const hasPlus =
-    raw.startsWith("+");
+    raw.startsWith(
+      "+"
+    );
 
   const digits =
     raw.replace(
@@ -415,19 +500,19 @@ function normalizePhone(
     return `+${digits}`;
   }
 
-  /*
-   * US default.
-   */
-
   if (
-    digits.length === 10
+    digits.length ===
+    10
   ) {
     return `+1${digits}`;
   }
 
   if (
-    digits.length === 11 &&
-    digits.startsWith("1")
+    digits.length ===
+      11 &&
+    digits.startsWith(
+      "1"
+    )
   ) {
     return `+${digits}`;
   }
@@ -442,7 +527,10 @@ function normalizePostalCode(
     value
   )
     .toUpperCase()
-    .slice(0, 20);
+    .slice(
+      0,
+      20
+    );
 }
 
 function normalizeCountry(
@@ -467,6 +555,11 @@ function normalizeCountry(
   return clean;
 }
 
+function nowIso() {
+  return new Date()
+    .toISOString();
+}
+
 function getRequestBody(
   req
 ) {
@@ -479,17 +572,25 @@ function getRequestBody(
     "string"
   ) {
     try {
-      return JSON.parse(
-        req.body
-      );
+      const parsed =
+        JSON.parse(
+          req.body
+        );
+
+      return isObject(
+        parsed
+      )
+        ? parsed
+        : {};
     } catch {
       return {};
     }
   }
 
   if (
-    typeof req.body ===
-    "object"
+    isObject(
+      req.body
+    )
   ) {
     return req.body;
   }
@@ -497,13 +598,8 @@ function getRequestBody(
   return {};
 }
 
-function nowIso() {
-  return new Date()
-    .toISOString();
-}
-
 /* ==========================================================================
-   ERROR COMPATIBILITY
+   DATABASE COMPATIBILITY
 ============================================================================ */
 
 function isMissingTableOrColumn(
@@ -512,26 +608,30 @@ function isMissingTableOrColumn(
   const code =
     String(
       error?.code ||
-        ""
+      ""
     );
 
   const message =
     String(
       error?.message ||
-        ""
+      ""
     ).toLowerCase();
 
   const details =
     String(
       error?.details ||
-        ""
+      ""
     ).toLowerCase();
 
   return (
-    code === "42P01" ||
-    code === "42703" ||
-    code === "PGRST204" ||
-    code === "PGRST205" ||
+    code ===
+      "42P01" ||
+    code ===
+      "42703" ||
+    code ===
+      "PGRST204" ||
+    code ===
+      "PGRST205" ||
 
     message.includes(
       "does not exist"
@@ -551,12 +651,16 @@ function isMissingTableOrColumn(
 
     details.includes(
       "could not find"
+    ) ||
+
+    details.includes(
+      "schema cache"
     )
   );
 }
 
 /* ==========================================================================
-   SESSION COOKIE
+   COOKIE PARSING
 ============================================================================ */
 
 function parseCookies(
@@ -589,10 +693,13 @@ function parseCookies(
         part
       ) => {
         const separator =
-          part.indexOf("=");
+          part.indexOf(
+            "="
+          );
 
         if (
-          separator === -1
+          separator ===
+          -1
         ) {
           return output;
         }
@@ -608,7 +715,8 @@ function parseCookies(
         const rawValue =
           part
             .slice(
-              separator + 1
+              separator +
+                1
             )
             .trim();
 
@@ -632,15 +740,117 @@ function parseCookies(
     );
 }
 
+/* ==========================================================================
+   SESSION DECODING
+
+   Supports the base64url session format created by api/auth/login.js.
+============================================================================ */
+
+function safeJsonParse(
+  value
+) {
+  try {
+    const parsed =
+      JSON.parse(
+        value
+      );
+
+    return isObject(
+      parsed
+    )
+      ? parsed
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseBase64Session(
+  value
+) {
+  const raw =
+    normalizeString(
+      value
+    );
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const decoded =
+      Buffer
+        .from(
+          raw,
+          "base64url"
+        )
+        .toString(
+          "utf8"
+        );
+
+    return safeJsonParse(
+      decoded
+    );
+  } catch {
+    return null;
+  }
+}
+
+function parseSessionValue(
+  value
+) {
+  const raw =
+    normalizeString(
+      value
+    );
+
+  if (!raw) {
+    return null;
+  }
+
+  /*
+   * First support plain JSON compatibility sessions.
+   */
+
+  const direct =
+    safeJsonParse(
+      raw
+    );
+
+  if (direct) {
+    return direct;
+  }
+
+  /*
+   * Current Card Leo login session format.
+   */
+
+  const base64 =
+    parseBase64Session(
+      raw
+    );
+
+  if (base64) {
+    return base64;
+  }
+
+  return null;
+}
+
 function readSessionCookie(
   req
 ) {
   const cookies =
-    parseCookies(req);
+    parseCookies(
+      req
+    );
 
   const configuredName =
     normalizeString(
-      getSessionCookieName?.()
+      typeof getSessionCookieName ===
+        "function"
+        ? getSessionCookieName()
+        : ""
     );
 
   const names =
@@ -649,12 +859,15 @@ function readSessionCookie(
         [
           configuredName,
           ...SESSION_COOKIE_NAMES,
-        ].filter(Boolean)
+        ].filter(
+          Boolean
+        )
       )
     );
 
   for (
-    const name of names
+    const name
+    of names
   ) {
     const raw =
       cookies[name];
@@ -664,13 +877,14 @@ function readSessionCookie(
     }
 
     const data =
-      safeJsonParse(
-        raw,
-        null
+      parseSessionValue(
+        raw
       );
 
     if (
-      isObject(data)
+      isObject(
+        data
+      )
     ) {
       return {
         name,
@@ -683,6 +897,38 @@ function readSessionCookie(
   return null;
 }
 
+function readSessionToken(
+  req
+) {
+  const cookies =
+    parseCookies(
+      req
+    );
+
+  for (
+    const name
+    of SESSION_TOKEN_COOKIE_NAMES
+  ) {
+    const token =
+      normalizeString(
+        cookies[name]
+      );
+
+    if (token) {
+      return {
+        name,
+        token,
+      };
+    }
+  }
+
+  return null;
+}
+
+/* ==========================================================================
+   SESSION IDENTITY
+============================================================================ */
+
 function getSessionMemberId(
   sessionMeta
 ) {
@@ -693,12 +939,32 @@ function getSessionMemberId(
   return normalizeString(
     data.member?.id ||
       data.profile?.id ||
-      data.user?.id ||
       data.signupId ||
       data.signup_id ||
       data.memberId ||
       data.member_id ||
       data.id
+  );
+}
+
+function getSessionPortalUserId(
+  sessionMeta
+) {
+  const data =
+    sessionMeta?.data ||
+    {};
+
+  return normalizeString(
+    data.portalUserId ||
+      data.portal_user_id ||
+      data.member
+        ?.portalUserId ||
+      data.member
+        ?.portal_user_id ||
+      data.profile
+        ?.portalUserId ||
+      data.profile
+        ?.portal_user_id
   );
 }
 
@@ -715,6 +981,26 @@ function getSessionEmail(
       data.user?.email ||
       data.email ||
       data.userEmail
+  );
+}
+
+function getSessionToken(
+  sessionMeta
+) {
+  const data =
+    sessionMeta?.data ||
+    {};
+
+  return normalizeString(
+    data.token ||
+      data.sessionToken ||
+      data.session_token ||
+      data.authToken ||
+      data.auth_token ||
+      data.loginToken ||
+      data.login_token ||
+      data.portalToken ||
+      data.portal_token
   );
 }
 
@@ -751,6 +1037,12 @@ function isSessionExpired(
       sessionMeta
     );
 
+  /*
+   * Match /api/auth/me:
+   * Missing expiration does not automatically invalidate a compatible
+   * legacy Card Leo session.
+   */
+
   if (!expiresAt) {
     return false;
   }
@@ -758,23 +1050,83 @@ function isSessionExpired(
   return (
     expiresAt <=
     Math.floor(
-      Date.now() / 1000
+      Date.now() /
+        1000
     )
   );
 }
 
 /* ==========================================================================
-   CARD LEO MEMBER STATUS
+   MEMBER ELIGIBILITY
 ============================================================================ */
+
+function getMemberStatuses(
+  member
+) {
+  return {
+    status:
+      normalizeStatus(
+        member?.status
+      ),
+
+    paymentStatus:
+      normalizeStatus(
+        member
+          ?.payment_status
+      ),
+
+    membershipStatus:
+      normalizeStatus(
+        member
+          ?.membership_status
+      ),
+
+    approvalStatus:
+      normalizeStatus(
+        member
+          ?.approval_status
+      ),
+  };
+}
+
+function isMemberBlocked(
+  member
+) {
+  const {
+    status,
+    membershipStatus,
+    approvalStatus,
+  } =
+    getMemberStatuses(
+      member
+    );
+
+  return (
+    BLOCKED_STATUSES.has(
+      status
+    ) ||
+    BLOCKED_STATUSES.has(
+      membershipStatus
+    ) ||
+    BLOCKED_STATUSES.has(
+      approvalStatus
+    )
+  );
+}
 
 function isMemberPaid(
   member
 ) {
+  const {
+    paymentStatus,
+  } =
+    getMemberStatuses(
+      member
+    );
+
   return (
     ACTIVE_PAYMENT_STATUSES.has(
-      normalizeStatus(
-        member?.payment_status
-      )
+      paymentStatus
     )
   );
 }
@@ -782,29 +1134,31 @@ function isMemberPaid(
 function isMemberActive(
   member
 ) {
-  const status =
-    normalizeStatus(
-      member?.status
-    );
-
-  const membershipStatus =
-    normalizeStatus(
-      member?.membership_status
-    );
-
-  const approvalStatus =
-    normalizeStatus(
-      member?.approval_status
-    );
-
-  const paid =
-    isMemberPaid(
+  if (
+    !member ||
+    isMemberBlocked(
       member
-    );
-
-  if (!paid) {
+    )
+  ) {
     return false;
   }
+
+  if (
+    !isMemberPaid(
+      member
+    )
+  ) {
+    return false;
+  }
+
+  const {
+    status,
+    membershipStatus,
+    approvalStatus,
+  } =
+    getMemberStatuses(
+      member
+    );
 
   return (
     ACTIVE_MEMBER_STATUSES.has(
@@ -825,7 +1179,9 @@ function isMemberActive(
 
 async function getMemberRecord({
   memberId,
+  portalUserId,
   email,
+  sessionToken,
 }) {
   const extendedFields = [
     "id",
@@ -846,12 +1202,21 @@ async function getMemberRecord({
     "membership_status",
     "approval_status",
 
+    "portal_user_id",
+
+    "session_token",
+    "auth_token",
+    "login_token",
+    "portal_token",
+
     "stripe_customer_id",
     "stripe_subscription_id",
 
     "created_at",
     "updated_at",
-  ].join(", ");
+  ].join(
+    ", "
+  );
 
   const fallbackFields = [
     "id",
@@ -871,35 +1236,81 @@ async function getMemberRecord({
 
     "created_at",
     "updated_at",
-  ].join(", ");
+  ].join(
+    ", "
+  );
 
-  let query =
-    supabaseAdmin
-      .from(
-        "signups"
-      )
-      .select(
-        extendedFields
-      )
-      .limit(1);
+  async function runQuery(
+    fields
+  ) {
+    let query =
+      supabaseAdmin
+        .from(
+          "signups"
+        )
+        .select(
+          fields
+        )
+        .limit(
+          1
+        );
 
-  if (memberId) {
-    query =
-      query.eq(
-        "id",
-        memberId
-      );
-  } else {
-    query =
-      query.eq(
-        "email",
-        email
-      );
+    if (memberId) {
+      query =
+        query.eq(
+          "id",
+          memberId
+        );
+    } else if (
+      portalUserId
+    ) {
+      query =
+        query.eq(
+          "portal_user_id",
+          portalUserId
+        );
+    } else if (
+      email
+    ) {
+      query =
+        query.ilike(
+          "email",
+          email
+        );
+    } else if (
+      sessionToken
+    ) {
+      /*
+       * Token lookup is used only as a last compatibility path.
+       */
+
+      query =
+        query.or(
+          [
+            `session_token.eq.${sessionToken}`,
+            `auth_token.eq.${sessionToken}`,
+            `login_token.eq.${sessionToken}`,
+            `portal_token.eq.${sessionToken}`,
+          ].join(",")
+        );
+    } else {
+      return {
+        data:
+          null,
+
+        error:
+          null,
+      };
+    }
+
+    return query
+      .maybeSingle();
   }
 
   let result =
-    await query
-      .maybeSingle();
+    await runQuery(
+      extendedFields
+    );
 
   if (
     result.error &&
@@ -907,33 +1318,21 @@ async function getMemberRecord({
       result.error
     )
   ) {
-    let fallbackQuery =
-      supabaseAdmin
-        .from(
-          "signups"
-        )
-        .select(
-          fallbackFields
-        )
-        .limit(1);
+    /*
+     * The fallback schema can only resolve IDs/emails.
+     */
 
-    if (memberId) {
-      fallbackQuery =
-        fallbackQuery.eq(
-          "id",
-          memberId
-        );
-    } else {
-      fallbackQuery =
-        fallbackQuery.eq(
-          "email",
-          email
-        );
+    if (
+      !memberId &&
+      !email
+    ) {
+      return result;
     }
 
     result =
-      await fallbackQuery
-        .maybeSingle();
+      await runQuery(
+        fallbackFields
+      );
   }
 
   return result;
@@ -954,7 +1353,8 @@ async function getAuthenticatedMember(
 
   if (!session?.data) {
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -969,12 +1369,17 @@ async function getAuthenticatedMember(
       session
     )
   ) {
-    clearAuthCookies(
-      res
-    );
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -984,27 +1389,22 @@ async function getAuthenticatedMember(
     };
   }
 
-  if (
-    session.data
-      .authenticated !== true
-  ) {
-    clearAuthCookies(
-      res
-    );
-
-    return {
-      member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Your login session is invalid."
-        ),
-    };
-  }
+  /*
+   * Do NOT require:
+   *
+   * session.data.authenticated === true
+   *
+   * /api/auth/me and the fixed Card Leo login support compatible session
+   * formats that resolve identity server-side.
+   */
 
   const memberId =
     getSessionMemberId(
+      session
+    );
+
+  const portalUserId =
+    getSessionPortalUserId(
       session
     );
 
@@ -1013,16 +1413,38 @@ async function getAuthenticatedMember(
       session
     );
 
-  if (
-    !memberId &&
-    !email
-  ) {
-    clearAuthCookies(
-      res
+  const embeddedToken =
+    getSessionToken(
+      session
     );
 
+  const tokenCookie =
+    readSessionToken(
+      req
+    );
+
+  const sessionToken =
+    embeddedToken ||
+    tokenCookie?.token ||
+    "";
+
+  if (
+    !memberId &&
+    !portalUserId &&
+    !email &&
+    !sessionToken
+  ) {
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
+
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -1033,25 +1455,39 @@ async function getAuthenticatedMember(
   }
 
   const {
-    data: member,
+    data:
+      member,
+
     error,
   } =
     await getMemberRecord({
       memberId,
+      portalUserId,
       email,
+      sessionToken,
     });
 
   if (error) {
+    /*
+     * Database failure is NOT proof that the browser session is invalid.
+     * Do not clear cookies here.
+     */
+
     throw error;
   }
 
   if (!member?.id) {
-    clearAuthCookies(
-      res
-    );
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -1062,17 +1498,43 @@ async function getAuthenticatedMember(
   }
 
   if (
+    isMemberBlocked(
+      member
+    )
+  ) {
+    return {
+      member:
+        null,
+
+      response:
+        forbidden(
+          res,
+          "Your Card Leo account is not eligible for card provisioning at this time.",
+          {
+            code:
+              "MEMBER_BLOCKED",
+          }
+        ),
+    };
+  }
+
+  if (
     !isMemberPaid(
       member
     )
   ) {
     return {
-      member: null,
+      member:
+        null,
 
       response:
         forbidden(
           res,
-          "Your Card Leo membership payment must be current before a Card Leo allowance card account can be created."
+          "Your Card Leo membership payment must be current before a Card Leo card account can be created.",
+          {
+            code:
+              "PAYMENT_NOT_CURRENT",
+          }
         ),
     };
   }
@@ -1083,24 +1545,30 @@ async function getAuthenticatedMember(
     )
   ) {
     return {
-      member: null,
+      member:
+        null,
 
       response:
         forbidden(
           res,
-          "Your Card Leo membership must be active and approved before a card account can be created."
+          "Your Card Leo membership must be active and approved before a card account can be created.",
+          {
+            code:
+              "MEMBERSHIP_NOT_ACTIVE",
+          }
         ),
     };
   }
 
   return {
     member,
-    response: null,
+    response:
+      null,
   };
 }
 
 /* ==========================================================================
-   MEMBER CARDS RECORD
+   EXISTING MEMBER CARD RECORD
 ============================================================================ */
 
 async function getExistingMemberCard(
@@ -1114,10 +1582,15 @@ async function getExistingMemberCard(
       .from(
         MEMBER_CARDS_TABLE
       )
-      .select("*")
+      .select(
+        "*"
+      )
       .eq(
         "member_id",
         memberId
+      )
+      .limit(
+        1
       )
       .maybeSingle();
 
@@ -1128,11 +1601,14 @@ async function getExistingMemberCard(
       )
     ) {
       return {
-        record: null,
+        record:
+          null,
 
-        tableMissing: true,
+        tableMissing:
+          true,
 
-        error: null,
+        error:
+          null,
       };
     }
 
@@ -1141,17 +1617,100 @@ async function getExistingMemberCard(
 
   return {
     record:
-      data || null,
+      data ||
+      null,
 
     tableMissing:
       false,
 
-    error: null,
+    error:
+      null,
   };
 }
 
 /* ==========================================================================
-   CREATE / UPDATE MEMBER CARDS RECORD
+   STABLE IDEMPOTENCY KEY
+
+   Same Card Leo member -> same UUID.
+   This provides an additional layer of duplicate protection.
+============================================================================ */
+
+function buildMemberIdempotencyKey(
+  memberId
+) {
+  const digest =
+    crypto
+      .createHash(
+        "sha256"
+      )
+      .update(
+        `cardleo:lithic:account-holder:${memberId}`
+      )
+      .digest();
+
+  const bytes =
+    Buffer.from(
+      digest.subarray(
+        0,
+        16
+      )
+    );
+
+  /*
+   * RFC-4122-compatible deterministic UUID bits.
+   */
+
+  bytes[6] =
+    (
+      bytes[6] &
+      0x0f
+    ) |
+    0x50;
+
+  bytes[8] =
+    (
+      bytes[8] &
+      0x3f
+    ) |
+    0x80;
+
+  const hex =
+    bytes.toString(
+      "hex"
+    );
+
+  return [
+    hex.slice(
+      0,
+      8
+    ),
+
+    hex.slice(
+      8,
+      12
+    ),
+
+    hex.slice(
+      12,
+      16
+    ),
+
+    hex.slice(
+      16,
+      20
+    ),
+
+    hex.slice(
+      20,
+      32
+    ),
+  ].join(
+    "-"
+  );
+}
+
+/* ==========================================================================
+   SAVE MEMBER CARD RECORD
 ============================================================================ */
 
 async function saveMemberCardRecord({
@@ -1211,11 +1770,17 @@ async function saveMemberCardRecord({
 
     updated_at:
       timestamp,
-  };
 
-  /*
-   * Only add created_at for new records.
-   */
+    /*
+     * SAFE diagnostic data only.
+     *
+     * Never save raw onboarding input here.
+     */
+
+    lithic_last_response:
+      lithicResponse ||
+      null,
+  };
 
   if (
     !existingRecord?.id
@@ -1223,16 +1788,6 @@ async function saveMemberCardRecord({
     payload.created_at =
       timestamp;
   }
-
-  /*
-   * Optional debugging column.
-   *
-   * Step 12 can include this JSONB column.
-   */
-
-  payload.lithic_last_response =
-    lithicResponse ||
-    null;
 
   if (
     existingRecord?.id
@@ -1262,6 +1817,11 @@ async function saveMemberCardRecord({
     return data;
   }
 
+  /*
+   * Upsert by member_id adds another duplicate-protection layer when the
+   * table has a unique member_id constraint.
+   */
+
   const {
     data,
     error,
@@ -1270,8 +1830,12 @@ async function saveMemberCardRecord({
       .from(
         MEMBER_CARDS_TABLE
       )
-      .insert(
-        payload
+      .upsert(
+        payload,
+        {
+          onConflict:
+            "member_id",
+        }
       )
       .select()
       .single();
@@ -1342,7 +1906,7 @@ function buildAddress(
 }
 
 /* ==========================================================================
-   ONBOARDING INPUT
+   NORMALIZE CARDHOLDER INPUT
 ============================================================================ */
 
 function normalizeCardholderInput(
@@ -1350,7 +1914,9 @@ function normalizeCardholderInput(
   rawBody
 ) {
   const body =
-    isObject(rawBody)
+    isObject(
+      rawBody
+    )
       ? rawBody
       : {};
 
@@ -1381,6 +1947,11 @@ function normalizeCardholderInput(
         body.date_of_birth ||
         body.dateOfBirth
     );
+
+  /*
+   * SENSITIVE:
+   * Used only in-memory for workflows requiring customer-provided KYC.
+   */
 
   const governmentId =
     normalizeString(
@@ -1415,11 +1986,27 @@ function normalizeCardholderInput(
 
   const workflow =
     normalizeString(
-      body.workflow ||
-        process.env
-          .LITHIC_ACCOUNT_HOLDER_WORKFLOW ||
+      process.env
+        .LITHIC_ACCOUNT_HOLDER_WORKFLOW ||
+        body.workflow ||
         DEFAULT_WORKFLOW
     ).toUpperCase();
+
+  const kycExemptionType =
+    normalizeString(
+      process.env
+        .LITHIC_KYC_EXEMPTION_TYPE ||
+        body.kyc_exemption_type ||
+        body.kycExemptionType
+    ).toUpperCase();
+
+  const businessAccountToken =
+    normalizeString(
+      process.env
+        .LITHIC_BUSINESS_ACCOUNT_TOKEN ||
+        body.business_account_token ||
+        body.businessAccountToken
+    );
 
   return {
     firstName,
@@ -1441,6 +2028,10 @@ function normalizeCardholderInput(
 
     workflow,
 
+    kycExemptionType,
+
+    businessAccountToken,
+
     externalId:
       buildMemberExternalId(
         member
@@ -1461,12 +2052,12 @@ function validateWorkflow(
     ).toUpperCase();
 
   /*
-   * We intentionally DO NOT choose one for the user.
+   * Never select a Lithic compliance workflow automatically.
    *
-   * Lithic controls which workflow Card Leo is approved to use.
+   * It must match the workflow specifically approved for Card Leo.
    */
 
-  const knownWorkflows =
+  const supported =
     new Set([
       "KYC_EXEMPT",
       "KYC_BYO",
@@ -1475,7 +2066,8 @@ function validateWorkflow(
 
   if (!clean) {
     return {
-      valid: false,
+      valid:
+        false,
 
       message:
         "Lithic account-holder workflow has not been configured. Add LITHIC_ACCOUNT_HOLDER_WORKFLOW only after Lithic confirms the workflow approved for Card Leo Rewards.",
@@ -1483,12 +2075,13 @@ function validateWorkflow(
   }
 
   if (
-    !knownWorkflows.has(
+    !supported.has(
       clean
     )
   ) {
     return {
-      valid: false,
+      valid:
+        false,
 
       message:
         `Unsupported Lithic individual workflow: ${clean}.`,
@@ -1496,8 +2089,11 @@ function validateWorkflow(
   }
 
   return {
-    valid: true,
-    workflow: clean,
+    valid:
+      true,
+
+    workflow:
+      clean,
   };
 }
 
@@ -1536,7 +2132,7 @@ function validateCardholderInput(
     !input.phone
   ) {
     errors.phone =
-      "Phone number is required for cardholder onboarding.";
+      "Phone number is required for Card Leo cardholder onboarding.";
   }
 
   if (
@@ -1566,17 +2162,17 @@ function validateCardholderInput(
   }
 
   /*
-   * BYO KYC requires substantially more identity information.
-   *
-   * We validate the obvious fields but still rely on Lithic
-   * to enforce the exact program-specific schema.
+   * KYC_BYO means Card Leo is performing the KYC process itself under an
+   * arrangement Lithic has explicitly approved.
    */
 
   if (
     input.workflow ===
     "KYC_BYO"
   ) {
-    if (!input.dob) {
+    if (
+      !input.dob
+    ) {
       errors.dob =
         "Date of birth is required for KYC_BYO.";
     }
@@ -1589,45 +2185,118 @@ function validateCardholderInput(
     }
 
     if (
-      !input.address.address1
+      !input.address
+        .address1
     ) {
       errors.address1 =
         "Street address is required for KYC_BYO.";
     }
 
     if (
-      !input.address.city
+      !input.address
+        .city
     ) {
       errors.city =
         "City is required for KYC_BYO.";
     }
 
     if (
-      !input.address.state
+      !input.address
+        .state
     ) {
       errors.state =
         "State is required for KYC_BYO.";
     }
 
     if (
-      !input.address.postalCode
+      !input.address
+        .postalCode
     ) {
       errors.postalCode =
         "Postal code is required for KYC_BYO.";
     }
+
+    if (
+      !input.address
+        .country
+    ) {
+      errors.country =
+        "Country is required for KYC_BYO.";
+    }
   }
 
   /*
-   * Do not hardcode the complete field requirements for
-   * KYC_BASIC/KYC_EXEMPT here because the exact approved
-   * Lithic program configuration controls them.
+   * KYC_BASIC requirements vary with the approved program.
+   * We require the normal identity/address foundation and allow Lithic to
+   * enforce any program-specific fields.
    */
+
+  if (
+    input.workflow ===
+    "KYC_BASIC"
+  ) {
+    if (
+      !input.dob
+    ) {
+      errors.dob =
+        "Date of birth is required for KYC_BASIC.";
+    }
+
+    if (
+      !input.address
+        .address1
+    ) {
+      errors.address1 =
+        "Street address is required for KYC_BASIC.";
+    }
+
+    if (
+      !input.address
+        .city
+    ) {
+      errors.city =
+        "City is required for KYC_BASIC.";
+    }
+
+    if (
+      !input.address
+        .state
+    ) {
+      errors.state =
+        "State is required for KYC_BASIC.";
+    }
+
+    if (
+      !input.address
+        .postalCode
+    ) {
+      errors.postalCode =
+        "Postal code is required for KYC_BASIC.";
+    }
+  }
+
+  /*
+   * KYC_EXEMPT can require program-specific exemption information.
+   */
+
+  if (
+    input.workflow ===
+      "KYC_EXEMPT" &&
+    process.env
+      .LITHIC_REQUIRE_KYC_EXEMPTION_TYPE ===
+      "true" &&
+    !input.kycExemptionType
+  ) {
+    errors.kycExemptionType =
+      "A KYC exemption type is required for the configured Card Leo program.";
+  }
 
   return {
     valid:
       Object.keys(
         errors
-      ).length === 0,
+      ).length ===
+      0,
 
     errors,
   };
@@ -1654,10 +2323,17 @@ function buildLithicIndividual(
       input.phone,
   };
 
-  if (input.dob) {
+  if (
+    input.dob
+  ) {
     individual.dob =
       input.dob;
   }
+
+  /*
+   * This stays in memory and goes directly to Lithic when the selected
+   * workflow requires it.
+   */
 
   if (
     input.governmentId
@@ -1668,35 +2344,47 @@ function buildLithicIndividual(
 
   const hasAddress =
     Boolean(
-      input.address.address1 ||
-        input.address.city ||
-        input.address.state ||
-        input.address.postalCode
+      input.address
+        .address1 ||
+      input.address
+        .city ||
+      input.address
+        .state ||
+      input.address
+        .postalCode
     );
 
   if (hasAddress) {
     individual.address = {
       address1:
-        input.address.address1,
+        input.address
+          .address1,
 
       city:
-        input.address.city,
+        input.address
+          .city,
 
       state:
-        input.address.state,
+        input.address
+          .state,
 
       postal_code:
-        input.address.postalCode,
+        input.address
+          .postalCode,
 
       country:
-        input.address.country,
+        input.address
+          .country,
     };
 
     if (
-      input.address.address2
+      input.address
+        .address2
     ) {
-      individual.address.address2 =
-        input.address.address2;
+      individual.address
+        .address2 =
+        input.address
+          .address2;
     }
   }
 
@@ -1704,7 +2392,7 @@ function buildLithicIndividual(
 }
 
 /* ==========================================================================
-   BUILD ACCOUNT HOLDER PAYLOAD
+   BUILD LITHIC ACCOUNT HOLDER PAYLOAD
 ============================================================================ */
 
 function buildLithicAccountHolderPayload(
@@ -1717,20 +2405,49 @@ function buildLithicAccountHolderPayload(
     tos_timestamp:
       input.tosTimestamp,
 
-    external_id:
-      input.externalId,
-
     individual:
       buildLithicIndividual(
         input
       ),
   };
 
+  /*
+   * external_id is included only if configured/accepted by the current
+   * Card Leo Lithic program.
+   */
+
+  if (
+    normalizeBoolean(
+      process.env
+        .LITHIC_SEND_EXTERNAL_ID,
+      false
+    )
+  ) {
+    payload.external_id =
+      input.externalId;
+  }
+
+  if (
+    input.workflow ===
+      "KYC_EXEMPT" &&
+    input.kycExemptionType
+  ) {
+    payload.kyc_exemption_type =
+      input.kycExemptionType;
+  }
+
+  if (
+    input.businessAccountToken
+  ) {
+    payload.business_account_token =
+      input.businessAccountToken;
+  }
+
   return payload;
 }
 
 /* ==========================================================================
-   PARSE LITHIC RESPONSE
+   PARSE LITHIC RESULT
 ============================================================================ */
 
 function unwrapLithicData(
@@ -1741,7 +2458,9 @@ function unwrapLithicData(
       result?.data?.data
     )
   ) {
-    return result.data.data;
+    return result
+      .data
+      .data;
   }
 
   if (
@@ -1797,14 +2516,11 @@ function parseCreatedAccountHolder(
     status,
 
     statusReasons,
-
-    raw:
-      data,
   };
 }
 
 /* ==========================================================================
-   SAFE RECORD
+   SAFE MEMBER CARD RESPONSE
 ============================================================================ */
 
 function sanitizeMemberCardRecord(
@@ -1877,10 +2593,6 @@ function sanitizeMemberCardRecord(
   };
 }
 
-/* ==========================================================================
-   EXISTING ACCOUNT HOLDER RESPONSE
-============================================================================ */
-
 function hasExistingAccountHolder(
   record
 ) {
@@ -1893,14 +2605,63 @@ function hasExistingAccountHolder(
 }
 
 /* ==========================================================================
-   ROUTE
+   SAFE MEMBER RESPONSE
+============================================================================ */
+
+function buildSafeMember(
+  member
+) {
+  return {
+    id:
+      member.id,
+
+    email:
+      normalizeEmail(
+        member.email
+      ),
+
+    firstName:
+      normalizeString(
+        member.first_name
+      ),
+
+    lastName:
+      normalizeString(
+        member.last_name
+      ),
+
+    fullName:
+      normalizeString(
+        member.full_name
+      ) ||
+      [
+        member.first_name,
+        member.last_name,
+      ]
+        .map(
+          normalizeString
+        )
+        .filter(Boolean)
+        .join(" "),
+  };
+}
+
+/* ==========================================================================
+   HANDLER
 ============================================================================ */
 
 export default async function handler(
   req,
   res
 ) {
-  setNoStore?.(res);
+  if (
+    typeof setNoStore ===
+    "function"
+  ) {
+    setNoStore(
+      res
+    );
+  }
 
   logRequestStart(
     req,
@@ -1910,8 +2671,13 @@ export default async function handler(
     }
   );
 
+  /* ------------------------------------------------------------------------
+     METHOD
+  ------------------------------------------------------------------------ */
+
   if (
-    req.method !== "POST"
+    req.method !==
+    "POST"
   ) {
     res.setHeader(
       "Allow",
@@ -1922,8 +2688,12 @@ export default async function handler(
       res,
       405,
       {
-        success: false,
-        ok: false,
+        success:
+          false,
+
+        ok:
+          false,
+
         message:
           "Method not allowed. Use POST.",
       }
@@ -1954,7 +2724,7 @@ export default async function handler(
       );
 
     /* ======================================================================
-       CHECK CURRENT MEMBER CARD RECORD
+       EXISTING MEMBER CARD RECORD
     ====================================================================== */
 
     const existingResult =
@@ -1962,29 +2732,20 @@ export default async function handler(
         memberId
       );
 
-    /*
-     * Step 12 creates this table.
-     *
-     * Before Lithic is enabled, this does not need to block development.
-     *
-     * Once Lithic is enabled, however, we MUST have somewhere safe to
-     * persist the returned account holder/account tokens before creating
-     * a financial account.
-     */
-
     if (
-      existingResult.tableMissing &&
+      existingResult
+        .tableMissing &&
       isLithicEnabled()
     ) {
       return serviceUnavailable(
         res,
-        "The Card Leo member_cards table has not been created yet. Complete Step 12 before enabling Lithic account creation.",
+        "The Card Leo member_cards table has not been created yet.",
         {
           code:
             "MEMBER_CARDS_TABLE_MISSING",
 
           nextStep:
-            "Create the Supabase member_cards table before setting LITHIC_ENABLED=true.",
+            "Create the member_cards table before enabling Lithic provisioning.",
         }
       );
     }
@@ -1993,7 +2754,7 @@ export default async function handler(
       existingResult.record;
 
     /* ======================================================================
-       ALREADY CREATED
+       IDEMPOTENT EXISTING HOLDER
     ====================================================================== */
 
     if (
@@ -2004,26 +2765,16 @@ export default async function handler(
       return successResponse(
         res,
         {
-          alreadyExists: true,
+          created:
+            false,
 
-          created: false,
+          alreadyExists:
+            true,
 
-          member: {
-            id:
-              member.id,
-
-            email:
-              member.email,
-
-            fullName:
-              member.full_name ||
-              [
-                member.first_name,
-                member.last_name,
-              ]
-                .filter(Boolean)
-                .join(" "),
-          },
+          member:
+            buildSafeMember(
+              member
+            ),
 
           cardAccount:
             sanitizeMemberCardRecord(
@@ -2032,15 +2783,31 @@ export default async function handler(
 
           lithic:
             getLithicIntegrationStatus(),
+
+          next: {
+            canCreateVirtualCard:
+              Boolean(
+                existingRecord
+                  ?.lithic_account_token
+              ) &&
+              normalizeStatus(
+                existingRecord
+                  ?.lithic_account_holder_status
+              ) ===
+                "accepted",
+
+            endpoint:
+              "/api/cards/create-virtual-card",
+          },
         },
-        "Your Card Leo Lithic account holder already exists."
+        "Your Card Leo Lithic card account already exists."
       );
     }
 
     /* ======================================================================
        LITHIC DISABLED
 
-       This is EXPECTED until Card Leo has Lithic credentials.
+       This is normal while Card Leo is still preparing Sandbox.
     ====================================================================== */
 
     if (
@@ -2049,40 +2816,30 @@ export default async function handler(
       return successResponse(
         res,
         {
-          created: false,
+          created:
+            false,
 
-          alreadyExists: false,
+          alreadyExists:
+            false,
 
           configurationRequired:
             true,
 
-          member: {
-            id:
-              member.id,
-
-            email:
-              member.email,
-
-            fullName:
-              member.full_name ||
-              [
-                member.first_name,
-                member.last_name,
-              ]
-                .filter(Boolean)
-                .join(" "),
-          },
+          member:
+            buildSafeMember(
+              member
+            ),
 
           lithic:
             getLithicIntegrationStatus(),
 
           nextSteps: [
-            "Obtain Card Leo Rewards Lithic program approval.",
+            "Obtain Card Leo Lithic program approval.",
             "Obtain the Lithic Sandbox API key.",
-            "Confirm the individual account-holder workflow Card Leo is approved to use.",
-            "Create the member_cards Supabase table in Step 12.",
+            "Confirm Card Leo's approved individual account-holder workflow.",
+            "Create/verify the member_cards table.",
             "Add the Lithic environment variables in Vercel.",
-            "Set LITHIC_ENABLED=true only when Sandbox testing is ready.",
+            "Set LITHIC_ENABLED=true when Sandbox provisioning is ready.",
           ],
         },
         "Card Leo card infrastructure is prepared, but Lithic is currently disabled."
@@ -2090,7 +2847,7 @@ export default async function handler(
     }
 
     /* ======================================================================
-       LITHIC CONFIGURED?
+       LITHIC CONFIG
     ====================================================================== */
 
     if (
@@ -2109,12 +2866,9 @@ export default async function handler(
       );
     }
 
-    /* ======================================================================
-       MEMBER CARDS TABLE REQUIRED
-    ====================================================================== */
-
     if (
-      existingResult.tableMissing
+      existingResult
+        .tableMissing
     ) {
       return serviceUnavailable(
         res,
@@ -2172,7 +2926,9 @@ export default async function handler(
     }
 
     /* ======================================================================
-       BUILD PAYLOAD
+       BUILD LITHIC REQUEST
+
+       Do not log this object because it may contain KYC PII.
     ====================================================================== */
 
     const lithicPayload =
@@ -2180,33 +2936,32 @@ export default async function handler(
         input
       );
 
+    const idempotencyKey =
+      buildMemberIdempotencyKey(
+        memberId
+      );
+
     /* ======================================================================
-       CREATE LITHIC ACCOUNT HOLDER
-
-       Current Lithic endpoint:
-
-       POST /v1/account_holders
-
-       lib/lithic.js already includes /v1 in base URL.
+       CREATE ACCOUNT HOLDER
     ====================================================================== */
 
     let lithicResult;
 
     try {
       lithicResult =
-        await lithicRequest(
-          "/account_holders",
+        await createLithicAccountHolder(
+          lithicPayload,
           {
-            method:
-              "POST",
-
-            body:
-              lithicPayload,
+            idempotencyKey,
           }
         );
     } catch (
       lithicError
     ) {
+      /*
+       * Do not include payload/PII in logs.
+       */
+
       logRequestError(
         req,
         lithicError,
@@ -2216,18 +2971,20 @@ export default async function handler(
 
           memberId,
 
-          email:
-            member.email,
-
           workflow:
             input.workflow,
+
+          environment:
+            getLithicEnvironment(),
         }
       );
 
       const status =
         Number(
-          lithicError?.status
-        ) || 502;
+          lithicError
+            ?.status
+        ) ||
+        502;
 
       return sendJson(
         res,
@@ -2236,16 +2993,20 @@ export default async function handler(
           ? status
           : 502,
         {
-          success: false,
+          success:
+            false,
 
-          ok: false,
+          ok:
+            false,
 
           message:
-            lithicError?.message ||
-            "Lithic could not create the account holder.",
+            lithicError
+              ?.message ||
+            "Lithic could not create the Card Leo account holder.",
 
           code:
-            lithicError?.code ||
+            lithicError
+              ?.code ||
             "LITHIC_CREATE_ACCOUNT_HOLDER_FAILED",
 
           lithic: {
@@ -2269,13 +3030,17 @@ export default async function handler(
       );
 
     if (
-      !created.accountHolderToken
+      !created
+        .accountHolderToken
     ) {
+      const unexpected =
+        new Error(
+          "Lithic response did not include an account-holder token."
+        );
+
       logRequestError(
         req,
-        new Error(
-          "Lithic response did not include an account holder token."
-        ),
+        unexpected,
         {
           scope:
             "lithic_account_holder_missing_token",
@@ -2284,6 +3049,9 @@ export default async function handler(
 
           workflow:
             input.workflow,
+
+          status:
+            created.status,
         }
       );
 
@@ -2301,10 +3069,13 @@ export default async function handler(
     }
 
     /* ======================================================================
-       SAVE TOKENS IN SUPABASE
+       SAVE SAFE LITHIC RELATIONSHIP
 
-       IMPORTANT:
-       Tokens stay server-side.
+       NEVER persist:
+       - government ID
+       - DOB request payload
+       - address request payload
+       - raw request body
     ====================================================================== */
 
     let savedRecord;
@@ -2317,10 +3088,12 @@ export default async function handler(
           existingRecord,
 
           accountHolderToken:
-            created.accountHolderToken,
+            created
+              .accountHolderToken,
 
           accountToken:
-            created.accountToken,
+            created
+              .accountToken,
 
           lithicStatus:
             created.status,
@@ -2330,11 +3103,8 @@ export default async function handler(
               created.status,
 
             status_reasons:
-              created.statusReasons,
-
-            /*
-             * Do not persist government ID / request PII here.
-             */
+              created
+                .statusReasons,
           },
 
           workflow:
@@ -2361,15 +3131,15 @@ export default async function handler(
       );
 
       /*
-       * This is intentionally treated as a serious error.
+       * Lithic may now contain this member.
        *
-       * Lithic may now contain the account holder, but Card Leo failed
-       * to persist its token. Do NOT automatically create another holder.
+       * We MUST NOT blindly retry account-holder creation if the relationship
+       * could not be persisted.
        */
 
       return serverError(
         res,
-        "The Lithic account holder was created, but Card Leo could not save the account relationship. Do not retry automatically. An administrator should reconcile the Lithic account holder first.",
+        "The Lithic account holder was created, but Card Leo could not save the account relationship. Do not retry automatically. An administrator must reconcile this member before another provisioning attempt.",
         {
           code:
             "LITHIC_CREATED_DATABASE_SAVE_FAILED",
@@ -2384,6 +3154,16 @@ export default async function handler(
        SUCCESS
     ====================================================================== */
 
+    const accepted =
+      created.status ===
+      "ACCEPTED";
+
+    const hasAccount =
+      Boolean(
+        created
+          .accountToken
+      );
+
     logRequestSuccess(
       req,
       {
@@ -2391,9 +3171,6 @@ export default async function handler(
           "create_lithic_cardholder",
 
         memberId,
-
-        email:
-          member.email,
 
         lithicEnvironment:
           getLithicEnvironment(),
@@ -2404,51 +3181,27 @@ export default async function handler(
         lithicStatus:
           created.status,
 
-        hasAccountHolderToken:
-          Boolean(
-            created
-              .accountHolderToken
-          ),
+        accountHolderCreated:
+          true,
 
-        hasAccountToken:
-          Boolean(
-            created
-              .accountToken
-          ),
+        accountCreated:
+          hasAccount,
       }
     );
 
     return successResponse(
       res,
       {
-        created: true,
+        created:
+          true,
 
-        alreadyExists: false,
+        alreadyExists:
+          false,
 
-        member: {
-          id:
-            member.id,
-
-          email:
-            member.email,
-
-          firstName:
-            member.first_name ||
-            "",
-
-          lastName:
-            member.last_name ||
-            "",
-
-          fullName:
-            member.full_name ||
-            [
-              member.first_name,
-              member.last_name,
-            ]
-              .filter(Boolean)
-              .join(" "),
-        },
+        member:
+          buildSafeMember(
+            member
+          ),
 
         cardAccount:
           sanitizeMemberCardRecord(
@@ -2456,9 +3209,11 @@ export default async function handler(
           ),
 
         lithic: {
-          enabled: true,
+          enabled:
+            true,
 
-          configured: true,
+          configured:
+            true,
 
           environment:
             getLithicEnvironment(),
@@ -2466,58 +3221,59 @@ export default async function handler(
           status:
             created.status,
 
-          accepted:
-            created.status ===
-            "ACCEPTED",
+          accepted,
 
           pendingReview:
             created.status ===
-              "PENDING_REVIEW",
+            "PENDING_REVIEW",
 
           statusReasons:
-            created.statusReasons,
+            created
+              .statusReasons,
 
           /*
-           * Do not return raw Lithic tokens to browser.
+           * Intentionally booleans only.
+           * Tokens remain server-side.
            */
 
           accountHolderCreated:
-            Boolean(
-              created
-                .accountHolderToken
-            ),
+            true,
 
           accountCreated:
-            Boolean(
-              created
-                .accountToken
-            ),
+            hasAccount,
         },
 
         next: {
           canCreateVirtualCard:
-            created.status ===
-              "ACCEPTED" &&
-            Boolean(
-              created.accountToken
-            ),
+            accepted &&
+            hasAccount,
 
           endpoint:
             "/api/cards/create-virtual-card",
 
           message:
-            created.status ===
-              "ACCEPTED"
-              ? "Your Lithic account is ready for Card Leo virtual card creation."
-              : "Your Lithic account holder exists, but onboarding must be accepted before a card can be issued.",
+            accepted &&
+            hasAccount
+              ? "Your Card Leo Lithic account is ready for virtual-card creation."
+              : accepted
+                ? "Your Lithic account holder was accepted, but an account token is not yet available."
+                : "Your Lithic account holder exists, but onboarding must finish before a Card Leo virtual card can be issued.",
         },
       },
-      created.status ===
-        "ACCEPTED"
+      accepted &&
+      hasAccount
         ? "Card Leo card account created successfully."
         : "Card Leo card account was submitted to Lithic."
     );
-  } catch (error) {
+  } catch (
+    error
+  ) {
+    /*
+     * IMPORTANT:
+     * Unexpected server/database failures do not prove the member's browser
+     * authentication is invalid. Do not clear their auth session here.
+     */
+
     logRequestError(
       req,
       error,
@@ -2525,6 +3281,11 @@ export default async function handler(
         scope:
           "create_lithic_cardholder_unexpected",
       }
+    );
+
+    console.error(
+      "Card Leo create-cardholder error:",
+      error
     );
 
     return serverError(

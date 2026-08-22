@@ -1,8 +1,10 @@
 // api/cards/fund-allowance.js
 
-import { randomUUID } from "crypto";
+import crypto from "node:crypto";
 
-import { supabaseAdmin } from "../../lib/supabase-admin.js";
+import {
+  supabaseAdmin,
+} from "../../lib/supabase-admin.js";
 
 import {
   lithicRequest,
@@ -17,7 +19,6 @@ import {
 } from "../../lib/lithic.js";
 
 import {
-  safeJsonParse,
   getSessionCookieName,
   clearAuthCookies,
 } from "../../lib/cookies.js";
@@ -42,47 +43,56 @@ import {
 
    PURPOSE
    -------
-   Move an APPROVED Card Leo allowance from the Card Leo reward/allowance
-   ledger into the member's Lithic issuing financial account.
+   Move an APPROVED Card Leo allowance/reward into the member's Lithic
+   issuing financial account.
 
-   IMPORTANT SECURITY RULE
-   -----------------------
-   The client/browser DOES NOT choose the dollar amount.
+   SECURITY MODEL
+   --------------
+   The browser NEVER chooses:
 
-   The browser sends:
+   - amount
+   - member_id
+   - Lithic account
+   - financial account
+   - source funding account
+   - destination funding account
+   - provider transaction reference
+
+   Browser sends ONLY:
 
      {
        "allowanceTransactionId": "..."
      }
 
-   This route then loads the amount from the Card Leo database.
+   Card Leo then verifies everything server-side.
 
    FLOW
    ----
-   1. Authenticate logged-in member
-   2. Confirm membership is active + paid
-   3. Load member_cards record
-   4. Confirm Lithic account + virtual card exist
-   5. Load approved allowance_transactions record
-   6. Confirm allowance belongs to this member
-   7. Prevent duplicate funding
-   8. Resolve member Lithic ISSUING financial account
-   9. Confirm Card Leo program funding account
-   10. Create Lithic book transfer
-   11. Save provider transaction reference
-   12. Mark allowance transaction funded/completed
-
-   NEVER TRUST
-   -----------
-   - amount sent from browser
-   - member_id sent from browser
-   - Lithic destination token sent from browser
-   - arbitrary reward IDs without database verification
+   1. Authenticate Card Leo member.
+   2. Resolve member from Supabase.
+   3. Verify member is paid + active.
+   4. Reject blocked/suspended members.
+   5. Load member_cards.
+   6. Require Lithic account holder.
+   7. Require accepted account holder.
+   8. Require Lithic account.
+   9. Require Card Leo virtual card.
+   10. Load allowance transaction by BOTH transaction ID and member ID.
+   11. Load amount only from database.
+   12. Confirm transaction is an approved credit.
+   13. Prevent duplicate funding.
+   14. Resolve destination ISSUING financial account from Lithic.
+   15. Resolve Card Leo source funding account from server env.
+   16. Lock allowance as processing.
+   17. Perform Lithic book transfer.
+   18. Save provider reference.
+   19. Mark allowance funded/processing.
+   20. Return safe balance/result.
 
 ============================================================================ */
 
 /* ==========================================================================
-   DATABASE TABLES
+   TABLES
 ============================================================================ */
 
 const MEMBER_CARDS_TABLE =
@@ -92,19 +102,30 @@ const ALLOWANCE_TRANSACTIONS_TABLE =
   "allowance_transactions";
 
 /* ==========================================================================
-   SESSION
+   SESSION COOKIES
 ============================================================================ */
 
 const SESSION_COOKIE_NAMES = [
   "cardleo_session",
+  "cardleo_auth",
+  "cardleo_portal_session",
   "card_leo_session",
   "member_session",
   "portal_session",
   "session",
 ];
 
+const SESSION_TOKEN_COOKIE_NAMES = [
+  "cardleo_session_token",
+  "session_token",
+  "auth_token",
+  "login_token",
+  "portal_token",
+  "token",
+];
+
 /* ==========================================================================
-   MEMBERSHIP STATUS
+   MEMBER STATUS
 ============================================================================ */
 
 const ACTIVE_PAYMENT_STATUSES =
@@ -138,6 +159,17 @@ const ACTIVE_APPROVAL_STATUSES =
     "auto_approved",
   ]);
 
+const BLOCKED_STATUSES =
+  new Set([
+    "disabled",
+    "suspended",
+    "paused",
+    "denied",
+    "closed",
+    "cancelled",
+    "canceled",
+  ]);
+
 /* ==========================================================================
    ALLOWANCE STATUS
 ============================================================================ */
@@ -148,6 +180,14 @@ const READY_ALLOWANCE_STATUSES =
     "ready",
     "ready_to_fund",
     "queued",
+  ]);
+
+const PROCESSING_ALLOWANCE_STATUSES =
+  new Set([
+    "processing",
+    "funding",
+    "submitted",
+    "pending_transfer",
   ]);
 
 const COMPLETED_ALLOWANCE_STATUSES =
@@ -164,6 +204,7 @@ const FAILED_ALLOWANCE_STATUSES =
     "failed",
     "declined",
     "cancelled",
+    "canceled",
     "reversed",
   ]);
 
@@ -201,9 +242,14 @@ function success(
     res,
     200,
     {
-      success: true,
-      ok: true,
+      success:
+        true,
+
+      ok:
+        true,
+
       message,
+
       ...data,
     }
   );
@@ -218,9 +264,14 @@ function badRequest(
     res,
     400,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
       ...extra,
     }
   );
@@ -235,8 +286,15 @@ function unauthorized(
     res,
     401,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
+      authenticated:
+        false,
+
       message,
     }
   );
@@ -251,9 +309,17 @@ function forbidden(
     res,
     403,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
+      authenticated:
+        true,
+
       message,
+
       ...extra,
     }
   );
@@ -268,9 +334,14 @@ function notFound(
     res,
     404,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
       ...extra,
     }
   );
@@ -285,9 +356,14 @@ function conflict(
     res,
     409,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
       ...extra,
     }
   );
@@ -302,9 +378,14 @@ function serviceUnavailable(
     res,
     503,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
       ...extra,
     }
   );
@@ -320,22 +401,30 @@ function serverError(
     res,
     500,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
       ...extra,
     }
   );
 }
 
 /* ==========================================================================
-   BASIC HELPERS
+   GENERAL HELPERS
 ============================================================================ */
 
-function isObject(value) {
+function isObject(
+  value
+) {
   return (
     Boolean(value) &&
-    typeof value === "object" &&
+    typeof value ===
+      "object" &&
     !Array.isArray(value)
   );
 }
@@ -363,7 +452,8 @@ function normalizeInteger(
   const parsed =
     Number.parseInt(
       String(
-        value ?? ""
+        value ??
+        ""
       ),
       10
     );
@@ -403,7 +493,9 @@ function safeDate(
   }
 
   const date =
-    new Date(value);
+    new Date(
+      value
+    );
 
   if (
     Number.isNaN(
@@ -429,17 +521,25 @@ function getRequestBody(
     "string"
   ) {
     try {
-      return JSON.parse(
-        req.body
-      );
+      const parsed =
+        JSON.parse(
+          req.body
+        );
+
+      return isObject(
+        parsed
+      )
+        ? parsed
+        : {};
     } catch {
       return {};
     }
   }
 
   if (
-    typeof req.body ===
-    "object"
+    isObject(
+      req.body
+    )
   ) {
     return req.body;
   }
@@ -453,12 +553,8 @@ function getEnv(
 ) {
   return normalizeString(
     process.env[name] ??
-    fallback
+      fallback
   );
-}
-
-function generateIdempotencyToken() {
-  return randomUUID();
 }
 
 /* ==========================================================================
@@ -487,10 +583,14 @@ function isMissingTableOrColumn(
     ).toLowerCase();
 
   return (
-    code === "42P01" ||
-    code === "42703" ||
-    code === "PGRST204" ||
-    code === "PGRST205" ||
+    code ===
+      "42P01" ||
+    code ===
+      "42703" ||
+    code ===
+      "PGRST204" ||
+    code ===
+      "PGRST205" ||
 
     message.includes(
       "does not exist"
@@ -552,10 +652,13 @@ function parseCookies(
         part
       ) => {
         const separator =
-          part.indexOf("=");
+          part.indexOf(
+            "="
+          );
 
         if (
-          separator === -1
+          separator ===
+          -1
         ) {
           return output;
         }
@@ -571,7 +674,8 @@ function parseCookies(
         const rawValue =
           part
             .slice(
-              separator + 1
+              separator +
+                1
             )
             .trim();
 
@@ -596,8 +700,84 @@ function parseCookies(
 }
 
 /* ==========================================================================
-   SESSION
+   SESSION DECODING
 ============================================================================ */
+
+function safeJsonParse(
+  value
+) {
+  try {
+    const parsed =
+      JSON.parse(
+        value
+      );
+
+    return isObject(
+      parsed
+    )
+      ? parsed
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseBase64Session(
+  value
+) {
+  const raw =
+    normalizeString(
+      value
+    );
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const decoded =
+      Buffer
+        .from(
+          raw,
+          "base64url"
+        )
+        .toString(
+          "utf8"
+        );
+
+    return safeJsonParse(
+      decoded
+    );
+  } catch {
+    return null;
+  }
+}
+
+function parseSessionValue(
+  value
+) {
+  const raw =
+    normalizeString(
+      value
+    );
+
+  if (!raw) {
+    return null;
+  }
+
+  const direct =
+    safeJsonParse(
+      raw
+    );
+
+  if (direct) {
+    return direct;
+  }
+
+  return parseBase64Session(
+    raw
+  );
+}
 
 function readSessionCookie(
   req
@@ -609,7 +789,10 @@ function readSessionCookie(
 
   const configuredName =
     normalizeString(
-      getSessionCookieName?.()
+      typeof getSessionCookieName ===
+        "function"
+        ? getSessionCookieName()
+        : ""
     );
 
   const names =
@@ -618,12 +801,15 @@ function readSessionCookie(
         [
           configuredName,
           ...SESSION_COOKIE_NAMES,
-        ].filter(Boolean)
+        ].filter(
+          Boolean
+        )
       )
     );
 
   for (
-    const name of names
+    const name
+    of names
   ) {
     const raw =
       cookies[name];
@@ -633,9 +819,8 @@ function readSessionCookie(
     }
 
     const data =
-      safeJsonParse(
-        raw,
-        null
+      parseSessionValue(
+        raw
       );
 
     if (
@@ -654,6 +839,38 @@ function readSessionCookie(
   return null;
 }
 
+function readSessionTokenCookie(
+  req
+) {
+  const cookies =
+    parseCookies(
+      req
+    );
+
+  for (
+    const name
+    of SESSION_TOKEN_COOKIE_NAMES
+  ) {
+    const token =
+      normalizeString(
+        cookies[name]
+      );
+
+    if (token) {
+      return {
+        name,
+        token,
+      };
+    }
+  }
+
+  return null;
+}
+
+/* ==========================================================================
+   SESSION IDENTITY
+============================================================================ */
+
 function getSessionMemberId(
   sessionMeta
 ) {
@@ -664,12 +881,32 @@ function getSessionMemberId(
   return normalizeString(
     data.member?.id ||
       data.profile?.id ||
-      data.user?.id ||
       data.signupId ||
       data.signup_id ||
       data.memberId ||
       data.member_id ||
       data.id
+  );
+}
+
+function getSessionPortalUserId(
+  sessionMeta
+) {
+  const data =
+    sessionMeta?.data ||
+    {};
+
+  return normalizeString(
+    data.portalUserId ||
+      data.portal_user_id ||
+      data.member
+        ?.portalUserId ||
+      data.member
+        ?.portal_user_id ||
+      data.profile
+        ?.portalUserId ||
+      data.profile
+        ?.portal_user_id
   );
 }
 
@@ -689,6 +926,26 @@ function getSessionEmail(
   );
 }
 
+function getSessionToken(
+  sessionMeta
+) {
+  const data =
+    sessionMeta?.data ||
+    {};
+
+  return normalizeString(
+    data.token ||
+      data.sessionToken ||
+      data.session_token ||
+      data.authToken ||
+      data.auth_token ||
+      data.loginToken ||
+      data.login_token ||
+      data.portalToken ||
+      data.portal_token
+  );
+}
+
 function getSessionExpiresAt(
   sessionMeta
 ) {
@@ -700,8 +957,10 @@ function getSessionExpiresAt(
     Number(
       data.expires_at ||
         data.expiresAt ||
-        data.session?.expires_at ||
-        data.session?.expiresAt ||
+        data.session
+          ?.expires_at ||
+        data.session
+          ?.expiresAt ||
         0
     );
 
@@ -727,7 +986,8 @@ function isSessionExpired(
   return (
     expiresAt <=
     Math.floor(
-      Date.now() / 1000
+      Date.now() /
+        1000
     )
   );
 }
@@ -736,12 +996,73 @@ function isSessionExpired(
    MEMBER STATUS
 ============================================================================ */
 
+function getMemberStatuses(
+  member
+) {
+  return {
+    status:
+      normalizeStatus(
+        member?.status
+      ),
+
+    paymentStatus:
+      normalizeStatus(
+        member
+          ?.payment_status
+      ),
+
+    membershipStatus:
+      normalizeStatus(
+        member
+          ?.membership_status
+      ),
+
+    approvalStatus:
+      normalizeStatus(
+        member
+          ?.approval_status
+      ),
+  };
+}
+
+function isMemberBlocked(
+  member
+) {
+  const {
+    status,
+    membershipStatus,
+    approvalStatus,
+  } =
+    getMemberStatuses(
+      member
+    );
+
+  return (
+    BLOCKED_STATUSES.has(
+      status
+    ) ||
+    BLOCKED_STATUSES.has(
+      membershipStatus
+    ) ||
+    BLOCKED_STATUSES.has(
+      approvalStatus
+    )
+  );
+}
+
 function isMemberPaid(
   member
 ) {
-  return ACTIVE_PAYMENT_STATUSES.has(
-    normalizeStatus(
-      member?.payment_status
+  const {
+    paymentStatus,
+  } =
+    getMemberStatuses(
+      member
+    );
+
+  return (
+    ACTIVE_PAYMENT_STATUSES.has(
+      paymentStatus
     )
   );
 }
@@ -750,6 +1071,15 @@ function isMemberActive(
   member
 ) {
   if (
+    !member ||
+    isMemberBlocked(
+      member
+    )
+  ) {
+    return false;
+  }
+
+  if (
     !isMemberPaid(
       member
     )
@@ -757,19 +1087,13 @@ function isMemberActive(
     return false;
   }
 
-  const status =
-    normalizeStatus(
-      member?.status
-    );
-
-  const membershipStatus =
-    normalizeStatus(
-      member?.membership_status
-    );
-
-  const approvalStatus =
-    normalizeStatus(
-      member?.approval_status
+  const {
+    status,
+    membershipStatus,
+    approvalStatus,
+  } =
+    getMemberStatuses(
+      member
     );
 
   return (
@@ -791,7 +1115,9 @@ function isMemberActive(
 
 async function getMemberRecord({
   memberId,
+  portalUserId,
   email,
+  sessionToken,
 }) {
   const extendedFields = [
     "id",
@@ -807,12 +1133,21 @@ async function getMemberRecord({
     "membership_status",
     "approval_status",
 
+    "portal_user_id",
+
+    "session_token",
+    "auth_token",
+    "login_token",
+    "portal_token",
+
     "stripe_customer_id",
     "stripe_subscription_id",
 
     "created_at",
     "updated_at",
-  ].join(", ");
+  ].join(
+    ", "
+  );
 
   const fallbackFields = [
     "id",
@@ -827,35 +1162,77 @@ async function getMemberRecord({
 
     "created_at",
     "updated_at",
-  ].join(", ");
+  ].join(
+    ", "
+  );
 
-  let query =
-    supabaseAdmin
-      .from(
-        "signups"
-      )
-      .select(
-        extendedFields
-      )
-      .limit(1);
+  async function runQuery(
+    fields
+  ) {
+    let query =
+      supabaseAdmin
+        .from(
+          "signups"
+        )
+        .select(
+          fields
+        )
+        .limit(
+          1
+        );
 
-  if (memberId) {
-    query =
-      query.eq(
-        "id",
-        memberId
-      );
-  } else {
-    query =
-      query.eq(
-        "email",
-        email
-      );
+    if (memberId) {
+      query =
+        query.eq(
+          "id",
+          memberId
+        );
+    } else if (
+      portalUserId
+    ) {
+      query =
+        query.eq(
+          "portal_user_id",
+          portalUserId
+        );
+    } else if (
+      email
+    ) {
+      query =
+        query.ilike(
+          "email",
+          email
+        );
+    } else if (
+      sessionToken
+    ) {
+      query =
+        query.or(
+          [
+            `session_token.eq.${sessionToken}`,
+            `auth_token.eq.${sessionToken}`,
+            `login_token.eq.${sessionToken}`,
+            `portal_token.eq.${sessionToken}`,
+          ].join(",")
+        );
+    } else {
+      return {
+        data:
+          null,
+
+        error:
+          null,
+      };
+    }
+
+    return query
+      .maybeSingle();
   }
 
   let result =
-    await query
-      .maybeSingle();
+    await runQuery(
+      extendedFields
+    );
 
   if (
     result.error &&
@@ -863,33 +1240,17 @@ async function getMemberRecord({
       result.error
     )
   ) {
-    let fallback =
-      supabaseAdmin
-        .from(
-          "signups"
-        )
-        .select(
-          fallbackFields
-        )
-        .limit(1);
-
-    if (memberId) {
-      fallback =
-        fallback.eq(
-          "id",
-          memberId
-        );
-    } else {
-      fallback =
-        fallback.eq(
-          "email",
-          email
-        );
+    if (
+      !memberId &&
+      !email
+    ) {
+      return result;
     }
 
     result =
-      await fallback
-        .maybeSingle();
+      await runQuery(
+        fallbackFields
+      );
   }
 
   return result;
@@ -908,9 +1269,12 @@ async function getAuthenticatedMember(
       req
     );
 
-  if (!session?.data) {
+  if (
+    !session?.data
+  ) {
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -925,12 +1289,17 @@ async function getAuthenticatedMember(
       session
     )
   ) {
-    clearAuthCookies(
-      res
-    );
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -940,27 +1309,21 @@ async function getAuthenticatedMember(
     };
   }
 
-  if (
-    session.data
-      .authenticated !== true
-  ) {
-    clearAuthCookies(
-      res
-    );
-
-    return {
-      member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Your login session is invalid."
-        ),
-    };
-  }
+  /*
+   * Same session resolution as #8, #9, #10.
+   *
+   * DO NOT require:
+   *
+   * session.data.authenticated === true
+   */
 
   const memberId =
     getSessionMemberId(
+      session
+    );
+
+  const portalUserId =
+    getSessionPortalUserId(
       session
     );
 
@@ -969,45 +1332,82 @@ async function getAuthenticatedMember(
       session
     );
 
-  if (
-    !memberId &&
-    !email
-  ) {
-    clearAuthCookies(
-      res
+  const embeddedToken =
+    getSessionToken(
+      session
     );
 
+  const tokenCookie =
+    readSessionTokenCookie(
+      req
+    );
+
+  const sessionToken =
+    embeddedToken ||
+    tokenCookie?.token ||
+    "";
+
+  if (
+    !memberId &&
+    !portalUserId &&
+    !email &&
+    !sessionToken
+  ) {
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
+
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
           res,
-          "Member information is missing from your session."
+          "Member information is missing from your login session."
         ),
     };
   }
 
   const {
-    data: member,
+    data:
+      member,
+
     error,
   } =
     await getMemberRecord({
       memberId,
+      portalUserId,
       email,
+      sessionToken,
     });
+
+  /*
+   * Database problem != logout.
+   */
 
   if (error) {
     throw error;
   }
 
-  if (!member?.id) {
-    clearAuthCookies(
-      res
-    );
+  if (
+    !member?.id
+  ) {
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -1018,17 +1418,43 @@ async function getAuthenticatedMember(
   }
 
   if (
+    isMemberBlocked(
+      member
+    )
+  ) {
+    return {
+      member:
+        null,
+
+      response:
+        forbidden(
+          res,
+          "Your Card Leo account is currently restricted and cannot receive card allowance.",
+          {
+            code:
+              "MEMBER_BLOCKED",
+          }
+        ),
+    };
+  }
+
+  if (
     !isMemberPaid(
       member
     )
   ) {
     return {
-      member: null,
+      member:
+        null,
 
       response:
         forbidden(
           res,
-          "Your Card Leo membership payment must be current before an allowance can be funded."
+          "Your Card Leo membership payment must be current before allowance can be funded.",
+          {
+            code:
+              "PAYMENT_NOT_CURRENT",
+          }
         ),
     };
   }
@@ -1039,19 +1465,26 @@ async function getAuthenticatedMember(
     )
   ) {
     return {
-      member: null,
+      member:
+        null,
 
       response:
         forbidden(
           res,
-          "Your Card Leo membership must be active and approved before an allowance can be funded."
+          "Your Card Leo membership must be active and approved before allowance can be funded.",
+          {
+            code:
+              "MEMBERSHIP_NOT_ACTIVE",
+          }
         ),
     };
   }
 
   return {
     member,
-    response: null,
+
+    response:
+      null,
   };
 }
 
@@ -1070,10 +1503,15 @@ async function getMemberCardRecord(
       .from(
         MEMBER_CARDS_TABLE
       )
-      .select("*")
+      .select(
+        "*"
+      )
       .eq(
         "member_id",
         memberId
+      )
+      .limit(
+        1
       )
       .maybeSingle();
 
@@ -1084,8 +1522,11 @@ async function getMemberCardRecord(
       )
     ) {
       return {
-        record: null,
-        tableMissing: true,
+        record:
+          null,
+
+        tableMissing:
+          true,
       };
     }
 
@@ -1103,7 +1544,11 @@ async function getMemberCardRecord(
 }
 
 /* ==========================================================================
-   ALLOWANCE TRANSACTION
+   ALLOWANCE LOOKUP
+
+   Ownership is enforced in SQL:
+   id = allowanceTransactionId
+   member_id = authenticated member
 ============================================================================ */
 
 async function getAllowanceTransaction({
@@ -1118,7 +1563,9 @@ async function getAllowanceTransaction({
       .from(
         ALLOWANCE_TRANSACTIONS_TABLE
       )
-      .select("*")
+      .select(
+        "*"
+      )
       .eq(
         "id",
         allowanceTransactionId
@@ -1126,6 +1573,9 @@ async function getAllowanceTransaction({
       .eq(
         "member_id",
         memberId
+      )
+      .limit(
+        1
       )
       .maybeSingle();
 
@@ -1159,41 +1609,50 @@ async function getAllowanceTransaction({
 
 /* ==========================================================================
    ALLOWANCE AMOUNT
+
+   The browser amount is NEVER used.
 ============================================================================ */
 
 function getAllowanceAmountCents(
   transaction
 ) {
-  /*
-   * Step 13 should use amount_cents.
-   *
-   * We support amount as a compatibility fallback.
-   */
-
   const amountCents =
     normalizePositiveInteger(
-      transaction?.amount_cents,
+      transaction
+        ?.amount_cents,
       0
     );
 
   if (
-    amountCents > 0
+    amountCents >
+    0
   ) {
     return amountCents;
   }
 
+  /*
+   * Compatibility fallback only.
+   *
+   * Older rows may contain dollar amount.
+   */
+
   const amount =
     Number(
-      transaction?.amount ||
+      transaction
+        ?.amount ||
       0
     );
 
   if (
-    Number.isFinite(amount) &&
-    amount > 0
+    Number.isFinite(
+      amount
+    ) &&
+    amount >
+    0
   ) {
     return Math.round(
-      amount * 100
+      amount *
+      100
     );
   }
 
@@ -1209,9 +1668,12 @@ function isAllowanceCredit(
 ) {
   const direction =
     normalizeStatus(
-      transaction?.direction ||
-      transaction?.type ||
-      transaction?.transaction_type ||
+      transaction
+        ?.direction ||
+      transaction
+        ?.type ||
+      transaction
+        ?.transaction_type ||
       "credit"
     );
 
@@ -1227,7 +1689,26 @@ function isAllowanceCredit(
 }
 
 /* ==========================================================================
-   ALLOWANCE READINESS
+   EXISTING PROVIDER REFERENCE
+============================================================================ */
+
+function getExistingProviderTransactionToken(
+  transaction
+) {
+  return normalizeString(
+    transaction
+      ?.provider_transaction_token ||
+    transaction
+      ?.lithic_transaction_token ||
+    transaction
+      ?.external_reference ||
+    transaction
+      ?.external_id
+  );
+}
+
+/* ==========================================================================
+   VALIDATE ALLOWANCE
 ============================================================================ */
 
 function validateAllowanceTransaction(
@@ -1235,7 +1716,9 @@ function validateAllowanceTransaction(
 ) {
   const errors = {};
 
-  if (!transaction?.id) {
+  if (
+    !transaction?.id
+  ) {
     errors.transaction =
       "Allowance transaction does not exist.";
   }
@@ -1246,7 +1729,8 @@ function validateAllowanceTransaction(
     );
 
   if (
-    amountCents <= 0
+    amountCents <=
+    0
   ) {
     errors.amount =
       "Allowance transaction does not contain a valid amount.";
@@ -1263,7 +1747,8 @@ function validateAllowanceTransaction(
 
   const status =
     normalizeStatus(
-      transaction?.status
+      transaction
+        ?.status
     );
 
   if (
@@ -1285,11 +1770,23 @@ function validateAllowanceTransaction(
   }
 
   if (
+    PROCESSING_ALLOWANCE_STATUSES.has(
+      status
+    )
+  ) {
+    errors.processing =
+      "This allowance is already processing.";
+  }
+
+  if (
     status &&
     !READY_ALLOWANCE_STATUSES.has(
       status
     ) &&
     !COMPLETED_ALLOWANCE_STATUSES.has(
+      status
+    ) &&
+    !PROCESSING_ALLOWANCE_STATUSES.has(
       status
     )
   ) {
@@ -1301,7 +1798,8 @@ function validateAllowanceTransaction(
     valid:
       Object.keys(
         errors
-      ).length === 0,
+      ).length ===
+      0,
 
     errors,
 
@@ -1310,25 +1808,12 @@ function validateAllowanceTransaction(
 }
 
 /* ==========================================================================
-   IDEMPOTENCY
+   DETERMINISTIC IDEMPOTENCY KEY
+
+   The same Card Leo allowance transaction always maps to the same UUID.
 ============================================================================ */
 
-function getExistingProviderTransactionToken(
-  transaction
-) {
-  return normalizeString(
-    transaction
-      ?.provider_transaction_token ||
-    transaction
-      ?.lithic_transaction_token ||
-    transaction
-      ?.external_reference ||
-    transaction
-      ?.external_id
-  );
-}
-
-function getOrCreateIdempotencyToken(
+function buildAllowanceIdempotencyKey(
   transaction
 ) {
   const existing =
@@ -1343,7 +1828,176 @@ function getOrCreateIdempotencyToken(
     return existing;
   }
 
-  return generateIdempotencyToken();
+  const transactionId =
+    normalizeString(
+      transaction
+        ?.id
+    );
+
+  const memberId =
+    normalizeString(
+      transaction
+        ?.member_id
+    );
+
+  const digest =
+    crypto
+      .createHash(
+        "sha256"
+      )
+      .update(
+        [
+          "cardleo",
+          "lithic",
+          "allowance",
+          memberId,
+          transactionId,
+        ].join(":")
+      )
+      .digest();
+
+  const bytes =
+    Buffer.from(
+      digest.subarray(
+        0,
+        16
+      )
+    );
+
+  /*
+   * RFC 4122-compatible deterministic UUID.
+   */
+
+  bytes[6] =
+    (
+      bytes[6] &
+      0x0f
+    ) |
+    0x50;
+
+  bytes[8] =
+    (
+      bytes[8] &
+      0x3f
+    ) |
+    0x80;
+
+  const hex =
+    bytes.toString(
+      "hex"
+    );
+
+  return [
+    hex.slice(
+      0,
+      8
+    ),
+
+    hex.slice(
+      8,
+      12
+    ),
+
+    hex.slice(
+      12,
+      16
+    ),
+
+    hex.slice(
+      16,
+      20
+    ),
+
+    hex.slice(
+      20,
+      32
+    ),
+  ].join(
+    "-"
+  );
+}
+
+/* ==========================================================================
+   ATOMIC-STYLE PROCESSING CLAIM
+
+   This protects against two browser requests racing each other.
+
+   We only claim a row when it is still in a ready state.
+============================================================================ */
+
+async function claimAllowanceForProcessing({
+  transaction,
+  idempotencyKey,
+}) {
+  const readyStatuses =
+    Array.from(
+      READY_ALLOWANCE_STATUSES
+    );
+
+  const timestamp =
+    nowIso();
+
+  let query =
+    supabaseAdmin
+      .from(
+        ALLOWANCE_TRANSACTIONS_TABLE
+      )
+      .update({
+        status:
+          "processing",
+
+        provider:
+          "lithic",
+
+        provider_status:
+          "processing",
+
+        idempotency_key:
+          idempotencyKey,
+
+        funding_started_at:
+          timestamp,
+
+        updated_at:
+          timestamp,
+      })
+      .eq(
+        "id",
+        transaction.id
+      )
+      .eq(
+        "member_id",
+        transaction.member_id
+      );
+
+  /*
+   * Restrict update to an allowable starting status.
+   */
+
+  if (
+    readyStatuses.length
+  ) {
+    query =
+      query.in(
+        "status",
+        readyStatuses
+      );
+  }
+
+  const {
+    data,
+    error,
+  } =
+    await query
+      .select()
+      .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data ||
+    null;
 }
 
 /* ==========================================================================
@@ -1356,6 +2010,7 @@ async function updateAllowanceTransaction(
 ) {
   const payload = {
     ...updates,
+
     updated_at:
       nowIso(),
   };
@@ -1386,7 +2041,7 @@ async function updateAllowanceTransaction(
 }
 
 /* ==========================================================================
-   LITHIC FINANCIAL ACCOUNTS
+   LITHIC LIST
 ============================================================================ */
 
 function unwrapLithicList(
@@ -1405,7 +2060,9 @@ function unwrapLithicList(
       result?.data?.data
     )
   ) {
-    return result.data.data;
+    return result
+      .data
+      .data;
   }
 
   if (
@@ -1413,14 +2070,43 @@ function unwrapLithicList(
       result?.data?.items
     )
   ) {
-    return result.data.items;
+    return result
+      .data
+      .items;
   }
 
   return [];
 }
 
+function unwrapLithicObject(
+  result
+) {
+  if (
+    isObject(
+      result?.data?.data
+    )
+  ) {
+    return result
+      .data
+      .data;
+  }
+
+  if (
+    isObject(
+      result?.data
+    )
+  ) {
+    return result.data;
+  }
+
+  return {};
+}
+
 /* ==========================================================================
-   FIND MEMBER ISSUING FINANCIAL ACCOUNT
+   MEMBER ISSUING FINANCIAL ACCOUNT
+
+   We deliberately require ISSUING.
+   We do NOT silently fall back to OPERATING.
 ============================================================================ */
 
 async function getMemberIssuingFinancialAccount(
@@ -1452,33 +2138,25 @@ async function getMemberIssuingFinancialAccount(
       }
     );
 
-  const financialAccounts =
+  const accounts =
     unwrapLithicList(
       result
     );
 
-  const issuing =
-    financialAccounts.find(
+  return (
+    accounts.find(
       (account) =>
         normalizeStatus(
           account?.type
-        ) === "issuing"
-    );
-
-  if (issuing) {
-    return issuing;
-  }
-
-  /*
-   * Do NOT automatically use OPERATING as the
-   * member destination.
-   */
-
-  return null;
+        ) ===
+        "issuing"
+    ) ||
+    null
+  );
 }
 
 /* ==========================================================================
-   PROGRAM SOURCE ACCOUNT
+   CARD LEO SOURCE FUNDING ACCOUNT
 ============================================================================ */
 
 function getProgramIssuingFinancialAccountToken() {
@@ -1493,7 +2171,7 @@ function getProgramIssuingFinancialAccountToken() {
 }
 
 /* ==========================================================================
-   BOOK TRANSFER CONFIGURATION
+   BOOK TRANSFER CONFIG
 ============================================================================ */
 
 function getBookTransferCategory() {
@@ -1526,8 +2204,8 @@ function validateBookTransferConfiguration() {
   }
 
   /*
-   * Lithic's book transfer category and subtype are
-   * program-specific. We deliberately do not guess them.
+   * Card Leo must use the category/subtype approved for its Lithic program.
+   * Never guess these values.
    */
 
   if (!category) {
@@ -1544,7 +2222,8 @@ function validateBookTransferConfiguration() {
     valid:
       Object.keys(
         errors
-      ).length === 0,
+      ).length ===
+      0,
 
     errors,
 
@@ -1557,32 +2236,38 @@ function validateBookTransferConfiguration() {
 }
 
 /* ==========================================================================
-   BUILD TRANSFER MEMO
+   TRANSFER MEMO
 ============================================================================ */
 
 function buildTransferMemo({
   member,
   transaction,
 }) {
-  const source =
-    normalizeString(
-      transaction?.source ||
-      transaction?.description
-    );
-
   const memberName =
     normalizeString(
-      member?.full_name
+      member
+        ?.full_name
     ) ||
     [
-      member?.first_name,
-      member?.last_name,
+      member
+        ?.first_name,
+
+      member
+        ?.last_name,
     ]
       .map(
         normalizeString
       )
       .filter(Boolean)
       .join(" ");
+
+  const source =
+    normalizeString(
+      transaction
+        ?.source ||
+      transaction
+        ?.description
+    );
 
   let memo =
     DEFAULT_MEMO_PREFIX;
@@ -1597,20 +2282,14 @@ function buildTransferMemo({
       ` - ${source}`;
   }
 
-  /*
-   * Keep it comfortably below Lithic's documented
-   * maximum memo size.
-   */
-
-  return memo
-    .slice(
-      0,
-      300
-    );
+  return memo.slice(
+    0,
+    300
+  );
 }
 
 /* ==========================================================================
-   CREATE BOOK TRANSFER
+   CREATE LITHIC BOOK TRANSFER
 ============================================================================ */
 
 async function createLithicBookTransfer({
@@ -1620,7 +2299,7 @@ async function createLithicBookTransfer({
   category,
   subtype,
   memo,
-  idempotencyToken,
+  idempotencyKey,
 }) {
   const payload = {
     amount:
@@ -1639,11 +2318,6 @@ async function createLithicBookTransfer({
     memo,
   };
 
-  /*
-   * The current book-transfer API supports an
-   * Idempotency-Key request header.
-   */
-
   return lithicRequest(
     "/book_transfers",
     {
@@ -1652,7 +2326,7 @@ async function createLithicBookTransfer({
 
       headers: {
         "Idempotency-Key":
-          idempotencyToken,
+          idempotencyKey,
       },
 
       body:
@@ -1662,30 +2336,8 @@ async function createLithicBookTransfer({
 }
 
 /* ==========================================================================
-   BOOK TRANSFER RESPONSE
+   PARSE TRANSFER
 ============================================================================ */
-
-function unwrapLithicObject(
-  result
-) {
-  if (
-    isObject(
-      result?.data?.data
-    )
-  ) {
-    return result.data.data;
-  }
-
-  if (
-    isObject(
-      result?.data
-    )
-  ) {
-    return result.data;
-  }
-
-  return {};
-}
 
 function parseBookTransfer(
   result
@@ -1704,8 +2356,7 @@ function parseBookTransfer(
 
     status:
       normalizeString(
-        data.status ||
-        data.result
+        data.status
       ).toUpperCase() ||
       null,
 
@@ -1740,7 +2391,7 @@ function parseBookTransfer(
 }
 
 /* ==========================================================================
-   GET BALANCE AFTER TRANSFER
+   FINANCIAL ACCOUNT BALANCE
 ============================================================================ */
 
 async function getFinancialAccountBalance(
@@ -1771,77 +2422,84 @@ async function getFinancialAccountBalance(
       result
     );
 
-  const availableAmount =
+  const availableCents =
     Number(
       data.available_amount ??
       data.available_balance ??
       0
     );
 
-  const pendingAmount =
+  const pendingCents =
     Number(
       data.pending_amount ??
       data.pending_balance ??
       0
     );
 
-  const totalAmount =
+  const totalCents =
     Number(
       data.total_amount ??
       data.total_balance ??
       (
-        availableAmount +
-        pendingAmount
+        Number.isFinite(
+          availableCents
+        )
+          ? availableCents
+          : 0
+      ) +
+      (
+        Number.isFinite(
+          pendingCents
+        )
+          ? pendingCents
+          : 0
       )
     );
 
+  const safeAvailable =
+    Number.isFinite(
+      availableCents
+    )
+      ? availableCents
+      : 0;
+
+  const safePending =
+    Number.isFinite(
+      pendingCents
+    )
+      ? pendingCents
+      : 0;
+
+  const safeTotal =
+    Number.isFinite(
+      totalCents
+    )
+      ? totalCents
+      : 0;
+
   return {
     availableCents:
-      Number.isFinite(
-        availableAmount
-      )
-        ? availableAmount
-        : 0,
+      safeAvailable,
 
     available:
       centsToDollars(
-        Number.isFinite(
-          availableAmount
-        )
-          ? availableAmount
-          : 0
+        safeAvailable
       ),
 
     pendingCents:
-      Number.isFinite(
-        pendingAmount
-      )
-        ? pendingAmount
-        : 0,
+      safePending,
 
     pending:
       centsToDollars(
-        Number.isFinite(
-          pendingAmount
-        )
-          ? pendingAmount
-          : 0
+        safePending
       ),
 
     totalCents:
-      Number.isFinite(
-        totalAmount
-      )
-        ? totalAmount
-        : 0,
+      safeTotal,
 
     total:
       centsToDollars(
-        Number.isFinite(
-          totalAmount
-        )
-          ? totalAmount
-          : 0
+        safeTotal
       ),
 
     currency:
@@ -1881,7 +2539,8 @@ function sanitizeAllowanceTransaction(
       null,
 
     memberId:
-      transaction.member_id ||
+      transaction
+        .member_id ||
       null,
 
     amountCents,
@@ -1901,6 +2560,8 @@ function sanitizeAllowanceTransaction(
       normalizeStatus(
         transaction.direction ||
         transaction.type ||
+        transaction
+          .transaction_type ||
         "credit"
       ),
 
@@ -1916,8 +2577,10 @@ function sanitizeAllowanceTransaction(
       null,
 
     sourceRewardId:
-      transaction.source_reward_id ||
-      transaction.reward_id ||
+      transaction
+        .source_reward_id ||
+      transaction
+        .reward_id ||
       null,
 
     description:
@@ -1934,29 +2597,33 @@ function sanitizeAllowanceTransaction(
 
     providerStatus:
       normalizeString(
-        transaction.provider_status
+        transaction
+          .provider_status
       ) ||
       null,
 
     fundedAt:
       safeDate(
-        transaction.funded_at
+        transaction
+          .funded_at
       ),
 
     createdAt:
       safeDate(
-        transaction.created_at
+        transaction
+          .created_at
       ),
 
     updatedAt:
       safeDate(
-        transaction.updated_at
+        transaction
+          .updated_at
       ),
   };
 }
 
 /* ==========================================================================
-   IDEMPOTENT ALREADY FUNDED RESPONSE
+   IDEMPOTENT FUNDED CHECK
 ============================================================================ */
 
 function isAlreadyFunded(
@@ -1964,7 +2631,8 @@ function isAlreadyFunded(
 ) {
   const status =
     normalizeStatus(
-      transaction?.status
+      transaction
+        ?.status
     );
 
   const providerToken =
@@ -1983,6 +2651,87 @@ function isAlreadyFunded(
 }
 
 /* ==========================================================================
+   PROCESSING CHECK
+============================================================================ */
+
+function isAlreadyProcessing(
+  transaction
+) {
+  return PROCESSING_ALLOWANCE_STATUSES.has(
+    normalizeStatus(
+      transaction
+        ?.status
+    )
+  );
+}
+
+/* ==========================================================================
+   ACCOUNT HOLDER READY
+============================================================================ */
+
+function getAccountHolderStatus(
+  memberCard
+) {
+  return normalizeString(
+    memberCard
+      ?.lithic_account_holder_status
+  ).toUpperCase();
+}
+
+function isAccountHolderAccepted(
+  memberCard
+) {
+  return (
+    getAccountHolderStatus(
+      memberCard
+    ) ===
+    "ACCEPTED"
+  );
+}
+
+/* ==========================================================================
+   SAFE MEMBER
+============================================================================ */
+
+function buildSafeMember(
+  member
+) {
+  return {
+    id:
+      member.id,
+
+    email:
+      normalizeEmail(
+        member.email
+      ),
+
+    firstName:
+      normalizeString(
+        member.first_name
+      ),
+
+    lastName:
+      normalizeString(
+        member.last_name
+      ),
+
+    fullName:
+      normalizeString(
+        member.full_name
+      ) ||
+      [
+        member.first_name,
+        member.last_name,
+      ]
+        .map(
+          normalizeString
+        )
+        .filter(Boolean)
+        .join(" "),
+  };
+}
+
+/* ==========================================================================
    HANDLER
 ============================================================================ */
 
@@ -1990,9 +2739,14 @@ export default async function handler(
   req,
   res
 ) {
-  setNoStore?.(
-    res
-  );
+  if (
+    typeof setNoStore ===
+    "function"
+  ) {
+    setNoStore(
+      res
+    );
+  }
 
   logRequestStart(
     req,
@@ -2001,6 +2755,10 @@ export default async function handler(
         "fund_allowance",
     }
   );
+
+  /* ------------------------------------------------------------------------
+     METHOD
+  ------------------------------------------------------------------------ */
 
   if (
     req.method !==
@@ -2015,8 +2773,12 @@ export default async function handler(
       res,
       405,
       {
-        success: false,
-        ok: false,
+        success:
+          false,
+
+        ok:
+          false,
+
         message:
           "Method not allowed. Use POST.",
       }
@@ -2025,7 +2787,7 @@ export default async function handler(
 
   try {
     /* ======================================================================
-       AUTH
+       AUTHENTICATE
     ====================================================================== */
 
     const {
@@ -2047,7 +2809,7 @@ export default async function handler(
       );
 
     /* ======================================================================
-       BODY
+       REQUEST BODY
     ====================================================================== */
 
     const body =
@@ -2057,10 +2819,14 @@ export default async function handler(
 
     const allowanceTransactionId =
       normalizeString(
-        body.allowanceTransactionId ||
-        body.allowance_transaction_id ||
-        body.transactionId ||
-        body.transaction_id
+        body
+          .allowanceTransactionId ||
+        body
+          .allowance_transaction_id ||
+        body
+          .transactionId ||
+        body
+          .transaction_id
       );
 
     if (
@@ -2073,9 +2839,9 @@ export default async function handler(
           code:
             "ALLOWANCE_TRANSACTION_ID_REQUIRED",
 
-          example: {
+          expectedBody: {
             allowanceTransactionId:
-              "your-approved-allowance-transaction-id",
+              "approved-allowance-transaction-id",
           },
         }
       );
@@ -2084,13 +2850,18 @@ export default async function handler(
     /*
      * SECURITY:
      *
-     * Ignore browser-provided amount.
+     * Ignore all of the following even if the browser supplies them:
      *
-     * The amount must come from the database.
+     * body.amount
+     * body.amount_cents
+     * body.member_id
+     * body.account_token
+     * body.card_token
+     * body.financial_account_token
      */
 
     /* ======================================================================
-       MEMBER CARD RECORD
+       MEMBER CARD
     ====================================================================== */
 
     const {
@@ -2113,9 +2884,6 @@ export default async function handler(
         {
           code:
             "MEMBER_CARDS_TABLE_MISSING",
-
-          nextStep:
-            "Complete Step 12.",
         }
       );
     }
@@ -2137,7 +2905,7 @@ export default async function handler(
     }
 
     /* ======================================================================
-       VIRTUAL CARD READY
+       ACCOUNT HOLDER
     ====================================================================== */
 
     const accountHolderToken =
@@ -2163,13 +2931,34 @@ export default async function handler(
     ) {
       return conflict(
         res,
-        "A Lithic account holder must be created before an allowance can be funded.",
+        "A Lithic account holder must be created before allowance can be funded.",
         {
           code:
             "LITHIC_ACCOUNT_HOLDER_REQUIRED",
 
           nextEndpoint:
             "/api/cards/create-cardholder",
+        }
+      );
+    }
+
+    if (
+      !isAccountHolderAccepted(
+        memberCard
+      )
+    ) {
+      return conflict(
+        res,
+        "Your Lithic account holder must be accepted before allowance can be funded.",
+        {
+          code:
+            "LITHIC_ACCOUNT_HOLDER_NOT_ACCEPTED",
+
+          accountHolderStatus:
+            getAccountHolderStatus(
+              memberCard
+            ) ||
+            "UNKNOWN",
         }
       );
     }
@@ -2195,7 +2984,7 @@ export default async function handler(
     ) {
       return conflict(
         res,
-        "Your Card Leo virtual card must be created before an allowance can be loaded.",
+        "Your Card Leo virtual card must be created before allowance can be loaded.",
         {
           code:
             "LITHIC_CARD_REQUIRED",
@@ -2208,6 +2997,9 @@ export default async function handler(
 
     /* ======================================================================
        LOAD ALLOWANCE
+
+       The .eq(member_id, authenticated member) check prevents a member
+       from submitting another member's transaction ID.
     ====================================================================== */
 
     const {
@@ -2232,9 +3024,6 @@ export default async function handler(
         {
           code:
             "ALLOWANCE_TRANSACTIONS_TABLE_MISSING",
-
-          nextStep:
-            "Complete Step 13 before allowance funding is enabled.",
         }
       );
     }
@@ -2264,10 +3053,70 @@ export default async function handler(
       return success(
         res,
         {
+          authenticated:
+            true,
+
           funded:
             true,
 
+          processing:
+            false,
+
           alreadyFunded:
+            true,
+
+          member:
+            buildSafeMember(
+              member
+            ),
+
+          allowance:
+            sanitizeAllowanceTransaction(
+              allowanceTransaction
+            ),
+
+          lithic:
+            getLithicIntegrationStatus(),
+
+          links: {
+            card:
+              "/portal/card.html",
+
+            memberCard:
+              "/api/cards/member-card",
+          },
+        },
+        "This Card Leo allowance has already been funded."
+      );
+    }
+
+    /* ======================================================================
+       ALREADY PROCESSING
+
+       Do not initiate another provider request.
+    ====================================================================== */
+
+    if (
+      isAlreadyProcessing(
+        allowanceTransaction
+      )
+    ) {
+      return success(
+        res,
+        {
+          authenticated:
+            true,
+
+          funded:
+            false,
+
+          processing:
+            true,
+
+          alreadyFunded:
+            false,
+
+          alreadyProcessing:
             true,
 
           allowance:
@@ -2278,7 +3127,7 @@ export default async function handler(
           lithic:
             getLithicIntegrationStatus(),
         },
-        "This Card Leo allowance has already been funded."
+        "This Card Leo allowance is already processing."
       );
     }
 
@@ -2302,7 +3151,8 @@ export default async function handler(
             "ALLOWANCE_NOT_READY",
 
           errors:
-            allowanceValidation.errors,
+            allowanceValidation
+              .errors,
 
           allowance:
             sanitizeAllowanceTransaction(
@@ -2317,7 +3167,7 @@ export default async function handler(
         .amountCents;
 
     /* ======================================================================
-       LITHIC DISABLED
+       LITHIC ENABLED
     ====================================================================== */
 
     if (
@@ -2326,7 +3176,13 @@ export default async function handler(
       return success(
         res,
         {
+          authenticated:
+            true,
+
           funded:
+            false,
+
+          processing:
             false,
 
           alreadyFunded:
@@ -2355,23 +3211,10 @@ export default async function handler(
 
           lithic:
             getLithicIntegrationStatus(),
-
-          nextSteps: [
-            "Obtain Lithic Sandbox credentials.",
-            "Confirm Card Leo's program-level ISSUING financial account.",
-            "Confirm the book-transfer category approved for Card Leo.",
-            "Confirm the book-transfer subtype approved for Card Leo.",
-            "Add those values to Vercel.",
-            "Set LITHIC_ENABLED=true only when Sandbox testing is ready.",
-          ],
         },
         "The allowance is approved and ready, but Lithic funding is currently disabled."
       );
     }
-
-    /* ======================================================================
-       LITHIC CONFIG
-    ====================================================================== */
 
     if (
       !isLithicConfigured()
@@ -2390,7 +3233,7 @@ export default async function handler(
     }
 
     /* ======================================================================
-       BOOK TRANSFER CONFIG
+       TRANSFER CONFIGURATION
     ====================================================================== */
 
     const transferConfig =
@@ -2407,11 +3250,8 @@ export default async function handler(
             "LITHIC_BOOK_TRANSFER_CONFIGURATION_REQUIRED",
 
           errors:
-            transferConfig.errors,
-
-          /*
-           * No sensitive tokens returned.
-           */
+            transferConfig
+              .errors,
 
           requirements: [
             "LITHIC_PROGRAM_ISSUING_FINANCIAL_ACCOUNT_TOKEN",
@@ -2423,7 +3263,9 @@ export default async function handler(
     }
 
     /* ======================================================================
-       MEMBER FINANCIAL ACCOUNT
+       DESTINATION FINANCIAL ACCOUNT
+
+       Server resolves this from the authenticated member's Lithic account.
     ====================================================================== */
 
     let memberFinancialAccount;
@@ -2444,6 +3286,8 @@ export default async function handler(
             "fund_allowance_member_financial_account",
 
           memberId,
+
+          allowanceTransactionId,
         }
       );
 
@@ -2475,48 +3319,35 @@ export default async function handler(
 
     const memberFinancialAccountToken =
       normalizeString(
-        memberFinancialAccount.token
+        memberFinancialAccount
+          .token
       );
 
     /* ======================================================================
-       PREPARE IDEMPOTENCY
+       IDEMPOTENCY
     ====================================================================== */
 
-    const idempotencyToken =
-      getOrCreateIdempotencyToken(
+    const idempotencyKey =
+      buildAllowanceIdempotencyKey(
         allowanceTransaction
       );
 
-    /*
-     * Save the idempotency token BEFORE calling Lithic.
-     *
-     * This prevents a network retry from generating a
-     * brand-new provider operation.
-     */
+    /* ======================================================================
+       CLAIM ALLOWANCE
+
+       We save/claim the idempotency key before calling Lithic.
+    ====================================================================== */
 
     let processingTransaction;
 
     try {
       processingTransaction =
-        await updateAllowanceTransaction(
-          allowanceTransaction.id,
-          {
-            status:
-              "processing",
+        await claimAllowanceForProcessing({
+          transaction:
+            allowanceTransaction,
 
-            provider:
-              "lithic",
-
-            provider_status:
-              "processing",
-
-            idempotency_key:
-              idempotencyToken,
-
-            funding_started_at:
-              nowIso(),
-          }
-        );
+          idempotencyKey,
+        });
     } catch (
       error
     ) {
@@ -2525,7 +3356,7 @@ export default async function handler(
         error,
         {
           scope:
-            "fund_allowance_mark_processing",
+            "fund_allowance_claim_processing",
 
           memberId,
 
@@ -2540,6 +3371,74 @@ export default async function handler(
           code:
             "ALLOWANCE_PROCESSING_LOCK_FAILED",
         }
+      );
+    }
+
+    /*
+     * Another request may have claimed it between our SELECT and UPDATE.
+     */
+
+    if (
+      !processingTransaction
+    ) {
+      const {
+        transaction:
+          currentTransaction,
+      } =
+        await getAllowanceTransaction({
+          allowanceTransactionId,
+
+          memberId,
+        });
+
+      if (
+        isAlreadyFunded(
+          currentTransaction
+        )
+      ) {
+        return success(
+          res,
+          {
+            funded:
+              true,
+
+            processing:
+              false,
+
+            alreadyFunded:
+              true,
+
+            allowance:
+              sanitizeAllowanceTransaction(
+                currentTransaction
+              ),
+          },
+          "This Card Leo allowance has already been funded."
+        );
+      }
+
+      return success(
+        res,
+        {
+          funded:
+            false,
+
+          processing:
+            true,
+
+          alreadyFunded:
+            false,
+
+          alreadyProcessing:
+            true,
+
+          allowance:
+            sanitizeAllowanceTransaction(
+              currentTransaction ||
+              allowanceTransaction
+            ),
+        },
+        "This Card Leo allowance is already being processed."
       );
     }
 
@@ -2579,7 +3478,7 @@ export default async function handler(
 
           memo,
 
-          idempotencyToken,
+          idempotencyKey,
         });
     } catch (
       lithicError
@@ -2603,10 +3502,11 @@ export default async function handler(
       );
 
       /*
-       * We mark it failed but retain the idempotency key.
+       * IMPORTANT:
        *
-       * An administrator can inspect the provider before
-       * deciding whether the request should be retried.
+       * We retain the same idempotency key.
+       *
+       * Do not create a different one on retry.
        */
 
       try {
@@ -2623,7 +3523,8 @@ export default async function handler(
               "failed",
 
             provider_error:
-              lithicError?.message ||
+              lithicError
+                ?.message ||
               "Lithic book transfer failed.",
 
             funding_failed_at:
@@ -2638,7 +3539,7 @@ export default async function handler(
           updateError,
           {
             scope:
-              "fund_allowance_save_failure",
+              "fund_allowance_save_provider_failure",
 
             memberId,
 
@@ -2649,7 +3550,8 @@ export default async function handler(
 
       const providerStatus =
         Number(
-          lithicError?.status
+          lithicError
+            ?.status
         ) ||
         502;
 
@@ -2666,15 +3568,23 @@ export default async function handler(
           ok:
             false,
 
+          authenticated:
+            true,
+
           funded:
             false,
 
+          processing:
+            false,
+
           message:
-            lithicError?.message ||
+            lithicError
+              ?.message ||
             "Lithic could not fund the Card Leo allowance.",
 
           code:
-            lithicError?.code ||
+            lithicError
+              ?.code ||
             "LITHIC_BOOK_TRANSFER_FAILED",
 
           allowance: {
@@ -2687,6 +3597,9 @@ export default async function handler(
               centsToDollars(
                 amountCents
               ),
+
+            currency:
+              DEFAULT_CURRENCY,
           },
 
           requiresReview:
@@ -2708,11 +3621,46 @@ export default async function handler(
       !transfer.token
     ) {
       /*
-       * Do not retry automatically.
+       * Provider may have executed transfer.
        *
-       * A transfer may have occurred even though the
-       * response was not shaped as expected.
+       * Do not automatically try again.
        */
+
+      try {
+        await updateAllowanceTransaction(
+          allowanceTransaction.id,
+          {
+            status:
+              "processing",
+
+            provider:
+              "lithic",
+
+            provider_status:
+              transfer.status ||
+              transfer.result ||
+              "unknown",
+
+            provider_error:
+              "Lithic response did not include a transfer token.",
+          }
+        );
+      } catch (
+        updateError
+      ) {
+        logRequestError(
+          req,
+          updateError,
+          {
+            scope:
+              "fund_allowance_missing_transfer_token_save",
+
+            memberId,
+
+            allowanceTransactionId,
+          }
+        );
+      }
 
       return serverError(
         res,
@@ -2730,8 +3678,13 @@ export default async function handler(
     }
 
     /* ======================================================================
-       DETERMINE FINAL STATUS
+       PROVIDER STATUS
     ====================================================================== */
+
+    const providerState =
+      transfer.result ||
+      transfer.status ||
+      "";
 
     const transferApproved =
       [
@@ -2742,28 +3695,36 @@ export default async function handler(
         "SUCCESS",
         "SUCCEEDED",
       ].includes(
-        transfer.result ||
-        transfer.status
+        providerState
       );
 
-    /*
-     * If provider returns a non-terminal/pending state,
-     * leave Card Leo record as processing.
-     */
+    const transferRejected =
+      [
+        "DECLINED",
+        "FAILED",
+        "REJECTED",
+        "CANCELLED",
+        "CANCELED",
+        "REVERSED",
+      ].includes(
+        providerState
+      );
 
     const finalStatus =
       transferApproved
         ? "funded"
-        : "processing";
+        : transferRejected
+          ? "failed"
+          : "processing";
 
     /* ======================================================================
-       SAVE PROVIDER REFERENCE
+       SAVE RESULT
     ====================================================================== */
 
-    let completedTransaction;
+    let finalTransaction;
 
     try {
-      completedTransaction =
+      finalTransaction =
         await updateAllowanceTransaction(
           allowanceTransaction.id,
           {
@@ -2774,11 +3735,13 @@ export default async function handler(
               "lithic",
 
             provider_status:
-              transfer.result ||
-              transfer.status ||
+              providerState ||
               "processing",
 
             provider_transaction_token:
+              transfer.token,
+
+            lithic_transaction_token:
               transfer.token,
 
             external_reference:
@@ -2789,7 +3752,21 @@ export default async function handler(
                 ? nowIso()
                 : null,
 
+            funding_failed_at:
+              transferRejected
+                ? nowIso()
+                : null,
+
+            provider_error:
+              transferRejected
+                ? "Lithic rejected the allowance transfer."
+                : null,
+
             provider_response: {
+              /*
+               * Safe transfer metadata only.
+               */
+
               token:
                 transfer.token,
 
@@ -2829,18 +3806,13 @@ export default async function handler(
 
           lithicTransferCreated:
             true,
-
-          lithicTransferToken:
-            transfer.token,
         }
       );
 
       /*
-       * SERIOUS STATE:
+       * A Lithic transfer now exists.
        *
-       * Lithic transfer exists but Supabase update failed.
-       *
-       * Never automatically retry the transfer.
+       * Never automatically create another transfer.
        */
 
       return serverError(
@@ -2863,6 +3835,8 @@ export default async function handler(
 
     /* ======================================================================
        BALANCE
+
+       Failure here does not undo successful funding.
     ====================================================================== */
 
     let balance =
@@ -2876,11 +3850,6 @@ export default async function handler(
     } catch (
       balanceError
     ) {
-      /*
-       * Funding success should not be reversed because
-       * a balance read failed.
-       */
-
       logRequestError(
         req,
         balanceError,
@@ -2907,9 +3876,6 @@ export default async function handler(
 
         memberId,
 
-        email:
-          member.email,
-
         allowanceTransactionId,
 
         amountCents,
@@ -2923,11 +3889,17 @@ export default async function handler(
           "lithic",
 
         providerStatus:
-          transfer.result ||
-          transfer.status,
+          providerState,
 
         funded:
           transferApproved,
+
+        processing:
+          !transferApproved &&
+          !transferRejected,
+
+        failed:
+          transferRejected,
 
         environment:
           getLithicEnvironment(),
@@ -2937,28 +3909,45 @@ export default async function handler(
     /* ======================================================================
        SAFE RESPONSE
 
-       Do not expose:
-       - financial account tokens
-       - source funding account token
-       - card token
-       - account token
+       DO NOT expose:
+       - Lithic account token
+       - Lithic card token
+       - account holder token
+       - financial account token
+       - program source account
+       - raw provider response
     ====================================================================== */
 
     return success(
       res,
       {
+        authenticated:
+          true,
+
         funded:
           transferApproved,
 
         processing:
-          !transferApproved,
+          !transferApproved &&
+          !transferRejected,
+
+        failed:
+          transferRejected,
 
         alreadyFunded:
           false,
 
+        alreadyProcessing:
+          false,
+
+        member:
+          buildSafeMember(
+            member
+          ),
+
         allowance:
           sanitizeAllowanceTransaction(
-            completedTransaction
+            finalTransaction
           ),
 
         amount: {
@@ -2981,19 +3970,22 @@ export default async function handler(
                   balance.available,
 
                 availableCents:
-                  balance.availableCents,
+                  balance
+                    .availableCents,
 
                 pending:
                   balance.pending,
 
                 pendingCents:
-                  balance.pendingCents,
+                  balance
+                    .pendingCents,
 
                 total:
                   balance.total,
 
                 totalCents:
-                  balance.totalCents,
+                  balance
+                    .totalCents,
 
                 currency:
                   balance.currency,
@@ -3017,8 +4009,7 @@ export default async function handler(
             true,
 
           transferStatus:
-            transfer.result ||
-            transfer.status ||
+            providerState ||
             "PROCESSING",
         },
 
@@ -3035,11 +4026,21 @@ export default async function handler(
       },
       transferApproved
         ? "Your Card Leo allowance was successfully added to your card account."
-        : "Your Card Leo allowance transfer has been submitted and is processing."
+        : transferRejected
+          ? "The Card Leo allowance transfer was not approved."
+          : "Your Card Leo allowance transfer has been submitted and is processing."
     );
   } catch (
     error
   ) {
+    /*
+     * IMPORTANT:
+     *
+     * A provider/database error does NOT prove member authentication failed.
+     *
+     * Never clear auth cookies from this catch.
+     */
+
     logRequestError(
       req,
       error,
@@ -3047,6 +4048,11 @@ export default async function handler(
         scope:
           "fund_allowance_unexpected",
       }
+    );
+
+    console.error(
+      "Card Leo fund-allowance error:",
+      error
     );
 
     return serverError(

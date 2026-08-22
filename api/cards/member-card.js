@@ -1,6 +1,8 @@
 // api/cards/member-card.js
 
-import { supabaseAdmin } from "../../lib/supabase-admin.js";
+import {
+  supabaseAdmin,
+} from "../../lib/supabase-admin.js";
 
 import {
   lithicRequest,
@@ -19,7 +21,6 @@ import {
 } from "../../lib/lithic.js";
 
 import {
-  safeJsonParse,
   getSessionCookieName,
   clearAuthCookies,
 } from "../../lib/cookies.js";
@@ -44,45 +45,36 @@ import {
 
    PURPOSE
    -------
-   Returns the logged-in Card Leo member's SAFE card information.
+   Returns the authenticated Card Leo member's SAFE card state.
 
-   THIS ENDPOINT MAY RETURN:
-   -------------------------
-   - Card status
-   - Card type
-   - Last four digits
-   - Masked card number
-   - Lithic account/card readiness
-   - Available balance / allowance
-   - Pending balance
-   - Recent transactions
-   - Card creation status
-   - Member card page metadata
+   MAY RETURN
+   ----------
+   - card status
+   - card type
+   - last four
+   - masked card number
+   - account-holder readiness
+   - account readiness
+   - virtual-card readiness
+   - live/provider balance
+   - Card Leo allowance ledger
+   - recent transactions
+   - provider health/readiness
 
-   THIS ENDPOINT MUST NEVER RETURN:
-   --------------------------------
-   - Full PAN
+   NEVER RETURN
+   ------------
+   - PAN
    - CVV
-   - Full card credentials
-   - Raw sensitive Lithic responses
+   - complete Lithic card token
+   - complete Lithic account token
+   - complete account-holder token
+   - raw provider responses
    - API keys
-   - Full financial account/routing numbers
+   - routing/account numbers
 
-   CARD LEO FLOW
-   -------------
-   signups
-      ↓
-   member_cards
-      ↓
-   Lithic Account Holder
-      ↓
-   Lithic Account
-      ↓
-   Lithic Virtual Card
-      ↓
-   Allowance Funding
-      ↓
-   portal/card.html
+   AUTH RULE
+   ---------
+   Card/provider failures must never be treated as member logout.
 
 ============================================================================ */
 
@@ -96,13 +88,34 @@ const MEMBER_CARDS_TABLE =
 const ALLOWANCE_TRANSACTIONS_TABLE =
   "allowance_transactions";
 
+const DEFAULT_TRANSACTION_LIMIT =
+  20;
+
+const MAX_TRANSACTION_LIMIT =
+  50;
+
 const SESSION_COOKIE_NAMES = [
   "cardleo_session",
+  "cardleo_auth",
+  "cardleo_portal_session",
   "card_leo_session",
   "member_session",
   "portal_session",
   "session",
 ];
+
+const SESSION_TOKEN_COOKIE_NAMES = [
+  "cardleo_session_token",
+  "session_token",
+  "auth_token",
+  "login_token",
+  "portal_token",
+  "token",
+];
+
+/* ==========================================================================
+   STATUS RULES
+============================================================================ */
 
 const ACTIVE_PAYMENT_STATUSES =
   new Set([
@@ -135,14 +148,19 @@ const ACTIVE_APPROVAL_STATUSES =
     "auto_approved",
   ]);
 
-const DEFAULT_TRANSACTION_LIMIT =
-  20;
-
-const MAX_TRANSACTION_LIMIT =
-  50;
+const BLOCKED_STATUSES =
+  new Set([
+    "disabled",
+    "suspended",
+    "paused",
+    "denied",
+    "closed",
+    "cancelled",
+    "canceled",
+  ]);
 
 /* ==========================================================================
-   RESPONSE HELPERS
+   RESPONSES
 ============================================================================ */
 
 function sendJson(
@@ -165,9 +183,14 @@ function success(
     res,
     200,
     {
-      success: true,
-      ok: true,
+      success:
+        true,
+
+      ok:
+        true,
+
       message,
+
       ...data,
     }
   );
@@ -182,8 +205,15 @@ function unauthorized(
     res,
     401,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
+      authenticated:
+        false,
+
       message,
     }
   );
@@ -198,26 +228,17 @@ function forbidden(
     res,
     403,
     {
-      success: false,
-      ok: false,
-      message,
-      ...extra,
-    }
-  );
-}
+      success:
+        false,
 
-function notFound(
-  res,
-  message,
-  extra = {}
-) {
-  return sendJson(
-    res,
-    404,
-    {
-      success: false,
-      ok: false,
+      ok:
+        false,
+
+      authenticated:
+        true,
+
       message,
+
       ...extra,
     }
   );
@@ -232,9 +253,14 @@ function serviceUnavailable(
     res,
     503,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
       ...extra,
     }
   );
@@ -250,22 +276,30 @@ function serverError(
     res,
     500,
     {
-      success: false,
-      ok: false,
+      success:
+        false,
+
+      ok:
+        false,
+
       message,
+
       ...extra,
     }
   );
 }
 
 /* ==========================================================================
-   GENERAL HELPERS
+   GENERIC HELPERS
 ============================================================================ */
 
-function isObject(value) {
+function isObject(
+  value
+) {
   return (
     Boolean(value) &&
-    typeof value === "object" &&
+    typeof value ===
+      "object" &&
     !Array.isArray(value)
   );
 }
@@ -319,47 +353,22 @@ function clamp(
   );
 }
 
-function money(
-  value
-) {
-  const amount =
-    Number(value || 0);
-
-  if (
-    !Number.isFinite(
-      amount
-    )
-  ) {
-    return 0;
-  }
-
-  return Number(
-    amount.toFixed(2)
-  );
-}
-
 function cents(
   value
 ) {
   const amount =
-    Number(value || 0);
+    Number(
+      value ??
+      0
+    );
 
-  if (
-    !Number.isFinite(
-      amount
-    )
-  ) {
-    return 0;
-  }
-
-  return Math.round(
+  return Number.isFinite(
     amount
-  );
-}
-
-function nowIso() {
-  return new Date()
-    .toISOString();
+  )
+    ? Math.round(
+        amount
+      )
+    : 0;
 }
 
 function safeDate(
@@ -370,7 +379,9 @@ function safeDate(
   }
 
   const date =
-    new Date(value);
+    new Date(
+      value
+    );
 
   if (
     Number.isNaN(
@@ -380,7 +391,33 @@ function safeDate(
     return null;
   }
 
-  return date.toISOString();
+  return date
+    .toISOString();
+}
+
+function emptyBalance() {
+  return {
+    source:
+      "none",
+
+    live:
+      false,
+
+    availableCents:
+      0,
+
+    available:
+      0,
+
+    pendingCents:
+      0,
+
+    pending:
+      0,
+
+    currency:
+      "USD",
+  };
 }
 
 /* ==========================================================================
@@ -393,26 +430,30 @@ function isMissingTableOrColumn(
   const code =
     String(
       error?.code ||
-        ""
+      ""
     );
 
   const message =
     String(
       error?.message ||
-        ""
+      ""
     ).toLowerCase();
 
   const details =
     String(
       error?.details ||
-        ""
+      ""
     ).toLowerCase();
 
   return (
-    code === "42P01" ||
-    code === "42703" ||
-    code === "PGRST204" ||
-    code === "PGRST205" ||
+    code ===
+      "42P01" ||
+    code ===
+      "42703" ||
+    code ===
+      "PGRST204" ||
+    code ===
+      "PGRST205" ||
 
     message.includes(
       "does not exist"
@@ -441,7 +482,7 @@ function isMissingTableOrColumn(
 }
 
 /* ==========================================================================
-   SESSION COOKIES
+   COOKIE PARSING
 ============================================================================ */
 
 function parseCookies(
@@ -474,10 +515,13 @@ function parseCookies(
         part
       ) => {
         const separator =
-          part.indexOf("=");
+          part.indexOf(
+            "="
+          );
 
         if (
-          separator === -1
+          separator ===
+          -1
         ) {
           return output;
         }
@@ -493,7 +537,8 @@ function parseCookies(
         const rawValue =
           part
             .slice(
-              separator + 1
+              separator +
+                1
             )
             .trim();
 
@@ -517,6 +562,92 @@ function parseCookies(
     );
 }
 
+/* ==========================================================================
+   SESSION DECODING
+
+   Supports:
+   - direct JSON
+   - Base64URL JSON
+
+   This matches the session created by api/auth/login.js.
+============================================================================ */
+
+function safeJsonParse(
+  value
+) {
+  try {
+    const parsed =
+      JSON.parse(
+        value
+      );
+
+    return isObject(
+      parsed
+    )
+      ? parsed
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseBase64Session(
+  value
+) {
+  const raw =
+    normalizeString(
+      value
+    );
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const decoded =
+      Buffer
+        .from(
+          raw,
+          "base64url"
+        )
+        .toString(
+          "utf8"
+        );
+
+    return safeJsonParse(
+      decoded
+    );
+  } catch {
+    return null;
+  }
+}
+
+function parseSessionValue(
+  value
+) {
+  const raw =
+    normalizeString(
+      value
+    );
+
+  if (!raw) {
+    return null;
+  }
+
+  const direct =
+    safeJsonParse(
+      raw
+    );
+
+  if (direct) {
+    return direct;
+  }
+
+  return parseBase64Session(
+    raw
+  );
+}
+
 function readSessionCookie(
   req
 ) {
@@ -527,7 +658,10 @@ function readSessionCookie(
 
   const configuredName =
     normalizeString(
-      getSessionCookieName?.()
+      typeof getSessionCookieName ===
+        "function"
+        ? getSessionCookieName()
+        : ""
     );
 
   const names =
@@ -536,12 +670,15 @@ function readSessionCookie(
         [
           configuredName,
           ...SESSION_COOKIE_NAMES,
-        ].filter(Boolean)
+        ].filter(
+          Boolean
+        )
       )
     );
 
   for (
-    const name of names
+    const name
+    of names
   ) {
     const raw =
       cookies[name];
@@ -551,9 +688,8 @@ function readSessionCookie(
     }
 
     const data =
-      safeJsonParse(
-        raw,
-        null
+      parseSessionValue(
+        raw
       );
 
     if (
@@ -563,7 +699,9 @@ function readSessionCookie(
     ) {
       return {
         name,
+
         raw,
+
         data,
       };
     }
@@ -571,6 +709,39 @@ function readSessionCookie(
 
   return null;
 }
+
+function readSessionTokenCookie(
+  req
+) {
+  const cookies =
+    parseCookies(
+      req
+    );
+
+  for (
+    const name
+    of SESSION_TOKEN_COOKIE_NAMES
+  ) {
+    const token =
+      normalizeString(
+        cookies[name]
+      );
+
+    if (token) {
+      return {
+        name,
+
+        token,
+      };
+    }
+  }
+
+  return null;
+}
+
+/* ==========================================================================
+   SESSION IDENTITY
+============================================================================ */
 
 function getSessionMemberId(
   sessionMeta
@@ -582,12 +753,32 @@ function getSessionMemberId(
   return normalizeString(
     data.member?.id ||
       data.profile?.id ||
-      data.user?.id ||
       data.signupId ||
       data.signup_id ||
       data.memberId ||
       data.member_id ||
       data.id
+  );
+}
+
+function getSessionPortalUserId(
+  sessionMeta
+) {
+  const data =
+    sessionMeta?.data ||
+    {};
+
+  return normalizeString(
+    data.portalUserId ||
+      data.portal_user_id ||
+      data.member
+        ?.portalUserId ||
+      data.member
+        ?.portal_user_id ||
+      data.profile
+        ?.portalUserId ||
+      data.profile
+        ?.portal_user_id
   );
 }
 
@@ -607,6 +798,26 @@ function getSessionEmail(
   );
 }
 
+function getSessionToken(
+  sessionMeta
+) {
+  const data =
+    sessionMeta?.data ||
+    {};
+
+  return normalizeString(
+    data.token ||
+      data.sessionToken ||
+      data.session_token ||
+      data.authToken ||
+      data.auth_token ||
+      data.loginToken ||
+      data.login_token ||
+      data.portalToken ||
+      data.portal_token
+  );
+}
+
 function getSessionExpiresAt(
   sessionMeta
 ) {
@@ -618,8 +829,10 @@ function getSessionExpiresAt(
     Number(
       data.expires_at ||
         data.expiresAt ||
-        data.session?.expires_at ||
-        data.session?.expiresAt ||
+        data.session
+          ?.expires_at ||
+        data.session
+          ?.expiresAt ||
         0
     );
 
@@ -639,8 +852,10 @@ function isSessionExpired(
     );
 
   /*
-   * Some older Card Leo sessions may not
-   * contain an explicit expiration value.
+   * Same compatibility behavior as /api/auth/me:
+   *
+   * Missing expiration does not automatically invalidate
+   * a compatible Card Leo session.
    */
 
   if (!expiresAt) {
@@ -650,7 +865,8 @@ function isSessionExpired(
   return (
     expiresAt <=
     Math.floor(
-      Date.now() / 1000
+      Date.now() /
+        1000
     )
   );
 }
@@ -659,12 +875,73 @@ function isSessionExpired(
    MEMBER STATUS
 ============================================================================ */
 
+function getMemberStatuses(
+  member
+) {
+  return {
+    status:
+      normalizeStatus(
+        member?.status
+      ),
+
+    paymentStatus:
+      normalizeStatus(
+        member
+          ?.payment_status
+      ),
+
+    membershipStatus:
+      normalizeStatus(
+        member
+          ?.membership_status
+      ),
+
+    approvalStatus:
+      normalizeStatus(
+        member
+          ?.approval_status
+      ),
+  };
+}
+
+function isMemberBlocked(
+  member
+) {
+  const {
+    status,
+    membershipStatus,
+    approvalStatus,
+  } =
+    getMemberStatuses(
+      member
+    );
+
+  return (
+    BLOCKED_STATUSES.has(
+      status
+    ) ||
+    BLOCKED_STATUSES.has(
+      membershipStatus
+    ) ||
+    BLOCKED_STATUSES.has(
+      approvalStatus
+    )
+  );
+}
+
 function isMemberPaid(
   member
 ) {
-  return ACTIVE_PAYMENT_STATUSES.has(
-    normalizeStatus(
-      member?.payment_status
+  const {
+    paymentStatus,
+  } =
+    getMemberStatuses(
+      member
+    );
+
+  return (
+    ACTIVE_PAYMENT_STATUSES.has(
+      paymentStatus
     )
   );
 }
@@ -673,6 +950,15 @@ function isMemberActive(
   member
 ) {
   if (
+    !member ||
+    isMemberBlocked(
+      member
+    )
+  ) {
+    return false;
+  }
+
+  if (
     !isMemberPaid(
       member
     )
@@ -680,19 +966,13 @@ function isMemberActive(
     return false;
   }
 
-  const status =
-    normalizeStatus(
-      member?.status
-    );
-
-  const membershipStatus =
-    normalizeStatus(
-      member?.membership_status
-    );
-
-  const approvalStatus =
-    normalizeStatus(
-      member?.approval_status
+  const {
+    status,
+    membershipStatus,
+    approvalStatus,
+  } =
+    getMemberStatuses(
+      member
     );
 
   return (
@@ -714,7 +994,9 @@ function isMemberActive(
 
 async function getMemberRecord({
   memberId,
+  portalUserId,
   email,
+  sessionToken,
 }) {
   const extendedFields = [
     "id",
@@ -734,12 +1016,21 @@ async function getMemberRecord({
     "membership_status",
     "approval_status",
 
+    "portal_user_id",
+
+    "session_token",
+    "auth_token",
+    "login_token",
+    "portal_token",
+
     "stripe_customer_id",
     "stripe_subscription_id",
 
     "created_at",
     "updated_at",
-  ].join(", ");
+  ].join(
+    ", "
+  );
 
   const fallbackFields = [
     "id",
@@ -758,35 +1049,77 @@ async function getMemberRecord({
 
     "created_at",
     "updated_at",
-  ].join(", ");
+  ].join(
+    ", "
+  );
 
-  let query =
-    supabaseAdmin
-      .from(
-        "signups"
-      )
-      .select(
-        extendedFields
-      )
-      .limit(1);
+  async function runQuery(
+    fields
+  ) {
+    let query =
+      supabaseAdmin
+        .from(
+          "signups"
+        )
+        .select(
+          fields
+        )
+        .limit(
+          1
+        );
 
-  if (memberId) {
-    query =
-      query.eq(
-        "id",
-        memberId
-      );
-  } else {
-    query =
-      query.eq(
-        "email",
-        email
-      );
+    if (memberId) {
+      query =
+        query.eq(
+          "id",
+          memberId
+        );
+    } else if (
+      portalUserId
+    ) {
+      query =
+        query.eq(
+          "portal_user_id",
+          portalUserId
+        );
+    } else if (
+      email
+    ) {
+      query =
+        query.ilike(
+          "email",
+          email
+        );
+    } else if (
+      sessionToken
+    ) {
+      query =
+        query.or(
+          [
+            `session_token.eq.${sessionToken}`,
+            `auth_token.eq.${sessionToken}`,
+            `login_token.eq.${sessionToken}`,
+            `portal_token.eq.${sessionToken}`,
+          ].join(",")
+        );
+    } else {
+      return {
+        data:
+          null,
+
+        error:
+          null,
+      };
+    }
+
+    return query
+      .maybeSingle();
   }
 
   let result =
-    await query
-      .maybeSingle();
+    await runQuery(
+      extendedFields
+    );
 
   if (
     result.error &&
@@ -794,33 +1127,21 @@ async function getMemberRecord({
       result.error
     )
   ) {
-    let fallback =
-      supabaseAdmin
-        .from(
-          "signups"
-        )
-        .select(
-          fallbackFields
-        )
-        .limit(1);
+    /*
+     * Older schema fallback can still resolve member by ID/email.
+     */
 
-    if (memberId) {
-      fallback =
-        fallback.eq(
-          "id",
-          memberId
-        );
-    } else {
-      fallback =
-        fallback.eq(
-          "email",
-          email
-        );
+    if (
+      !memberId &&
+      !email
+    ) {
+      return result;
     }
 
     result =
-      await fallback
-        .maybeSingle();
+      await runQuery(
+        fallbackFields
+      );
   }
 
   return result;
@@ -843,7 +1164,8 @@ async function getAuthenticatedMember(
     !session?.data
   ) {
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -858,12 +1180,17 @@ async function getAuthenticatedMember(
       session
     )
   ) {
-    clearAuthCookies(
-      res
-    );
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -873,27 +1200,28 @@ async function getAuthenticatedMember(
     };
   }
 
-  if (
-    session.data
-      .authenticated !== true
-  ) {
-    clearAuthCookies(
-      res
-    );
-
-    return {
-      member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Your login session is invalid."
-        ),
-    };
-  }
+  /*
+   * CRITICAL FIX:
+   *
+   * Do NOT require:
+   *
+   * session.data.authenticated === true
+   *
+   * Valid Card Leo sessions may identify the member through:
+   * - member ID
+   * - signup ID
+   * - portal user ID
+   * - email
+   * - session token
+   */
 
   const memberId =
     getSessionMemberId(
+      session
+    );
+
+  const portalUserId =
+    getSessionPortalUserId(
       session
     );
 
@@ -902,16 +1230,38 @@ async function getAuthenticatedMember(
       session
     );
 
-  if (
-    !memberId &&
-    !email
-  ) {
-    clearAuthCookies(
-      res
+  const embeddedToken =
+    getSessionToken(
+      session
     );
 
+  const tokenCookie =
+    readSessionTokenCookie(
+      req
+    );
+
+  const sessionToken =
+    embeddedToken ||
+    tokenCookie?.token ||
+    "";
+
+  if (
+    !memberId &&
+    !portalUserId &&
+    !email &&
+    !sessionToken
+  ) {
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
+
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -922,13 +1272,23 @@ async function getAuthenticatedMember(
   }
 
   const {
-    data: member,
+    data:
+      member,
+
     error,
   } =
     await getMemberRecord({
       memberId,
+      portalUserId,
       email,
+      sessionToken,
     });
+
+  /*
+   * Database failure is not authentication failure.
+   *
+   * Do NOT clear cookies here.
+   */
 
   if (error) {
     throw error;
@@ -937,12 +1297,17 @@ async function getAuthenticatedMember(
   if (
     !member?.id
   ) {
-    clearAuthCookies(
-      res
-    );
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -953,17 +1318,43 @@ async function getAuthenticatedMember(
   }
 
   if (
+    isMemberBlocked(
+      member
+    )
+  ) {
+    return {
+      member:
+        null,
+
+      response:
+        forbidden(
+          res,
+          "Your Card Leo account is currently restricted.",
+          {
+            code:
+              "MEMBER_BLOCKED",
+          }
+        ),
+    };
+  }
+
+  if (
     !isMemberPaid(
       member
     )
   ) {
     return {
-      member: null,
+      member:
+        null,
 
       response:
         forbidden(
           res,
-          "Your membership payment must be current to access your Card Leo card."
+          "Your membership payment must be current to access your Card Leo card.",
+          {
+            code:
+              "PAYMENT_NOT_CURRENT",
+          }
         ),
     };
   }
@@ -974,19 +1365,99 @@ async function getAuthenticatedMember(
     )
   ) {
     return {
-      member: null,
+      member:
+        null,
 
       response:
         forbidden(
           res,
-          "Your Card Leo membership is not currently active."
+          "Your Card Leo membership is not currently active.",
+          {
+            code:
+              "MEMBERSHIP_NOT_ACTIVE",
+          }
         ),
     };
   }
 
   return {
     member,
-    response: null,
+
+    response:
+      null,
+  };
+}
+
+/* ==========================================================================
+   SAFE MEMBER
+============================================================================ */
+
+function buildSafeMember(
+  member
+) {
+  return {
+    id:
+      member.id,
+
+    email:
+      normalizeEmail(
+        member.email
+      ),
+
+    firstName:
+      normalizeString(
+        member.first_name
+      ),
+
+    lastName:
+      normalizeString(
+        member.last_name
+      ),
+
+    fullName:
+      normalizeString(
+        member.full_name
+      ) ||
+      [
+        member.first_name,
+        member.last_name,
+      ]
+        .map(
+          normalizeString
+        )
+        .filter(Boolean)
+        .join(" "),
+
+    membership: {
+      status:
+        member.status ||
+        null,
+
+      paymentStatus:
+        member
+          .payment_status ||
+        null,
+
+      membershipStatus:
+        member
+          .membership_status ||
+        null,
+
+      approvalStatus:
+        member
+          .approval_status ||
+        null,
+
+      paid:
+        isMemberPaid(
+          member
+        ),
+
+      active:
+        isMemberActive(
+          member
+        ),
+    },
   };
 }
 
@@ -1005,10 +1476,15 @@ async function getMemberCardRecord(
       .from(
         MEMBER_CARDS_TABLE
       )
-      .select("*")
+      .select(
+        "*"
+      )
       .eq(
         "member_id",
         memberId
+      )
+      .limit(
+        1
       )
       .maybeSingle();
 
@@ -1019,8 +1495,11 @@ async function getMemberCardRecord(
       )
     ) {
       return {
-        record: null,
-        tableMissing: true,
+        record:
+          null,
+
+        tableMissing:
+          true,
       };
     }
 
@@ -1038,166 +1517,7 @@ async function getMemberCardRecord(
 }
 
 /* ==========================================================================
-   LOCAL ALLOWANCE LEDGER
-
-   This is intentionally separate from Lithic's live balance.
-
-   Once Step #13 creates allowance_transactions, this gives the member
-   Card Leo's internal allowance ledger as well as the provider balance.
-
-============================================================================ */
-
-async function getAllowanceLedger(
-  memberId
-) {
-  const {
-    data,
-    error,
-  } =
-    await supabaseAdmin
-      .from(
-        ALLOWANCE_TRANSACTIONS_TABLE
-      )
-      .select("*")
-      .eq(
-        "member_id",
-        memberId
-      )
-      .order(
-        "created_at",
-        {
-          ascending: false,
-        }
-      )
-      .limit(100);
-
-  if (error) {
-    if (
-      isMissingTableOrColumn(
-        error
-      )
-    ) {
-      return {
-        available: false,
-
-        transactions: [],
-
-        creditedCents: 0,
-        debitedCents: 0,
-        pendingCents: 0,
-        failedCents: 0,
-        netCents: 0,
-      };
-    }
-
-    throw error;
-  }
-
-  const rows =
-    data || [];
-
-  let creditedCents = 0;
-  let debitedCents = 0;
-  let pendingCents = 0;
-  let failedCents = 0;
-
-  for (
-    const row of rows
-  ) {
-    const amount =
-      Math.abs(
-        cents(
-          row.amount_cents ??
-            row.amount ??
-            0
-        )
-      );
-
-    const status =
-      normalizeStatus(
-        row.status
-      );
-
-    const direction =
-      normalizeStatus(
-        row.direction ||
-          row.type ||
-          row.transaction_type
-      );
-
-    if (
-      status === "pending" ||
-      status === "processing"
-    ) {
-      pendingCents += amount;
-      continue;
-    }
-
-    if (
-      status === "failed" ||
-      status === "declined" ||
-      status === "cancelled" ||
-      status === "reversed"
-    ) {
-      failedCents += amount;
-      continue;
-    }
-
-    if (
-      !status ||
-      [
-        "completed",
-        "complete",
-        "succeeded",
-        "settled",
-        "posted",
-        "approved",
-      ].includes(
-        status
-      )
-    ) {
-      if (
-        [
-          "debit",
-          "withdrawal",
-          "spend",
-          "purchase",
-          "out",
-        ].includes(
-          direction
-        )
-      ) {
-        debitedCents += amount;
-      } else {
-        creditedCents += amount;
-      }
-    }
-  }
-
-  const netCents =
-    creditedCents -
-    debitedCents;
-
-  return {
-    available: true,
-
-    transactions:
-      rows,
-
-    creditedCents,
-
-    debitedCents,
-
-    pendingCents,
-
-    failedCents,
-
-    netCents,
-  };
-}
-
-/* ==========================================================================
-   SAFE DATABASE CARD
+   SAFE MEMBER CARD DB RECORD
 ============================================================================ */
 
 function sanitizeMemberCardRecord(
@@ -1266,15 +1586,17 @@ function sanitizeMemberCardRecord(
       null,
 
     spendLimitCents:
-      record.spend_limit_cents ??
+      record
+        .spend_limit_cents ??
       null,
 
     spendLimit:
-      record.spend_limit_cents != null
-        ? money(
-            Number(
-              record.spend_limit_cents
-            ) / 100
+      record
+        .spend_limit_cents !=
+      null
+        ? centsToDollars(
+            record
+              .spend_limit_cents
           )
         : null,
 
@@ -1302,7 +1624,279 @@ function sanitizeMemberCardRecord(
 }
 
 /* ==========================================================================
-   LITHIC RESULT UNWRAPPER
+   LOCAL ALLOWANCE LEDGER
+============================================================================ */
+
+async function getAllowanceLedger(
+  memberId
+) {
+  const {
+    data,
+    error,
+  } =
+    await supabaseAdmin
+      .from(
+        ALLOWANCE_TRANSACTIONS_TABLE
+      )
+      .select(
+        "*"
+      )
+      .eq(
+        "member_id",
+        memberId
+      )
+      .order(
+        "created_at",
+        {
+          ascending:
+            false,
+        }
+      )
+      .limit(
+        100
+      );
+
+  if (error) {
+    if (
+      isMissingTableOrColumn(
+        error
+      )
+    ) {
+      return {
+        available:
+          false,
+
+        transactions:
+          [],
+
+        creditedCents:
+          0,
+
+        debitedCents:
+          0,
+
+        pendingCents:
+          0,
+
+        failedCents:
+          0,
+
+        netCents:
+          0,
+      };
+    }
+
+    throw error;
+  }
+
+  const rows =
+    data ||
+    [];
+
+  let creditedCents =
+    0;
+
+  let debitedCents =
+    0;
+
+  let pendingCents =
+    0;
+
+  let failedCents =
+    0;
+
+  for (
+    const row
+    of rows
+  ) {
+    const amount =
+      Math.abs(
+        cents(
+          row.amount_cents ??
+            row.amount ??
+            0
+        )
+      );
+
+    const status =
+      normalizeStatus(
+        row.status
+      );
+
+    const direction =
+      normalizeStatus(
+        row.direction ||
+          row.type ||
+          row.transaction_type ||
+          "credit"
+      );
+
+    if (
+      [
+        "pending",
+        "processing",
+      ].includes(
+        status
+      )
+    ) {
+      pendingCents +=
+        amount;
+
+      continue;
+    }
+
+    if (
+      [
+        "failed",
+        "declined",
+        "cancelled",
+        "canceled",
+        "reversed",
+      ].includes(
+        status
+      )
+    ) {
+      failedCents +=
+        amount;
+
+      continue;
+    }
+
+    const completed =
+      !status ||
+      [
+        "completed",
+        "complete",
+        "succeeded",
+        "settled",
+        "posted",
+        "approved",
+      ].includes(
+        status
+      );
+
+    if (!completed) {
+      continue;
+    }
+
+    if (
+      [
+        "debit",
+        "withdrawal",
+        "spend",
+        "purchase",
+        "out",
+      ].includes(
+        direction
+      )
+    ) {
+      debitedCents +=
+        amount;
+    } else {
+      creditedCents +=
+        amount;
+    }
+  }
+
+  return {
+    available:
+      true,
+
+    transactions:
+      rows,
+
+    creditedCents,
+
+    debitedCents,
+
+    pendingCents,
+
+    failedCents,
+
+    netCents:
+      creditedCents -
+      debitedCents,
+  };
+}
+
+/* ==========================================================================
+   SAFE ALLOWANCE TRANSACTION
+============================================================================ */
+
+function sanitizeAllowanceTransaction(
+  row
+) {
+  const amountCents =
+    cents(
+      row.amount_cents ??
+        row.amount ??
+        0
+    );
+
+  return {
+    id:
+      row.id ||
+      null,
+
+    direction:
+      normalizeStatus(
+        row.direction ||
+          row.type ||
+          row.transaction_type ||
+          "credit"
+      ),
+
+    amountCents,
+
+    amount:
+      centsToDollars(
+        amountCents
+      ),
+
+    status:
+      normalizeStatus(
+        row.status ||
+          "pending"
+      ),
+
+    source:
+      normalizeString(
+        row.source
+      ) ||
+      null,
+
+    sourceRewardId:
+      row.source_reward_id ||
+      row.reward_id ||
+      null,
+
+    externalReference:
+      normalizeString(
+        row.external_reference ||
+          row.external_id
+      ) ||
+      null,
+
+    description:
+      normalizeString(
+        row.description
+      ) ||
+      null,
+
+    createdAt:
+      safeDate(
+        row.created_at
+      ),
+
+    updatedAt:
+      safeDate(
+        row.updated_at
+      ),
+  };
+}
+
+/* ==========================================================================
+   LITHIC RESPONSE HELPERS
 ============================================================================ */
 
 function unwrapLithicData(
@@ -1313,7 +1907,9 @@ function unwrapLithicData(
       result?.data?.data
     )
   ) {
-    return result.data.data;
+    return result
+      .data
+      .data;
   }
 
   if (
@@ -1326,10 +1922,6 @@ function unwrapLithicData(
 
   return {};
 }
-
-/* ==========================================================================
-   LITHIC LIST UNWRAPPER
-============================================================================ */
 
 function unwrapLithicList(
   result
@@ -1365,15 +1957,13 @@ function unwrapLithicList(
 }
 
 /* ==========================================================================
-   LIVE CARD
+   LIVE LITHIC CARD
 ============================================================================ */
 
 async function getLiveLithicCard(
   cardToken
 ) {
-  if (
-    !cardToken
-  ) {
+  if (!cardToken) {
     return null;
   }
 
@@ -1382,26 +1972,21 @@ async function getLiveLithicCard(
       cardToken
     );
 
-  const card =
+  return sanitizeLithicCard(
     unwrapLithicData(
       result
-    );
-
-  return sanitizeLithicCard(
-    card
+    )
   );
 }
 
 /* ==========================================================================
-   LIVE ACCOUNT
+   LIVE LITHIC ACCOUNT
 ============================================================================ */
 
 async function getLiveLithicAccount(
   accountToken
 ) {
-  if (
-    !accountToken
-  ) {
+  if (!accountToken) {
     return null;
   }
 
@@ -1415,13 +2000,11 @@ async function getLiveLithicAccount(
       result
     );
 
-  return {
-    token:
-      normalizeString(
-        account.token
-      ) ||
-      null,
+  /*
+   * Deliberately omit account token from member response.
+   */
 
+  return {
     state:
       normalizeString(
         account.state
@@ -1429,11 +2012,13 @@ async function getLiveLithicAccount(
       null,
 
     spendLimit:
-      account.spend_limit ??
+      account
+        .spend_limit ??
       null,
 
     spendLimitDuration:
-      account.spend_limit_duration ??
+      account
+        .spend_limit_duration ??
       null,
 
     created:
@@ -1445,18 +2030,12 @@ async function getLiveLithicAccount(
 
 /* ==========================================================================
    CARD BALANCE
-
-   Lithic:
-   GET /v1/cards/{card_token}/balances
-
 ============================================================================ */
 
 async function getLithicCardBalance(
   cardToken
 ) {
-  if (
-    !cardToken
-  ) {
+  if (!cardToken) {
     return null;
   }
 
@@ -1466,7 +2045,8 @@ async function getLithicCardBalance(
         cardToken
       )}/balances`,
       {
-        method: "GET",
+        method:
+          "GET",
       }
     );
 
@@ -1474,13 +2054,6 @@ async function getLithicCardBalance(
     unwrapLithicData(
       result
     );
-
-  /*
-   * The balance response can evolve by program.
-   *
-   * We preserve safe fields and calculate an available
-   * amount when the common fields are present.
-   */
 
   const availableCents =
     cents(
@@ -1549,18 +2122,12 @@ async function getLithicCardBalance(
 
 /* ==========================================================================
    ACCOUNT BALANCES
-
-   Lithic:
-   GET /v1/balances?account_token=...
-
 ============================================================================ */
 
 async function getLithicAccountBalances(
   accountToken
 ) {
-  if (
-    !accountToken
-  ) {
+  if (!accountToken) {
     return [];
   }
 
@@ -1575,227 +2142,64 @@ async function getLithicAccountBalances(
       }
     );
 
-  const rows =
-    unwrapLithicList(
-      result
-    );
-
-  return rows.map(
-    (row) => ({
-      token:
-        normalizeString(
-          row.token ||
-            row.financial_account_token
-        ) ||
-        null,
-
-      type:
-        normalizeString(
-          row.type ||
-            row.financial_account_type
-        ) ||
-        null,
-
-      availableCents:
+  return unwrapLithicList(
+    result
+  ).map(
+    (row) => {
+      const availableCents =
         cents(
           row.available_amount ??
             row.available_balance ??
             row.available ??
             row.balance ??
             0
-        ),
+        );
 
-      available:
-        centsToDollars(
-          cents(
-            row.available_amount ??
-              row.available_balance ??
-              row.available ??
-              row.balance ??
-              0
-          )
-        ),
-
-      pendingCents:
+      const pendingCents =
         cents(
           row.pending_amount ??
             row.pending_balance ??
             row.pending ??
             0
-        ),
+        );
 
-      pending:
-        centsToDollars(
-          cents(
-            row.pending_amount ??
-              row.pending_balance ??
-              row.pending ??
-              0
-          )
-        ),
+      return {
+        type:
+          normalizeString(
+            row.type ||
+              row.financial_account_type
+          ) ||
+          null,
 
-      currency:
-        normalizeString(
-          row.currency
-        ) ||
-        "USD",
+        availableCents,
 
-      updatedAt:
-        safeDate(
-          row.updated_at ||
-            row.updated ||
-            row.created
-        ),
-    })
+        available:
+          centsToDollars(
+            availableCents
+          ),
+
+        pendingCents,
+
+        pending:
+          centsToDollars(
+            pendingCents
+          ),
+
+        currency:
+          normalizeString(
+            row.currency
+          ) ||
+          "USD",
+
+        updatedAt:
+          safeDate(
+            row.updated_at ||
+              row.updated ||
+              row.created
+          ),
+      };
+    }
   );
-}
-
-/* ==========================================================================
-   TRANSACTIONS
-
-   Lithic:
-   GET /v1/transactions?card_token=...
-
-============================================================================ */
-
-async function getLithicTransactions({
-  cardToken,
-  accountToken,
-  limit,
-}) {
-  const params =
-    new URLSearchParams();
-
-  if (
-    cardToken
-  ) {
-    params.set(
-      "card_token",
-      cardToken
-    );
-  } else if (
-    accountToken
-  ) {
-    params.set(
-      "account_token",
-      accountToken
-    );
-  } else {
-    return [];
-  }
-
-  params.set(
-    "page_size",
-    String(limit)
-  );
-
-  const result =
-    await lithicRequest(
-      `/transactions?${params.toString()}`,
-      {
-        method:
-          "GET",
-      }
-    );
-
-  const rows =
-    unwrapLithicList(
-      result
-    );
-
-  return rows
-    .slice(
-      0,
-      limit
-    )
-    .map(
-      (row) => {
-        const sanitized =
-          sanitizeLithicTransaction(
-            row
-          );
-
-        const amountCents =
-          cents(
-            row.amount ??
-              sanitized?.amountCents ??
-              0
-          );
-
-        return {
-          token:
-            sanitized?.token ||
-            normalizeString(
-              row.token
-            ) ||
-            null,
-
-          cardToken:
-            sanitized?.cardToken ||
-            null,
-
-          /*
-           * Do not return account tokens through
-           * this public/member endpoint.
-           */
-
-          status:
-            sanitized?.status ||
-            normalizeString(
-              row.status
-            ) ||
-            null,
-
-          result:
-            sanitized?.result ||
-            normalizeString(
-              row.result
-            ) ||
-            null,
-
-          amountCents,
-
-          amount:
-            centsToDollars(
-              amountCents
-            ),
-
-          currency:
-            normalizeString(
-              row.currency
-            ) ||
-            "USD",
-
-          merchant:
-            sanitizeMerchant(
-              row.merchant ||
-                sanitized?.merchant
-            ),
-
-          createdAt:
-            safeDate(
-              row.created ||
-                row.created_at
-            ),
-
-          settledAmountCents:
-            row.settled_amount != null
-              ? cents(
-                  row.settled_amount
-                )
-              : null,
-
-          settledAmount:
-            row.settled_amount != null
-              ? centsToDollars(
-                  cents(
-                    row.settled_amount
-                  )
-                )
-              : null,
-        };
-      }
-    );
 }
 
 /* ==========================================================================
@@ -1850,85 +2254,145 @@ function sanitizeMerchant(
 }
 
 /* ==========================================================================
-   LOCAL ALLOWANCE TRANSACTION SANITIZER
+   LITHIC TRANSACTIONS
 ============================================================================ */
 
-function sanitizeAllowanceTransaction(
-  row
-) {
-  const amountCents =
-    cents(
-      row.amount_cents ??
-        row.amount ??
-        0
+async function getLithicTransactions({
+  cardToken,
+  accountToken,
+  limit,
+}) {
+  if (
+    !cardToken &&
+    !accountToken
+  ) {
+    return [];
+  }
+
+  const params =
+    new URLSearchParams();
+
+  if (cardToken) {
+    params.set(
+      "card_token",
+      cardToken
+    );
+  } else {
+    params.set(
+      "account_token",
+      accountToken
+    );
+  }
+
+  params.set(
+    "page_size",
+    String(
+      limit
+    )
+  );
+
+  const result =
+    await lithicRequest(
+      `/transactions?${params.toString()}`,
+      {
+        method:
+          "GET",
+      }
     );
 
-  const direction =
-    normalizeStatus(
-      row.direction ||
-        row.type ||
-        row.transaction_type ||
-        "credit"
+  return unwrapLithicList(
+    result
+  )
+    .slice(
+      0,
+      limit
+    )
+    .map(
+      (row) => {
+        const sanitized =
+          sanitizeLithicTransaction(
+            row
+          );
+
+        const amountCents =
+          cents(
+            row.amount ??
+              sanitized
+                ?.amountCents ??
+              0
+          );
+
+        return {
+          token:
+            sanitized
+              ?.token ||
+            normalizeString(
+              row.token
+            ) ||
+            null,
+
+          status:
+            sanitized
+              ?.status ||
+            normalizeString(
+              row.status
+            ) ||
+            null,
+
+          result:
+            sanitized
+              ?.result ||
+            normalizeString(
+              row.result
+            ) ||
+            null,
+
+          amountCents,
+
+          amount:
+            centsToDollars(
+              amountCents
+            ),
+
+          currency:
+            normalizeString(
+              row.currency
+            ) ||
+            "USD",
+
+          merchant:
+            sanitizeMerchant(
+              row.merchant ||
+                sanitized
+                  ?.merchant
+            ),
+
+          createdAt:
+            safeDate(
+              row.created ||
+                row.created_at
+            ),
+
+          settledAmountCents:
+            row.settled_amount !=
+            null
+              ? cents(
+                  row.settled_amount
+                )
+              : null,
+
+          settledAmount:
+            row.settled_amount !=
+            null
+              ? centsToDollars(
+                  cents(
+                    row.settled_amount
+                  )
+                )
+              : null,
+        };
+      }
     );
-
-  return {
-    id:
-      row.id ||
-      null,
-
-    memberId:
-      row.member_id ||
-      null,
-
-    direction,
-
-    amountCents,
-
-    amount:
-      centsToDollars(
-        amountCents
-      ),
-
-    status:
-      normalizeStatus(
-        row.status ||
-          "pending"
-      ),
-
-    source:
-      normalizeString(
-        row.source
-      ) ||
-      null,
-
-    sourceRewardId:
-      row.source_reward_id ||
-      row.reward_id ||
-      null,
-
-    externalReference:
-      normalizeString(
-        row.external_reference ||
-          row.external_id
-      ) ||
-      null,
-
-    description:
-      normalizeString(
-        row.description
-      ) ||
-      null,
-
-    createdAt:
-      safeDate(
-        row.created_at
-      ),
-
-    updatedAt:
-      safeDate(
-        row.updated_at
-      ),
-  };
 }
 
 /* ==========================================================================
@@ -1940,20 +2404,13 @@ function buildBalanceSummary({
   accountBalances,
   allowanceLedger,
 }) {
-  /*
-   * Preferred balance:
-   *
-   * 1. Lithic card-level live balance
-   * 2. Lithic issuing account balance
-   * 3. Local Card Leo allowance ledger
-   */
-
   const issuingBalance =
     accountBalances.find(
       (row) =>
         normalizeStatus(
           row.type
-        ) === "issuing"
+        ) ===
+        "issuing"
     ) ||
     accountBalances[0] ||
     null;
@@ -2024,34 +2481,43 @@ function buildBalanceSummary({
     };
   }
 
-  return {
-    source:
-      allowanceLedger.available
-        ? "card_leo_ledger"
-        : "none",
+  if (
+    allowanceLedger
+      .available
+  ) {
+    return {
+      source:
+        "card_leo_ledger",
 
-    live:
-      false,
+      live:
+        false,
 
-    availableCents:
-      allowanceLedger.netCents,
+      availableCents:
+        allowanceLedger
+          .netCents,
 
-    available:
-      centsToDollars(
-        allowanceLedger.netCents
-      ),
+      available:
+        centsToDollars(
+          allowanceLedger
+            .netCents
+        ),
 
-    pendingCents:
-      allowanceLedger.pendingCents,
+      pendingCents:
+        allowanceLedger
+          .pendingCents,
 
-    pending:
-      centsToDollars(
-        allowanceLedger.pendingCents
-      ),
+      pending:
+        centsToDollars(
+          allowanceLedger
+            .pendingCents
+        ),
 
-    currency:
-      "USD",
-  };
+      currency:
+        "USD",
+    };
+  }
+
+  return emptyBalance();
 }
 
 /* ==========================================================================
@@ -2087,6 +2553,16 @@ function buildCardReadiness({
       )
     );
 
+  const accountHolderStatus =
+    normalizeString(
+      memberCard
+        ?.lithic_account_holder_status
+    ).toUpperCase();
+
+  const accountHolderAccepted =
+    accountHolderStatus ===
+    "ACCEPTED";
+
   let stage =
     "not_started";
 
@@ -2098,6 +2574,24 @@ function buildCardReadiness({
 
   if (
     accountHolderCreated &&
+    !accountHolderAccepted
+  ) {
+    stage =
+      "account_holder_pending";
+
+    nextEndpoint =
+      null;
+
+    message =
+      accountHolderStatus ===
+      "PENDING_REVIEW"
+        ? "Your Card Leo card account is under review."
+        : "Your Card Leo card account must be accepted before card issuance.";
+  }
+
+  if (
+    accountHolderCreated &&
+    accountHolderAccepted &&
     accountCreated &&
     !cardCreated
   ) {
@@ -2108,7 +2602,7 @@ function buildCardReadiness({
       "/api/cards/create-virtual-card";
 
     message =
-      "Your card account is ready for virtual card creation.";
+      "Your card account is ready for virtual-card creation.";
   }
 
   if (
@@ -2130,6 +2624,9 @@ function buildCardReadiness({
     stage =
       "provider_disabled";
 
+    nextEndpoint =
+      null;
+
     message =
       "Card Leo card infrastructure is prepared, but Lithic is not enabled yet.";
   } else if (
@@ -2139,6 +2636,9 @@ function buildCardReadiness({
     stage =
       "provider_configuration_required";
 
+    nextEndpoint =
+      null;
+
     message =
       "Lithic is enabled but still requires configuration.";
   }
@@ -2147,6 +2647,12 @@ function buildCardReadiness({
     stage,
 
     accountHolderCreated,
+
+    accountHolderAccepted,
+
+    accountHolderStatus:
+      accountHolderStatus ||
+      null,
 
     accountCreated,
 
@@ -2159,6 +2665,111 @@ function buildCardReadiness({
 }
 
 /* ==========================================================================
+   EMPTY CARD RESPONSE
+============================================================================ */
+
+function buildEmptyCardResponse({
+  member,
+  readiness,
+  lithic,
+  memberCardsReady = true,
+}) {
+  return {
+    authenticated:
+      true,
+
+    portalAccess:
+      true,
+
+    member:
+      buildSafeMember(
+        member
+      ),
+
+    card:
+      null,
+
+    balance:
+      emptyBalance(),
+
+    allowance: {
+      available:
+        0,
+
+      availableCents:
+        0,
+
+      pending:
+        0,
+
+      pendingCents:
+        0,
+
+      currency:
+        "USD",
+
+      source:
+        "none",
+
+      live:
+        false,
+
+      internalLedger: {
+        enabled:
+          false,
+
+        totalCredited:
+          0,
+
+        totalCreditedCents:
+          0,
+
+        totalDebited:
+          0,
+
+        totalDebitedCents:
+          0,
+
+        pending:
+          0,
+
+        pendingCents:
+          0,
+
+        failed:
+          0,
+
+        failedCents:
+          0,
+
+        net:
+          0,
+
+        netCents:
+          0,
+      },
+    },
+
+    transactions:
+      [],
+
+    allowanceTransactions:
+      [],
+
+    readiness,
+
+    lithic,
+
+    database: {
+      memberCardsReady,
+
+      allowanceLedgerReady:
+        false,
+    },
+  };
+}
+
+/* ==========================================================================
    HANDLER
 ============================================================================ */
 
@@ -2166,9 +2777,14 @@ export default async function handler(
   req,
   res
 ) {
-  setNoStore?.(
-    res
-  );
+  if (
+    typeof setNoStore ===
+    "function"
+  ) {
+    setNoStore(
+      res
+    );
+  }
 
   logRequestStart(
     req,
@@ -2205,7 +2821,7 @@ export default async function handler(
 
   try {
     /* ======================================================================
-       AUTHENTICATE
+       AUTHENTICATION
     ====================================================================== */
 
     const {
@@ -2225,10 +2841,6 @@ export default async function handler(
       getMemberId(
         member
       );
-
-    /* ======================================================================
-       TRANSACTION LIMIT
-    ====================================================================== */
 
     const requestedLimit =
       normalizeInteger(
@@ -2259,111 +2871,57 @@ export default async function handler(
       );
 
     /*
-     * Step #12 has not happened yet.
-     *
-     * Rather than throwing a 500, provide a useful state to the portal.
+     * A missing card table is NOT an auth failure.
      */
 
     if (
       tableMissing
     ) {
+      const readiness = {
+        stage:
+          "database_required",
+
+        accountHolderCreated:
+          false,
+
+        accountHolderAccepted:
+          false,
+
+        accountHolderStatus:
+          null,
+
+        accountCreated:
+          false,
+
+        cardCreated:
+          false,
+
+        nextEndpoint:
+          null,
+
+        message:
+          "The Card Leo member_cards table must be created before card features can be activated.",
+      };
+
       return success(
         res,
-        {
-          member: {
-            id:
-              member.id,
+        buildEmptyCardResponse({
+          member,
 
-            email:
-              member.email,
-
-            firstName:
-              member.first_name ||
-              "",
-
-            lastName:
-              member.last_name ||
-              "",
-
-            fullName:
-              member.full_name ||
-              [
-                member.first_name,
-                member.last_name,
-              ]
-                .filter(Boolean)
-                .join(" "),
-          },
-
-          card:
-            null,
-
-          balance: {
-            source:
-              "none",
-
-            live:
-              false,
-
-            availableCents:
-              0,
-
-            available:
-              0,
-
-            pendingCents:
-              0,
-
-            pending:
-              0,
-
-            currency:
-              "USD",
-          },
-
-          transactions:
-            [],
-
-          allowanceTransactions:
-            [],
-
-          readiness: {
-            stage:
-              "database_required",
-
-            accountHolderCreated:
-              false,
-
-            accountCreated:
-              false,
-
-            cardCreated:
-              false,
-
-            nextEndpoint:
-              null,
-
-            message:
-              "The Card Leo member_cards database table must be created before card features can be activated.",
-          },
+          readiness,
 
           lithic:
             getLithicIntegrationStatus(),
 
-          database: {
-            memberCardsReady:
-              false,
-
-            allowanceLedgerReady:
-              false,
-          },
-        },
+          memberCardsReady:
+            false,
+        }),
         "Card infrastructure is prepared, but the member_cards table has not been created yet."
       );
     }
 
     /* ======================================================================
-       NO CARD ACCOUNT YET
+       NO CARD RECORD YET
     ====================================================================== */
 
     if (
@@ -2383,76 +2941,17 @@ export default async function handler(
 
       return success(
         res,
-        {
-          member: {
-            id:
-              member.id,
-
-            email:
-              member.email,
-
-            firstName:
-              member.first_name ||
-              "",
-
-            lastName:
-              member.last_name ||
-              "",
-
-            fullName:
-              member.full_name ||
-              [
-                member.first_name,
-                member.last_name,
-              ]
-                .filter(Boolean)
-                .join(" "),
-          },
-
-          card:
-            null,
-
-          balance: {
-            source:
-              "none",
-
-            live:
-              false,
-
-            availableCents:
-              0,
-
-            available:
-              0,
-
-            pendingCents:
-              0,
-
-            pending:
-              0,
-
-            currency:
-              "USD",
-          },
-
-          transactions:
-            [],
-
-          allowanceTransactions:
-            [],
+        buildEmptyCardResponse({
+          member,
 
           readiness,
 
           lithic:
             getLithicIntegrationStatus(),
-        },
+        }),
         "You do not have a Card Leo card account yet."
       );
     }
-
-    /* ======================================================================
-       SAFE LOCAL CARD
-    ====================================================================== */
 
     const localCard =
       sanitizeMemberCardRecord(
@@ -2460,7 +2959,9 @@ export default async function handler(
       );
 
     /* ======================================================================
-       LOCAL ALLOWANCE LEDGER
+       ALLOWANCE LEDGER
+
+       Failure here must not fail the whole My Card page.
     ====================================================================== */
 
     let allowanceLedger;
@@ -2541,15 +3042,6 @@ export default async function handler(
           .lithic_account_token
       );
 
-    /* ======================================================================
-       LIVE LITHIC DATA
-
-       We only call Lithic when:
-       - enabled
-       - configured
-       - token exists
-    ====================================================================== */
-
     let liveCard =
       null;
 
@@ -2568,17 +3060,19 @@ export default async function handler(
     const providerErrors =
       [];
 
+    /* ======================================================================
+       LIVE PROVIDER DATA
+
+       Every provider call is isolated.
+
+       One failed Lithic call must not turn My Card into an auth failure.
+    ====================================================================== */
+
     if (
       lithicEnabled &&
       lithicConfigured
     ) {
-      /* --------------------------------------------------------------------
-         CARD
-      -------------------------------------------------------------------- */
-
-      if (
-        cardToken
-      ) {
+      if (cardToken) {
         try {
           liveCard =
             await getLiveLithicCard(
@@ -2607,10 +3101,6 @@ export default async function handler(
             }
           );
         }
-
-        /* ------------------------------------------------------------------
-           CARD BALANCE
-        ------------------------------------------------------------------ */
 
         try {
           liveCardBalance =
@@ -2641,10 +3131,6 @@ export default async function handler(
           );
         }
       }
-
-      /* --------------------------------------------------------------------
-         ACCOUNT
-      -------------------------------------------------------------------- */
 
       if (
         accountToken
@@ -2678,10 +3164,6 @@ export default async function handler(
           );
         }
 
-        /* ------------------------------------------------------------------
-           ACCOUNT BALANCES
-        ------------------------------------------------------------------ */
-
         try {
           accountBalances =
             await getLithicAccountBalances(
@@ -2712,10 +3194,6 @@ export default async function handler(
         }
       }
 
-      /* --------------------------------------------------------------------
-         TRANSACTIONS
-      -------------------------------------------------------------------- */
-
       if (
         cardToken ||
         accountToken
@@ -2724,7 +3202,9 @@ export default async function handler(
           liveTransactions =
             await getLithicTransactions({
               cardToken,
+
               accountToken,
+
               limit:
                 transactionLimit,
             });
@@ -2755,9 +3235,7 @@ export default async function handler(
     }
 
     /* ======================================================================
-       SAFE DISPLAY CARD
-
-       Prefer live Lithic card state where available.
+       DISPLAY CARD
     ====================================================================== */
 
     const displayCard = {
@@ -2774,14 +3252,17 @@ export default async function handler(
         "NOT_CREATED",
 
       lastFour:
-        liveCard?.lastFour ||
+        liveCard
+          ?.lastFour ||
         localCard.lastFour ||
         null,
 
       maskedNumber:
-        liveCard?.lastFour
+        liveCard
+          ?.lastFour
           ? `•••• •••• •••• ${liveCard.lastFour}`
-          : localCard.maskedNumber,
+          : localCard
+              .maskedNumber,
 
       memo:
         liveCard?.memo ||
@@ -2816,19 +3297,7 @@ export default async function handler(
       });
 
     /* ======================================================================
-       DATABASE FLAGS
-    ====================================================================== */
-
-    const database = {
-      memberCardsReady:
-        true,
-
-      allowanceLedgerReady:
-        allowanceLedger.available,
-    };
-
-    /* ======================================================================
-       PROVIDER STATUS
+       SAFE LITHIC STATUS
     ====================================================================== */
 
     const lithicStatus = {
@@ -2839,6 +3308,13 @@ export default async function handler(
           memberCard
             .lithic_account_holder_token
         ),
+
+      accountHolderStatus:
+        normalizeString(
+          memberCard
+            .lithic_account_holder_status
+        ) ||
+        null,
 
       hasAccount:
         Boolean(
@@ -2867,7 +3343,103 @@ export default async function handler(
     };
 
     /* ======================================================================
-       LOG SUCCESS
+       ALLOWANCE RESPONSE
+    ====================================================================== */
+
+    const allowance = {
+      available:
+        balance.available,
+
+      availableCents:
+        balance.availableCents,
+
+      pending:
+        balance.pending,
+
+      pendingCents:
+        balance.pendingCents,
+
+      currency:
+        balance.currency,
+
+      source:
+        balance.source,
+
+      live:
+        balance.live,
+
+      internalLedger: {
+        enabled:
+          allowanceLedger
+            .available,
+
+        totalCredited:
+          centsToDollars(
+            allowanceLedger
+              .creditedCents
+          ),
+
+        totalCreditedCents:
+          allowanceLedger
+            .creditedCents,
+
+        totalDebited:
+          centsToDollars(
+            allowanceLedger
+              .debitedCents
+          ),
+
+        totalDebitedCents:
+          allowanceLedger
+            .debitedCents,
+
+        pending:
+          centsToDollars(
+            allowanceLedger
+              .pendingCents
+          ),
+
+        pendingCents:
+          allowanceLedger
+            .pendingCents,
+
+        failed:
+          centsToDollars(
+            allowanceLedger
+              .failedCents
+          ),
+
+        failedCents:
+          allowanceLedger
+            .failedCents,
+
+        net:
+          centsToDollars(
+            allowanceLedger
+              .netCents
+          ),
+
+        netCents:
+          allowanceLedger
+            .netCents,
+      },
+    };
+
+    /* ======================================================================
+       DATABASE STATUS
+    ====================================================================== */
+
+    const database = {
+      memberCardsReady:
+        true,
+
+      allowanceLedgerReady:
+        allowanceLedger
+          .available,
+    };
+
+    /* ======================================================================
+       SUCCESS LOG
     ====================================================================== */
 
     logRequestSuccess(
@@ -2878,11 +3450,9 @@ export default async function handler(
 
         memberId,
 
-        email:
-          member.email,
-
         cardCreated:
-          readiness.cardCreated,
+          readiness
+            .cardCreated,
 
         cardStatus:
           displayCard
@@ -2899,289 +3469,121 @@ export default async function handler(
         lithicConfigured,
 
         liveTransactionCount:
-          liveTransactions.length,
+          liveTransactions
+            .length,
 
         allowanceTransactionCount:
           safeAllowanceTransactions
             .length,
+
+        providerPartialFailure:
+          providerErrors.length >
+          0,
       }
     );
 
     /* ======================================================================
        RESPONSE
 
-       IMPORTANT:
-       Do not add raw memberCard, raw Lithic response,
-       PAN, CVV, or provider tokens here.
+       CRITICAL:
+       Do not add memberCard raw object or Lithic provider tokens.
     ====================================================================== */
 
     return success(
       res,
       {
-        member: {
-          id:
-            member.id,
+        authenticated:
+          true,
 
-          email:
-            member.email,
+        portalAccess:
+          true,
 
-          firstName:
-            member.first_name ||
-            "",
-
-          lastName:
-            member.last_name ||
-            "",
-
-          fullName:
-            member.full_name ||
-            [
-              member.first_name,
-              member.last_name,
-            ]
-              .filter(Boolean)
-              .join(" "),
-
-          membership: {
-            status:
-              member.status ||
-              null,
-
-            paymentStatus:
-              member.payment_status ||
-              null,
-
-            membershipStatus:
-              member.membership_status ||
-              null,
-
-            approvalStatus:
-              member.approval_status ||
-              null,
-
-            active:
-              isMemberActive(
-                member
-              ),
-
-            paid:
-              isMemberPaid(
-                member
-              ),
-          },
-        },
-
-        /* ================================================================
-           SAFE CARD
-        ================================================================= */
+        member:
+          buildSafeMember(
+            member
+          ),
 
         card:
           displayCard,
 
-        /* ================================================================
-           CARD READINESS
-        ================================================================= */
-
         readiness,
-
-        /* ================================================================
-           BALANCE / ALLOWANCE
-        ================================================================= */
 
         balance,
 
-        allowance: {
-          available:
-            balance.available,
-
-          availableCents:
-            balance.availableCents,
-
-          pending:
-            balance.pending,
-
-          pendingCents:
-            balance.pendingCents,
-
-          currency:
-            balance.currency,
-
-          source:
-            balance.source,
-
-          live:
-            balance.live,
-
-          internalLedger: {
-            enabled:
-              allowanceLedger.available,
-
-            totalCredited:
-              centsToDollars(
-                allowanceLedger
-                  .creditedCents
-              ),
-
-            totalCreditedCents:
-              allowanceLedger
-                .creditedCents,
-
-            totalDebited:
-              centsToDollars(
-                allowanceLedger
-                  .debitedCents
-              ),
-
-            totalDebitedCents:
-              allowanceLedger
-                .debitedCents,
-
-            pending:
-              centsToDollars(
-                allowanceLedger
-                  .pendingCents
-              ),
-
-            pendingCents:
-              allowanceLedger
-                .pendingCents,
-
-            net:
-              centsToDollars(
-                allowanceLedger
-                  .netCents
-              ),
-
-            netCents:
-              allowanceLedger
-                .netCents,
-          },
-        },
-
-        /* ================================================================
-           LITHIC TRANSACTIONS
-        ================================================================= */
+        allowance,
 
         transactions:
           liveTransactions,
 
-        /* ================================================================
-           CARD LEO ALLOWANCE LEDGER
-        ================================================================= */
-
         allowanceTransactions:
           safeAllowanceTransactions,
 
-        /* ================================================================
-           LIVE ACCOUNT — SAFE DISPLAY ONLY
-        ================================================================= */
+        account: {
+          available:
+            Boolean(
+              liveAccount
+            ),
 
-        account:
-          liveAccount
-            ? {
-                state:
-                  liveAccount.state,
+          state:
+            liveAccount
+              ?.state ||
+            null,
 
-                spendLimit:
-                  liveAccount
-                    .spendLimit,
+          spendLimit:
+            liveAccount
+              ?.spendLimit ??
+            null,
 
-                spendLimitDuration:
-                  liveAccount
-                    .spendLimitDuration,
+          spendLimitDuration:
+            liveAccount
+              ?.spendLimitDuration ??
+            null,
 
-                createdAt:
-                  liveAccount
-                    .created,
-              }
-            : null,
-
-        /* ================================================================
-           ACCOUNT BALANCES
-        ================================================================= */
-
-        accountBalances:
-          accountBalances.map(
-            (row) => ({
-              type:
-                row.type,
-
-              available:
-                row.available,
-
-              availableCents:
-                row.availableCents,
-
-              pending:
-                row.pending,
-
-              pendingCents:
-                row.pendingCents,
-
-              currency:
-                row.currency,
-
-              updatedAt:
-                row.updatedAt,
-            })
-          ),
-
-        /* ================================================================
-           PROVIDER
-        ================================================================= */
+          created:
+            liveAccount
+              ?.created ||
+            null,
+        },
 
         lithic:
           lithicStatus,
 
-        /* ================================================================
-           DATABASE STATUS
-        ================================================================= */
-
         database,
 
-        /* ================================================================
-           MEMBER PORTAL LINKS
-        ================================================================= */
+        page: {
+          title:
+            "My Card",
 
-        links: {
-          cardPage:
+          url:
             "/portal/card.html",
 
-          createCardholder:
-            readiness
-              .accountHolderCreated
-              ? null
-              : "/api/cards/create-cardholder",
+          createCardholderEndpoint:
+            "/api/cards/create-cardholder",
 
-          createVirtualCard:
-            readiness
-              .accountCreated &&
-            !readiness
-              .cardCreated
-              ? "/api/cards/create-virtual-card"
-              : null,
+          createVirtualCardEndpoint:
+            "/api/cards/create-virtual-card",
 
-          fundAllowance:
-            readiness
-              .cardCreated
-              ? "/api/cards/fund-allowance"
-              : null,
+          memberCardEndpoint:
+            "/api/cards/member-card",
         },
-
-        /* ================================================================
-           SERVER TIMESTAMP
-        ================================================================= */
-
-        generatedAt:
-          nowIso(),
       },
-      readiness.cardCreated
-        ? "Card Leo card information loaded successfully."
-        : "Card Leo card account status loaded successfully."
+      providerErrors.length
+        ? "Card information loaded. Some live card data is temporarily unavailable."
+        : "Card information loaded successfully."
     );
   } catch (
     error
   ) {
+    /*
+     * CRITICAL LOGIN-LOOP RULE
+     * ------------------------
+     *
+     * A Supabase, Lithic, balance, or transaction failure is NOT proof that
+     * the member's authentication session is invalid.
+     *
+     * Never clear auth cookies here.
+     */
+
     logRequestError(
       req,
       error,
@@ -3191,9 +3593,14 @@ export default async function handler(
       }
     );
 
+    console.error(
+      "Card Leo member-card error:",
+      error
+    );
+
     return serverError(
       res,
-      "Unable to load your Card Leo card right now.",
+      "Unable to load Card Leo card information right now.",
       process.env.NODE_ENV ===
         "development"
         ? {

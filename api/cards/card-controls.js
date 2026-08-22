@@ -1,13 +1,14 @@
-// api/cards/create-virtual-card.js
-
-import crypto from "node:crypto";
+// api/cards/card-controls.js
 
 import {
   supabaseAdmin,
 } from "../../lib/supabase-admin.js";
 
 import {
-  createLithicCard,
+  getLithicCard,
+  openLithicCard,
+  pauseLithicCard,
+  closeLithicCard,
   isLithicEnabled,
   isLithicConfigured,
   getLithicEnvironment,
@@ -35,53 +36,75 @@ import {
 
 /* ==========================================================================
    CARD LEO REWARDS
-   CREATE VIRTUAL CARD
+   MEMBER CARD CONTROLS
 
    ROUTE
    -----
-   POST /api/cards/create-virtual-card
+   POST /api/cards/card-controls
 
    PURPOSE
    -------
-   1. Authenticate the Card Leo member.
-   2. Resolve the real member from Supabase.
-   3. Confirm membership/payment eligibility.
-   4. Require the member_cards record created by create-cardholder.js.
-   5. Require a Lithic account-holder relationship.
-   6. Require an accepted Lithic account holder.
-   7. Require the Lithic account token.
-   8. Prevent duplicate virtual-card issuance.
-   9. Create exactly one Card Leo VIRTUAL card.
-   10. Save safe card metadata in Supabase.
-   11. Never return PAN/CVV in this endpoint.
+   Allow an authenticated Card Leo member to safely control THEIR OWN
+   Card Leo virtual card.
 
-   IMPORTANT
-   ---------
-   This route assumes:
+   SUPPORTED ACTIONS
+   -----------------
+   pause
+   resume
+   open
 
-     api/cards/create-cardholder.js
+   OPTIONAL / DISABLED BY DEFAULT
+   ------------------------------
+   close
 
-   has already successfully created the Lithic account-holder/account
-   relationship.
+   SECURITY RULES
+   --------------
+   Browser NEVER sends or controls:
 
-   SECURITY
-   --------
-   - No PAN returned.
-   - No CVV returned.
-   - No full card token returned to browser.
-   - No account token returned to browser.
-   - No account-holder token returned to browser.
-   - Temporary database/provider errors do not clear member login cookies.
-   - Card issuance uses deterministic idempotency.
+   - member_id
+   - Lithic card token
+   - Lithic account token
+   - Lithic account-holder token
+   - provider account
+   - another member's card
+
+   Browser only sends:
+
+     {
+       "action": "pause"
+     }
+
+   or:
+
+     {
+       "action": "resume"
+     }
+
+   FLOW
+   ----
+   1. Authenticate member.
+   2. Resolve actual Card Leo member from Supabase.
+   3. Confirm membership eligibility.
+   4. Load member_cards by authenticated member ID.
+   5. Resolve Lithic card token server-side.
+   6. Confirm Lithic integration is ready.
+   7. Read current provider card state.
+   8. Apply requested safe control.
+   9. Save safe state in Supabase.
+   10. Return masked/safe card information.
 
 ============================================================================ */
 
 /* ==========================================================================
-   CONFIG
+   TABLES
 ============================================================================ */
 
 const MEMBER_CARDS_TABLE =
   "member_cards";
+
+/* ==========================================================================
+   SESSION
+============================================================================ */
 
 const SESSION_COOKIE_NAMES = [
   "cardleo_session",
@@ -102,22 +125,8 @@ const SESSION_TOKEN_COOKIE_NAMES = [
   "token",
 ];
 
-const DEFAULT_CARD_TYPE =
-  "VIRTUAL";
-
-const DEFAULT_CARD_STATE =
-  "OPEN";
-
-const DEFAULT_CARD_MEMO =
-  "Card Leo Rewards";
-
 /* ==========================================================================
-   MEMBER STATUS RULES
-
-   Keep these aligned with:
-   - api/auth/me.js
-   - api/auth/login.js
-   - api/cards/create-cardholder.js
+   MEMBER STATUS
 ============================================================================ */
 
 const ACTIVE_PAYMENT_STATUSES =
@@ -162,12 +171,28 @@ const BLOCKED_STATUSES =
     "canceled",
   ]);
 
-const ALLOWED_SPEND_LIMIT_DURATIONS =
+/* ==========================================================================
+   CARD ACTIONS
+============================================================================ */
+
+const ACTION_PAUSE =
+  "pause";
+
+const ACTION_OPEN =
+  "open";
+
+const ACTION_RESUME =
+  "resume";
+
+const ACTION_CLOSE =
+  "close";
+
+const ALLOWED_ACTIONS =
   new Set([
-    "ANNUALLY",
-    "FOREVER",
-    "MONTHLY",
-    "TRANSACTION",
+    ACTION_PAUSE,
+    ACTION_OPEN,
+    ACTION_RESUME,
+    ACTION_CLOSE,
   ]);
 
 /* ==========================================================================
@@ -188,7 +213,7 @@ function success(
   res,
   data = {},
   message =
-    "Card Leo virtual card created successfully."
+    "Card control updated successfully."
 ) {
   return sendJson(
     res,
@@ -260,6 +285,31 @@ function forbidden(
   return sendJson(
     res,
     403,
+    {
+      success:
+        false,
+
+      ok:
+        false,
+
+      authenticated:
+        true,
+
+      message,
+
+      ...extra,
+    }
+  );
+}
+
+function notFound(
+  res,
+  message,
+  extra = {}
+) {
+  return sendJson(
+    res,
+    404,
     {
       success:
         false,
@@ -372,25 +422,6 @@ function normalizeEmail(
   ).toLowerCase();
 }
 
-function normalizeInteger(
-  value,
-  fallback = 0
-) {
-  const parsed =
-    Number.parseInt(
-      String(
-        value ?? ""
-      ),
-      10
-    );
-
-  return Number.isFinite(
-    parsed
-  )
-    ? parsed
-    : fallback;
-}
-
 function normalizeBoolean(
   value,
   fallback = false
@@ -425,6 +456,7 @@ function normalizeBoolean(
       "yes",
       "y",
       "on",
+      "enabled",
     ].includes(
       normalized
     )
@@ -439,6 +471,7 @@ function normalizeBoolean(
       "no",
       "n",
       "off",
+      "disabled",
     ].includes(
       normalized
     )
@@ -451,6 +484,30 @@ function normalizeBoolean(
 
 function nowIso() {
   return new Date()
+    .toISOString();
+}
+
+function safeDate(
+  value
+) {
+  if (!value) {
+    return null;
+  }
+
+  const date =
+    new Date(
+      value
+    );
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return null;
+  }
+
+  return date
     .toISOString();
 }
 
@@ -493,7 +550,7 @@ function getRequestBody(
 }
 
 /* ==========================================================================
-   DATABASE ERROR COMPATIBILITY
+   SUPABASE COMPATIBILITY
 ============================================================================ */
 
 function isMissingTableOrColumn(
@@ -636,12 +693,6 @@ function parseCookies(
 
 /* ==========================================================================
    SESSION DECODING
-
-   Current Card Leo login writes a Base64URL session payload.
-
-   Compatibility:
-   - plain JSON
-   - Base64URL JSON
 ============================================================================ */
 
 function safeJsonParse(
@@ -715,16 +766,9 @@ function parseSessionValue(
     return direct;
   }
 
-  const encoded =
-    parseBase64Session(
-      raw
-    );
-
-  if (encoded) {
-    return encoded;
-  }
-
-  return null;
+  return parseBase64Session(
+    raw
+  );
 }
 
 function readSessionCookie(
@@ -778,9 +822,7 @@ function readSessionCookie(
     ) {
       return {
         name,
-
         raw,
-
         data,
       };
     }
@@ -809,7 +851,6 @@ function readSessionTokenCookie(
     if (token) {
       return {
         name,
-
         token,
       };
     }
@@ -931,10 +972,7 @@ function isSessionExpired(
     );
 
   /*
-   * Match the fixed /api/auth/me behavior.
-   *
-   * Missing expires_at alone does not prove an older compatible Card Leo
-   * session is invalid.
+   * Same compatibility behavior as the other Card Leo auth/card routes.
    */
 
   if (!expiresAt) {
@@ -951,7 +989,7 @@ function isSessionExpired(
 }
 
 /* ==========================================================================
-   MEMBER ELIGIBILITY
+   MEMBER STATUS
 ============================================================================ */
 
 function getMemberStatuses(
@@ -1086,10 +1124,6 @@ async function getMemberRecord({
     "last_name",
     "full_name",
 
-    "phone",
-    "city",
-    "state",
-
     "status",
     "payment_status",
     "membership_status",
@@ -1119,10 +1153,6 @@ async function getMemberRecord({
     "first_name",
     "last_name",
     "full_name",
-
-    "phone",
-    "city",
-    "state",
 
     "status",
 
@@ -1206,13 +1236,6 @@ async function getMemberRecord({
       result.error
     )
   ) {
-    /*
-     * Older schema compatibility.
-     *
-     * Token/portal-user lookup cannot safely fall back when those columns
-     * do not exist, but ID/email lookup still can.
-     */
-
     if (
       !memberId &&
       !email
@@ -1230,7 +1253,7 @@ async function getMemberRecord({
 }
 
 /* ==========================================================================
-   AUTHENTICATE MEMBER
+   AUTHENTICATION
 ============================================================================ */
 
 async function getAuthenticatedMember(
@@ -1242,7 +1265,9 @@ async function getAuthenticatedMember(
       req
     );
 
-  if (!session?.data) {
+  if (
+    !session?.data
+  ) {
     return {
       member:
         null,
@@ -1250,7 +1275,7 @@ async function getAuthenticatedMember(
       response:
         unauthorized(
           res,
-          "Please sign in before creating your Card Leo virtual card."
+          "Please sign in before managing your Card Leo card."
         ),
     };
   }
@@ -1275,7 +1300,7 @@ async function getAuthenticatedMember(
       response:
         unauthorized(
           res,
-          "Your session expired. Please sign in again."
+          "Your session has expired. Please sign in again."
         ),
     };
   }
@@ -1285,10 +1310,9 @@ async function getAuthenticatedMember(
    *
    * Do not require:
    *
-   *   session.data.authenticated === true
+   * session.data.authenticated === true
    *
-   * Some Card Leo compatible sessions resolve the member from identity
-   * fields/tokens server-side.
+   * We resolve server-side identity exactly like #8-#11.
    */
 
   const memberId =
@@ -1342,7 +1366,7 @@ async function getAuthenticatedMember(
       response:
         unauthorized(
           res,
-          "Your login session is missing member information."
+          "Member information is missing from your login session."
         ),
     };
   }
@@ -1361,15 +1385,16 @@ async function getAuthenticatedMember(
     });
 
   /*
-   * Database failure is not proof authentication is invalid.
-   * Do NOT clear the member session on query failure.
+   * Database error is NOT authentication failure.
    */
 
   if (error) {
     throw error;
   }
 
-  if (!member?.id) {
+  if (
+    !member?.id
+  ) {
     try {
       clearAuthCookies(
         res
@@ -1402,7 +1427,7 @@ async function getAuthenticatedMember(
       response:
         forbidden(
           res,
-          "Your Card Leo account is not eligible for virtual-card provisioning at this time.",
+          "Your Card Leo account is currently restricted.",
           {
             code:
               "MEMBER_BLOCKED",
@@ -1423,7 +1448,7 @@ async function getAuthenticatedMember(
       response:
         forbidden(
           res,
-          "Your Card Leo membership payment must be current before a virtual card can be created.",
+          "Your Card Leo membership payment must be current before managing your card.",
           {
             code:
               "PAYMENT_NOT_CURRENT",
@@ -1444,7 +1469,7 @@ async function getAuthenticatedMember(
       response:
         forbidden(
           res,
-          "Your Card Leo membership must be active and approved before a virtual card can be created.",
+          "Your Card Leo membership must be active before managing your card.",
           {
             code:
               "MEMBERSHIP_NOT_ACTIVE",
@@ -1517,98 +1542,89 @@ async function getMemberCardRecord(
 }
 
 /* ==========================================================================
-   SAFE CARD DB RESPONSE
+   UPDATE LOCAL CARD STATE
 ============================================================================ */
 
-function sanitizeMemberCardRecord(
-  record = {}
-) {
-  return {
-    id:
-      record.id ||
-      null,
+async function updateMemberCardRecord({
+  recordId,
+  state,
+  providerState,
+}) {
+  const timestamp =
+    nowIso();
 
-    memberId:
-      record.member_id ||
-      null,
+  const {
+    data,
+    error,
+  } =
+    await supabaseAdmin
+      .from(
+        MEMBER_CARDS_TABLE
+      )
+      .update({
+        card_status:
+          state,
 
-    provider:
-      record.provider ||
-      "lithic",
+        lithic_card_status:
+          providerState ||
+          state,
 
-    accountHolderCreated:
-      Boolean(
-        record
-          .lithic_account_holder_token
-      ),
+        card_status_updated_at:
+          timestamp,
 
-    accountCreated:
-      Boolean(
-        record
-          .lithic_account_token
-      ),
+        updated_at:
+          timestamp,
+      })
+      .eq(
+        "id",
+        recordId
+      )
+      .select()
+      .single();
 
-    accountHolderStatus:
-      record
-        .lithic_account_holder_status ||
-      null,
+  if (error) {
+    /*
+     * Compatibility with a schema that does not yet have
+     * lithic_card_status/card_status_updated_at.
+     */
 
-    cardCreated:
-      Boolean(
-        record
-          .lithic_card_token
-      ),
+    if (
+      isMissingTableOrColumn(
+        error
+      )
+    ) {
+      const fallback =
+        await supabaseAdmin
+          .from(
+            MEMBER_CARDS_TABLE
+          )
+          .update({
+            card_status:
+              state,
 
-    cardType:
-      record.card_type ||
-      null,
+            updated_at:
+              timestamp,
+          })
+          .eq(
+            "id",
+            recordId
+          )
+          .select()
+          .single();
 
-    cardStatus:
-      record.card_status ||
-      null,
+      if (
+        fallback.error
+      ) {
+        throw fallback.error;
+      }
 
-    lastFour:
-      record.last_four ||
-      null,
+      return fallback.data;
+    }
 
-    maskedNumber:
-      record.last_four
-        ? `•••• •••• •••• ${record.last_four}`
-        : null,
+    throw error;
+  }
 
-    memo:
-      record.card_memo ||
-      null,
-
-    spendLimitCents:
-      record
-        .spend_limit_cents ??
-      null,
-
-    spendLimit:
-      record
-        .spend_limit_cents !=
-      null
-        ? Number(
-            record
-              .spend_limit_cents
-          ) /
-          100
-        : null,
-
-    spendLimitDuration:
-      record
-        .spend_limit_duration ||
-      null,
-
-    createdAt:
-      record.created_at ||
-      null,
-
-    updatedAt:
-      record.updated_at ||
-      null,
-  };
+  return data;
 }
 
 /* ==========================================================================
@@ -1654,531 +1670,352 @@ function buildSafeMember(
 }
 
 /* ==========================================================================
-   CARD INPUT
-
-   IMPORTANT
-   ---------
-   spend_limit values are expected in CENTS at this backend layer.
-
-   Example:
-     2500 = $25.00
-
-   Regular members should not be allowed to arbitrarily increase their
-   program allowance through this endpoint.
-
-   Therefore body-provided spend limits are disabled by default and must be
-   explicitly allowed server-side.
+   SAFE CARD
 ============================================================================ */
 
-function normalizeCardInput(
-  body = {}
-) {
-  const memo =
+function buildSafeCard({
+  memberCard,
+  liveCard,
+}) {
+  const providerCard =
+    liveCard ||
+    {};
+
+  const lastFour =
     normalizeString(
-      body.memo ||
-        body.card_memo ||
-        DEFAULT_CARD_MEMO
-    ).slice(
-      0,
-      100
+      providerCard
+        ?.lastFour ||
+      providerCard
+        ?.last_four ||
+      memberCard
+        ?.last_four
     );
 
-  let requestedState =
+  const state =
     normalizeString(
-      body.state ||
-        DEFAULT_CARD_STATE
+      providerCard
+        ?.state ||
+      memberCard
+        ?.card_status
     ).toUpperCase();
 
-  if (
-    ![
-      "OPEN",
+  return {
+    exists:
+      Boolean(
+        memberCard
+          ?.lithic_card_token
+      ),
+
+    type:
+      normalizeString(
+        providerCard
+          ?.type ||
+        memberCard
+          ?.card_type
+      ) ||
+      "VIRTUAL",
+
+    state:
+      state ||
+      "UNKNOWN",
+
+    paused:
+      state ===
       "PAUSED",
-    ].includes(
-      requestedState
+
+    open:
+      state ===
+      "OPEN",
+
+    closed:
+      state ===
+      "CLOSED",
+
+    lastFour:
+      lastFour ||
+      null,
+
+    maskedNumber:
+      lastFour
+        ? `•••• •••• •••• ${lastFour}`
+        : null,
+
+    memo:
+      normalizeString(
+        providerCard
+          ?.memo ||
+        memberCard
+          ?.card_memo
+      ) ||
+      "Card Leo Rewards",
+
+    createdAt:
+      safeDate(
+        providerCard
+          ?.created ||
+        memberCard
+          ?.lithic_card_created_at ||
+        memberCard
+          ?.created_at
+      ),
+
+    updatedAt:
+      safeDate(
+        memberCard
+          ?.updated_at
+      ),
+  };
+}
+
+/* ==========================================================================
+   NORMALIZE ACTION
+============================================================================ */
+
+function normalizeAction(
+  value
+) {
+  let action =
+    normalizeStatus(
+      value
+    );
+
+  if (
+    action ===
+      "unpause" ||
+    action ===
+      "activate" ||
+    action ===
+      "enable"
+  ) {
+    action =
+      ACTION_RESUME;
+  }
+
+  if (
+    action ===
+      "freeze" ||
+    action ===
+      "lock"
+  ) {
+    action =
+      ACTION_PAUSE;
+  }
+
+  return action;
+}
+
+/* ==========================================================================
+   CLOSE CARD SETTING
+
+   Card closure is intentionally disabled by default because it is much more
+   destructive than pause/resume.
+============================================================================ */
+
+function isMemberCardCloseEnabled() {
+  return normalizeBoolean(
+    process.env
+      .CARDLEO_ALLOW_MEMBER_CARD_CLOSE,
+    false
+  );
+}
+
+/* ==========================================================================
+   VALIDATE ACTION
+============================================================================ */
+
+function validateAction({
+  action,
+  body,
+}) {
+  if (!action) {
+    return {
+      valid:
+        false,
+
+      message:
+        "A card action is required.",
+
+      code:
+        "CARD_ACTION_REQUIRED",
+    };
+  }
+
+  if (
+    !ALLOWED_ACTIONS.has(
+      action
     )
   ) {
-    requestedState =
-      DEFAULT_CARD_STATE;
+    return {
+      valid:
+        false,
+
+      message:
+        "Unsupported card action.",
+
+      code:
+        "INVALID_CARD_ACTION",
+    };
   }
 
-  const issueOpen =
-    normalizeBoolean(
-      body.issue_open ??
-        body.issueOpen,
-      true
-    );
-
-  const allowClientSpendLimit =
-    normalizeBoolean(
-      process.env
-        .LITHIC_ALLOW_CLIENT_SPEND_LIMIT,
-      false
-    );
-
-  let spendLimit =
-    0;
-
-  let spendLimitDuration =
-    "";
-
   if (
-    allowClientSpendLimit
+    action ===
+      ACTION_CLOSE
   ) {
-    spendLimit =
-      normalizeInteger(
-        body.spend_limit ??
-          body.spendLimit ??
-          0,
-        0
-      );
-
     if (
-      spendLimit <
-      0
+      !isMemberCardCloseEnabled()
     ) {
-      spendLimit =
-        0;
+      return {
+        valid:
+          false,
+
+        message:
+          "Permanent card closure is not enabled for member self-service.",
+
+        code:
+          "CARD_CLOSE_DISABLED",
+      };
     }
 
-    spendLimitDuration =
+    const confirmation =
       normalizeString(
-        body
-          .spend_limit_duration ||
-          body
-            .spendLimitDuration ||
-          ""
+        body.confirmation ||
+        body.confirm ||
+        ""
       ).toUpperCase();
 
     if (
-      spendLimitDuration &&
-      !ALLOWED_SPEND_LIMIT_DURATIONS.has(
-        spendLimitDuration
-      )
+      confirmation !==
+      "CLOSE"
     ) {
-      spendLimitDuration =
-        "";
-    }
-  }
+      return {
+        valid:
+          false,
 
-  /*
-   * Optional server-controlled initial spend limit.
-   *
-   * This is safer than allowing the member to choose their own amount.
-   */
+        message:
+          'Permanent closure requires confirmation: "CLOSE".',
 
-  const configuredSpendLimit =
-    normalizeInteger(
-      process.env
-        .LITHIC_INITIAL_CARD_SPEND_LIMIT_CENTS,
-      0
-    );
-
-  if (
-    configuredSpendLimit >
-      0
-  ) {
-    spendLimit =
-      configuredSpendLimit;
-
-    spendLimitDuration =
-      normalizeString(
-        process.env
-          .LITHIC_INITIAL_CARD_SPEND_LIMIT_DURATION ||
-          "FOREVER"
-      ).toUpperCase();
-
-    if (
-      !ALLOWED_SPEND_LIMIT_DURATIONS.has(
-        spendLimitDuration
-      )
-    ) {
-      spendLimitDuration =
-        "FOREVER";
+        code:
+          "CARD_CLOSE_CONFIRMATION_REQUIRED",
+      };
     }
   }
 
   return {
-    type:
-      DEFAULT_CARD_TYPE,
-
-    memo,
-
-    state:
-      issueOpen
-        ? requestedState
-        : "PAUSED",
-
-    spendLimit,
-
-    spendLimitDuration,
+    valid:
+      true,
   };
 }
 
 /* ==========================================================================
-   BUILD LITHIC CARD PAYLOAD
+   LIVE CARD
 ============================================================================ */
 
-function buildLithicCardPayload({
-  member,
-  memberCard,
-  input,
-}) {
-  const accountToken =
-    normalizeString(
-      memberCard
-        ?.lithic_account_token
-    );
-
-  if (!accountToken) {
-    const error =
-      new Error(
-        "Lithic account token is missing."
-      );
-
-    error.code =
-      "LITHIC_ACCOUNT_TOKEN_MISSING";
-
-    error.status =
-      409;
-
-    throw error;
-  }
-
-  const payload = {
-    type:
-      "VIRTUAL",
-
-    state:
-      input.state,
-
-    account_token:
-      accountToken,
-
-    memo:
-      input.memo ||
-      `Card Leo - ${
-        member.first_name ||
-        "Member"
-      }`,
-  };
-
-  /*
-   * lib/lithic.js will also apply the configured card program token when
-   * one exists, but this keeps the payload explicit when configured.
-   */
-
-  const cardProgramToken =
-    normalizeString(
-      process.env
-        .LITHIC_CARD_PROGRAM_TOKEN
-    );
-
-  if (
-    cardProgramToken
-  ) {
-    payload.card_program_token =
-      cardProgramToken;
-  }
-
-  /*
-   * Spend limit is sent only when configured.
-   */
-
-  if (
-    input.spendLimit >
-    0
-  ) {
-    payload.spend_limit =
-      input.spendLimit;
-
-    payload.spend_limit_duration =
-      input
-        .spendLimitDuration ||
-      "FOREVER";
-  }
-
-  return payload;
-}
-
-/* ==========================================================================
-   DETERMINISTIC CARD IDEMPOTENCY
-
-   This means retries for the same Card Leo member/account use the same
-   provider idempotency UUID.
-
-   That is especially important if:
-
-     Lithic creates the card
-            ↓
-     Card Leo database save temporarily fails
-            ↓
-     request gets retried
-
-   We do NOT want a second physical/virtual account instrument created.
-============================================================================ */
-
-function buildCardIdempotencyKey({
-  memberId,
-  accountToken,
-}) {
-  const digest =
-    crypto
-      .createHash(
-        "sha256"
-      )
-      .update(
-        [
-          "cardleo",
-          "lithic",
-          "virtual-card",
-          memberId,
-          accountToken,
-        ].join(":")
-      )
-      .digest();
-
-  const bytes =
-    Buffer.from(
-      digest.subarray(
-        0,
-        16
-      )
-    );
-
-  /*
-   * RFC-4122-compatible deterministic UUID.
-   */
-
-  bytes[6] =
-    (
-      bytes[6] &
-      0x0f
-    ) |
-    0x50;
-
-  bytes[8] =
-    (
-      bytes[8] &
-      0x3f
-    ) |
-    0x80;
-
-  const hex =
-    bytes.toString(
-      "hex"
-    );
-
-  return [
-    hex.slice(
-      0,
-      8
-    ),
-
-    hex.slice(
-      8,
-      12
-    ),
-
-    hex.slice(
-      12,
-      16
-    ),
-
-    hex.slice(
-      16,
-      20
-    ),
-
-    hex.slice(
-      20,
-      32
-    ),
-  ].join(
-    "-"
-  );
-}
-
-/* ==========================================================================
-   LITHIC RESULT
-============================================================================ */
-
-function unwrapLithicCard(
-  result
+async function getLiveCard(
+  cardToken
 ) {
-  if (
+  const result =
+    await getLithicCard(
+      cardToken
+    );
+
+  const raw =
     isObject(
       result?.data?.data
     )
-  ) {
-    return result
-      .data
-      .data;
-  }
+      ? result.data.data
+      : isObject(
+          result?.data
+        )
+        ? result.data
+        : {};
 
-  if (
-    isObject(
-      result?.data
-    )
-  ) {
-    return result.data;
-  }
-
-  return {};
+  return sanitizeLithicCard(
+    raw
+  );
 }
 
 /* ==========================================================================
-   SAVE CREATED CARD
-
-   Store only provider identifiers and safe display metadata.
-
-   Do not persist PAN/CVV here.
+   EXECUTE CARD ACTION
 ============================================================================ */
 
-async function saveCreatedCard({
-  memberCard,
-  lithicCard,
-  input,
+async function executeCardAction({
+  action,
+  cardToken,
 }) {
-  const safeCard =
-    sanitizeLithicCard(
-      lithicCard
+  if (
+    action ===
+    ACTION_PAUSE
+  ) {
+    return pauseLithicCard(
+      cardToken
+    );
+  }
+
+  if (
+    action ===
+      ACTION_RESUME ||
+    action ===
+      ACTION_OPEN
+  ) {
+    return openLithicCard(
+      cardToken
+    );
+  }
+
+  if (
+    action ===
+    ACTION_CLOSE
+  ) {
+    return closeLithicCard(
+      cardToken
+    );
+  }
+
+  const error =
+    new Error(
+      "Unsupported card action."
     );
 
-  if (
-    !safeCard?.token
-  ) {
-    const error =
-      new Error(
-        "Lithic card response did not include a card token."
-      );
+  error.code =
+    "INVALID_CARD_ACTION";
 
-    error.code =
-      "LITHIC_CARD_TOKEN_MISSING";
+  error.status =
+    400;
 
-    throw error;
-  }
-
-  const timestamp =
-    nowIso();
-
-  const payload = {
-    provider:
-      "lithic",
-
-    lithic_card_token:
-      safeCard.token,
-
-    card_type:
-      safeCard.type ||
-      "VIRTUAL",
-
-    card_status:
-      safeCard.state ||
-      input.state ||
-      "OPEN",
-
-    last_four:
-      safeCard.lastFour ||
-      null,
-
-    card_memo:
-      safeCard.memo ||
-      input.memo ||
-      null,
-
-    spend_limit_cents:
-      input.spendLimit >
-      0
-        ? input.spendLimit
-        : null,
-
-    spend_limit_duration:
-      input
-        .spendLimitDuration ||
-      null,
-
-    updated_at:
-      timestamp,
-
-    lithic_card_created_at:
-      safeCard.created ||
-      timestamp,
-
-    /*
-     * SAFE diagnostic snapshot only.
-     */
-
-    lithic_last_card_response: {
-      account_token_present:
-        Boolean(
-          safeCard
-            .accountToken
-        ),
-
-      type:
-        safeCard.type,
-
-      state:
-        safeCard.state,
-
-      last_four:
-        safeCard.lastFour,
-
-      memo:
-        safeCard.memo,
-
-      created:
-        safeCard.created,
-    },
-  };
-
-  const {
-    data,
-    error,
-  } =
-    await supabaseAdmin
-      .from(
-        MEMBER_CARDS_TABLE
-      )
-      .update(
-        payload
-      )
-      .eq(
-        "id",
-        memberCard.id
-      )
-      .select()
-      .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
+  throw error;
 }
 
 /* ==========================================================================
-   ACCOUNT-HOLDER READINESS
+   EXPECTED TARGET STATE
 ============================================================================ */
 
-function getAccountHolderStatus(
-  memberCard
+function getTargetState(
+  action
 ) {
-  return normalizeString(
-    memberCard
-      ?.lithic_account_holder_status
-  ).toUpperCase();
-}
+  if (
+    action ===
+    ACTION_PAUSE
+  ) {
+    return "PAUSED";
+  }
 
-function isAccountHolderAccepted(
-  memberCard
-) {
-  return (
-    getAccountHolderStatus(
-      memberCard
-    ) ===
-    "ACCEPTED"
-  );
+  if (
+    action ===
+      ACTION_RESUME ||
+    action ===
+      ACTION_OPEN
+  ) {
+    return "OPEN";
+  }
+
+  if (
+    action ===
+    ACTION_CLOSE
+  ) {
+    return "CLOSED";
+  }
+
+  return "";
 }
 
 /* ==========================================================================
@@ -2202,7 +2039,7 @@ export default async function handler(
     req,
     {
       scope:
-        "create_virtual_card",
+        "card_controls",
     }
   );
 
@@ -2237,7 +2074,7 @@ export default async function handler(
 
   try {
     /* ======================================================================
-       AUTHENTICATION
+       AUTHENTICATE
     ====================================================================== */
 
     const {
@@ -2259,7 +2096,64 @@ export default async function handler(
       );
 
     /* ======================================================================
-       MEMBER CARD RECORD
+       REQUEST
+    ====================================================================== */
+
+    const body =
+      getRequestBody(
+        req
+      );
+
+    const action =
+      normalizeAction(
+        body.action ||
+        body.cardAction ||
+        body.card_action
+      );
+
+    const validation =
+      validateAction({
+        action,
+
+        body,
+      });
+
+    if (
+      !validation.valid
+    ) {
+      return badRequest(
+        res,
+        validation.message,
+        {
+          code:
+            validation.code,
+
+          allowedActions: [
+            "pause",
+            "resume",
+          ],
+
+          closeEnabled:
+            isMemberCardCloseEnabled(),
+        }
+      );
+    }
+
+    /*
+     * SECURITY:
+     *
+     * Ignore browser-supplied:
+     *
+     * body.member_id
+     * body.memberId
+     * body.card_token
+     * body.cardToken
+     * body.account_token
+     * body.accountToken
+     */
+
+    /* ======================================================================
+       MEMBER CARD
     ====================================================================== */
 
     const {
@@ -2281,9 +2175,6 @@ export default async function handler(
         {
           code:
             "MEMBER_CARDS_TABLE_MISSING",
-
-          nextStep:
-            "Create the member_cards table before enabling Lithic card creation.",
         }
       );
     }
@@ -2291,12 +2182,12 @@ export default async function handler(
     if (
       !memberCard?.id
     ) {
-      return conflict(
+      return notFound(
         res,
-        "A Card Leo Lithic account holder must be created before issuing a virtual card.",
+        "Your Card Leo card account has not been created yet.",
         {
           code:
-            "CARDHOLDER_REQUIRED",
+            "MEMBER_CARD_NOT_FOUND",
 
           nextEndpoint:
             "/api/cards/create-cardholder",
@@ -2304,118 +2195,54 @@ export default async function handler(
       );
     }
 
-    /* ======================================================================
-       DUPLICATE PROTECTION
-
-       Database record is the first source of truth.
-    ====================================================================== */
-
-    if (
+    const cardToken =
       normalizeString(
         memberCard
           .lithic_card_token
-      )
+      );
+
+    if (
+      !cardToken
     ) {
-      return success(
+      return conflict(
         res,
+        "Your Card Leo virtual card has not been created yet.",
         {
-          created:
-            false,
+          code:
+            "LITHIC_CARD_REQUIRED",
 
-          alreadyExists:
-            true,
-
-          member:
-            buildSafeMember(
-              member
-            ),
-
-          card:
-            sanitizeMemberCardRecord(
-              memberCard
-            ),
-
-          lithic:
-            getLithicIntegrationStatus(),
-
-          next: {
-            memberCardEndpoint:
-              "/api/cards/member-card",
-
-            memberCardPage:
-              "/portal/card.html",
-          },
-        },
-        "Your Card Leo virtual card already exists."
+          nextEndpoint:
+            "/api/cards/create-virtual-card",
+        }
       );
     }
 
     /* ======================================================================
-       LITHIC DISABLED
+       LITHIC
     ====================================================================== */
 
     if (
       !isLithicEnabled()
     ) {
-      return success(
+      return serviceUnavailable(
         res,
+        "Card controls are unavailable because Lithic is currently disabled.",
         {
-          created:
-            false,
-
-          alreadyExists:
-            false,
-
-          configurationRequired:
-            true,
-
-          member:
-            buildSafeMember(
-              member
-            ),
-
-          cardholderReady:
-            Boolean(
-              memberCard
-                .lithic_account_holder_token
-            ),
-
-          accountReady:
-            Boolean(
-              memberCard
-                .lithic_account_token
-            ),
-
-          accountHolderStatus:
-            getAccountHolderStatus(
-              memberCard
-            ) ||
-            null,
+          code:
+            "LITHIC_DISABLED",
 
           lithic:
             getLithicIntegrationStatus(),
-
-          nextSteps: [
-            "Obtain/confirm Lithic Sandbox approval and API credentials.",
-            "Confirm the member account holder is accepted.",
-            "Confirm the Lithic account token exists.",
-            "Set LITHIC_ENABLED=true only when Sandbox card issuance is ready.",
-          ],
-        },
-        "Virtual-card infrastructure is prepared, but Lithic is currently disabled."
+        }
       );
     }
-
-    /* ======================================================================
-       LITHIC CONFIGURATION
-    ====================================================================== */
 
     if (
       !isLithicConfigured()
     ) {
       return serviceUnavailable(
         res,
-        "Lithic is enabled but not fully configured.",
+        "Lithic is enabled but is not fully configured.",
         {
           code:
             "LITHIC_NOT_CONFIGURED",
@@ -2427,193 +2254,218 @@ export default async function handler(
     }
 
     /* ======================================================================
-       ACCOUNT HOLDER REQUIRED
+       CURRENT PROVIDER STATE
+
+       This lets us make pause/resume idempotent.
     ====================================================================== */
 
-    if (
-      !normalizeString(
-        memberCard
-          .lithic_account_holder_token
-      )
-    ) {
-      return conflict(
-        res,
-        "The Card Leo member does not have a Lithic account holder yet.",
-        {
-          code:
-            "LITHIC_ACCOUNT_HOLDER_REQUIRED",
+    let liveCard;
 
-          nextEndpoint:
-            "/api/cards/create-cardholder",
+    try {
+      liveCard =
+        await getLiveCard(
+          cardToken
+        );
+    } catch (
+      error
+    ) {
+      logRequestError(
+        req,
+        error,
+        {
+          scope:
+            "card_controls_get_card",
+
+          memberId,
+
+          action,
+
+          environment:
+            getLithicEnvironment(),
         }
       );
-    }
 
-    /* ======================================================================
-       ACCOUNT TOKEN REQUIRED
-    ====================================================================== */
-
-    const accountToken =
-      normalizeString(
-        memberCard
-          .lithic_account_token
-      );
-
-    if (
-      !accountToken
-    ) {
-      return conflict(
+      return serviceUnavailable(
         res,
-        "The Lithic account holder exists, but its associated account token has not been saved yet.",
+        "Card Leo could not verify the current card state.",
         {
           code:
-            "LITHIC_ACCOUNT_TOKEN_REQUIRED",
+            "LITHIC_CARD_LOOKUP_FAILED",
 
-          requiresReconciliation:
+          authenticated:
             true,
         }
       );
     }
 
-    /* ======================================================================
-       ACCEPTED ACCOUNT HOLDER REQUIRED
-    ====================================================================== */
+    const currentState =
+      normalizeString(
+        liveCard
+          ?.state
+      ).toUpperCase();
 
-    const accountHolderStatus =
-      getAccountHolderStatus(
-        memberCard
+    const targetState =
+      getTargetState(
+        action
       );
 
-    /*
-     * Do not issue a card from UNKNOWN/PENDING/REJECTED onboarding.
-     *
-     * We require explicit ACCEPTED.
-     */
+    /* ======================================================================
+       CLOSED CARD
+
+       Do not attempt to reopen a permanently closed card.
+    ====================================================================== */
 
     if (
-      !isAccountHolderAccepted(
-        memberCard
-      )
+      currentState ===
+        "CLOSED" &&
+      targetState !==
+        "CLOSED"
     ) {
       return conflict(
         res,
-        "The Lithic account holder is not yet accepted for Card Leo card issuance.",
+        "This Card Leo card has been permanently closed and cannot be reopened.",
         {
           code:
-            "LITHIC_ACCOUNT_HOLDER_NOT_ACCEPTED",
+            "CARD_ALREADY_CLOSED",
 
-          accountHolderStatus:
-            accountHolderStatus ||
-            "UNKNOWN",
+          card:
+            buildSafeCard({
+              memberCard,
 
-          pendingReview:
-            accountHolderStatus ===
-            "PENDING_REVIEW",
+              liveCard,
+            }),
         }
       );
     }
 
     /* ======================================================================
-       CARD INPUT
+       ALREADY IN REQUESTED STATE
     ====================================================================== */
 
-    const body =
-      getRequestBody(
-        req
-      );
-
-    const input =
-      normalizeCardInput(
-        body
-      );
-
-    /* ======================================================================
-       BUILD PROVIDER PAYLOAD
-    ====================================================================== */
-
-    let cardPayload;
-
-    try {
-      cardPayload =
-        buildLithicCardPayload({
-          member,
-
-          memberCard,
-
-          input,
-        });
-    } catch (
-      payloadError
+    if (
+      currentState &&
+      currentState ===
+        targetState
     ) {
-      return badRequest(
-        res,
-        payloadError
-          ?.message ||
-          "Unable to prepare Card Leo card creation.",
-        {
-          code:
-            payloadError
-              ?.code ||
-            "CARD_PAYLOAD_ERROR",
-        }
-      );
-    }
+      /*
+       * Re-sync the safe local status in case Supabase was stale.
+       */
 
-    /* ======================================================================
-       IDEMPOTENCY
+      let syncedRecord =
+        memberCard;
 
-       Stable per member + Lithic account.
-    ====================================================================== */
+      try {
+        syncedRecord =
+          await updateMemberCardRecord({
+            recordId:
+              memberCard.id,
 
-    const idempotencyKey =
-      buildCardIdempotencyKey({
-        memberId,
+            state:
+              currentState,
 
-        accountToken,
-      });
-
-    /* ======================================================================
-       CREATE LITHIC VIRTUAL CARD
-
-       lib/lithic.js:
-         createLithicCard()
-
-       will send:
-         POST /cards
-         Idempotency-Key: <stable UUID>
-    ====================================================================== */
-
-    let lithicResult;
-
-    try {
-      lithicResult =
-        await createLithicCard(
-          cardPayload,
+            providerState:
+              currentState,
+          });
+      } catch (
+        syncError
+      ) {
+        logRequestError(
+          req,
+          syncError,
           {
-            idempotencyKey,
+            scope:
+              "card_controls_sync_existing_state",
+
+            memberId,
+
+            action,
+
+            currentState,
           }
         );
+      }
+
+      return success(
+        res,
+        {
+          authenticated:
+            true,
+
+          updated:
+            false,
+
+          alreadyInState:
+            true,
+
+          action,
+
+          member:
+            buildSafeMember(
+              member
+            ),
+
+          card:
+            buildSafeCard({
+              memberCard:
+                syncedRecord,
+
+              liveCard,
+            }),
+
+          lithic:
+            getLithicIntegrationStatus(),
+
+          links: {
+            card:
+              "/portal/card.html",
+
+            memberCard:
+              "/api/cards/member-card",
+          },
+        },
+        currentState ===
+          "PAUSED"
+          ? "Your Card Leo card is already paused."
+          : currentState ===
+              "OPEN"
+            ? "Your Card Leo card is already active."
+            : "Your Card Leo card is already in the requested state."
+      );
+    }
+
+    /* ======================================================================
+       EXECUTE
+    ====================================================================== */
+
+    let providerResult;
+
+    try {
+      providerResult =
+        await executeCardAction({
+          action,
+
+          cardToken,
+        });
     } catch (
       lithicError
     ) {
-      /*
-       * Never log account tokens or card payloads.
-       */
-
       logRequestError(
         req,
         lithicError,
         {
           scope:
-            "lithic_create_virtual_card",
+            "card_controls_lithic_update",
 
           memberId,
 
+          action,
+
+          currentState,
+
+          targetState,
+
           environment:
             getLithicEnvironment(),
-
-          cardType:
-            "VIRTUAL",
         }
       );
 
@@ -2637,87 +2489,120 @@ export default async function handler(
           ok:
             false,
 
+          authenticated:
+            true,
+
           message:
             lithicError
               ?.message ||
-            "Lithic could not create the Card Leo virtual card.",
+            "Card Leo could not update your card.",
 
           code:
             lithicError
               ?.code ||
-            "LITHIC_CREATE_CARD_FAILED",
+            "LITHIC_CARD_CONTROL_FAILED",
 
-          lithic: {
-            environment:
-              getLithicEnvironment(),
+          action,
 
-            configured:
-              isLithicConfigured(),
+          card: {
+            state:
+              currentState ||
+              null,
+
+            lastFour:
+              liveCard
+                ?.lastFour ||
+              memberCard
+                ?.last_four ||
+              null,
           },
         }
       );
     }
 
     /* ======================================================================
-       PARSE SAFE CARD
+       PARSE UPDATED PROVIDER CARD
     ====================================================================== */
 
-    const lithicCard =
-      unwrapLithicCard(
-        lithicResult
+    const rawProviderCard =
+      isObject(
+        providerResult
+          ?.data?.data
+      )
+        ? providerResult
+            .data
+            .data
+        : isObject(
+            providerResult
+              ?.data
+          )
+          ? providerResult
+              .data
+          : {};
+
+    let updatedLiveCard =
+      sanitizeLithicCard(
+        rawProviderCard
       );
 
-    const safeCard =
-      sanitizeLithicCard(
-        lithicCard
-      );
+    /*
+     * Some provider PATCH responses may not return the complete card.
+     * Confirm the final state with one GET when necessary.
+     */
 
     if (
-      !safeCard?.token
+      !updatedLiveCard?.state
     ) {
-      const unexpectedError =
-        new Error(
-          "Lithic returned a successful card response without a card token."
+      try {
+        updatedLiveCard =
+          await getLiveCard(
+            cardToken
+          );
+      } catch (
+        verifyError
+      ) {
+        logRequestError(
+          req,
+          verifyError,
+          {
+            scope:
+              "card_controls_verify_updated_card",
+
+            memberId,
+
+            action,
+          }
         );
-
-      logRequestError(
-        req,
-        unexpectedError,
-        {
-          scope:
-            "lithic_card_missing_token",
-
-          memberId,
-
-          environment:
-            getLithicEnvironment(),
-        }
-      );
-
-      return serverError(
-        res,
-        "Lithic returned an unexpected card response.",
-        {
-          code:
-            "LITHIC_CARD_TOKEN_MISSING",
-        }
-      );
+      }
     }
 
+    const finalState =
+      normalizeString(
+        updatedLiveCard
+          ?.state ||
+        targetState
+      ).toUpperCase();
+
     /* ======================================================================
-       SAVE SAFE CARD RELATIONSHIP
+       SAVE LOCAL STATE
+
+       Provider operation has already happened.
+       If this fails, do NOT repeat the provider action automatically.
     ====================================================================== */
 
     let savedRecord;
 
     try {
       savedRecord =
-        await saveCreatedCard({
-          memberCard,
+        await updateMemberCardRecord({
+          recordId:
+            memberCard.id,
 
-          lithicCard,
+          state:
+            finalState,
 
-          input,
+          providerState:
+            finalState,
         });
     } catch (
       databaseError
@@ -2727,61 +2612,43 @@ export default async function handler(
         databaseError,
         {
           scope:
-            "save_lithic_virtual_card",
+            "card_controls_save_state",
 
           memberId,
 
-          lithicCardCreated:
+          action,
+
+          providerUpdated:
             true,
 
-          /*
-           * Safe display identifier only.
-           */
-          lastFour:
-            safeCard
-              ?.lastFour ||
-            null,
+          finalState,
         }
       );
 
-      /*
-       * CRITICAL:
-       *
-       * A real Lithic card may now exist.
-       *
-       * Do not blindly create another card.
-       *
-       * Because we use a deterministic idempotency key, an intentional
-       * reconciliation retry is safer, but Card Leo should still investigate
-       * the database failure before ordinary member retries.
-       */
-
       return serverError(
         res,
-        "Lithic created the virtual card, but Card Leo could not save the card relationship. Do not retry automatically. An administrator must reconcile this card first.",
+        "Your card was updated by Lithic, but Card Leo could not save the new state. Please refresh My Card before trying another action.",
         {
           code:
-            "LITHIC_CARD_CREATED_DATABASE_SAVE_FAILED",
+            "CARD_PROVIDER_UPDATED_DATABASE_SAVE_FAILED",
+
+          authenticated:
+            true,
+
+          providerUpdated:
+            true,
 
           requiresReconciliation:
             true,
 
           safeCard: {
-            created:
-              true,
-
-            type:
-              safeCard
-                ?.type ||
-              "VIRTUAL",
-
             state:
-              safeCard
-                ?.state ||
-              input.state,
+              finalState,
 
             lastFour:
-              safeCard
+              updatedLiveCard
+                ?.lastFour ||
+              liveCard
                 ?.lastFour ||
               null,
           },
@@ -2790,52 +2657,80 @@ export default async function handler(
     }
 
     /* ======================================================================
-       SUCCESS
+       LOG
     ====================================================================== */
 
     logRequestSuccess(
       req,
       {
         scope:
-          "create_virtual_card",
+          "card_controls",
 
         memberId,
 
-        lithicEnvironment:
+        action,
+
+        previousState:
+          currentState,
+
+        finalState,
+
+        environment:
           getLithicEnvironment(),
-
-        cardType:
-          safeCard.type ||
-          "VIRTUAL",
-
-        cardState:
-          safeCard.state ||
-          input.state,
-
-        lastFour:
-          safeCard.lastFour,
       }
     );
 
     /* ======================================================================
-       SAFE RESPONSE
-
-       NEVER RETURN:
-       - PAN
-       - CVV
-       - Lithic card token
-       - Lithic account token
-       - Lithic account-holder token
+       SUCCESS RESPONSE
     ====================================================================== */
+
+    let message =
+      "Your Card Leo card was updated successfully.";
+
+    if (
+      finalState ===
+      "PAUSED"
+    ) {
+      message =
+        "Your Card Leo card has been paused.";
+    }
+
+    if (
+      finalState ===
+      "OPEN"
+    ) {
+      message =
+        "Your Card Leo card is active and ready to use.";
+    }
+
+    if (
+      finalState ===
+      "CLOSED"
+    ) {
+      message =
+        "Your Card Leo card has been permanently closed.";
+    }
 
     return success(
       res,
       {
-        created:
+        authenticated:
           true,
 
-        alreadyExists:
+        updated:
+          true,
+
+        alreadyInState:
           false,
+
+        action,
+
+        previousState:
+          currentState ||
+          null,
+
+        state:
+          finalState,
 
         member:
           buildSafeMember(
@@ -2843,9 +2738,29 @@ export default async function handler(
           ),
 
         card:
-          sanitizeMemberCardRecord(
-            savedRecord
-          ),
+          buildSafeCard({
+            memberCard:
+              savedRecord,
+
+            liveCard:
+              updatedLiveCard ||
+              liveCard,
+          }),
+
+        controls: {
+          canPause:
+            finalState ===
+            "OPEN",
+
+          canResume:
+            finalState ===
+            "PAUSED",
+
+          canClose:
+            isMemberCardCloseEnabled() &&
+            finalState !==
+              "CLOSED",
+        },
 
         lithic: {
           enabled:
@@ -2856,37 +2771,20 @@ export default async function handler(
 
           environment:
             getLithicEnvironment(),
-
-          cardCreated:
-            true,
-
-          type:
-            safeCard.type ||
-            "VIRTUAL",
-
-          state:
-            safeCard.state ||
-            input.state,
-
-          lastFour:
-            safeCard.lastFour,
-
-          maskedNumber:
-            safeCard.maskedNumber,
         },
 
-        next: {
-          memberCardEndpoint:
-            "/api/cards/member-card",
-
-          memberCardPage:
+        links: {
+          card:
             "/portal/card.html",
 
-          message:
-            "Your Card Leo virtual card has been created and is ready to load in the My Card portal.",
+          memberCard:
+            "/api/cards/member-card",
         },
+
+        updatedAt:
+          nowIso(),
       },
-      "Card Leo virtual card created successfully."
+      message
     );
   } catch (
     error
@@ -2894,9 +2792,7 @@ export default async function handler(
     /*
      * IMPORTANT:
      *
-     * A database, Lithic, or server error is not proof that the member's
-     * browser authentication session is invalid.
-     *
+     * Database/Lithic failures are not proof the member logged out.
      * Do not clear auth cookies here.
      */
 
@@ -2905,18 +2801,18 @@ export default async function handler(
       error,
       {
         scope:
-          "create_virtual_card_unexpected",
+          "card_controls_unexpected",
       }
     );
 
     console.error(
-      "Card Leo create-virtual-card error:",
+      "Card Leo card-controls error:",
       error
     );
 
     return serverError(
       res,
-      "Unable to create the Card Leo virtual card right now.",
+      "Unable to update your Card Leo card right now.",
       process.env.NODE_ENV ===
         "development"
         ? {

@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
@@ -13,43 +14,90 @@
       name="description"
       content="Log in to your Card Leo Rewards member portal to view your profile, rewards, referrals, membership status, and account updates."
     />
+
     <meta
       name="keywords"
       content="Card Leo Rewards login, member portal, rewards login, member sign in, membership login"
     />
+
     <meta name="theme-color" content="#030303" />
     <meta name="robots" content="noindex, nofollow" />
 
-    <link rel="canonical" href="https://www.cardleorewards.com/login.html" />
-    <link rel="manifest" href="/site.webmanifest" />
-    <link rel="stylesheet" href="/style.css" />
+    <link
+      rel="canonical"
+      href="https://www.cardleorewards.com/login.html"
+    />
 
-    <meta property="og:title" content="Member Login | Card Leo Rewards" />
+    <link
+      rel="manifest"
+      href="/site.webmanifest"
+    />
+
+    <link
+      rel="stylesheet"
+      href="/style.css"
+    />
+
+    <meta
+      property="og:title"
+      content="Member Login | Card Leo Rewards"
+    />
+
     <meta
       property="og:description"
       content="Secure member access for active Card Leo Rewards members."
     />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Card Leo Rewards" />
-    <meta property="og:url" content="https://www.cardleorewards.com/login.html" />
+
+    <meta
+      property="og:type"
+      content="website"
+    />
+
+    <meta
+      property="og:site_name"
+      content="Card Leo Rewards"
+    />
+
+    <meta
+      property="og:url"
+      content="https://www.cardleorewards.com/login.html"
+    />
+
     <meta
       property="og:image"
       content="https://www.cardleorewards.com/assets/cardleo-cover.jpg"
     />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Member Login | Card Leo Rewards" />
+    <meta
+      name="twitter:card"
+      content="summary_large_image"
+    />
+
+    <meta
+      name="twitter:title"
+      content="Member Login | Card Leo Rewards"
+    />
+
     <meta
       name="twitter:description"
       content="Secure member access for active Card Leo Rewards members."
     />
+
     <meta
       name="twitter:image"
       content="https://www.cardleorewards.com/assets/cardleo-cover.jpg"
     />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
 
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
@@ -84,13 +132,34 @@
       body {
         margin: 0;
         min-height: 100vh;
-        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
           sans-serif;
+
         color: var(--leo-white);
+
         background:
-          radial-gradient(circle at 82% 8%, rgba(231, 182, 79, 0.14), transparent 28%),
-          radial-gradient(circle at 50% 95%, rgba(231, 182, 79, 0.1), transparent 30%),
-          linear-gradient(180deg, #030303 0%, #080808 48%, #010101 100%);
+          radial-gradient(
+            circle at 82% 8%,
+            rgba(231, 182, 79, 0.14),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 50% 95%,
+            rgba(231, 182, 79, 0.1),
+            transparent 30%
+          ),
+          linear-gradient(
+            180deg,
+            #030303 0%,
+            #080808 48%,
+            #010101 100%
+          );
       }
 
       a {
@@ -115,10 +184,22 @@
       .site-shell {
         min-height: 100vh;
         overflow: hidden;
+
         background:
-          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-          radial-gradient(circle at 72% 24%, rgba(231, 182, 79, 0.08), transparent 28%);
-        background-size: 96px 96px, auto;
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.035) 1px,
+            transparent 1px
+          ),
+          radial-gradient(
+            circle at 72% 24%,
+            rgba(231, 182, 79, 0.08),
+            transparent 28%
+          );
+
+        background-size:
+          96px 96px,
+          auto;
       }
 
       .container {
@@ -126,20 +207,30 @@
         margin: 0 auto;
       }
 
+      /* ================================================================
+         HEADER
+      ================================================================ */
+
       .site-header {
         position: sticky;
         top: 0;
         z-index: 100;
+
         background: rgba(0, 0, 0, 0.86);
-        border-bottom: 1px solid rgba(231, 182, 79, 0.18);
+
+        border-bottom:
+          1px solid rgba(231, 182, 79, 0.18);
+
         backdrop-filter: blur(18px);
       }
 
       .nav-wrap {
         min-height: 86px;
+
         display: flex;
         align-items: center;
         justify-content: space-between;
+
         gap: 1rem;
       }
 
@@ -152,28 +243,61 @@
       .brand-logo {
         width: 54px;
         height: 54px;
+
         border-radius: 16px;
+
         object-fit: contain;
+
         padding: 0.35rem;
-        border: 1px solid rgba(231, 182, 79, 0.35);
+
+        border:
+          1px solid rgba(231, 182, 79, 0.35);
+
         background:
-          radial-gradient(circle at top, rgba(247, 217, 139, 0.28), transparent 48%),
-          linear-gradient(145deg, #0b0b0b, #000);
-        box-shadow: 0 0 26px rgba(231, 182, 79, 0.18);
+          radial-gradient(
+            circle at top,
+            rgba(247, 217, 139, 0.28),
+            transparent 48%
+          ),
+          linear-gradient(
+            145deg,
+            #0b0b0b,
+            #000
+          );
+
+        box-shadow:
+          0 0 26px rgba(231, 182, 79, 0.18);
       }
 
       .brand-fallback {
         width: 54px;
         height: 54px;
+
         display: none;
+
         place-items: center;
+
         border-radius: 16px;
-        border: 1px solid rgba(231, 182, 79, 0.35);
+
+        border:
+          1px solid rgba(231, 182, 79, 0.35);
+
         background:
-          radial-gradient(circle at top, rgba(247, 217, 139, 0.28), transparent 48%),
-          linear-gradient(145deg, #0b0b0b, #000);
+          radial-gradient(
+            circle at top,
+            rgba(247, 217, 139, 0.28),
+            transparent 48%
+          ),
+          linear-gradient(
+            145deg,
+            #0b0b0b,
+            #000
+          );
+
         color: var(--leo-gold-2);
+
         font-weight: 900;
+
         letter-spacing: 0.08em;
       }
 
@@ -191,10 +315,14 @@
 
       .brand-subtitle {
         margin-top: 0.2rem;
+
         color: var(--leo-gold);
+
         font-size: 0.72rem;
         font-weight: 900;
+
         letter-spacing: 0.15em;
+
         text-transform: uppercase;
       }
 
@@ -206,8 +334,10 @@
 
       .site-nav a {
         color: rgba(248, 243, 231, 0.75);
+
         font-weight: 800;
         font-size: 0.95rem;
+
         transition: color 0.22s ease;
       }
 
@@ -218,10 +348,22 @@
 
       .nav-cta {
         min-height: 46px;
-        padding: 0.78rem 1.1rem;
+
+        padding:
+          0.78rem 1.1rem;
+
         border-radius: 999px;
-        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 50%, #8b5b0b 100%);
+
+        background:
+          linear-gradient(
+            135deg,
+            #f7d98b 0%,
+            #d89a22 50%,
+            #8b5b0b 100%
+          );
+
         color: #080808 !important;
+
         box-shadow:
           0 18px 42px rgba(216, 154, 34, 0.28),
           inset 0 1px 0 rgba(255, 255, 255, 0.45);
@@ -229,38 +371,62 @@
 
       .menu-toggle {
         display: none;
+
         width: 48px;
         height: 48px;
-        border: 1px solid rgba(231, 182, 79, 0.2);
+
+        border:
+          1px solid rgba(231, 182, 79, 0.2);
+
         border-radius: 14px;
-        background: rgba(255, 255, 255, 0.04);
+
+        background:
+          rgba(255, 255, 255, 0.04);
+
         align-items: center;
         justify-content: center;
         flex-direction: column;
+
         gap: 0.25rem;
       }
 
       .menu-toggle span {
         width: 20px;
         height: 2px;
+
         border-radius: 999px;
-        background: var(--leo-white);
+
+        background:
+          var(--leo-white);
       }
+
+      /* ================================================================
+         BUTTONS
+      ================================================================ */
 
       .btn {
         display: inline-flex;
+
         align-items: center;
         justify-content: center;
+
         min-height: 56px;
-        padding: 0.95rem 1.35rem;
+
+        padding:
+          0.95rem 1.35rem;
+
         border-radius: 999px;
+
         border: 0;
+
         font-weight: 900;
+
         transition: 0.22s ease;
       }
 
       .btn:hover:not(:disabled) {
-        transform: translateY(-2px);
+        transform:
+          translateY(-2px);
       }
 
       .btn:disabled {
@@ -269,30 +435,44 @@
       }
 
       .btn-primary {
-        background: linear-gradient(135deg, #f7d98b 0%, #d89a22 50%, #8b5b0b 100%);
+        background:
+          linear-gradient(
+            135deg,
+            #f7d98b 0%,
+            #d89a22 50%,
+            #8b5b0b 100%
+          );
+
         color: #080808;
+
         box-shadow:
           0 18px 42px rgba(216, 154, 34, 0.28),
           inset 0 1px 0 rgba(255, 255, 255, 0.45);
       }
 
-      .btn-secondary {
-        border: 1px solid rgba(231, 182, 79, 0.28);
-        background: rgba(255, 255, 255, 0.045);
-        color: var(--leo-white);
-      }
+      /* ================================================================
+         LOGIN
+      ================================================================ */
 
       .login-hero {
-        min-height: calc(100vh - 86px);
+        min-height:
+          calc(100vh - 86px);
+
         display: grid;
         align-items: center;
-        padding: 54px 0 82px;
+
+        padding:
+          54px 0 82px;
       }
 
       .login-grid {
         display: grid;
-        grid-template-columns: 0.9fr 1.1fr;
+
+        grid-template-columns:
+          0.9fr 1.1fr;
+
         gap: 2rem;
+
         align-items: center;
       }
 
@@ -302,188 +482,392 @@
 
       .eyebrow {
         display: inline-flex;
+
         align-items: center;
+
         gap: 0.65rem;
-        margin: 0 0 1rem;
-        color: var(--leo-gold);
-        font-size: 0.78rem;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
+
+        margin:
+          0 0 1rem;
+
+        color:
+          var(--leo-gold);
+
+        font-size:
+          0.78rem;
+
+        letter-spacing:
+          0.18em;
+
+        text-transform:
+          uppercase;
+
         font-weight: 900;
       }
 
       .eyebrow::before {
         content: "";
+
         width: 34px;
         height: 1px;
-        background: linear-gradient(90deg, var(--leo-gold), transparent);
+
+        background:
+          linear-gradient(
+            90deg,
+            var(--leo-gold),
+            transparent
+          );
       }
 
       .login-copy h1 {
         margin: 0;
-        font-family: "Playfair Display", Georgia, serif;
-        font-size: clamp(2.9rem, 6vw, 5.25rem);
+
+        font-family:
+          "Playfair Display",
+          Georgia,
+          serif;
+
+        font-size:
+          clamp(
+            2.9rem,
+            6vw,
+            5.25rem
+          );
+
         line-height: 0.98;
-        letter-spacing: -0.06em;
+
+        letter-spacing:
+          -0.06em;
       }
 
       .text-gradient {
-        background: linear-gradient(135deg, #ffffff 0%, #f7d98b 40%, #e7b64f 70%);
-        -webkit-background-clip: text;
-        background-clip: text;
+        background:
+          linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f7d98b 40%,
+            #e7b64f 70%
+          );
+
+        -webkit-background-clip:
+          text;
+
+        background-clip:
+          text;
+
         color: transparent;
       }
 
-      .login-copy p {
+      .login-copy > p:not(.eyebrow) {
         max-width: 62ch;
-        color: var(--leo-muted);
-        line-height: 1.75;
+
+        color:
+          var(--leo-muted);
+
+        line-height:
+          1.75;
       }
 
       .login-bullets {
         display: grid;
+
         gap: 0.85rem;
-        margin-top: 1.35rem;
+
+        margin-top:
+          1.35rem;
       }
 
       .bulletin-card {
         display: grid;
-        grid-template-columns: auto 1fr;
+
+        grid-template-columns:
+          auto 1fr;
+
         gap: 0.85rem;
+
         align-items: start;
+
         padding: 1rem;
+
         border-radius: 18px;
-        border: 1px solid rgba(231, 182, 79, 0.18);
+
+        border:
+          1px solid rgba(231, 182, 79, 0.18);
+
         background:
-          radial-gradient(circle at top right, rgba(231, 182, 79, 0.1), transparent 38%),
+          radial-gradient(
+            circle at top right,
+            rgba(231, 182, 79, 0.1),
+            transparent 38%
+          ),
           rgba(255, 255, 255, 0.035);
-        box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32);
+
+        box-shadow:
+          0 16px 44px rgba(0, 0, 0, 0.32);
       }
 
       .bulletin-dot {
         width: 12px;
         height: 12px;
-        margin-top: 0.45rem;
-        border-radius: 999px;
-        background: var(--leo-gold-2);
-        box-shadow: 0 0 18px rgba(247, 217, 139, 0.45);
+
+        margin-top:
+          0.45rem;
+
+        border-radius:
+          999px;
+
+        background:
+          var(--leo-gold-2);
+
+        box-shadow:
+          0 0 18px rgba(247, 217, 139, 0.45);
       }
 
       .bulletin-card span {
         display: block;
-        color: var(--leo-gold);
-        font-size: 0.74rem;
-        font-weight: 900;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
+
+        color:
+          var(--leo-gold);
+
+        font-size:
+          0.74rem;
+
+        font-weight:
+          900;
+
+        letter-spacing:
+          0.12em;
+
+        text-transform:
+          uppercase;
       }
 
       .bulletin-card strong {
         display: block;
-        margin-top: 0.22rem;
-        color: var(--leo-white);
+
+        margin-top:
+          0.22rem;
+
+        color:
+          var(--leo-white);
       }
 
       .bulletin-card p {
-        margin: 0.25rem 0 0;
-        color: var(--leo-muted);
-        line-height: 1.55;
+        margin:
+          0.25rem 0 0;
+
+        color:
+          var(--leo-muted);
+
+        line-height:
+          1.55;
       }
 
+      /* ================================================================
+         CARD
+      ================================================================ */
+
       .login-card {
-        border-radius: 32px;
-        border: 1px solid rgba(231, 182, 79, 0.24);
+        border-radius:
+          32px;
+
+        border:
+          1px solid rgba(231, 182, 79, 0.24);
+
         background:
-          radial-gradient(circle at top right, rgba(231, 182, 79, 0.14), transparent 34%),
-          linear-gradient(180deg, rgba(16, 16, 16, 0.94), rgba(4, 4, 4, 0.96));
-        box-shadow: var(--leo-shadow);
+          radial-gradient(
+            circle at top right,
+            rgba(231, 182, 79, 0.14),
+            transparent 34%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(16, 16, 16, 0.94),
+            rgba(4, 4, 4, 0.96)
+          );
+
+        box-shadow:
+          var(--leo-shadow);
+
         overflow: hidden;
       }
 
       .login-card-head {
-        padding: 1.5rem 1.5rem 1.1rem;
-        border-bottom: 1px solid rgba(231, 182, 79, 0.14);
+        padding:
+          1.5rem 1.5rem 1.1rem;
+
+        border-bottom:
+          1px solid rgba(231, 182, 79, 0.14);
       }
 
       .login-card-head h2 {
         margin: 0;
-        font-family: "Playfair Display", Georgia, serif;
-        font-size: clamp(1.85rem, 3vw, 2.55rem);
-        line-height: 1.05;
-        letter-spacing: -0.04em;
+
+        font-family:
+          "Playfair Display",
+          Georgia,
+          serif;
+
+        font-size:
+          clamp(
+            1.85rem,
+            3vw,
+            2.55rem
+          );
+
+        line-height:
+          1.05;
+
+        letter-spacing:
+          -0.04em;
       }
 
       .login-card-head p {
-        margin: 0.65rem 0 0;
-        color: var(--leo-muted);
-        line-height: 1.65;
+        margin:
+          0.65rem 0 0;
+
+        color:
+          var(--leo-muted);
+
+        line-height:
+          1.65;
       }
 
       .login-card-body {
         padding: 1.5rem;
       }
 
+      /* ================================================================
+         ACTIVATION INFO
+      ================================================================ */
+
       .activation-box {
-        margin-bottom: 1.25rem;
+        margin-bottom:
+          1.25rem;
+
         padding: 1rem;
-        border-radius: 20px;
-        border: 1px solid rgba(244, 193, 93, 0.2);
+
+        border-radius:
+          20px;
+
+        border:
+          1px solid rgba(244, 193, 93, 0.2);
+
         background:
-          radial-gradient(circle at top right, rgba(244, 193, 93, 0.12), transparent 32%),
+          radial-gradient(
+            circle at top right,
+            rgba(244, 193, 93, 0.12),
+            transparent 32%
+          ),
           rgba(255, 255, 255, 0.04);
       }
 
       .activation-box h3 {
-        margin: 0 0 0.5rem;
-        color: var(--leo-white);
-        font-size: 1rem;
+        margin:
+          0 0 0.5rem;
+
+        color:
+          var(--leo-white);
+
+        font-size:
+          1rem;
       }
 
       .activation-box p {
         margin: 0;
-        color: var(--leo-muted);
-        line-height: 1.65;
-        font-size: 0.93rem;
+
+        color:
+          var(--leo-muted);
+
+        line-height:
+          1.65;
+
+        font-size:
+          0.93rem;
       }
 
       .activation-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+
+        grid-template-columns:
+          repeat(2, 1fr);
+
         gap: 0.7rem;
-        margin-top: 0.9rem;
+
+        margin-top:
+          0.9rem;
       }
 
       .activation-item {
-        padding: 0.8rem;
-        border-radius: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        background: rgba(255, 255, 255, 0.04);
+        padding:
+          0.8rem;
+
+        border-radius:
+          15px;
+
+        border:
+          1px solid rgba(255, 255, 255, 0.08);
+
+        background:
+          rgba(255, 255, 255, 0.04);
       }
 
       .activation-item span {
         display: block;
-        color: var(--leo-muted-2);
-        font-size: 0.78rem;
-        font-weight: 800;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
+
+        color:
+          var(--leo-muted-2);
+
+        font-size:
+          0.78rem;
+
+        font-weight:
+          800;
+
+        letter-spacing:
+          0.07em;
+
+        text-transform:
+          uppercase;
       }
 
       .activation-item strong {
         display: block;
-        margin-top: 0.25rem;
-        color: var(--leo-gold-2);
-        font-size: 0.94rem;
+
+        margin-top:
+          0.25rem;
+
+        color:
+          var(--leo-gold-2);
+
+        font-size:
+          0.94rem;
       }
+
+      /* ================================================================
+         STATUS
+      ================================================================ */
 
       .status {
         display: none;
-        padding: 0.95rem 1rem;
-        border-radius: 16px;
-        border: 1px solid transparent;
-        font-size: 0.95rem;
-        line-height: 1.6;
-        margin-bottom: 1rem;
+
+        padding:
+          0.95rem 1rem;
+
+        border-radius:
+          16px;
+
+        border:
+          1px solid transparent;
+
+        font-size:
+          0.95rem;
+
+        line-height:
+          1.6;
+
+        margin-bottom:
+          1rem;
       }
 
       .status.is-visible {
@@ -491,28 +875,49 @@
       }
 
       .status.is-error {
-        background: rgba(255, 118, 118, 0.1);
-        border-color: rgba(255, 118, 118, 0.24);
+        background:
+          rgba(255, 118, 118, 0.1);
+
+        border-color:
+          rgba(255, 118, 118, 0.24);
+
         color: #ffd4d4;
       }
 
       .status.is-success {
-        background: rgba(72, 240, 107, 0.12);
-        border-color: rgba(72, 240, 107, 0.2);
+        background:
+          rgba(72, 240, 107, 0.12);
+
+        border-color:
+          rgba(72, 240, 107, 0.2);
+
         color: #dffbea;
       }
 
       .status.is-info {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(255, 255, 255, 0.08);
-        color: var(--leo-muted);
+        background:
+          rgba(255, 255, 255, 0.05);
+
+        border-color:
+          rgba(255, 255, 255, 0.08);
+
+        color:
+          var(--leo-muted);
       }
 
       .status.is-warning {
-        background: rgba(255, 209, 102, 0.1);
-        border-color: rgba(255, 209, 102, 0.25);
+        background:
+          rgba(255, 209, 102, 0.1);
+
+        border-color:
+          rgba(255, 209, 102, 0.25);
+
         color: #ffe6a3;
       }
+
+      /* ================================================================
+         FORM
+      ================================================================ */
 
       .login-form {
         display: grid;
@@ -525,9 +930,14 @@
       }
 
       .field label {
-        color: var(--leo-muted);
-        font-size: 0.92rem;
-        font-weight: 900;
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.92rem;
+
+        font-weight:
+          900;
       }
 
       .input-wrap {
@@ -536,13 +946,27 @@
 
       .field input {
         width: 100%;
-        min-height: 54px;
-        padding: 0.95rem 1rem;
-        border-radius: 16px;
-        border: 1px solid rgba(231, 182, 79, 0.16);
-        background: rgba(0, 0, 0, 0.56);
-        color: var(--leo-white);
+
+        min-height:
+          54px;
+
+        padding:
+          0.95rem 1rem;
+
+        border-radius:
+          16px;
+
+        border:
+          1px solid rgba(231, 182, 79, 0.16);
+
+        background:
+          rgba(0, 0, 0, 0.56);
+
+        color:
+          var(--leo-white);
+
         outline: none;
+
         transition:
           border-color 0.22s ease,
           box-shadow 0.22s ease,
@@ -550,157 +974,275 @@
       }
 
       .field input::placeholder {
-        color: rgba(248, 243, 231, 0.36);
+        color:
+          rgba(248, 243, 231, 0.36);
       }
 
       .field input:focus {
-        border-color: rgba(247, 217, 139, 0.42);
-        box-shadow: 0 0 0 4px rgba(247, 217, 139, 0.08);
-        background: rgba(0, 0, 0, 0.72);
+        border-color:
+          rgba(247, 217, 139, 0.42);
+
+        box-shadow:
+          0 0 0 4px rgba(247, 217, 139, 0.08);
+
+        background:
+          rgba(0, 0, 0, 0.72);
       }
 
       .password-toggle {
         position: absolute;
+
         top: 50%;
         right: 0.5rem;
-        transform: translateY(-50%);
-        min-width: 56px;
-        min-height: 40px;
+
+        transform:
+          translateY(-50%);
+
+        min-width:
+          56px;
+
+        min-height:
+          40px;
+
         border: 0;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.045);
-        color: var(--leo-muted);
+
+        border-radius:
+          12px;
+
+        background:
+          rgba(255, 255, 255, 0.045);
+
+        color:
+          var(--leo-muted);
+
         cursor: pointer;
-        font-weight: 900;
+
+        font-weight:
+          900;
       }
 
       .password-toggle:hover {
-        color: var(--leo-white);
-        background: rgba(255, 255, 255, 0.075);
+        color:
+          var(--leo-white);
+
+        background:
+          rgba(255, 255, 255, 0.075);
       }
 
       .login-row {
         display: flex;
+
         align-items: center;
         justify-content: space-between;
+
         gap: 1rem;
+
         flex-wrap: wrap;
       }
 
       .check {
         display: inline-flex;
+
         align-items: center;
+
         gap: 0.65rem;
-        color: var(--leo-muted);
-        font-size: 0.92rem;
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.92rem;
       }
 
       .check input {
         width: 18px;
         height: 18px;
-        accent-color: var(--leo-gold-2);
+
+        accent-color:
+          var(--leo-gold-2);
       }
 
       .text-link {
-        color: var(--leo-gold-2);
-        font-weight: 900;
+        color:
+          var(--leo-gold-2);
+
+        font-weight:
+          900;
       }
 
       .text-link:hover {
-        text-decoration: underline;
+        text-decoration:
+          underline;
       }
 
       .action-links {
-        margin-top: 1rem;
+        margin-top:
+          1rem;
+
         display: flex;
+
         flex-wrap: wrap;
-        gap: 0.6rem 0.85rem;
-        color: var(--leo-muted);
-        font-size: 0.92rem;
+
+        gap:
+          0.6rem 0.85rem;
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.92rem;
       }
 
       .security-list {
-        margin: 1rem 0 0;
+        margin:
+          1rem 0 0;
+
         padding: 0;
+
         list-style: none;
+
         display: grid;
+
         gap: 0.6rem;
       }
 
       .security-list li {
         display: flex;
-        align-items: flex-start;
+
+        align-items:
+          flex-start;
+
         gap: 0.6rem;
-        color: var(--leo-muted);
-        line-height: 1.6;
-        font-size: 0.92rem;
+
+        color:
+          var(--leo-muted);
+
+        line-height:
+          1.6;
+
+        font-size:
+          0.92rem;
       }
 
       .security-list li::before {
         content: "•";
-        color: var(--leo-gold-2);
-        font-size: 1.2rem;
+
+        color:
+          var(--leo-gold-2);
+
+        font-size:
+          1.2rem;
+
         line-height: 1;
-        margin-top: 0.1rem;
+
+        margin-top:
+          0.1rem;
       }
 
+      /* ================================================================
+         FOOTER
+      ================================================================ */
+
       .site-footer {
-        padding: 2rem 0;
-        border-top: 1px solid rgba(231, 182, 79, 0.12);
-        color: var(--leo-muted);
+        padding:
+          2rem 0;
+
+        border-top:
+          1px solid rgba(231, 182, 79, 0.12);
+
+        color:
+          var(--leo-muted);
       }
 
       .footer-bottom {
         display: flex;
+
         align-items: center;
         justify-content: space-between;
+
         gap: 1rem;
       }
 
       .back-to-top {
-        color: var(--leo-gold-2);
-        font-weight: 900;
+        color:
+          var(--leo-gold-2);
+
+        font-weight:
+          900;
       }
+
+      /* ================================================================
+         RESPONSIVE
+      ================================================================ */
 
       @media (max-width: 1060px) {
         .login-grid {
-          grid-template-columns: 1fr;
+          grid-template-columns:
+            1fr;
         }
       }
 
       @media (max-width: 980px) {
         .menu-toggle {
-          display: inline-flex;
+          display:
+            inline-flex;
         }
 
         .site-nav {
-          position: absolute;
-          top: calc(100% + 0.75rem);
+          position:
+            absolute;
+
+          top:
+            calc(100% + 0.75rem);
+
           left: 1rem;
           right: 1rem;
+
           display: grid;
+
           gap: 0.85rem;
+
           padding: 1rem;
-          border-radius: 22px;
-          border: 1px solid rgba(231, 182, 79, 0.2);
-          background: rgba(0, 0, 0, 0.96);
-          box-shadow: var(--leo-shadow);
+
+          border-radius:
+            22px;
+
+          border:
+            1px solid rgba(231, 182, 79, 0.2);
+
+          background:
+            rgba(0, 0, 0, 0.96);
+
+          box-shadow:
+            var(--leo-shadow);
+
           opacity: 0;
-          pointer-events: none;
-          transform: translateY(-8px);
-          transition: 0.22s ease;
+
+          pointer-events:
+            none;
+
+          transform:
+            translateY(-8px);
+
+          transition:
+            0.22s ease;
         }
 
         .site-nav.is-open {
           opacity: 1;
-          pointer-events: auto;
-          transform: translateY(0);
+
+          pointer-events:
+            auto;
+
+          transform:
+            translateY(0);
         }
       }
 
       @media (max-width: 720px) {
         .container {
-          width: min(100% - 1.2rem, 1320px);
+          width:
+            min(100% - 1.2rem, 1320px);
         }
 
         .brand-subtitle {
@@ -714,25 +1256,32 @@
         }
 
         .nav-wrap {
-          min-height: 78px;
+          min-height:
+            78px;
         }
 
         .login-hero {
-          padding: 32px 0 70px;
+          padding:
+            32px 0 70px;
         }
 
         .login-card-head,
         .login-card-body {
-          padding: 1.1rem;
+          padding:
+            1.1rem;
         }
 
         .activation-grid {
-          grid-template-columns: 1fr;
+          grid-template-columns:
+            1fr;
         }
 
         .login-row {
-          align-items: flex-start;
-          flex-direction: column;
+          align-items:
+            flex-start;
+
+          flex-direction:
+            column;
         }
 
         .btn {
@@ -740,8 +1289,11 @@
         }
 
         .footer-bottom {
-          flex-direction: column;
-          align-items: flex-start;
+          flex-direction:
+            column;
+
+          align-items:
+            flex-start;
         }
       }
     </style>
@@ -749,20 +1301,41 @@
 
   <body>
     <div class="site-shell">
-      <header class="site-header" id="top">
+
+      <!-- ============================================================
+           HEADER
+      ============================================================ -->
+
+      <header
+        class="site-header"
+        id="top"
+      >
         <div class="container nav-wrap">
-          <a href="/" class="brand" aria-label="Card Leo Rewards home">
+
+          <a
+            href="/"
+            class="brand"
+            aria-label="Card Leo Rewards home"
+          >
             <img
               class="brand-logo"
               src="/assets/cardleo-logo.png"
               alt="Card Leo Rewards Logo"
               onerror="this.style.display='none';this.nextElementSibling.style.display='grid';"
             />
-            <div class="brand-fallback">CL</div>
+
+            <div class="brand-fallback">
+              CL
+            </div>
 
             <div class="brand-copy">
-              <span class="brand-title">Card Leo Rewards</span>
-              <span class="brand-subtitle">Lead The Game</span>
+              <span class="brand-title">
+                Card Leo Rewards
+              </span>
+
+              <span class="brand-subtitle">
+                Lead The Game
+              </span>
             </div>
           </a>
 
@@ -779,8 +1352,14 @@
             <span></span>
           </button>
 
-          <nav class="site-nav" id="site-nav">
-            <a href="/">Home</a>
+          <nav
+            class="site-nav"
+            id="site-nav"
+          >
+            <a href="/">
+              Home
+            </a>
+
             <a
               href="/how-it-works.html"
               target="_blank"
@@ -788,95 +1367,183 @@
             >
               How It Works
             </a>
-            <a href="/signup.html" class="nav-cta">Join Now</a>
-            <a href="/login.html" class="is-active" aria-current="page">
+
+            <a
+              href="/signup.html"
+              class="nav-cta"
+            >
+              Join Now
+            </a>
+
+            <a
+              href="/login.html"
+              class="is-active"
+              aria-current="page"
+            >
               Member Login
             </a>
           </nav>
         </div>
       </header>
 
+      <!-- ============================================================
+           MAIN
+      ============================================================ -->
+
       <main>
         <section class="login-hero">
+
           <div class="container login-grid">
+
+            <!-- LEFT -->
+
             <div class="login-copy">
-              <p class="eyebrow">Member Login</p>
+
+              <p class="eyebrow">
+                Member Login
+              </p>
 
               <h1>
                 Welcome Back To
-                <span class="text-gradient">Card Leo Rewards.</span>
+                <span class="text-gradient">
+                  Card Leo Rewards.
+                </span>
               </h1>
 
               <p>
-                Sign in to access your member portal, view your rewards, track
-                referrals, manage billing, and keep your account active.
+                Sign in to access your member portal,
+                view your rewards, track referrals,
+                manage billing, and keep your account active.
               </p>
 
               <div class="login-bullets">
+
                 <article class="bulletin-card">
                   <div class="bulletin-dot"></div>
+
                   <div>
-                    <span>Portal Access</span>
-                    <strong>Active Members Only</strong>
+                    <span>
+                      Portal Access
+                    </span>
+
+                    <strong>
+                      Secure Member Access
+                    </strong>
+
                     <p>
-                      Portal access unlocks after your membership payment is confirmed.
+                      Your Card Leo session and portal
+                      permissions are verified securely
+                      before your dashboard opens.
                     </p>
                   </div>
                 </article>
 
                 <article class="bulletin-card">
                   <div class="bulletin-dot"></div>
+
                   <div>
-                    <span>Membership</span>
-                    <strong>$25 Activation + $20 Monthly</strong>
+                    <span>
+                      Membership
+                    </span>
+
+                    <strong>
+                      $25 Activation + $20 Monthly
+                    </strong>
+
                     <p>
-                      Monthly billing happens on the 10th after your account is activated.
+                      Monthly billing happens on the
+                      10th after your account is activated.
                     </p>
                   </div>
                 </article>
 
                 <article class="bulletin-card">
                   <div class="bulletin-dot"></div>
+
                   <div>
-                    <span>Rewards</span>
-                    <strong>Track Referrals And Payouts</strong>
+                    <span>
+                      Rewards
+                    </span>
+
+                    <strong>
+                      Track Referrals And Payouts
+                    </strong>
+
                     <p>
-                      View referral rewards, leaderboard activity, and payout status inside.
+                      View referral rewards, leaderboard
+                      activity, and payout status inside
+                      your portal.
                     </p>
                   </div>
                 </article>
+
               </div>
             </div>
 
-            <section class="login-card" aria-labelledby="login-title">
+            <!-- LOGIN CARD -->
+
+            <section
+              class="login-card"
+              aria-labelledby="login-title"
+            >
+
               <div class="login-card-head">
-                <p class="eyebrow">Secure Sign In</p>
-                <h2 id="login-title">Member Portal Login</h2>
-                <p>
-                  Enter the email and password connected to your Card Leo Rewards account.
+
+                <p class="eyebrow">
+                  Secure Sign In
                 </p>
+
+                <h2 id="login-title">
+                  Member Portal Login
+                </h2>
+
+                <p>
+                  Enter the email and password connected
+                  to your Card Leo Rewards account.
+                </p>
+
               </div>
 
               <div class="login-card-body">
+
                 <div class="activation-box">
-                  <h3>Membership Status Check</h3>
+
+                  <h3>
+                    Membership Status Check
+                  </h3>
+
                   <p>
-                    If your account exists but payment is still pending, you may be
-                    sent to secure checkout before portal access opens.
+                    Card Leo securely checks your account,
+                    membership, payment status, and portal
+                    access after sign in.
                   </p>
 
                   <div class="activation-grid">
+
                     <div class="activation-item">
-                      <span>Activation</span>
-                      <strong>$25 One-Time</strong>
+                      <span>
+                        Activation
+                      </span>
+
+                      <strong>
+                        $25 One-Time
+                      </strong>
                     </div>
 
                     <div class="activation-item">
-                      <span>Monthly</span>
-                      <strong>$20 On The 10th</strong>
+                      <span>
+                        Monthly
+                      </span>
+
+                      <strong>
+                        $20 On The 10th
+                      </strong>
                     </div>
+
                   </div>
                 </div>
+
+                <!-- STATUS -->
 
                 <div
                   id="formStatus"
@@ -885,12 +1552,31 @@
                   aria-live="polite"
                 ></div>
 
-                <form id="loginForm" class="login-form" novalidate>
-                  <input type="hidden" id="next" name="next" value="" />
+                <!-- FORM -->
+
+                <form
+                  id="loginForm"
+                  class="login-form"
+                  novalidate
+                >
+
+                  <input
+                    type="hidden"
+                    id="next"
+                    name="next"
+                    value=""
+                  />
+
+                  <!-- EMAIL -->
 
                   <div class="field">
-                    <label for="email">Email Address</label>
+
+                    <label for="email">
+                      Email Address
+                    </label>
+
                     <div class="input-wrap">
+
                       <input
                         id="email"
                         name="email"
@@ -900,12 +1586,20 @@
                         placeholder="you@example.com"
                         required
                       />
+
                     </div>
                   </div>
 
+                  <!-- PASSWORD -->
+
                   <div class="field">
-                    <label for="password">Password</label>
+
+                    <label for="password">
+                      Password
+                    </label>
+
                     <div class="input-wrap">
+
                       <input
                         id="password"
                         name="password"
@@ -914,6 +1608,7 @@
                         placeholder="Enter your password"
                         required
                       />
+
                       <button
                         type="button"
                         class="password-toggle"
@@ -923,24 +1618,40 @@
                       >
                         Show
                       </button>
+
                     </div>
                   </div>
 
+                  <!-- ROW -->
+
                   <div class="login-row">
-                    <label class="check" for="remember">
+
+                    <label
+                      class="check"
+                      for="remember"
+                    >
                       <input
                         id="remember"
                         name="remember"
                         type="checkbox"
                         value="true"
                       />
-                      <span>Keep me signed in</span>
+
+                      <span>
+                        Keep me signed in
+                      </span>
                     </label>
 
-                    <a class="text-link" href="/forgot-password.html">
+                    <a
+                      class="text-link"
+                      href="/forgot-password.html"
+                    >
                       Forgot Password?
                     </a>
+
                   </div>
+
+                  <!-- SUBMIT -->
 
                   <button
                     id="submitButton"
@@ -949,575 +1660,1550 @@
                   >
                     Sign In To Portal
                   </button>
+
                 </form>
 
-                <div class="action-links" aria-label="Additional account actions">
-                  <span>Need an account?</span>
-                  <a class="text-link" href="/signup.html">Join Now</a>
+                <div
+                  class="action-links"
+                  aria-label="Additional account actions"
+                >
+                  <span>
+                    Need an account?
+                  </span>
+
+                  <a
+                    class="text-link"
+                    href="/signup.html"
+                  >
+                    Join Now
+                  </a>
+
                   <span>•</span>
-                  <a class="text-link" href="/how-it-works.html" target="_blank" rel="noopener noreferrer">
+
+                  <a
+                    class="text-link"
+                    href="/how-it-works.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     How It Works
                   </a>
                 </div>
 
-                <ul class="security-list" aria-label="Portal access details">
-                  <li>Use the same email address submitted during signup.</li>
-                  <li>Portal access requires active paid membership status.</li>
-                  <li>Pending members can be redirected to secure payment.</li>
+                <ul
+                  class="security-list"
+                  aria-label="Portal access details"
+                >
+                  <li>
+                    Use the same email address submitted
+                    during signup.
+                  </li>
+
+                  <li>
+                    Your secure Card Leo session determines
+                    portal access.
+                  </li>
+
+                  <li>
+                    Members requiring payment can be sent
+                    to secure checkout.
+                  </li>
                 </ul>
+
               </div>
             </section>
           </div>
         </section>
       </main>
 
+      <!-- ============================================================
+           FOOTER
+      ============================================================ -->
+
       <footer class="site-footer">
+
         <div class="container footer-bottom">
-          <p>© <span id="year"></span> Card Leo Rewards. All rights reserved.</p>
-          <a href="#top" class="back-to-top">Back To Top ↑</a>
+
+          <p>
+            ©
+            <span id="year"></span>
+            Card Leo Rewards.
+            All rights reserved.
+          </p>
+
+          <a
+            href="#top"
+            class="back-to-top"
+          >
+            Back To Top ↑
+          </a>
+
         </div>
       </footer>
     </div>
 
+    <!-- ==============================================================
+         BASIC UI
+    ============================================================== -->
+
     <script>
       (() => {
-        const year = document.getElementById("year");
-        if (year) year.textContent = String(new Date().getFullYear());
+        "use strict";
 
-        const menuToggle = document.getElementById("menuToggle");
-        const nav = document.getElementById("site-nav");
+        const year =
+          document.getElementById("year");
 
-        menuToggle?.addEventListener("click", () => {
-          const isOpen = nav.classList.toggle("is-open");
-          menuToggle.setAttribute("aria-expanded", String(isOpen));
-        });
-
-        nav?.querySelectorAll("a").forEach((link) => {
-          link.addEventListener("click", () => {
-            nav.classList.remove("is-open");
-            menuToggle?.setAttribute("aria-expanded", "false");
-          });
-        });
-      })();
-
-      (() => {
-        const form = document.getElementById("loginForm");
-        const statusBox = document.getElementById("formStatus");
-        const submitButton = document.getElementById("submitButton");
-        const passwordInput = document.getElementById("password");
-        const togglePassword = document.getElementById("togglePassword");
-        const nextField = document.getElementById("next");
-
-        const LOGIN_ENDPOINT = "/api/auth/login";
-        const ME_ENDPOINT = "/api/auth/me";
-        const CHECKOUT_ENDPOINT = "/api/billing/create-checkout-session";
-        const SIGNUP_URL = "/signup.html";
-        const PORTAL_URL = "/portal/index.html";
-
-        const params = new URLSearchParams(window.location.search);
-        const nextParam = params.get("next");
-        const paymentParam = params.get("payment");
-        const statusParam = params.get("status");
-
-        const safeDefaultRedirect = PORTAL_URL;
-        const redirectTarget =
-          nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
-            ? nextParam
-            : safeDefaultRedirect;
-
-        if (nextField) {
-          nextField.value = redirectTarget;
+        if (year) {
+          year.textContent =
+            String(
+              new Date().getFullYear()
+            );
         }
 
-        function setStatus(message, type = "info") {
-          if (!statusBox) return;
+        const menuToggle =
+          document.getElementById(
+            "menuToggle"
+          );
 
-          statusBox.textContent = message;
-          statusBox.className = "status is-visible";
+        const nav =
+          document.getElementById(
+            "site-nav"
+          );
 
-          if (type === "error") {
-            statusBox.classList.add("is-error");
-          } else if (type === "success") {
-            statusBox.classList.add("is-success");
-          } else if (type === "warning") {
-            statusBox.classList.add("is-warning");
+        menuToggle?.addEventListener(
+          "click",
+          () => {
+            const isOpen =
+              nav?.classList.toggle(
+                "is-open"
+              );
+
+            menuToggle.setAttribute(
+              "aria-expanded",
+              String(
+                Boolean(isOpen)
+              )
+            );
+          }
+        );
+
+        nav
+          ?.querySelectorAll("a")
+          .forEach((link) => {
+            link.addEventListener(
+              "click",
+              () => {
+                nav.classList.remove(
+                  "is-open"
+                );
+
+                menuToggle?.setAttribute(
+                  "aria-expanded",
+                  "false"
+                );
+              }
+            );
+          });
+      })();
+    </script>
+
+    <!-- ==============================================================
+         CARD LEO LOGIN
+    ============================================================== -->
+
+    <script>
+      (() => {
+        "use strict";
+
+        /* ============================================================
+           CONFIGURATION
+        ============================================================ */
+
+        const LOGIN_ENDPOINT =
+          "/api/auth/login";
+
+        const ME_ENDPOINT =
+          "/api/auth/me";
+
+        const CHECKOUT_ENDPOINT =
+          "/api/billing/create-checkout-session";
+
+        const PORTAL_URL =
+          "/portal/index.html";
+
+        const LOGIN_URL =
+          "/login.html";
+
+        const SIGNUP_URL =
+          "/signup.html";
+
+        /* ============================================================
+           ELEMENTS
+        ============================================================ */
+
+        const form =
+          document.getElementById(
+            "loginForm"
+          );
+
+        const statusBox =
+          document.getElementById(
+            "formStatus"
+          );
+
+        const submitButton =
+          document.getElementById(
+            "submitButton"
+          );
+
+        const passwordInput =
+          document.getElementById(
+            "password"
+          );
+
+        const togglePassword =
+          document.getElementById(
+            "togglePassword"
+          );
+
+        const nextField =
+          document.getElementById(
+            "next"
+          );
+
+        /* ============================================================
+           URL
+        ============================================================ */
+
+        const params =
+          new URLSearchParams(
+            window.location.search
+          );
+
+        const nextParam =
+          params.get("next");
+
+        const paymentParam =
+          params.get("payment");
+
+        const statusParam =
+          params.get("status");
+
+        /* ============================================================
+           SAFE REDIRECT
+        ============================================================ */
+
+        function isSafeInternalPath(
+          value
+        ) {
+          if (
+            typeof value !==
+            "string"
+          ) {
+            return false;
+          }
+
+          if (
+            !value.startsWith("/")
+          ) {
+            return false;
+          }
+
+          if (
+            value.startsWith("//")
+          ) {
+            return false;
+          }
+
+          try {
+            const url =
+              new URL(
+                value,
+                window.location.origin
+              );
+
+            return (
+              url.origin ===
+              window.location.origin
+            );
+          } catch {
+            return false;
+          }
+        }
+
+        function isLoginPath(
+          value
+        ) {
+          if (
+            !isSafeInternalPath(
+              value
+            )
+          ) {
+            return false;
+          }
+
+          try {
+            const url =
+              new URL(
+                value,
+                window.location.origin
+              );
+
+            return (
+              url.pathname ===
+              LOGIN_URL
+            );
+          } catch {
+            return false;
+          }
+        }
+
+        function sanitizeNext(
+          value
+        ) {
+          if (
+            !isSafeInternalPath(
+              value
+            )
+          ) {
+            return PORTAL_URL;
+          }
+
+          /*
+           * Never redirect a successful login
+           * back to the login page.
+           */
+
+          if (
+            isLoginPath(
+              value
+            )
+          ) {
+            return PORTAL_URL;
+          }
+
+          return value;
+        }
+
+        const redirectTarget =
+          sanitizeNext(
+            nextParam
+          );
+
+        if (nextField) {
+          nextField.value =
+            redirectTarget;
+        }
+
+        /* ============================================================
+           HELPERS
+        ============================================================ */
+
+        function normalizeText(
+          value
+        ) {
+          return String(
+            value ?? ""
+          ).trim();
+        }
+
+        function normalizeEmail(
+          value
+        ) {
+          return normalizeText(
+            value
+          ).toLowerCase();
+        }
+
+        function normalizeStatus(
+          value
+        ) {
+          return normalizeText(
+            value
+          ).toLowerCase();
+        }
+
+        function isValidEmail(
+          value
+        ) {
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+            value
+          );
+        }
+
+        function isObject(
+          value
+        ) {
+          return (
+            Boolean(value) &&
+            typeof value ===
+              "object" &&
+            !Array.isArray(value)
+          );
+        }
+
+        function sleep(ms) {
+          return new Promise(
+            (resolve) => {
+              window.setTimeout(
+                resolve,
+                ms
+              );
+            }
+          );
+        }
+
+        /* ============================================================
+           STATUS
+        ============================================================ */
+
+        function setStatus(
+          message,
+          type = "info"
+        ) {
+          if (!statusBox) {
+            return;
+          }
+
+          statusBox.textContent =
+            message;
+
+          statusBox.className =
+            "status is-visible";
+
+          if (
+            type === "error"
+          ) {
+            statusBox.classList.add(
+              "is-error"
+            );
+          } else if (
+            type === "success"
+          ) {
+            statusBox.classList.add(
+              "is-success"
+            );
+          } else if (
+            type === "warning"
+          ) {
+            statusBox.classList.add(
+              "is-warning"
+            );
           } else {
-            statusBox.classList.add("is-info");
+            statusBox.classList.add(
+              "is-info"
+            );
           }
         }
 
         function clearStatus() {
-          if (!statusBox) return;
-          statusBox.textContent = "";
-          statusBox.className = "status";
-        }
-
-        function setLoading(isLoading) {
-          if (!submitButton) return;
-
-          submitButton.disabled = isLoading;
-          submitButton.textContent = isLoading
-            ? "Checking Membership..."
-            : "Sign In To Portal";
-        }
-
-        function normalizeEmail(value) {
-          return String(value || "").trim().toLowerCase();
-        }
-
-        function isValidEmail(value) {
-          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-        }
-
-        function getNestedValue(payload, path) {
-          const parts = path.split(".");
-          let current = payload;
-
-          for (const part of parts) {
-            current = current?.[part];
+          if (!statusBox) {
+            return;
           }
 
-          return current;
+          statusBox.textContent =
+            "";
+
+          statusBox.className =
+            "status";
         }
 
-        function readString(payload, keys) {
-          for (const key of keys) {
-            const value = getNestedValue(payload, key);
-
-            if (typeof value === "string" && value.trim()) {
-              return value.trim();
-            }
+        function setLoading(
+          loading,
+          text = ""
+        ) {
+          if (!submitButton) {
+            return;
           }
 
-          return "";
+          submitButton.disabled =
+            loading;
+
+          submitButton.textContent =
+            loading
+              ? text ||
+                "Signing In..."
+              : "Sign In To Portal";
         }
 
-        function readBoolean(payload, keys) {
-          for (const key of keys) {
-            const value = getNestedValue(payload, key);
+        /* ============================================================
+           JSON FETCH
+        ============================================================ */
 
-            if (typeof value === "boolean") return value;
+        async function fetchJson(
+          url,
+          options = {}
+        ) {
+          try {
+            const response =
+              await fetch(
+                url,
+                {
+                  credentials:
+                    "include",
 
-            if (typeof value === "string") {
-              const normalized = value.trim().toLowerCase();
-              if (normalized === "true") return true;
-              if (normalized === "false") return false;
-            }
+                  cache:
+                    "no-store",
+
+                  ...options,
+
+                  headers: {
+                    Accept:
+                      "application/json",
+
+                    "Cache-Control":
+                      "no-cache",
+
+                    ...(options.headers ||
+                      {}),
+                  },
+                }
+              );
+
+            const data =
+              await response
+                .json()
+                .catch(
+                  () => ({})
+                );
+
+            return {
+              response,
+              data,
+              error:
+                null,
+            };
+          } catch (error) {
+            return {
+              response:
+                null,
+
+              data: {},
+
+              error,
+            };
+          }
+        }
+
+        /* ============================================================
+           PAYLOAD
+        ============================================================ */
+
+        function unwrap(
+          payload
+        ) {
+          if (
+            !isObject(payload)
+          ) {
+            return {};
+          }
+
+          return isObject(
+            payload.data
+          )
+            ? payload.data
+            : payload;
+        }
+
+        function getMessage(
+          payload
+        ) {
+          const data =
+            unwrap(payload);
+
+          return (
+            normalizeText(
+              payload?.message
+            ) ||
+            normalizeText(
+              payload?.error
+            ) ||
+            normalizeText(
+              data?.message
+            ) ||
+            normalizeText(
+              data?.error
+            )
+          );
+        }
+
+        function isAuthenticated(
+          payload
+        ) {
+          const data =
+            unwrap(payload);
+
+          /*
+           * IMPORTANT:
+           *
+           * Do not treat "user exists" as authenticated.
+           *
+           * /api/auth/me should explicitly return authenticated:true.
+           */
+
+          return (
+            data?.authenticated ===
+              true ||
+            payload?.authenticated ===
+              true
+          );
+        }
+
+        function getMember(
+          payload
+        ) {
+          const data =
+            unwrap(payload);
+
+          if (
+            isObject(
+              data.member
+            )
+          ) {
+            return data.member;
+          }
+
+          if (
+            isObject(
+              data.profile
+            )
+          ) {
+            return data.profile;
+          }
+
+          return {};
+        }
+
+        function getPortalAccess(
+          payload
+        ) {
+          const data =
+            unwrap(payload);
+
+          const member =
+            getMember(payload);
+
+          if (
+            typeof data.portalAccess ===
+            "boolean"
+          ) {
+            return data.portalAccess;
+          }
+
+          if (
+            typeof data.portal_access ===
+            "boolean"
+          ) {
+            return data.portal_access;
+          }
+
+          if (
+            typeof member.portalAccess ===
+            "boolean"
+          ) {
+            return member.portalAccess;
+          }
+
+          if (
+            typeof member.portal_access ===
+            "boolean"
+          ) {
+            return member.portal_access;
+          }
+
+          /*
+           * If /api/auth/me authenticated the member
+           * and did not explicitly deny portal access,
+           * allow the portal to perform its own guard.
+           */
+
+          return isAuthenticated(
+            payload
+          );
+        }
+
+        function requiresPayment(
+          payload
+        ) {
+          const data =
+            unwrap(payload);
+
+          if (
+            data.requires_payment ===
+              true ||
+            data.requiresPayment ===
+              true ||
+            data.payment_required ===
+              true ||
+            data.paymentRequired ===
+              true ||
+            payload?.requires_payment ===
+              true ||
+            payload?.requiresPayment ===
+              true ||
+            payload?.payment_required ===
+              true ||
+            payload?.paymentRequired ===
+              true
+          ) {
+            return true;
           }
 
           return false;
         }
 
-        function resolveRedirectFromPayload(payload) {
+        function getRedirect(
+          payload
+        ) {
+          const data =
+            unwrap(payload);
+
           const candidates = [
+            data.redirectTo,
+            data.redirect_to,
+            data.next,
+
             payload?.redirectTo,
-            payload?.data?.redirectTo,
-            payload?.data?.next,
+            payload?.redirect_to,
             payload?.next,
           ];
 
-          for (const value of candidates) {
+          for (
+            const candidate
+            of candidates
+          ) {
             if (
-              typeof value === "string" &&
-              value.startsWith("/") &&
-              !value.startsWith("//")
+              isSafeInternalPath(
+                candidate
+              ) &&
+              !isLoginPath(
+                candidate
+              )
             ) {
-              return value;
+              return candidate;
             }
           }
 
           return redirectTarget;
         }
 
-        function hasActiveSession(payload) {
-          return Boolean(
-            payload?.authenticated ||
-              payload?.data?.authenticated ||
-              payload?.data?.user ||
-              payload?.user
+        function getSignupId(
+          payload
+        ) {
+          const data =
+            unwrap(payload);
+
+          const member =
+            getMember(payload);
+
+          return normalizeText(
+            data.signup_id ||
+            data.signupId ||
+            member.signup_id ||
+            member.signupId ||
+            member.id ||
+            ""
           );
         }
 
-        function getMembershipStatus(payload) {
-          return readString(payload, [
-            "membership_status",
-            "membershipStatus",
-            "data.membership_status",
-            "data.membershipStatus",
-            "data.user.membership_status",
-            "data.user.membershipStatus",
-            "user.membership_status",
-            "user.membershipStatus",
-            "member.membership_status",
-            "member.membershipStatus",
-          ]).toLowerCase();
+        function getCheckoutUrl(
+          payload
+        ) {
+          const data =
+            unwrap(payload);
+
+          const candidates = [
+            data.checkout_url,
+            data.checkoutUrl,
+            data.payment_url,
+            data.paymentUrl,
+            data.url,
+
+            payload?.checkout_url,
+            payload?.checkoutUrl,
+            payload?.payment_url,
+            payload?.paymentUrl,
+            payload?.url,
+          ];
+
+          for (
+            const candidate
+            of candidates
+          ) {
+            if (
+              typeof candidate ===
+                "string" &&
+              candidate.trim()
+            ) {
+              return candidate.trim();
+            }
+          }
+
+          return "";
         }
 
-        function getPaymentStatus(payload) {
-          return readString(payload, [
-            "payment_status",
-            "paymentStatus",
-            "data.payment_status",
-            "data.paymentStatus",
-            "data.user.payment_status",
-            "data.user.paymentStatus",
-            "user.payment_status",
-            "user.paymentStatus",
-            "member.payment_status",
-            "member.paymentStatus",
-          ]).toLowerCase();
+        /* ============================================================
+           SESSION VERIFICATION
+        ============================================================ */
+
+        async function verifySession(
+          retries = 2
+        ) {
+          let lastResult =
+            null;
+
+          for (
+            let attempt = 0;
+            attempt <= retries;
+            attempt += 1
+          ) {
+            const result =
+              await fetchJson(
+                ME_ENDPOINT,
+                {
+                  method:
+                    "GET",
+                }
+              );
+
+            lastResult =
+              result;
+
+            if (
+              result.error
+            ) {
+              if (
+                attempt <
+                retries
+              ) {
+                await sleep(
+                  350 *
+                    (attempt + 1)
+                );
+
+                continue;
+              }
+
+              return {
+                ok: false,
+
+                temporary:
+                  true,
+
+                authenticated:
+                  false,
+
+                portalAccess:
+                  false,
+
+                requiresPayment:
+                  false,
+
+                status: 0,
+
+                payload:
+                  result.data,
+
+                message:
+                  "Card Leo could not verify your session right now.",
+              };
+            }
+
+            const status =
+              result.response
+                ?.status ||
+              0;
+
+            /*
+             * Temporary backend failure.
+             */
+
+            if (
+              status >= 500
+            ) {
+              if (
+                attempt <
+                retries
+              ) {
+                await sleep(
+                  350 *
+                    (attempt + 1)
+                );
+
+                continue;
+              }
+
+              return {
+                ok: false,
+
+                temporary:
+                  true,
+
+                authenticated:
+                  false,
+
+                portalAccess:
+                  false,
+
+                requiresPayment:
+                  false,
+
+                status,
+
+                payload:
+                  result.data,
+
+                message:
+                  getMessage(
+                    result.data
+                  ) ||
+                  "Card Leo could not verify your session right now.",
+              };
+            }
+
+            const authenticated =
+              isAuthenticated(
+                result.data
+              );
+
+            return {
+              ok:
+                result.response
+                  ?.ok ===
+                  true,
+
+              temporary:
+                false,
+
+              authenticated,
+
+              portalAccess:
+                authenticated
+                  ? getPortalAccess(
+                      result.data
+                    )
+                  : false,
+
+              requiresPayment:
+                requiresPayment(
+                  result.data
+                ),
+
+              status,
+
+              payload:
+                result.data,
+
+              message:
+                getMessage(
+                  result.data
+                ),
+
+              redirect:
+                getRedirect(
+                  result.data
+                ),
+            };
+          }
+
+          return {
+            ok: false,
+
+            temporary:
+              true,
+
+            authenticated:
+              false,
+
+            portalAccess:
+              false,
+
+            requiresPayment:
+              false,
+
+            status: 0,
+
+            payload:
+              lastResult?.data ||
+              {},
+
+            message:
+              "Unable to verify your Card Leo session.",
+          };
         }
 
-        function getApprovalStatus(payload) {
-          return readString(payload, [
-            "approval_status",
-            "approvalStatus",
-            "status",
-            "data.approval_status",
-            "data.approvalStatus",
-            "data.status",
-            "data.user.approval_status",
-            "data.user.approvalStatus",
-            "data.user.status",
-            "user.approval_status",
-            "user.approvalStatus",
-            "user.status",
-            "member.approval_status",
-            "member.approvalStatus",
-            "member.status",
-          ]).toLowerCase();
-        }
+        /* ============================================================
+           EXISTING SESSION
 
-        function getSignupId(payload) {
-          return readString(payload, [
-            "signup_id",
-            "signupId",
-            "id",
-            "data.signup_id",
-            "data.signupId",
-            "data.id",
-            "data.user.signup_id",
-            "data.user.signupId",
-            "data.user.id",
-            "user.signup_id",
-            "user.signupId",
-            "user.id",
-            "member.signup_id",
-            "member.signupId",
-            "member.id",
-          ]);
-        }
+           CRITICAL:
+           ----------
+           Login page never logs the member out merely because
+           /api/auth/me temporarily failed.
 
-        function getCheckoutUrl(payload) {
-          return readString(payload, [
-            "checkout_url",
-            "checkoutUrl",
-            "payment_url",
-            "paymentUrl",
-            "url",
-            "redirectTo",
-            "redirect",
-            "data.checkout_url",
-            "data.checkoutUrl",
-            "data.payment_url",
-            "data.paymentUrl",
-            "data.url",
-            "data.redirectTo",
-            "data.redirect",
-          ]);
-        }
+           Login page only redirects when /api/auth/me explicitly
+           confirms an authenticated session.
+        ============================================================ */
 
-        function isPaidActiveMember(payload) {
-          const membershipStatus = getMembershipStatus(payload);
-          const paymentStatus = getPaymentStatus(payload);
-          const approvalStatus = getApprovalStatus(payload);
+        async function checkExistingSession() {
+          const session =
+            await verifySession();
 
-          const activeMembership =
-            membershipStatus === "active" ||
-            membershipStatus === "activated" ||
-            membershipStatus === "paid";
+          if (
+            session.temporary
+          ) {
+            /*
+             * Leave login form available.
+             *
+             * A service failure is not proof
+             * that the user is logged out.
+             */
 
-          const paidPayment =
-            paymentStatus === "paid" ||
-            paymentStatus === "active" ||
-            paymentStatus === "current" ||
-            paymentStatus === "succeeded";
+            return;
+          }
 
-          const approved =
-            approvalStatus === "active" ||
-            approvalStatus === "approved" ||
-            approvalStatus === "auto_approved" ||
-            approvalStatus === "paid";
+          if (
+            !session.authenticated
+          ) {
+            return;
+          }
 
-          return activeMembership || paidPayment || approved;
-        }
+          if (
+            session.requiresPayment
+          ) {
+            setStatus(
+              "You're signed in, but your membership requires payment before portal access.",
+              "warning"
+            );
 
-        function isPaymentPendingMember(payload) {
-          const membershipStatus = getMembershipStatus(payload);
-          const paymentStatus = getPaymentStatus(payload);
-          const approvalStatus = getApprovalStatus(payload);
+            return;
+          }
 
-          return [membershipStatus, paymentStatus, approvalStatus].some((value) =>
-            [
-              "payment_pending",
-              "pending_payment",
-              "unpaid",
-              "incomplete",
-              "past_due",
-              "pending",
-              "inactive",
-              "requires_payment",
-            ].includes(value)
+          if (
+            session.portalAccess ===
+            false
+          ) {
+            setStatus(
+              "You're signed in, but your account does not currently have portal access.",
+              "warning"
+            );
+
+            return;
+          }
+
+          /*
+           * Session is authenticated and allowed.
+           */
+
+          setStatus(
+            "You're already signed in. Opening your portal...",
+            "success"
+          );
+
+          window.setTimeout(
+            () => {
+              window.location.replace(
+                sanitizeNext(
+                  session.redirect ||
+                  redirectTarget
+                )
+              );
+            },
+            300
           );
         }
 
-        function shouldRequirePayment(payload) {
-          return Boolean(
-            readBoolean(payload, [
-              "requires_payment",
-              "requiresPayment",
-              "payment_required",
-              "paymentRequired",
-              "data.requires_payment",
-              "data.requiresPayment",
-              "data.payment_required",
-              "data.paymentRequired",
-            ]) || isPaymentPendingMember(payload)
-          );
-        }
+        /* ============================================================
+           CHECKOUT
+        ============================================================ */
 
-        async function startCheckoutFromLogin(email, loginPayload) {
-          const signupId = getSignupId(loginPayload);
+        async function startCheckout(
+          email,
+          payload
+        ) {
+          const existingUrl =
+            getCheckoutUrl(
+              payload
+            );
+
+          if (existingUrl) {
+            window.location.href =
+              existingUrl;
+
+            return;
+          }
+
+          const signupId =
+            getSignupId(
+              payload
+            );
 
           const checkoutPayload = {
-            signup_id: signupId,
+            signup_id:
+              signupId,
+
             signupId,
+
             email,
-            activation_fee_amount: 25,
-            monthly_fee_amount: 20,
-            billing_day: 10,
+
+            activation_fee_amount:
+              25,
+
+            monthly_fee_amount:
+              20,
+
+            billing_day:
+              10,
+
             success_url:
-              window.location.origin +
-              "/thank-you.html?payment=success&membership=activated",
+              `${window.location.origin}/thank-you.html?payment=success&membership=activated`,
+
             cancel_url:
-              window.location.origin +
-              "/login.html?payment=cancelled",
+              `${window.location.origin}/login.html?payment=cancelled`,
           };
 
-          const response = await fetch(CHECKOUT_ENDPOINT, {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify(checkoutPayload),
-          });
+          const result =
+            await fetchJson(
+              CHECKOUT_ENDPOINT,
+              {
+                method:
+                  "POST",
 
-          const data = await response.json().catch(() => ({}));
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                },
 
-          if (!response.ok || data?.success === false || data?.ok === false) {
+                body:
+                  JSON.stringify(
+                    checkoutPayload
+                  ),
+              }
+            );
+
+          if (
+            result.error
+          ) {
             throw new Error(
-              data?.message ||
-                data?.error ||
-                "Your account was found, but secure payment could not be started."
+              "Card Leo could not start secure checkout right now."
             );
           }
 
-          const checkoutUrl = getCheckoutUrl(data);
+          if (
+            !result.response?.ok ||
+            result.data
+              ?.success ===
+              false ||
+            result.data
+              ?.ok ===
+              false
+          ) {
+            throw new Error(
+              getMessage(
+                result.data
+              ) ||
+              "Your account was found, but secure payment could not be started."
+            );
+          }
+
+          const checkoutUrl =
+            getCheckoutUrl(
+              result.data
+            );
 
           if (!checkoutUrl) {
             throw new Error(
-              "Your account was found, but the payment checkout link was missing."
+              "The secure payment link was not returned."
             );
           }
 
-          window.location.href = checkoutUrl;
+          window.location.href =
+            checkoutUrl;
         }
 
-        async function checkExistingSession() {
-          try {
-            const response = await fetch(ME_ENDPOINT, {
-              method: "GET",
-              credentials: "include",
-              headers: {
-                Accept: "application/json",
-              },
-            });
+        /* ============================================================
+           PAYMENT QUERY MESSAGE
+        ============================================================ */
 
-            if (!response.ok) return;
-
-            const data = await response.json().catch(() => ({}));
-
-            if (!hasActiveSession(data)) return;
-
-            if (isPaidActiveMember(data)) {
-              window.location.href = resolveRedirectFromPayload(data);
-              return;
-            }
-
-            if (shouldRequirePayment(data)) {
-              setStatus(
-                "Your account is signed in, but membership payment is still required before portal access.",
-                "warning"
-              );
-            }
-          } catch {
-            // Ignore session precheck failures.
-          }
-        }
-
-        if (paymentParam === "cancelled" || paymentParam === "canceled") {
+        if (
+          paymentParam ===
+            "cancelled" ||
+          paymentParam ===
+            "canceled"
+        ) {
           setStatus(
             "Payment was cancelled. You can sign in and continue activation when ready.",
             "warning"
           );
-        } else if (statusParam === "payment_required") {
+        } else if (
+          statusParam ===
+          "payment_required"
+        ) {
           setStatus(
             "Membership payment is required before portal access.",
             "warning"
           );
         }
 
-        checkExistingSession();
+        /* ============================================================
+           PASSWORD TOGGLE
+        ============================================================ */
 
-        togglePassword?.addEventListener("click", () => {
-          const isPassword = passwordInput.type === "password";
+        togglePassword
+          ?.addEventListener(
+            "click",
+            () => {
+              const showingPassword =
+                passwordInput
+                  ?.type ===
+                "text";
 
-          passwordInput.type = isPassword ? "text" : "password";
-          togglePassword.textContent = isPassword ? "Hide" : "Show";
+              if (
+                !passwordInput
+              ) {
+                return;
+              }
 
-          togglePassword.setAttribute(
-            "aria-label",
-            isPassword ? "Hide password" : "Show password"
+              passwordInput.type =
+                showingPassword
+                  ? "password"
+                  : "text";
+
+              togglePassword.textContent =
+                showingPassword
+                  ? "Show"
+                  : "Hide";
+
+              togglePassword.setAttribute(
+                "aria-label",
+                showingPassword
+                  ? "Show password"
+                  : "Hide password"
+              );
+
+              togglePassword.setAttribute(
+                "aria-pressed",
+                String(
+                  !showingPassword
+                )
+              );
+            }
           );
 
-          togglePassword.setAttribute(
-            "aria-pressed",
-            isPassword ? "true" : "false"
-          );
-        });
+        /* ============================================================
+           LOGIN
+        ============================================================ */
 
-        form?.addEventListener("submit", async (event) => {
-          event.preventDefault();
-          clearStatus();
+        form?.addEventListener(
+          "submit",
+          async (event) => {
+            event.preventDefault();
 
-          const formData = new FormData(form);
-          const email = normalizeEmail(formData.get("email"));
-          const password = String(formData.get("password") || "");
-          const remember = Boolean(formData.get("remember"));
-          const next = redirectTarget;
+            clearStatus();
 
-          if (!email || !password) {
-            setStatus("Please enter your email and password.", "error");
-            return;
-          }
+            const formData =
+              new FormData(
+                form
+              );
 
-          if (!isValidEmail(email)) {
-            setStatus("Please enter a valid email address.", "error");
-            return;
-          }
+            const email =
+              normalizeEmail(
+                formData.get(
+                  "email"
+                )
+              );
 
-          setLoading(true);
+            const password =
+              String(
+                formData.get(
+                  "password"
+                ) ||
+                ""
+              );
 
-          try {
-            const response = await fetch(LOGIN_ENDPOINT, {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-              },
-              body: JSON.stringify({
-                email,
-                password,
-                remember,
-                next,
-              }),
-            });
+            const remember =
+              Boolean(
+                formData.get(
+                  "remember"
+                )
+              );
 
-            const data = await response.json().catch(() => ({}));
+            if (
+              !email ||
+              !password
+            ) {
+              setStatus(
+                "Please enter your email and password.",
+                "error"
+              );
 
-            if (!response.ok || data?.success === false || data?.ok === false) {
-              const requiresPayment =
-                response.status === 402 || shouldRequirePayment(data);
+              return;
+            }
 
-              if (requiresPayment) {
-                const existingCheckoutUrl = getCheckoutUrl(data);
+            if (
+              !isValidEmail(
+                email
+              )
+            ) {
+              setStatus(
+                "Please enter a valid email address.",
+                "error"
+              );
 
+              return;
+            }
+
+            setLoading(
+              true,
+              "Signing In..."
+            );
+
+            try {
+              /* ======================================================
+                 STEP 1
+                 Authenticate credentials
+              ====================================================== */
+
+              const loginResult =
+                await fetchJson(
+                  LOGIN_ENDPOINT,
+                  {
+                    method:
+                      "POST",
+
+                    headers: {
+                      "Content-Type":
+                        "application/json",
+                    },
+
+                    body:
+                      JSON.stringify({
+                        email,
+                        password,
+                        remember,
+                        next:
+                          redirectTarget,
+                      }),
+                  }
+                );
+
+              if (
+                loginResult.error
+              ) {
+                throw new Error(
+                  "Card Leo could not reach the login service. Please try again."
+                );
+              }
+
+              const loginStatus =
+                loginResult.response
+                  ?.status ||
+                0;
+
+              /*
+               * Payment-required response from login endpoint.
+               */
+
+              if (
+                loginStatus ===
+                  402 ||
+                requiresPayment(
+                  loginResult.data
+                )
+              ) {
                 setStatus(
-                  "Your account exists, but payment is required before portal access. Redirecting to secure checkout...",
+                  "Your account requires membership payment. Opening secure checkout...",
                   "warning"
                 );
 
-                if (existingCheckoutUrl) {
-                  window.setTimeout(() => {
-                    window.location.href = existingCheckoutUrl;
-                  }, 650);
-                  return;
-                }
+                await startCheckout(
+                  email,
+                  loginResult.data
+                );
 
-                await startCheckoutFromLogin(email, data);
                 return;
               }
 
-              throw new Error(
-                data?.message ||
-                  data?.error ||
+              /*
+               * Credential/auth failure.
+               */
+
+              if (
+                !loginResult.response
+                  ?.ok ||
+                loginResult.data
+                  ?.success ===
+                  false ||
+                loginResult.data
+                  ?.ok ===
+                  false
+              ) {
+                throw new Error(
+                  getMessage(
+                    loginResult.data
+                  ) ||
                   "We could not sign you in with those credentials."
+                );
+              }
+
+              /* ======================================================
+                 STEP 2
+                 Login endpoint succeeded.
+
+                 DO NOT independently decide membership status here.
+
+                 Verify the actual cookie/session with /api/auth/me.
+              ====================================================== */
+
+              setLoading(
+                true,
+                "Verifying Session..."
               );
-            }
 
-            if (shouldRequirePayment(data) && !isPaidActiveMember(data)) {
-              const existingCheckoutUrl = getCheckoutUrl(data);
+              let session =
+                await verifySession(
+                  2
+                );
 
-              setStatus(
-                "Login accepted, but membership payment is required before portal access. Redirecting to secure checkout...",
-                "warning"
-              );
+              /*
+               * Some deployment/cookie environments need a short
+               * moment before the newly-created session is readable.
+               */
 
-              if (existingCheckoutUrl) {
-                window.setTimeout(() => {
-                  window.location.href = existingCheckoutUrl;
-                }, 650);
+              if (
+                !session.authenticated &&
+                !session.temporary
+              ) {
+                await sleep(
+                  300
+                );
+
+                session =
+                  await verifySession(
+                    1
+                  );
+              }
+
+              /* ======================================================
+                 TEMPORARY SERVER ERROR
+
+                 Never send user back to login/signup because of this.
+              ====================================================== */
+
+              if (
+                session.temporary
+              ) {
+                setStatus(
+                  "Your login was accepted, but Card Leo could not finish verifying the new session. Please try opening the portal again in a moment.",
+                  "warning"
+                );
+
                 return;
               }
 
-              await startCheckoutFromLogin(email, data);
-              return;
-            }
+              /* ======================================================
+                 SESSION COOKIE WAS NOT CREATED
+              ====================================================== */
 
-            if (!isPaidActiveMember(data)) {
+              if (
+                !session.authenticated
+              ) {
+                throw new Error(
+                  session.message ||
+                  "Your credentials were accepted, but the Card Leo session was not created. Please sign in again."
+                );
+              }
+
+              /* ======================================================
+                 PAYMENT REQUIRED
+
+                 Server decides this.
+              ====================================================== */
+
+              if (
+                session.requiresPayment
+              ) {
+                setStatus(
+                  "Your login is active, but membership payment is required. Opening secure checkout...",
+                  "warning"
+                );
+
+                await startCheckout(
+                  email,
+                  session.payload
+                );
+
+                return;
+              }
+
+              /* ======================================================
+                 PORTAL ACCESS DENIED
+              ====================================================== */
+
+              if (
+                session.portalAccess ===
+                false
+              ) {
+                setStatus(
+                  "Your login is active, but portal access is not enabled for this account. Please contact Card Leo Rewards support.",
+                  "warning"
+                );
+
+                return;
+              }
+
+              /* ======================================================
+                 SUCCESS
+
+                 We now know:
+                 1. Credentials were accepted.
+                 2. Session cookie exists.
+                 3. /api/auth/me sees the member.
+                 4. Portal access is allowed.
+              ====================================================== */
+
+              const finalRedirect =
+                sanitizeNext(
+                  session.redirect ||
+                  getRedirect(
+                    loginResult.data
+                  ) ||
+                  redirectTarget
+                );
+
               setStatus(
-                "Login accepted, but your membership is not active yet. Please complete your activation payment or contact support.",
-                "warning"
+                "Login successful. Opening your Card Leo portal...",
+                "success"
               );
 
-              window.setTimeout(() => {
-                window.location.href = SIGNUP_URL + "?status=payment_required";
-              }, 1000);
-              return;
+              window.setTimeout(
+                () => {
+                  window.location.replace(
+                    finalRedirect
+                  );
+                },
+                350
+              );
+            } catch (
+              error
+            ) {
+              setStatus(
+                error?.message ||
+                "Something went wrong while trying to sign you in.",
+                "error"
+              );
+            } finally {
+              setLoading(
+                false
+              );
             }
-
-            const finalRedirect = resolveRedirectFromPayload(data);
-
-            setStatus(
-              data?.message || "Login successful. Redirecting to your portal...",
-              "success"
-            );
-
-            window.setTimeout(() => {
-              window.location.href = finalRedirect;
-            }, 650);
-          } catch (error) {
-            setStatus(
-              error?.message || "Something went wrong while trying to sign you in.",
-              "error"
-            );
-          } finally {
-            setLoading(false);
           }
-        });
+        );
+
+        /* ============================================================
+           EXISTING SESSION CHECK
+        ============================================================ */
+
+        checkExistingSession();
       })();
     </script>
   </body>

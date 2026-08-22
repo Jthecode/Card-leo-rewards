@@ -10,6 +10,8 @@
 
   <title>My Card | Card Leo Rewards</title>
 
+  <!-- Card Leo portal session-loop fix: 2026-08-22 -->
+
   <meta
     name="description"
     content="View your Card Leo Rewards digital allowance card, available allowance, card activity, and member card status."
@@ -2761,7 +2763,10 @@
   </style>
 </head>
 
-<body>
+<body
+  data-require-auth
+  data-cardleo-auth-guard="auto"
+>
 
   <div
     class="loading-overlay"
@@ -2869,7 +2874,7 @@
           </a>
 
           <a
-            href="/api/portal/logout"
+            href="/api/auth/logout"
             class="logout-link"
             id="logoutLink"
           >
@@ -3452,6 +3457,15 @@
   </div>
 
   <!-- ======================================================
+       AUTH GUARD
+
+       This is the same member-session guard used by the portal dashboard.
+       It prevents card/service failures from being mistaken for logout.
+  ======================================================= -->
+
+  <script src="/assets/js/auth-guard.js"></script>
+
+  <!-- ======================================================
        JAVASCRIPT
   ======================================================= -->
 
@@ -4008,10 +4022,120 @@
       }
 
       async function verifyMemberSession() {
-        let authResult;
+        /*
+         * The shared CardLeoAuthGuard is the first authority for navigation.
+         *
+         * IMPORTANT:
+         * - Explicit 401 -> login
+         * - Explicit payment required -> signup/payment
+         * - Explicit portal denial -> unauthorized
+         * - Network/5xx/card-service problems -> stay on My Card
+         *
+         * A card provisioning problem must NEVER be treated as a logout.
+         */
+
+        if (
+          window.CardLeoAuthGuard &&
+          typeof window.CardLeoAuthGuard.run ===
+            "function"
+        ) {
+          const guardState =
+            await window.CardLeoAuthGuard.run({
+              redirectOnFail:
+                false,
+
+              requirePortalAccess:
+                true,
+
+              showLoader:
+                false,
+            });
+
+          if (
+            guardState?.ok ===
+              true &&
+            guardState?.authenticated ===
+              true
+          ) {
+            return (
+              guardState.data ||
+              guardState.raw ||
+              guardState
+            );
+          }
+
+          if (
+            guardState?.reason ===
+              "service_unavailable" ||
+            guardState?.reason ===
+              "error" ||
+            guardState?.status >=
+              500 ||
+            guardState?.status ===
+              0
+          ) {
+            throw new Error(
+              "We could not verify your member session right now. Your login was not cleared. Please refresh the page in a moment."
+            );
+          }
+
+          if (
+            guardState?.reason ===
+              "payment_required" ||
+            guardState?.paymentRequired ===
+              true
+          ) {
+            const destination =
+              normalizeText(
+                guardState
+                  ?.redirectTo
+              ) ||
+              "/signup.html?status=payment_required";
+
+            window.location.replace(
+              destination
+            );
+
+            return null;
+          }
+
+          if (
+            guardState?.reason ===
+              "unauthorized"
+          ) {
+            window.location.replace(
+              "/unauthorized.html"
+            );
+
+            return null;
+          }
+
+          if (
+            guardState?.reason ===
+              "unauthenticated" ||
+            guardState?.status ===
+              401
+          ) {
+            const next =
+              encodeURIComponent(
+                window.location.pathname +
+                window.location.search
+              );
+
+            window.location.replace(
+              `/login.html?next=${next}`
+            );
+
+            return null;
+          }
+        }
+
+        /*
+         * Compatibility fallback when the shared guard is unavailable.
+         */
 
         try {
-          authResult =
+          const authResult =
             await fetchJson(
               AUTH_ME_ENDPOINT,
               {
@@ -4019,27 +4143,15 @@
                   false,
               }
             );
-        } catch (error) {
-          /*
-           * A network/API problem is not proof that the member logged out.
-           * Keep the member on the card page and show the error instead of
-           * bouncing them between the dashboard and login page.
-           */
-          console.error(
-            "Card Leo auth verification error:",
-            error
-          );
 
-          throw new Error(
-            "We could not verify your member session right now. Please refresh the page in a moment."
-          );
-        }
+          if (
+            authResult
+              ?.authenticated ===
+            true
+          ) {
+            return authResult;
+          }
 
-        if (
-          authResult
-            ?.authenticated !==
-          true
-        ) {
           const destination =
             getAuthRedirect(
               authResult
@@ -4050,9 +4162,74 @@
           );
 
           return null;
-        }
+        } catch (error) {
+          /*
+           * An explicit authentication response is authoritative.
+           * A temporary backend/network failure is not.
+           */
 
-        return authResult;
+          if (
+            error?.status ===
+              401
+          ) {
+            const next =
+              encodeURIComponent(
+                window.location.pathname +
+                  window.location.search
+              );
+
+            window.location.replace(
+              `/login.html?next=${next}`
+            );
+
+            return null;
+          }
+
+          if (
+            error?.status ===
+              402
+          ) {
+            const destination =
+              normalizeText(
+                error
+                  ?.response
+                  ?.redirectTo
+              ) ||
+              "/signup.html?status=payment_required";
+
+            window.location.replace(
+              destination
+            );
+
+            return null;
+          }
+
+          if (
+            error?.status ===
+              403
+          ) {
+            /*
+             * 403 from /api/auth/me means the authenticated account itself
+             * does not have portal access. Card endpoint 403s are handled
+             * separately below and never trigger this redirect.
+             */
+
+            window.location.replace(
+              "/unauthorized.html"
+            );
+
+            return null;
+          }
+
+          console.error(
+            "Card Leo auth verification error:",
+            error
+          );
+
+          throw new Error(
+            "We could not verify your member session right now. Your login was not cleared. Please refresh the page in a moment."
+          );
+        }
       }
 
       function buildAuthFallbackResult(
@@ -5714,7 +5891,7 @@
 
             try {
               await fetch(
-                "/api/portal/logout",
+                "/api/auth/logout",
                 {
                   method:
                     "POST",

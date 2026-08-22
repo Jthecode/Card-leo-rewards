@@ -21,7 +21,7 @@ import {
 
 /* ==========================================================================
    CARD LEO REWARDS
-   STEP #17
+   STEP #15
    ACCESS OFFERS API
 
    ROUTE
@@ -33,26 +33,21 @@ import {
    Secure authenticated proxy between Card Leo members and the
    Access Development Offers API.
 
-   THIS ROUTE FIXES
-   ----------------
-   The old Benefits implementation stopped after a small fixed set
-   such as 32 offers.
+   THIS ROUTE:
 
-   This route can now:
-
-   - retrieve ALL Access offers through pagination
-   - retrieve one Access page when explicitly requested
-   - search offers
-   - filter by category
-   - filter online/local
-   - filter featured
-   - filter active
-   - use lat/lng/radius when supported by Access
-   - normalize merchants
-   - normalize locations
-   - normalize categories
-   - return safe portal offer data
-   - keep actual redemption credentials private
+   - retrieves ALL Access offers through pagination
+   - retrieves one Access page when explicitly requested
+   - searches offers
+   - filters by category
+   - filters online/local
+   - filters featured
+   - filters active
+   - supports lat/lng/radius when supported by Access
+   - normalizes merchants
+   - normalizes locations
+   - normalizes categories
+   - returns safe portal offer data
+   - keeps actual redemption credentials private
 
    IMPORTANT
    ---------
@@ -67,88 +62,76 @@ import {
 
      /api/access/redeem-offer
 
-   That is Step #18.
-
 ============================================================================ */
 
 /* ==========================================================================
    CONFIG
 ============================================================================ */
 
-const DEFAULT_PAGE_SIZE =
-  100;
+const DEFAULT_PAGE_SIZE = 100;
 
-const MAX_PUBLIC_PAGE_SIZE =
-  500;
+const MAX_PUBLIC_PAGE_SIZE = 500;
 
-const DEFAULT_MAX_PAGES =
-  100;
+const DEFAULT_MAX_PAGES = 100;
 
-const MAX_PUBLIC_MAX_PAGES =
-  250;
+const MAX_PUBLIC_MAX_PAGES = 250;
 
-const DEFAULT_RESPONSE_LIMIT =
-  0;
+const DEFAULT_RESPONSE_LIMIT = 0;
 
 /* ==========================================================================
    ACTIVE MEMBERSHIP VALUES
 ============================================================================ */
 
-const ACTIVE_MEMBER_STATUSES =
-  new Set([
-    "active",
-    "approved",
-    "paid",
-    "current",
-    "complete",
-    "completed",
-    "succeeded",
-    "auto_approved",
-    "invited",
-  ]);
+const ACTIVE_MEMBER_STATUSES = new Set([
+  "active",
+  "approved",
+  "paid",
+  "current",
+  "complete",
+  "completed",
+  "succeeded",
+  "auto_approved",
+  "invited",
+]);
 
-const ACTIVE_PAYMENT_STATUSES =
-  new Set([
-    "paid",
-    "active",
-    "current",
-    "complete",
-    "completed",
-    "succeeded",
-  ]);
+const ACTIVE_PAYMENT_STATUSES = new Set([
+  "paid",
+  "active",
+  "current",
+  "complete",
+  "completed",
+  "succeeded",
+]);
 
-const ACTIVE_MEMBERSHIP_STATUSES =
-  new Set([
-    "active",
-    "activated",
-    "approved",
-    "paid",
-    "current",
-  ]);
+const ACTIVE_MEMBERSHIP_STATUSES = new Set([
+  "active",
+  "activated",
+  "approved",
+  "paid",
+  "current",
+]);
 
-const ACTIVE_APPROVAL_STATUSES =
-  new Set([
-    "active",
-    "approved",
-    "complete",
-    "completed",
-    "auto_approved",
-  ]);
+const ACTIVE_APPROVAL_STATUSES = new Set([
+  "active",
+  "approved",
+  "complete",
+  "completed",
+  "auto_approved",
+]);
 
-const INACTIVE_STATUSES =
-  new Set([
-    "inactive",
-    "disabled",
-    "suspended",
-    "paused",
-    "denied",
-    "closed",
-    "cancelled",
-    "canceled",
-    "unpaid",
-    "past_due",
-    "payment_failed",
-  ]);
+const INACTIVE_STATUSES = new Set([
+  "inactive",
+  "disabled",
+  "suspended",
+  "paused",
+  "denied",
+  "closed",
+  "cancelled",
+  "canceled",
+  "unpaid",
+  "past_due",
+  "payment_failed",
+]);
 
 /* ==========================================================================
    SESSION COOKIE NAMES
@@ -173,8 +156,7 @@ function sendJson(
   status,
   payload
 ) {
-  res.statusCode =
-    status;
+  res.statusCode = status;
 
   res.setHeader(
     "Content-Type",
@@ -184,8 +166,8 @@ function sendJson(
   /*
    * Offers are member-only.
    *
-   * Do not let browsers/CDNs accidentally cache one member's response
-   * and serve it to another member.
+   * Never allow a browser/CDN to cache one member's response
+   * and accidentally serve it to another member.
    */
 
   res.setHeader(
@@ -237,6 +219,7 @@ function unauthorized(
     {
       success: false,
       ok: false,
+      authenticated: false,
       message,
     }
   );
@@ -253,6 +236,7 @@ function forbidden(
     {
       success: false,
       ok: false,
+      authenticated: true,
       message,
       ...extra,
     }
@@ -839,8 +823,8 @@ function isSessionExpired(
     );
 
   /*
-   * Preserve compatibility with older sessions that may not
-   * have an expires_at field.
+   * Preserve compatibility with older Card Leo sessions that
+   * may not have an expires_at field.
    */
 
   if (!expiresAt) {
@@ -887,7 +871,7 @@ function isMemberActive(
     );
 
   /*
-   * Explicit inactive state wins.
+   * Explicit inactive state always wins.
    */
 
   if (
@@ -906,6 +890,10 @@ function isMemberActive(
   ) {
     return false;
   }
+
+  /*
+   * Payment must actually be current.
+   */
 
   const paid =
     ACTIVE_PAYMENT_STATUSES.has(
@@ -979,12 +967,14 @@ async function findMember({
         "id",
         memberId
       );
-  } else {
+  } else if (email) {
     query =
       query.ilike(
         "email",
         email
       );
+  } else {
+    return null;
   }
 
   const {
@@ -1005,7 +995,18 @@ async function findMember({
 }
 
 /* ==========================================================================
-   AUTH
+   AUTHENTICATION
+
+   IMPORTANT
+   ---------
+   We do NOT require:
+
+     session.data.authenticated === true
+
+   Older/newer Card Leo session versions may not all contain that exact
+   boolean. Instead, we resolve the real member from the server-side
+   Supabase record using session identity.
+
 ============================================================================ */
 
 async function authenticateMember(
@@ -1036,9 +1037,13 @@ async function authenticateMember(
       session
     )
   ) {
-    clearAuthCookies(
-      res
-    );
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
       member: null,
@@ -1047,25 +1052,6 @@ async function authenticateMember(
         unauthorized(
           res,
           "Your session has expired. Please sign in again."
-        ),
-    };
-  }
-
-  if (
-    session.data
-      .authenticated !== true
-  ) {
-    clearAuthCookies(
-      res
-    );
-
-    return {
-      member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Your login session is invalid."
         ),
     };
   }
@@ -1084,9 +1070,13 @@ async function authenticateMember(
     !memberId &&
     !email
   ) {
-    clearAuthCookies(
-      res
-    );
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
       member: null,
@@ -1099,18 +1089,49 @@ async function authenticateMember(
     };
   }
 
-  const member =
-    await findMember({
-      memberId,
-      email,
-    });
+  let member =
+    null;
+
+  /*
+   * Try the immutable member ID first.
+   */
+
+  if (memberId) {
+    member =
+      await findMember({
+        memberId,
+        email: "",
+      });
+  }
+
+  /*
+   * Compatibility fallback:
+   *
+   * If an older session contains an ID that no longer resolves but has
+   * the member email, try the email before declaring the session invalid.
+   */
+
+  if (
+    !member?.id &&
+    email
+  ) {
+    member =
+      await findMember({
+        memberId: "",
+        email,
+      });
+  }
 
   if (
     !member?.id
   ) {
-    clearAuthCookies(
-      res
-    );
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
       member: null,
@@ -1122,6 +1143,13 @@ async function authenticateMember(
         ),
     };
   }
+
+  /*
+   * IMPORTANT:
+   *
+   * Membership/payment problems are authorization failures, NOT
+   * authentication failures. Do not clear the member's login cookies.
+   */
 
   if (
     !isMemberActive(
@@ -1136,11 +1164,9 @@ async function authenticateMember(
           res,
           "Your Card Leo membership must be active and paid before benefits can be viewed.",
           {
-            requiresPayment:
-              true,
+            requiresPayment: true,
 
-            requires_payment:
-              true,
+            requires_payment: true,
 
             redirectTo:
               "/signup.html?status=payment_required",
@@ -1151,8 +1177,7 @@ async function authenticateMember(
 
   return {
     member,
-    response:
-      null,
+    response: null,
   };
 }
 
@@ -1415,12 +1440,7 @@ function buildQueryOptions(
 }
 
 /* ==========================================================================
-   SERVER SEARCH/FILTER
-
-   Some Access programs may support server-side search/category parameters.
-   We pass them through AND apply normalized Card Leo filtering afterward.
-
-   That gives us consistent portal behavior.
+   SERVER SEARCH / FILTER
 ============================================================================ */
 
 function buildAccessFetchOptions(
@@ -1593,7 +1613,7 @@ async function loadSinglePage(
 /* ==========================================================================
    FETCH ALL MODE
 
-   This is the important fix for the old 32-offer behavior.
+   This fixes the old small/fixed benefits catalog behavior.
 ============================================================================ */
 
 async function loadFullCatalog(
@@ -1614,8 +1634,7 @@ async function loadFullCatalog(
     offers.length;
 
   /*
-   * Apply normalized Card Leo filters after all Access pages
-   * have been combined.
+   * Apply Card Leo filters after every Access page has been combined.
    */
 
   offers =
@@ -1625,7 +1644,7 @@ async function loadFullCatalog(
     );
 
   /*
-   * Build normalized catalog before final optional response limit.
+   * Build normalized catalog before optional result limit.
    */
 
   const catalog =
@@ -1779,10 +1798,9 @@ export default async function handler(
       );
 
     /*
-     * The member is paid/active but Access may still be syncing.
+     * Member may be paid/active while Access is still syncing.
      *
-     * We do not expose catalog access until their Access member status
-     * is OPEN.
+     * Do not expose catalog access until their Access membership is OPEN.
      */
 
     if (!accessReady) {
@@ -1848,8 +1866,6 @@ export default async function handler(
        * DEFAULT:
        *
        * Full catalog mode.
-       *
-       * This replaces the previous small fixed catalog behavior.
        */
 
       catalog =
@@ -1862,6 +1878,9 @@ export default async function handler(
        RESPONSE
     ====================================================================== */
 
+    const integrationStatus =
+      getAccessOffersIntegrationStatus();
+
     return sendJson(
       res,
       200,
@@ -1870,6 +1889,9 @@ export default async function handler(
           true,
 
         ok:
+          true,
+
+        authenticated:
           true,
 
         message:
@@ -1897,7 +1919,7 @@ export default async function handler(
             true,
 
           environment:
-            getAccessOffersIntegrationStatus()
+            integrationStatus
               .environment,
         },
 
@@ -1913,8 +1935,7 @@ export default async function handler(
             catalog.count,
 
           /*
-           * Total after Card Leo search/filter but before optional
-           * result_limit.
+           * Total after Card Leo filtering but before result_limit.
            */
 
           fullFilteredCount:
@@ -1946,11 +1967,6 @@ export default async function handler(
             catalog.categories ||
             [],
 
-          /*
-           * Merchants can be a large list, but returning it allows
-           * future merchant filtering/autocomplete in benefits.html.
-           */
-
           merchants:
             catalog.merchants ||
             [],
@@ -1966,13 +1982,16 @@ export default async function handler(
             "",
 
           online:
-            options.online ?? null,
+            options.online ??
+            null,
 
           local:
-            options.local ?? null,
+            options.local ??
+            null,
 
           featured:
-            options.featured ?? null,
+            options.featured ??
+            null,
 
           active:
             options.active,
@@ -1995,8 +2014,7 @@ export default async function handler(
           catalog.offers,
 
         /*
-         * Alias so older frontend code expecting "benefits" can
-         * transition without immediately breaking.
+         * Backward-compatible alias for older Benefits frontend code.
          */
 
         benefits:
@@ -2078,8 +2096,8 @@ export default async function handler(
               ),
 
             /*
-             * URL is useful for debugging endpoint configuration.
-             * No token is included in it.
+             * URL is useful for endpoint debugging.
+             * No Access token is included.
              */
 
             url:

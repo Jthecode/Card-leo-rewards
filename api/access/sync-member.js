@@ -73,8 +73,7 @@ import {
    CONFIG
 ============================================================================ */
 
-const DEFAULT_TIMEOUT_MS =
-  20000;
+const DEFAULT_TIMEOUT_MS = 20000;
 
 /* ==========================================================================
    RESPONSE HELPERS
@@ -814,12 +813,6 @@ function sanitizeAccessResponse(
     return null;
   }
 
-  /*
-   * Access response itself normally does not contain
-   * authentication tokens, but we still recursively strip
-   * common sensitive keys.
-   */
-
   if (
     Array.isArray(
       value
@@ -950,10 +943,6 @@ async function saveAccessSuccess({
       now,
   };
 
-  /*
-   * Only set suspended timestamp when the member is suspended.
-   */
-
   if (
     desiredStatus ===
     SUSPEND_STATUS
@@ -992,11 +981,6 @@ async function saveAccessSuccess({
     );
   }
 
-  /*
-   * Some older Card Leo databases may still be missing
-   * one or more Access columns.
-   */
-
   if (
     !isMissingOptionalColumn(
       result.error
@@ -1004,10 +988,6 @@ async function saveAccessSuccess({
   ) {
     throw result.error;
   }
-
-  /*
-   * Fallback to the safest common Access fields.
-   */
 
   const fallbackPayload = {
     access_member_identifier:
@@ -1055,13 +1035,6 @@ async function saveAccessSuccess({
       }
     );
   }
-
-  /*
-   * Absolute fallback:
-   * update only updated_at so successful AMT sync is not
-   * turned into an API 500 merely because optional columns
-   * are not installed yet.
-   */
 
   if (
     !isMissingOptionalColumn(
@@ -1151,11 +1124,6 @@ async function saveAccessFailure({
     updated_at:
       now,
   };
-
-  /*
-   * We do NOT blindly set access_suspended_at on a failed
-   * suspension because Access may not actually have accepted it.
-   */
 
   let result =
     await supabaseAdmin
@@ -1288,10 +1256,6 @@ async function performAccessSync({
   desiredStatus,
   timeoutMs,
 }) {
-  /*
-   * Explicit action still uses the same underlying AMT endpoint.
-   */
-
   if (
     action ===
     "open"
@@ -1316,13 +1280,6 @@ async function performAccessSync({
     );
   }
 
-  /*
-   * AUTO MODE
-   *
-   * Updated lib/access-amt.js determines whether the member
-   * should be OPEN or SUSPEND.
-   */
-
   return syncMemberAccessState(
     memberForAccess,
     {
@@ -1341,13 +1298,14 @@ export default async function handler(
 ) {
   /* ========================================================================
      METHOD
+
+     POST = actual AMT sync
+     GET  = dry-run/testing only
   ======================================================================== */
 
   if (
-    req.method !==
-    "POST" &&
-    req.method !==
-    "GET"
+    req.method !== "POST" &&
+    req.method !== "GET"
   ) {
     res.setHeader(
       "Allow",
@@ -1365,7 +1323,7 @@ export default async function handler(
           false,
 
         message:
-          "Method not allowed. Use GET or POST.",
+          "Method not allowed. Use POST to sync a member or GET for a dry run.",
       }
     );
   }
@@ -1387,7 +1345,7 @@ export default async function handler(
         false
       );
 
-    const dryRun =
+    const requestedDryRun =
       normalizeBoolean(
         body.dry_run ??
         body.dryRun ??
@@ -1395,6 +1353,18 @@ export default async function handler(
         req.query?.dryRun,
         false
       );
+
+    /*
+     * SECURITY:
+     *
+     * Every GET request is automatically a dry run.
+     * Only POST may change the member's Access AMT state.
+     */
+
+    const dryRun =
+      req.method === "GET"
+        ? true
+        : requestedDryRun;
 
     const force =
       normalizeBoolean(
@@ -1521,8 +1491,6 @@ export default async function handler(
 
     /*
      * Explicit OPEN on an inactive member is blocked unless force=true.
-     *
-     * This prevents manually re-enrolling an unpaid/cancelled member.
      */
 
     if (
@@ -1586,6 +1554,9 @@ export default async function handler(
           dry_run:
             true,
 
+          method:
+            req.method,
+
           message:
             `Dry run only. Member would be sent to Access AMT with status ${desiredStatus}.`,
 
@@ -1627,6 +1598,23 @@ export default async function handler(
             debug
               ? getAccessAmtConfigForDebug()
               : undefined,
+        }
+      );
+    }
+
+    /* ======================================================================
+       FINAL MUTATION SAFETY CHECK
+    ====================================================================== */
+
+    if (
+      req.method !== "POST"
+    ) {
+      return badRequest(
+        res,
+        "POST is required to perform an Access AMT member sync.",
+        {
+          code:
+            "ACCESS_SYNC_POST_REQUIRED",
         }
       );
     }

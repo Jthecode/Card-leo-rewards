@@ -20,7 +20,7 @@ import {
 
 /* ==========================================================================
    CARD LEO REWARDS
-   STEP #18
+   STEP #17
    ACCESS OFFER REDEMPTION ENDPOINT
 
    ROUTE
@@ -1048,23 +1048,15 @@ async function authenticateMember(
     };
   }
 
-  if (
-    session.data
-      .authenticated !== true
-  ) {
-    clearAuthCookies(
-      res
-    );
-
-    return {
-      member: null,
-      response:
-        unauthorized(
-          res,
-          "Your login session is invalid."
-        ),
-    };
-  }
+  /*
+   * IMPORTANT:
+   *
+   * Do NOT require:
+   *
+   *   session.data.authenticated === true
+   *
+   * Card Leo resolves the member from the server-side session identity.
+   */
 
   const memberId =
     getSessionMemberId(

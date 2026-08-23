@@ -34,28 +34,46 @@ import {
    PURPOSE
    -------
    1. Authenticate Card Leo member
-   2. Load reward account
-   3. Load reward transactions
-   4. Load payouts
+   2. Load member reward account
+   3. Load member reward transactions
+   4. Load member payouts
    5. Load membership payments
    6. Load membership cycles
    7. Load Access Perks status
    8. Load Card Leo member_cards state
    9. Load allowance_transactions
-   10. Separate personal allowance from Growth Pool
+   10. Calculate personal member allowance
    11. Identify approved allowance transactions ready for card funding
-   12. Return safe card/allowance information to the member portal
+   12. Return safe member-facing card and allowance information
+
+   MEMBER REWARD RULES
+   -------------------
+   Direct referral:
+   +$7.00 to the qualifying member
+
+   Team / override referral:
+   +$1.00 to the qualifying member
 
    IMPORTANT
    ---------
-   The Growth Pool is company-level tracking.
+   Growth Pool is company-level accounting.
 
-   It is NOT automatically added to:
+   Growth Pool information is intentionally NOT exposed through this
+   member-facing API route.
+
+   Growth Pool is NOT included in:
    - memberAllowanceEarned
+   - memberAllowancePaid
    - memberAllowanceAvailable
+   - availableRewardsBalance
    - Card Leo virtual card balance
-   - fundable allowance
+   - allowance funding
+   - member reward transactions
+   - member notices
+   - member reward summaries
 
+   Company/admin Growth Pool accounting must remain in the appropriate
+   admin/company-side routes and database records.
 ============================================================================ */
 
 /* ==========================================================================
@@ -204,7 +222,9 @@ function normalizeEmail(value) {
 }
 
 function normalizeStatus(value) {
-  return normalizeText(value || "").toLowerCase();
+  return normalizeText(
+    value || ""
+  ).toLowerCase();
 }
 
 function normalizeTier(value) {
@@ -1760,7 +1780,7 @@ async function getAuthenticatedMember(
               true,
 
             redirectTo:
-              "/signup.html?status=payment_required",
+              "/login.html?payment_required=1",
           }
         ),
     };
@@ -1772,7 +1792,6 @@ async function getAuthenticatedMember(
       null,
   };
 }
-
 /* ==========================================================================
    OPTIONAL TABLE LOOKUPS
 ============================================================================ */
@@ -1951,7 +1970,7 @@ async function getOptionalAllowanceTransactions(
     Math.min(
       Math.max(
         Number(limit) ||
-        DEFAULT_LIMIT,
+          DEFAULT_LIMIT,
         1
       ),
       MAX_LIMIT
@@ -2027,15 +2046,15 @@ function mapAllowanceTransactionRow(
   const status =
     normalizeStatus(
       row?.status ||
-      "pending"
+        "pending"
     );
 
   const direction =
     normalizeStatus(
       row?.direction ||
-      row?.transaction_type ||
-      row?.type ||
-      "credit"
+        row?.transaction_type ||
+        row?.type ||
+        "credit"
     );
 
   return {
@@ -2063,8 +2082,8 @@ function mapAllowanceTransactionRow(
     currency:
       normalizeText(
         row?.currency ||
-        row?.currency_code ||
-        "USD"
+          row?.currency_code ||
+          "USD"
       ),
 
     direction,
@@ -2074,7 +2093,7 @@ function mapAllowanceTransactionRow(
     source:
       normalizeText(
         row?.source ||
-        ""
+          ""
       ),
 
     sourceRewardId:
@@ -2088,19 +2107,19 @@ function mapAllowanceTransactionRow(
     description:
       normalizeText(
         row?.description ||
-        ""
+          ""
       ),
 
     provider:
       normalizeText(
         row?.provider ||
-        ""
+          ""
       ),
 
     providerStatus:
       normalizeText(
         row?.provider_status ||
-        ""
+          ""
       ),
 
     providerTransactionToken:
@@ -2117,8 +2136,8 @@ function mapAllowanceTransactionRow(
     idempotencyKey:
       normalizeText(
         row?.idempotency_key ||
-        row?.idempotency_token ||
-        ""
+          row?.idempotency_token ||
+          ""
       ),
 
     fundedAt:
@@ -2208,7 +2227,7 @@ function buildMemberCardPayload(
     provider:
       normalizeText(
         record.provider ||
-        "lithic"
+          "lithic"
       ),
 
     accountHolderCreated:
@@ -2244,7 +2263,7 @@ function buildMemberCardPayload(
     cardStatus:
       normalizeText(
         record.card_status ||
-        "not_created"
+          "not_created"
       ),
 
     cardType:
@@ -2336,13 +2355,13 @@ function sortByDateDesc(
       const aTime =
         new Date(
           aValue ||
-          0
+            0
         ).getTime();
 
       const bTime =
         new Date(
           bValue ||
-          0
+            0
         ).getTime();
 
       return (
@@ -2393,8 +2412,8 @@ function mapRewardTransactionRow(
         row.title,
         titleCase(
           row.transaction_type ||
-          row.type ||
-          "reward activity"
+            row.type ||
+            "reward activity"
         )
       ),
 
@@ -2406,16 +2425,16 @@ function mapRewardTransactionRow(
           "USD"
         } • ${titleCase(
           row.transaction_status ||
-          row.status ||
-          "posted"
+            row.status ||
+            "posted"
         )}`
       ),
 
     status:
       normalizeRewardStatus(
         row.transaction_status ||
-        row.status ||
-        "posted"
+          row.status ||
+          "posted"
       ),
 
     amount,
@@ -2448,8 +2467,8 @@ function mapRewardTransactionRow(
     postedAt:
       safeDate(
         row.posted_at ||
-        row.occurred_at ||
-        row.created_at
+          row.occurred_at ||
+          row.created_at
       ),
 
     createdAt:
@@ -2519,20 +2538,20 @@ function mapPayoutRow(
     periodStart:
       safeDate(
         row.period_start ||
-        row.periodStart
+          row.periodStart
       ),
 
     periodEnd:
       safeDate(
         row.period_end ||
-        row.periodEnd
+          row.periodEnd
       ),
 
     paidAt:
       safeDate(
         row.paid_at ||
-        row.paidAt ||
-        row.created_at
+          row.paidAt ||
+          row.created_at
       ),
 
     notes:
@@ -2580,39 +2599,33 @@ function mapPaymentRow(
     paymentMonth:
       Number(
         row.payment_month ||
-        row.paymentMonth ||
-        0
+          row.paymentMonth ||
+          0
       ),
 
     amountCharged:
       money(
         row.amount_charged ||
-        row.amountCharged ||
-        row.amount
+          row.amountCharged ||
+          row.amount
       ),
 
     cardleoAmount:
       money(
         row.cardleo_amount ||
-        row.cardleoAmount
+          row.cardleoAmount
       ),
 
     directReferralAmount:
       money(
         row.direct_referral_amount ||
-        row.directReferralAmount
+          row.directReferralAmount
       ),
 
     overrideAmount:
       money(
         row.override_amount ||
-        row.overrideAmount
-      ),
-
-    companyBuildingAmount:
-      money(
-        row.company_building_amount ||
-        row.companyBuildingAmount
+          row.overrideAmount
       ),
 
     paymentStatus:
@@ -2626,20 +2639,20 @@ function mapPaymentRow(
     billingPeriodStart:
       safeDate(
         row.billing_period_start ||
-        row.billingPeriodStart
+          row.billingPeriodStart
       ),
 
     billingPeriodEnd:
       safeDate(
         row.billing_period_end ||
-        row.billingPeriodEnd
+          row.billingPeriodEnd
       ),
 
     paidAt:
       safeDate(
         row.paid_at ||
-        row.paidAt ||
-        row.created_at
+          row.paidAt ||
+          row.created_at
       ),
 
     externalPaymentId:
@@ -2674,46 +2687,34 @@ function mapCycleRow(
     cycleNumber:
       Number(
         row.cycle_number ||
-        row.cycleNumber ||
-        index + 1
+          row.cycleNumber ||
+          index + 1
       ),
 
     cycleStartDate:
       safeDate(
         row.cycle_start_date ||
-        row.cycleStartDate
+          row.cycleStartDate
       ),
 
     cycleEndDate:
       safeDate(
         row.cycle_end_date ||
-        row.cycleEndDate
+          row.cycleEndDate
       ),
 
     paidMonthsCount:
       Number(
         row.paid_months_count ||
-        row.paidMonthsCount ||
-        0
+          row.paidMonthsCount ||
+          0
       ),
 
     requiredPaidMonths:
       Number(
         row.required_paid_months ||
-        row.requiredPaidMonths ||
-        4
-      ),
-
-    companyBuildingAccrued:
-      money(
-        row.company_building_accrued ||
-        row.companyBuildingAccrued
-      ),
-
-    companyBuildingReleased:
-      money(
-        row.company_building_released ||
-        row.companyBuildingReleased
+          row.requiredPaidMonths ||
+          4
       ),
 
     cycleStatus:
@@ -2727,19 +2728,19 @@ function mapCycleRow(
     completedAt:
       safeDate(
         row.completed_at ||
-        row.completedAt
+          row.completedAt
       ),
 
     releasedAt:
       safeDate(
         row.released_at ||
-        row.releasedAt
+          row.releasedAt
       ),
 
     forfeitedAt:
       safeDate(
         row.forfeited_at ||
-        row.forfeitedAt
+          row.forfeitedAt
       ),
 
     createdAt:
@@ -2748,7 +2749,6 @@ function mapCycleRow(
       ),
   };
 }
-
 /* ==========================================================================
    DEFAULT REWARD ACCOUNT
 ============================================================================ */
@@ -2781,15 +2781,6 @@ function buildDefaultRewardAccount(
     total_override_earned:
       0,
 
-    company_building_pending:
-      0,
-
-    company_building_released:
-      0,
-
-    company_building_forfeited:
-      0,
-
     total_member_revenue_processed:
       0,
 
@@ -2806,9 +2797,6 @@ function buildDefaultRewardAccount(
       null,
 
     last_override_at:
-      null,
-
-    last_company_building_release_at:
       null,
   };
 }
@@ -2863,24 +2851,6 @@ function normalizeRewardAccount(
         base.totalOverrideEarned
       ),
 
-    companyBuildingPending:
-      money(
-        base.company_building_pending ||
-        base.companyBuildingPending
-      ),
-
-    companyBuildingReleased:
-      money(
-        base.company_building_released ||
-        base.companyBuildingReleased
-      ),
-
-    companyBuildingForfeited:
-      money(
-        base.company_building_forfeited ||
-        base.companyBuildingForfeited
-      ),
-
     totalMemberRevenueProcessed:
       money(
         base.total_member_revenue_processed ||
@@ -2915,14 +2885,6 @@ function normalizeRewardAccount(
       safeDate(
         base.last_override_at ||
         base.lastOverrideAt
-      ),
-
-    lastCompanyBuildingReleaseAt:
-      safeDate(
-        base
-          .last_company_building_release_at ||
-        base
-          .lastCompanyBuildingReleaseAt
       ),
   };
 }
@@ -2966,6 +2928,18 @@ function sumTransactionsByType(
 
 /* ==========================================================================
    SUMMARY
+
+   MEMBER-FACING RULES
+   -------------------
+   Direct referral:
+     +$7.00
+
+   Team / override referral:
+     +$1.00
+
+   Growth Pool:
+     Company/admin side only.
+     Never included in this member summary.
 ============================================================================ */
 
 function buildSummary({
@@ -3002,6 +2976,12 @@ function buildSummary({
       0
     );
 
+  /*
+   * Total reward-account values remain available for
+   * compatibility, but personal allowance below is calculated
+   * ONLY from Direct + Team/Override member rewards.
+   */
+
   const accountRewardsEarned =
     rewardAccount
       .totalRewardsEarned >
@@ -3018,55 +2998,85 @@ function buildSummary({
           .totalRewardsPaid
       : payoutTotal;
 
+  /* ------------------------------------------------------------------------
+     DIRECT REFERRALS
+  ------------------------------------------------------------------------ */
+
   const totalDirectReferralEarned =
-    rewardAccount
-      .totalDirectReferralEarned ||
-    sumTransactionsByType(
-      transactions,
-      [
-        "direct_referral",
-        "direct referral",
-        "direct",
-      ]
+    money(
+      rewardAccount
+        .totalDirectReferralEarned ||
+      sumTransactionsByType(
+        transactions,
+        [
+          "direct_referral",
+          "direct referral",
+          "direct",
+        ]
+      )
     );
+
+  /* ------------------------------------------------------------------------
+     TEAM / OVERRIDE REFERRALS
+  ------------------------------------------------------------------------ */
 
   const totalOverrideEarned =
-    rewardAccount
-      .totalOverrideEarned ||
-    sumTransactionsByType(
-      transactions,
-      [
-        "override",
-        "team_referral",
-        "team referral",
-      ]
+    money(
+      rewardAccount
+        .totalOverrideEarned ||
+      sumTransactionsByType(
+        transactions,
+        [
+          "override",
+          "team_referral",
+          "team referral",
+        ]
+      )
     );
+
+  /* ------------------------------------------------------------------------
+     CARD LEO ALLOCATION
+  ------------------------------------------------------------------------ */
 
   const totalCardleoAllocated =
-    rewardAccount
-      .totalCardleoAllocated ||
-    sumTransactionsByType(
-      transactions,
-      [
-        "cardleo",
-        "card leo",
-      ]
+    money(
+      rewardAccount
+        .totalCardleoAllocated ||
+      sumTransactionsByType(
+        transactions,
+        [
+          "cardleo",
+          "card leo",
+        ]
+      )
     );
 
-  /*
-   * PERSONAL MEMBER ALLOWANCE
-   *
-   * Only direct and team/override rewards count here.
-   *
-   * Growth Pool / company-building values are kept
-   * completely separate.
-   */
+  /* ------------------------------------------------------------------------
+     PERSONAL MEMBER ALLOWANCE
+
+     IMPORTANT:
+     Only member-owned rewards count.
+
+     Direct referral rewards:
+       included
+
+     Team / override rewards:
+       included
+
+     Growth Pool:
+       NOT included
+  ------------------------------------------------------------------------ */
 
   const memberAllowanceEarned =
     money(
       totalDirectReferralEarned +
       totalOverrideEarned
     );
+
+  /*
+   * Keep member allowance paid bounded by the amount the member
+   * actually earned.
+   */
 
   const memberAllowancePaid =
     money(
@@ -3088,23 +3098,9 @@ function buildSummary({
       )
     );
 
-  const companyGrowthPoolPending =
-    money(
-      rewardAccount
-        .companyBuildingPending
-    );
-
-  const companyGrowthPoolReleased =
-    money(
-      rewardAccount
-        .companyBuildingReleased
-    );
-
-  const companyGrowthPoolForfeited =
-    money(
-      rewardAccount
-        .companyBuildingForfeited
-    );
+  /* ------------------------------------------------------------------------
+     RESPONSE SUMMARY
+  ------------------------------------------------------------------------ */
 
   return {
     membershipMonthlyAmount:
@@ -3118,12 +3114,6 @@ function buildSummary({
 
     overrideReferralAmount:
       1,
-
-    companyBuildingAmount:
-      2,
-
-    companyBuildingCycleMonths:
-      4,
 
     totalCardleoAllocated:
       money(
@@ -3140,22 +3130,9 @@ function buildSummary({
         totalOverrideEarned
       ),
 
-    /*
-     * Backward compatibility.
-     */
-
-    companyBuildingPending:
-      companyGrowthPoolPending,
-
-    companyBuildingReleased:
-      companyGrowthPoolReleased,
-
-    companyBuildingForfeited:
-      companyGrowthPoolForfeited,
-
-    /*
-     * New explicit Card Leo allowance values.
-     */
+    /* ----------------------------------------------------------------------
+       PERSONAL ALLOWANCE
+    ---------------------------------------------------------------------- */
 
     memberAllowanceEarned,
 
@@ -3163,9 +3140,12 @@ function buildSummary({
 
     memberAllowanceAvailable,
 
-    /*
-     * Existing portal fields.
-     */
+    availableRewardsBalance:
+      memberAllowanceAvailable,
+
+    /* ----------------------------------------------------------------------
+       REWARD ACCOUNT COMPATIBILITY
+    ---------------------------------------------------------------------- */
 
     totalRewardsEarned:
       money(
@@ -3177,42 +3157,9 @@ function buildSummary({
         accountRewardsPaid
       ),
 
-    availableRewardsBalance:
-      memberAllowanceAvailable,
-
-    /*
-     * Growth Pool — COMPANY SIDE ONLY.
-     */
-
-    growthPool: {
-      trackedSeparately:
-        true,
-
-      includedInMemberAllowance:
-        false,
-
-      pending:
-        companyGrowthPoolPending,
-
-      released:
-        companyGrowthPoolReleased,
-
-      forfeited:
-        companyGrowthPoolForfeited,
-
-      totalTracked:
-        money(
-          companyGrowthPoolPending +
-          companyGrowthPoolReleased +
-          companyGrowthPoolForfeited
-        ),
-
-      contributionPerActivatedMember:
-        2,
-
-      note:
-        "Growth Pool/company-building amounts are tracked separately and are not spendable member allowance.",
-    },
+    /* ----------------------------------------------------------------------
+       COUNTS
+    ---------------------------------------------------------------------- */
 
     transactionCount:
       transactions.length,
@@ -3226,6 +3173,10 @@ function buildSummary({
     cycleCount:
       cycles.length,
 
+    /* ----------------------------------------------------------------------
+       MEMBER DISPLAY
+    ---------------------------------------------------------------------- */
+
     accessLevel:
       "Premium Access",
 
@@ -3235,15 +3186,16 @@ function buildSummary({
         "Active"
       ),
 
+    /* ----------------------------------------------------------------------
+       MEMBER REWARD RULES
+    ---------------------------------------------------------------------- */
+
     allowanceRules: {
       directReferral:
         "Member A referred Member B +$7.00",
 
       teamReferral:
         "Member B referred Member C +$1.00",
-
-      companyGrowthAllowance:
-        "Growth Pool/company-building amounts are tracked separately from personal member allowance.",
 
       payoutWindow:
         "Allowances are dispersed on the 1st and 3rd of every month.",
@@ -3268,6 +3220,10 @@ function buildAllowanceFundingPayload({
     ).map(
       mapAllowanceTransactionRow
     );
+
+  /*
+   * Only credit-style allowance records can ever become card funding.
+   */
 
   const credits =
     rows.filter(
@@ -3382,6 +3338,10 @@ function buildAllowanceFundingPayload({
       fundable.length >
         0,
 
+    /* ----------------------------------------------------------------------
+       READY TO FUND
+    ---------------------------------------------------------------------- */
+
     fundableCount:
       fundable.length,
 
@@ -3392,6 +3352,10 @@ function buildAllowanceFundingPayload({
       centsToMoney(
         fundableCents
       ),
+
+    /* ----------------------------------------------------------------------
+       PROCESSING
+    ---------------------------------------------------------------------- */
 
     processingCount:
       processing.length,
@@ -3404,6 +3368,10 @@ function buildAllowanceFundingPayload({
         processingCents
       ),
 
+    /* ----------------------------------------------------------------------
+       FUNDED
+    ---------------------------------------------------------------------- */
+
     fundedCount:
       funded.length,
 
@@ -3415,6 +3383,10 @@ function buildAllowanceFundingPayload({
         fundedCents
       ),
 
+    /* ----------------------------------------------------------------------
+       FAILED
+    ---------------------------------------------------------------------- */
+
     failedCount:
       failed.length,
 
@@ -3425,6 +3397,10 @@ function buildAllowanceFundingPayload({
       centsToMoney(
         failedCents
       ),
+
+    /* ----------------------------------------------------------------------
+       PERSONAL MEMBER REWARD BALANCE
+    ---------------------------------------------------------------------- */
 
     personalRewardBalance:
       money(
@@ -3441,8 +3417,9 @@ function buildAllowanceFundingPayload({
       ),
 
     /*
-     * Only safe IDs and display information are returned.
-     * No Lithic tokens are exposed here.
+     * Safe member-facing records only.
+     *
+     * No Lithic account tokens or card tokens are returned here.
      */
 
     fundable:
@@ -3530,25 +3507,11 @@ function buildNotices({
     });
   }
 
-  if (
-    rewardAccount
-      .companyBuildingPending >
-    0
-  ) {
-    notices.push({
-      id:
-        "company-building-pending",
-
-      type:
-        "info",
-
-      title:
-        "Growth Pool / Company-Building Tracking",
-
-      body:
-        "Company-building amounts are tracked separately from your spendable Card Leo allowance.",
-    });
-  }
+  /*
+   * Growth Pool notices are intentionally not returned to members.
+   *
+   * Growth Pool is an admin/company-side accounting metric.
+   */
 
   if (
     !access
@@ -3664,7 +3627,6 @@ function buildProfilePayload(
         .benefitsReady,
   };
 }
-
 /* ==========================================================================
    HANDLER
 ============================================================================ */
@@ -3818,6 +3780,9 @@ export default async function handler(
 
         /* --------------------------------------------------------------
            MEMBERSHIP PAYMENTS
+
+           Member response contains only member-facing payment fields.
+           Company Growth Pool allocation is intentionally omitted.
         -------------------------------------------------------------- */
 
         queryOptionalListByMemberColumns({
@@ -3841,6 +3806,9 @@ export default async function handler(
 
         /* --------------------------------------------------------------
            MEMBERSHIP CYCLES
+
+           Member response contains lifecycle/status information only.
+           Company Growth Pool accounting remains admin-side.
         -------------------------------------------------------------- */
 
         queryOptionalListByMemberColumns({
@@ -3863,9 +3831,9 @@ export default async function handler(
         }),
 
         /* --------------------------------------------------------------
-           STEP #12 MEMBER CARD
+           MEMBER CARD
 
-           Safe if table does not exist yet.
+           Safe if the member_cards table has not been created yet.
         -------------------------------------------------------------- */
 
         getOptionalMemberCard(
@@ -3873,9 +3841,9 @@ export default async function handler(
         ),
 
         /* --------------------------------------------------------------
-           STEP #13 ALLOWANCE LEDGER
+           ALLOWANCE LEDGER
 
-           Safe if table does not exist yet.
+           Safe if allowance_transactions has not been created yet.
         -------------------------------------------------------------- */
 
         getOptionalAllowanceTransactions(
@@ -3885,7 +3853,7 @@ export default async function handler(
       ]);
 
     /* ======================================================================
-       NORMALIZE REWARDS
+       NORMALIZE REWARD ACCOUNT
     ====================================================================== */
 
     const rewardAccount =
@@ -3893,6 +3861,10 @@ export default async function handler(
         rewardAccountRaw,
         member
       );
+
+    /* ======================================================================
+       NORMALIZE REWARD TRANSACTIONS
+    ====================================================================== */
 
     const transactions =
       sortByDateDesc(
@@ -3908,6 +3880,10 @@ export default async function handler(
         limit
       );
 
+    /* ======================================================================
+       NORMALIZE PAYOUTS
+    ====================================================================== */
+
     const payouts =
       sortByDateDesc(
         payoutRows.map(
@@ -3922,6 +3898,10 @@ export default async function handler(
         limit
       );
 
+    /* ======================================================================
+       NORMALIZE MEMBERSHIP PAYMENTS
+    ====================================================================== */
+
     const payments =
       sortByDateDesc(
         paymentRows.map(
@@ -3935,6 +3915,10 @@ export default async function handler(
         0,
         limit
       );
+
+    /* ======================================================================
+       NORMALIZE MEMBERSHIP CYCLES
+    ====================================================================== */
 
     const cycles =
       sortByDateDesc(
@@ -3997,6 +3981,9 @@ export default async function handler(
 
     /* ======================================================================
        LOG
+
+       IMPORTANT:
+       Growth Pool amounts are intentionally not logged by this member route.
     ====================================================================== */
 
     logRequestSuccess(
@@ -4015,6 +4002,12 @@ export default async function handler(
 
         payoutCount:
           payouts.length,
+
+        paymentCount:
+          payments.length,
+
+        cycleCount:
+          cycles.length,
 
         accessMemberStatus:
           access.member_status,
@@ -4039,12 +4032,25 @@ export default async function handler(
           allowanceFunding
             .fundableAmount,
 
+        memberAllowanceEarned:
+          summary
+            .memberAllowanceEarned,
+
+        memberAllowancePaid:
+          summary
+            .memberAllowancePaid,
+
         memberAllowanceAvailable:
           summary
             .memberAllowanceAvailable,
 
-        growthPoolIncludedInAllowance:
-          false,
+        directReferralEarned:
+          summary
+            .totalDirectReferralEarned,
+
+        teamReferralEarned:
+          summary
+            .totalOverrideEarned,
 
         ip:
           getClientIp(
@@ -4124,10 +4130,16 @@ export default async function handler(
         },
 
         /* ================================================================
-           STEP #11 — MEMBER CARD BRIDGE
+           MEMBER CARD BRIDGE
 
-           SAFE DATA ONLY.
-           No Lithic account/card tokens are returned here.
+           SAFE MEMBER-FACING DATA ONLY.
+
+           No Lithic:
+           - account holder token
+           - account token
+           - card token
+
+           is returned to the browser.
         ================================================================= */
 
         memberCard,
@@ -4136,7 +4148,7 @@ export default async function handler(
           memberCard,
 
         /* ================================================================
-           STEP #11 — ALLOWANCE FUNDING BRIDGE
+           PERSONAL ALLOWANCE FUNDING
         ================================================================= */
 
         allowanceFunding,
@@ -4168,9 +4180,6 @@ export default async function handler(
             summary
               .totalOverrideEarned,
 
-          growthPoolIncluded:
-            false,
-
           funding:
             allowanceFunding,
 
@@ -4182,19 +4191,19 @@ export default async function handler(
         },
 
         /* ================================================================
-           COMPANY GROWTH POOL
+           REWARD ACCOUNT
 
-           Separate from personal allowance.
-        ================================================================= */
+           Member-facing normalized account.
 
-        growthPool:
-          summary.growthPool,
-
-        /* ================================================================
-           EXISTING REWARD DATA
+           Growth Pool/company-building properties are stripped by
+           normalizeRewardAccount().
         ================================================================= */
 
         rewardAccount,
+
+        /* ================================================================
+           REWARD ACTIVITY
+        ================================================================= */
 
         rewards:
           transactions,
@@ -4203,14 +4212,39 @@ export default async function handler(
 
         payouts,
 
+        /* ================================================================
+           MEMBERSHIP HISTORY
+        ================================================================= */
+
         membershipPayments:
           payments,
 
         cycles,
 
+        /* ================================================================
+           MEMBER SUMMARY
+
+           Includes:
+           - Direct rewards
+           - Team rewards
+           - Personal allowance
+           - Reward totals
+           - Counts
+
+           Does NOT include Growth Pool.
+        ================================================================= */
+
         summary,
 
+        /* ================================================================
+           NOTICES
+        ================================================================= */
+
         notices,
+
+        /* ================================================================
+           SUPPORT
+        ================================================================= */
 
         support:
           buildSupportPayload(),
@@ -4228,6 +4262,12 @@ export default async function handler(
 
           benefits:
             "/portal/benefits.html",
+
+          rewards:
+            "/portal/rewards.html",
+
+          referrals:
+            "/portal/referrals.html",
 
           memberCardApi:
             "/api/cards/member-card",
@@ -4250,17 +4290,30 @@ export default async function handler(
               .databaseReady,
         },
 
+        /* ================================================================
+           FILTERS
+        ================================================================= */
+
         filters: {
           limit,
         },
 
+        /* ================================================================
+           TIMEZONE
+        ================================================================= */
+
         timezone:
           DEFAULT_TIMEZONE,
+
+        /* ================================================================
+           FETCHED AT
+        ================================================================= */
 
         fetchedAt:
           new Date()
             .toISOString(),
       },
+
       "Rewards loaded successfully."
     );
   } catch (
@@ -4277,7 +4330,9 @@ export default async function handler(
 
     return serverError(
       res,
+
       "Something went wrong while loading member rewards.",
+
       process.env.NODE_ENV ===
         "development"
         ? {

@@ -1500,7 +1500,7 @@
 
       grid-template-columns:
         repeat(
-          4,
+          3,
           1fr
         );
 
@@ -3310,18 +3310,6 @@
               <div class="breakdown-box">
 
                 <span>
-                  Growth Pool
-                </span>
-
-                <strong id="growthPoolCredit">
-                  $0.00
-                </strong>
-
-              </div>
-
-              <div class="breakdown-box">
-
-                <span>
                   Total
                 </span>
 
@@ -3866,11 +3854,6 @@
         teamEarnings:
           document.getElementById(
             "teamEarnings"
-          ),
-
-        growthPoolCredit:
-          document.getElementById(
-            "growthPoolCredit"
           ),
 
         leaderboardTotal:
@@ -5335,26 +5318,6 @@
             teamReferrals
           );
 
-        /*
-         * Do not manufacture the user's Growth Pool
-         * amount from team referrals.
-         *
-         * Only display a Growth Pool number when
-         * the API actually returns one.
-         */
-
-        const growthPoolCredit =
-          getSummaryNumber(
-            summary,
-            [
-              "growthPoolCredit",
-              "growth_pool_credit",
-              "growthPool",
-              "growth_pool"
-            ],
-            0
-          );
-
         const totalEarned =
           getSummaryNumber(
             summary,
@@ -5378,7 +5341,6 @@
           pendingReferrals,
           directEarnings,
           teamEarnings,
-          growthPoolCredit,
           totalEarned
         };
       }
@@ -5449,15 +5411,6 @@
           els.teamEarnings.textContent =
             money(
               summary.teamEarnings
-            );
-        }
-
-        if (
-          els.growthPoolCredit
-        ) {
-          els.growthPoolCredit.textContent =
-            money(
-              summary.growthPoolCredit
             );
         }
 
@@ -6321,8 +6274,7 @@
             possibleSummary.totalReferrals ||
             possibleSummary.totalEarned ||
             possibleSummary.directReferrals ||
-            possibleSummary.teamReferrals ||
-            possibleSummary.growthPoolCredit
+            possibleSummary.teamReferrals
           ) {
             renderStats(
               possibleSummary
@@ -6441,9 +6393,6 @@
               0,
 
             teamEarnings:
-              0,
-
-            growthPoolCredit:
               0,
 
             totalEarned:
@@ -7136,9 +7085,6 @@
               0,
 
             teamEarnings:
-              0,
-
-            growthPoolCredit:
               0,
 
             totalEarned:

@@ -415,6 +415,132 @@ function parseCookies(req) {
     );
 }
 
+/*
+ * Card Leo has used more than one serialized session-cookie
+ * format during development.
+ *
+ * Supported:
+ *   1. Direct JSON
+ *   2. Standard Base64 JSON
+ *   3. Base64URL JSON
+ */
+
+function parseSessionValue(
+  value
+) {
+  if (
+    isObject(value)
+  ) {
+    return value;
+  }
+
+  const raw =
+    normalizeText(
+      value
+    );
+
+  if (!raw) {
+    return null;
+  }
+
+  /*
+   * Direct JSON.
+   */
+
+  const direct =
+    safeJsonParse(
+      raw,
+      null
+    );
+
+  if (
+    isObject(direct)
+  ) {
+    return direct;
+  }
+
+  /*
+   * Standard Base64 JSON.
+   */
+
+  try {
+    const decoded =
+      Buffer
+        .from(
+          raw,
+          "base64"
+        )
+        .toString(
+          "utf8"
+        );
+
+    const parsed =
+      safeJsonParse(
+        decoded,
+        null
+      );
+
+    if (
+      isObject(parsed)
+    ) {
+      return parsed;
+    }
+  } catch {
+    // Ignore invalid Base64.
+  }
+
+  /*
+   * Base64URL JSON.
+   */
+
+  try {
+    const normalized =
+      raw
+        .replace(
+          /-/g,
+          "+"
+        )
+        .replace(
+          /_/g,
+          "/"
+        );
+
+    const padded =
+      normalized.padEnd(
+        Math.ceil(
+          normalized.length / 4
+        ) * 4,
+        "="
+      );
+
+    const decoded =
+      Buffer
+        .from(
+          padded,
+          "base64"
+        )
+        .toString(
+          "utf8"
+        );
+
+    const parsed =
+      safeJsonParse(
+        decoded,
+        null
+      );
+
+    if (
+      isObject(parsed)
+    ) {
+      return parsed;
+    }
+  } catch {
+    // Ignore invalid Base64URL.
+  }
+
+  return null;
+}
+
 function readSessionCookie(req) {
   const cookies =
     parseCookies(req);
@@ -447,9 +573,8 @@ function readSessionCookie(req) {
     }
 
     const parsed =
-      safeJsonParse(
-        raw,
-        null
+      parseSessionValue(
+        raw
       );
 
     if (
@@ -480,6 +605,7 @@ function getSessionExpiresAt(
   const candidates = [
     session.expires_at,
     session.expiresAt,
+    session.exp,
     session.session?.expires_at,
     session.session?.expiresAt,
   ];
@@ -513,9 +639,8 @@ function isSessionExpired(
     );
 
   /*
-   * If your older session format does not
-   * include expiration, do not immediately
-   * destroy the valid session.
+   * Older Card Leo sessions may not contain
+   * an expiration field.
    */
 
   if (!expiresAt) {
@@ -668,31 +793,80 @@ async function getSignupRecord({
     "portal_user_id",
   ].join(", ");
 
-  let query =
-    supabaseAdmin
-      .from("signups")
-      .select(
-        extendedFields
-      )
-      .limit(1);
+  async function executeQuery(
+    fields,
+    {
+      byId = false,
+      byEmail = false,
+    } = {}
+  ) {
+    let query =
+      supabaseAdmin
+        .from(
+          "signups"
+        )
+        .select(
+          fields
+        )
+        .limit(1);
 
-  if (signupId) {
-    query =
-      query.eq(
-        "id",
-        signupId
-      );
-  } else {
-    query =
-      query.eq(
-        "email",
-        email
-      );
+    if (
+      byId &&
+      signupId
+    ) {
+      query =
+        query.eq(
+          "id",
+          signupId
+        );
+    } else if (
+      byEmail &&
+      email
+    ) {
+      query =
+        query.ilike(
+          "email",
+          email
+        );
+    } else {
+      return {
+        data:
+          null,
+
+        error:
+          null,
+      };
+    }
+
+    return query
+      .maybeSingle();
   }
 
+  /*
+   * Prefer immutable member ID.
+   */
+
   let result =
-    await query
-      .maybeSingle();
+    signupId
+      ? await executeQuery(
+          extendedFields,
+          {
+            byId:
+              true,
+          }
+        )
+      : await executeQuery(
+          extendedFields,
+          {
+            byEmail:
+              true,
+          }
+        );
+
+  /*
+   * Older database schemas may not contain
+   * every optional field.
+   */
 
   if (
     result.error &&
@@ -700,31 +874,60 @@ async function getSignupRecord({
       result.error
     )
   ) {
-    let fallbackQuery =
-      supabaseAdmin
-        .from("signups")
-        .select(
-          baseFields
-        )
-        .limit(1);
+    result =
+      signupId
+        ? await executeQuery(
+            baseFields,
+            {
+              byId:
+                true,
+            }
+          )
+        : await executeQuery(
+            baseFields,
+            {
+              byEmail:
+                true,
+            }
+          );
+  }
 
-    if (signupId) {
-      fallbackQuery =
-        fallbackQuery.eq(
-          "id",
-          signupId
-        );
-    } else {
-      fallbackQuery =
-        fallbackQuery.eq(
-          "email",
-          email
+  /*
+   * Compatibility fallback:
+   * if an older session contains a stale ID,
+   * retry using the member email.
+   */
+
+  if (
+    !result.error &&
+    !result.data &&
+    signupId &&
+    email
+  ) {
+    result =
+      await executeQuery(
+        extendedFields,
+        {
+          byEmail:
+            true,
+        }
+      );
+
+    if (
+      result.error &&
+      isMissingOptionalTableOrColumn(
+        result.error
+      )
+    ) {
+      result =
+        await executeQuery(
+          baseFields,
+          {
+            byEmail:
+              true,
+          }
         );
     }
-
-    result =
-      await fallbackQuery
-        .maybeSingle();
   }
 
   return result;
@@ -745,7 +948,8 @@ async function getAuthenticatedMember(
     !sessionMeta?.data
   ) {
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -760,10 +964,17 @@ async function getAuthenticatedMember(
       sessionMeta
     )
   ) {
-    clearAuthCookies(res);
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -773,22 +984,16 @@ async function getAuthenticatedMember(
     };
   }
 
-  if (
-    sessionMeta.data
-      .authenticated !== true
-  ) {
-    clearAuthCookies(res);
-
-    return {
-      member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Session invalid. Please sign in again."
-        ),
-    };
-  }
+  /*
+   * IMPORTANT:
+   *
+   * Do NOT require:
+   *
+   * sessionMeta.data.authenticated === true
+   *
+   * Card Leo has used multiple compatible session formats.
+   * Resolve the real member from Supabase instead.
+   */
 
   const signupId =
     getSessionMemberId(
@@ -804,10 +1009,17 @@ async function getAuthenticatedMember(
     !signupId &&
     !email
   ) {
-    clearAuthCookies(res);
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -818,7 +1030,9 @@ async function getAuthenticatedMember(
   }
 
   const {
-    data: member,
+    data:
+      member,
+
     error,
   } =
     await getSignupRecord({
@@ -826,15 +1040,26 @@ async function getAuthenticatedMember(
       email,
     });
 
+  /*
+   * A database failure is not an authentication failure.
+   */
+
   if (error) {
     throw error;
   }
 
   if (!member?.id) {
-    clearAuthCookies(res);
+    try {
+      clearAuthCookies(
+        res
+      );
+    } catch {
+      // Best effort.
+    }
 
     return {
-      member: null,
+      member:
+        null,
 
       response:
         unauthorized(
@@ -845,18 +1070,28 @@ async function getAuthenticatedMember(
   }
 
   /*
-   * The portal should represent a real
-   * active membership.
+   * Referral portal eligibility requires:
    *
-   * We keep isMemberApproved here because
-   * existing Card Leo accounts may have
-   * different combinations of active fields.
+   * 1. Approved membership
+   * 2. Current/paid membership
+   *
+   * Do NOT clear the member's login cookie for a 403.
    */
 
   const approved =
-    isMemberApproved(member);
+    isMemberApproved(
+      member
+    );
 
-  if (!approved) {
+  const paid =
+    isMemberPaid(
+      member
+    );
+
+  if (
+    !approved ||
+    !paid
+  ) {
     const status =
       normalizeStatus(
         member.status ||
@@ -864,11 +1099,13 @@ async function getAuthenticatedMember(
       );
 
     return {
-      member: null,
+      member:
+        null,
 
       response:
         forbidden(
           res,
+
           status ===
               "pending" ||
             status ===
@@ -876,14 +1113,29 @@ async function getAuthenticatedMember(
             status ===
               "payment_pending"
             ? "Your account is still pending activation."
-            : "Your account is not active."
+            : !paid
+              ? "Your Card Leo membership payment must be current to access referrals."
+              : "Your account is not active.",
+
+          {
+            authenticated:
+              true,
+
+            requiresPayment:
+              !paid,
+
+            requires_payment:
+              !paid,
+          }
         ),
     };
   }
 
   return {
     member,
-    response: null,
+
+    response:
+      null,
   };
 }
 
@@ -1057,61 +1309,43 @@ function sanitizeMember(
    REFERRAL QUERY HELPERS
 ============================================================================ */
 
-/*
- * Your referrals table may have used one of
- * several column names during development.
- *
- * We safely try each known variation.
- */
-
 async function runReferralQuery({
   column,
-  values,
   value,
-  limit = MAX_LIMIT,
 }) {
-  let query =
-    supabaseAdmin
-      .from("referrals")
-      .select("*")
-      .order(
-        "created_at",
-        {
-          ascending: false,
-        }
-      )
-      .limit(limit);
-
   if (
-    Array.isArray(values)
+    !column ||
+    !value
   ) {
-    if (
-      !values.length
-    ) {
-      return [];
-    }
-
-    query =
-      query.in(
-        column,
-        values
-      );
-  } else {
-    query =
-      query.eq(
-        column,
-        value
-      );
+    return [];
   }
 
   const {
     data,
     error,
   } =
-    await query;
+    await supabaseAdmin
+      .from(
+        "referrals"
+      )
+      .select("*")
+      .eq(
+        column,
+        value
+      )
+      .order(
+        "created_at",
+        {
+          ascending:
+            false,
+        }
+      );
 
   if (!error) {
-    return data || [];
+    return (
+      data ||
+      []
+    );
   }
 
   if (
@@ -1119,153 +1353,148 @@ async function runReferralQuery({
       error
     )
   ) {
-    return null;
+    return [];
   }
 
   throw error;
 }
 
-/* ==========================================================================
-   DIRECT REFERRAL ROWS
-============================================================================ */
-
-async function queryDirectReferralRows({
-  memberId,
-  referralCode,
-}) {
-  const rows = [];
-
-  const referrerColumns = [
-    "referrer_signup_id",
-    "referrer_member_id",
-    "referrer_profile_id",
-    "referrer_id",
-  ];
-
-  for (
-    const column of referrerColumns
-  ) {
-    const result =
-      await runReferralQuery({
-        column,
-        value:
-          memberId,
-      });
-
-    if (
-      Array.isArray(result)
-    ) {
-      rows.push(
-        ...result
-      );
-    }
-  }
-
-  /*
-   * Only use referral_code as a fallback.
-   *
-   * This prevents a referral-code query from
-   * accidentally mixing deeper network rows
-   * into the direct-referral collection.
-   */
-
-  if (
-    !rows.length &&
-    referralCode
-  ) {
-    const result =
-      await runReferralQuery({
-        column:
-          "referral_code",
-
-        value:
-          referralCode,
-      });
-
-    if (
-      Array.isArray(result)
-    ) {
-      rows.push(
-        ...result
-      );
-    }
-  }
-
-  return uniqueRowsById(
-    rows
-  );
-}
-
-/* ==========================================================================
-   TEAM REFERRAL ROWS
-
-   TEAM LOGIC:
-   Current member -> Direct member -> Team member
-
-   Example:
-   Moe -> Marethia -> Monica
-
-   Moe:
-     Marethia = direct
-     Monica   = team
-
-   Marethia:
-     Monica = direct
-
-============================================================================ */
-
-async function queryTeamReferralRows(
-  directMemberIds = []
+async function queryDirectReferralRows(
+  member
 ) {
-  const ids =
-    Array.from(
-      new Set(
-        directMemberIds
-          .map(
-            normalizeText
-          )
-          .filter(Boolean)
-      )
+  const memberId =
+    normalizeText(
+      member?.id
     );
 
-  if (!ids.length) {
+  if (!memberId) {
     return [];
   }
 
-  const rows = [];
+  /*
+   * Card Leo referral schemas have used several
+   * names for the referring member ID.
+   */
 
-  const referrerColumns = [
+  const candidateColumns = [
     "referrer_signup_id",
     "referrer_member_id",
     "referrer_profile_id",
     "referrer_id",
   ];
 
+  const collected =
+    [];
+
   for (
     const column
-      of referrerColumns
+    of candidateColumns
   ) {
-    const result =
-      await runReferralQuery({
-        column,
-        values:
-          ids,
-      });
+    try {
+      const rows =
+        await runReferralQuery({
+          column,
+          value:
+            memberId,
+        });
 
-    if (
-      Array.isArray(result)
-    ) {
-      rows.push(
-        ...result
+      collected.push(
+        ...rows
       );
+    } catch (error) {
+      if (
+        isMissingOptionalTableOrColumn(
+          error
+        )
+      ) {
+        continue;
+      }
+
+      throw error;
     }
   }
 
   return uniqueRowsById(
-    rows
+    collected
   );
 }
 
+function getReferredIds(
+  rows = []
+) {
+  return Array.from(
+    new Set(
+      rows
+        .map(
+          (row) =>
+            getReferredMemberId(
+              row
+            )
+        )
+        .map(
+          normalizeText
+        )
+        .filter(Boolean)
+    )
+  );
+}
+
+async function queryTeamReferralRows(
+  directReferredIds = []
+) {
+  if (
+    !directReferredIds.length
+  ) {
+    return [];
+  }
+
+  const candidateColumns = [
+    "referrer_signup_id",
+    "referrer_member_id",
+    "referrer_profile_id",
+    "referrer_id",
+  ];
+
+  const collected =
+    [];
+
+  for (
+    const directMemberId
+    of directReferredIds
+  ) {
+    for (
+      const column
+      of candidateColumns
+    ) {
+      try {
+        const rows =
+          await runReferralQuery({
+            column,
+            value:
+              directMemberId,
+          });
+
+        collected.push(
+          ...rows
+        );
+      } catch (error) {
+        if (
+          isMissingOptionalTableOrColumn(
+            error
+          )
+        ) {
+          continue;
+        }
+
+        throw error;
+      }
+    }
+  }
+
+  return uniqueRowsById(
+    collected
+  );
+}
 /* ==========================================================================
    REFERRED MEMBER IDS
 ============================================================================ */
@@ -1407,7 +1636,6 @@ async function getSignupRecordsByIds(
    A row saying "registered" should not stay pending
    forever if Stripe already made that signup paid
    and approved.
-
 ============================================================================ */
 
 function getEffectiveReferralStatus(
@@ -1706,7 +1934,6 @@ function getReferralProgress(
    level:
      direct
      team
-
 ============================================================================ */
 
 function mapReferralRow({
@@ -2118,7 +2345,8 @@ async function queryReferralEvents(
       .order(
         "occurred_at",
         {
-          ascending: false,
+          ascending:
+            false,
         }
       );
 
@@ -2134,39 +2362,42 @@ async function queryReferralEvents(
     throw error;
   }
 
-  return (
-    data || []
-  ).reduce(
-    (
-      accumulator,
-      row
-    ) => {
-      const key =
-        normalizeText(
-          row.referral_id
-        );
+  const eventsByReferral =
+    {};
 
-      if (!key) {
-        return accumulator;
-      }
-
-      if (
-        !accumulator[key]
-      ) {
-        accumulator[key] =
-          [];
-      }
-
-      accumulator[key].push(
-        mapEventRow(row)
+  for (
+    const row of data || []
+  ) {
+    const referralId =
+      normalizeText(
+        row.referral_id
       );
 
-      return accumulator;
-    },
-    {}
-  );
-}
+    if (!referralId) {
+      continue;
+    }
 
+    if (
+      !eventsByReferral[
+        referralId
+      ]
+    ) {
+      eventsByReferral[
+        referralId
+      ] = [];
+    }
+
+    eventsByReferral[
+      referralId
+    ].push(
+      mapEventRow(
+        row
+      )
+    );
+  }
+
+  return eventsByReferral;
+}
 /* ==========================================================================
    FILTER REFERRALS
 ============================================================================ */
@@ -2512,7 +2743,6 @@ function buildPortalSummary(
    We keep the shared helper available, but construct
    exact portal-level direct/team values because we already
    know the network level of every returned row.
-
 ============================================================================ */
 
 function buildPortalTower(
@@ -2998,15 +3228,13 @@ export default async function handler(
        Moe sees:
          Marethia direct
          Monica team
-
     ---------------------------------------------------------------------- */
 
     const rawTeamRows =
       await queryTeamReferralRows(
         directReferredIds
       );
-
-    /*
+          /*
      * Prevent accidental duplication if a row
      * was already counted as direct.
      */
@@ -3081,6 +3309,7 @@ export default async function handler(
 
           return mapReferralRow({
             row,
+
             currentMember:
               member,
 
@@ -3114,6 +3343,7 @@ export default async function handler(
 
           return mapReferralRow({
             row,
+
             currentMember:
               member,
 
@@ -3686,6 +3916,7 @@ export default async function handler(
 
     return serverError(
       res,
+
       "Failed to load portal referrals.",
 
       process.env.NODE_ENV ===

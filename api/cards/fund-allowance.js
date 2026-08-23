@@ -991,7 +991,6 @@ function isSessionExpired(
     )
   );
 }
-
 /* ==========================================================================
    MEMBER STATUS
 ============================================================================ */
@@ -1999,7 +1998,6 @@ async function claimAllowanceForProcessing({
   return data ||
     null;
 }
-
 /* ==========================================================================
    UPDATE ALLOWANCE
 ============================================================================ */
@@ -2730,7 +2728,6 @@ function buildSafeMember(
         .join(" "),
   };
 }
-
 /* ==========================================================================
    HANDLER
 ============================================================================ */
@@ -2739,14 +2736,9 @@ export default async function handler(
   req,
   res
 ) {
-  if (
-    typeof setNoStore ===
-    "function"
-  ) {
-    setNoStore(
-      res
-    );
-  }
+  setNoStore(
+    res
+  );
 
   logRequestStart(
     req,
@@ -2755,10 +2747,6 @@ export default async function handler(
         "fund_allowance",
     }
   );
-
-  /* ------------------------------------------------------------------------
-     METHOD
-  ------------------------------------------------------------------------ */
 
   if (
     req.method !==
@@ -2787,7 +2775,66 @@ export default async function handler(
 
   try {
     /* ======================================================================
-       AUTHENTICATE
+       LITHIC CONFIG
+    ====================================================================== */
+
+    const integrationStatus =
+      getLithicIntegrationStatus();
+
+    if (
+      !isLithicEnabled()
+    ) {
+      return serviceUnavailable(
+        res,
+        "Card Leo allowance card funding is not enabled yet.",
+        {
+          code:
+            "LITHIC_DISABLED",
+
+          lithic: {
+            enabled:
+              false,
+
+            configured:
+              isLithicConfigured(),
+
+            environment:
+              getLithicEnvironment(),
+
+            integrationStatus,
+          },
+        }
+      );
+    }
+
+    if (
+      !isLithicConfigured()
+    ) {
+      return serviceUnavailable(
+        res,
+        "Card Leo allowance card funding is not fully configured yet.",
+        {
+          code:
+            "LITHIC_NOT_CONFIGURED",
+
+          lithic: {
+            enabled:
+              true,
+
+            configured:
+              false,
+
+            environment:
+              getLithicEnvironment(),
+
+            integrationStatus,
+          },
+        }
+      );
+    }
+
+    /* ======================================================================
+       AUTHENTICATE MEMBER
     ====================================================================== */
 
     const {
@@ -2808,8 +2855,25 @@ export default async function handler(
         member
       );
 
+    if (!memberId) {
+      return forbidden(
+        res,
+        "Unable to identify your Card Leo member account.",
+        {
+          code:
+            "MEMBER_ID_MISSING",
+        }
+      );
+    }
+
     /* ======================================================================
        REQUEST BODY
+
+       IMPORTANT:
+       The browser is allowed to choose ONLY the allowance transaction ID.
+
+       Amount, member, account and funding destination are resolved
+       server-side.
     ====================================================================== */
 
     const body =
@@ -2834,34 +2898,16 @@ export default async function handler(
     ) {
       return badRequest(
         res,
-        "An allowance transaction ID is required.",
+        "allowanceTransactionId is required.",
         {
           code:
             "ALLOWANCE_TRANSACTION_ID_REQUIRED",
-
-          expectedBody: {
-            allowanceTransactionId:
-              "approved-allowance-transaction-id",
-          },
         }
       );
     }
 
-    /*
-     * SECURITY:
-     *
-     * Ignore all of the following even if the browser supplies them:
-     *
-     * body.amount
-     * body.amount_cents
-     * body.member_id
-     * body.account_token
-     * body.card_token
-     * body.financial_account_token
-     */
-
     /* ======================================================================
-       MEMBER CARD
+       MEMBER CARD RECORD
     ====================================================================== */
 
     const {
@@ -2869,18 +2915,18 @@ export default async function handler(
         memberCard,
 
       tableMissing:
-        memberCardsMissing,
+        memberCardsTableMissing,
     } =
       await getMemberCardRecord(
         memberId
       );
 
     if (
-      memberCardsMissing
+      memberCardsTableMissing
     ) {
       return serviceUnavailable(
         res,
-        "The Card Leo member_cards table has not been created yet.",
+        "Card Leo member card storage has not been configured yet.",
         {
           code:
             "MEMBER_CARDS_TABLE_MISSING",
@@ -2888,18 +2934,16 @@ export default async function handler(
       );
     }
 
-    if (
-      !memberCard?.id
-    ) {
-      return conflict(
+    if (!memberCard) {
+      return forbidden(
         res,
-        "Your Card Leo card account has not been created yet.",
+        "Create your Card Leo allowance card before loading allowance.",
         {
           code:
-            "MEMBER_CARD_ACCOUNT_REQUIRED",
+            "MEMBER_CARD_NOT_CREATED",
 
-          nextEndpoint:
-            "/api/cards/create-cardholder",
+          cardPage:
+            "/portal/card.html",
         }
       );
     }
@@ -2914,30 +2958,18 @@ export default async function handler(
           .lithic_account_holder_token
       );
 
-    const accountToken =
-      normalizeString(
-        memberCard
-          .lithic_account_token
-      );
-
-    const cardToken =
-      normalizeString(
-        memberCard
-          .lithic_card_token
-      );
-
     if (
       !accountHolderToken
     ) {
-      return conflict(
+      return forbidden(
         res,
-        "A Lithic account holder must be created before allowance can be funded.",
+        "Your Card Leo account holder setup must be completed before allowance can be funded.",
         {
           code:
-            "LITHIC_ACCOUNT_HOLDER_REQUIRED",
+            "ACCOUNT_HOLDER_NOT_CREATED",
 
-          nextEndpoint:
-            "/api/cards/create-cardholder",
+          cardPage:
+            "/portal/card.html",
         }
       );
     }
@@ -2947,59 +2979,111 @@ export default async function handler(
         memberCard
       )
     ) {
-      return conflict(
+      return forbidden(
         res,
-        "Your Lithic account holder must be accepted before allowance can be funded.",
+        "Your Card Leo account holder must be approved before allowance can be funded.",
         {
           code:
-            "LITHIC_ACCOUNT_HOLDER_NOT_ACCEPTED",
+            "ACCOUNT_HOLDER_NOT_ACCEPTED",
 
           accountHolderStatus:
             getAccountHolderStatus(
               memberCard
             ) ||
             "UNKNOWN",
-        }
-      );
-    }
 
-    if (
-      !accountToken
-    ) {
-      return conflict(
-        res,
-        "The Lithic account token is missing.",
-        {
-          code:
-            "LITHIC_ACCOUNT_TOKEN_REQUIRED",
-
-          requiresReconciliation:
-            true,
-        }
-      );
-    }
-
-    if (
-      !cardToken
-    ) {
-      return conflict(
-        res,
-        "Your Card Leo virtual card must be created before allowance can be loaded.",
-        {
-          code:
-            "LITHIC_CARD_REQUIRED",
-
-          nextEndpoint:
-            "/api/cards/create-virtual-card",
+          cardPage:
+            "/portal/card.html",
         }
       );
     }
 
     /* ======================================================================
-       LOAD ALLOWANCE
+       LITHIC ACCOUNT
+    ====================================================================== */
 
-       The .eq(member_id, authenticated member) check prevents a member
-       from submitting another member's transaction ID.
+    const accountToken =
+      normalizeString(
+        memberCard
+          .lithic_account_token
+      );
+
+    if (!accountToken) {
+      return forbidden(
+        res,
+        "Your Card Leo card account has not been created yet.",
+        {
+          code:
+            "LITHIC_ACCOUNT_NOT_CREATED",
+
+          cardPage:
+            "/portal/card.html",
+        }
+      );
+    }
+
+    /* ======================================================================
+       CARD
+    ====================================================================== */
+
+    const cardToken =
+      normalizeString(
+        memberCard
+          .lithic_card_token
+      );
+
+    if (!cardToken) {
+      return forbidden(
+        res,
+        "Your Card Leo allowance card has not been created yet.",
+        {
+          code:
+            "CARD_NOT_CREATED",
+
+          cardPage:
+            "/portal/card.html",
+        }
+      );
+    }
+
+    const cardStatus =
+      normalizeStatus(
+        memberCard
+          .card_status
+      );
+
+    if (
+      [
+        "closed",
+        "terminated",
+        "canceled",
+        "cancelled",
+      ].includes(
+        cardStatus
+      )
+    ) {
+      return forbidden(
+        res,
+        "Your Card Leo allowance card cannot receive allowance in its current status.",
+        {
+          code:
+            "CARD_NOT_FUNDABLE",
+
+          cardStatus:
+            cardStatus ||
+            "unknown",
+        }
+      );
+    }
+
+    /* ======================================================================
+       LOAD ALLOWANCE TRANSACTION
+
+       Ownership is enforced here using BOTH:
+
+       transaction ID
+       +
+       authenticated member ID
     ====================================================================== */
 
     const {
@@ -3011,7 +3095,6 @@ export default async function handler(
     } =
       await getAllowanceTransaction({
         allowanceTransactionId,
-
         memberId,
       });
 
@@ -3020,7 +3103,7 @@ export default async function handler(
     ) {
       return serviceUnavailable(
         res,
-        "The Card Leo allowance_transactions table has not been created yet.",
+        "Card Leo allowance storage has not been configured yet.",
         {
           code:
             "ALLOWANCE_TRANSACTIONS_TABLE_MISSING",
@@ -3029,20 +3112,22 @@ export default async function handler(
     }
 
     if (
-      !allowanceTransaction?.id
+      !allowanceTransaction
     ) {
       return notFound(
         res,
-        "This approved allowance could not be found for your member account.",
+        "Allowance transaction was not found for this member.",
         {
           code:
-            "ALLOWANCE_NOT_FOUND",
+            "ALLOWANCE_TRANSACTION_NOT_FOUND",
         }
       );
     }
 
     /* ======================================================================
-       ALREADY FUNDED
+       IDEMPOTENT COMPLETED RESPONSE
+
+       If this exact allowance was already funded, do NOT send money again.
     ====================================================================== */
 
     if (
@@ -3050,20 +3135,38 @@ export default async function handler(
         allowanceTransaction
       )
     ) {
+      const providerToken =
+        getExistingProviderTransactionToken(
+          allowanceTransaction
+        );
+
+      logRequestSuccess(
+        req,
+        {
+          scope:
+            "fund_allowance_already_funded",
+
+          memberId,
+
+          allowanceTransactionId,
+
+          providerTransactionToken:
+            providerToken ||
+            null,
+        }
+      );
+
       return success(
         res,
         {
           authenticated:
             true,
 
-          funded:
+          alreadyFunded:
             true,
 
           processing:
             false,
-
-          alreadyFunded:
-            true,
 
           member:
             buildSafeMember(
@@ -3075,8 +3178,28 @@ export default async function handler(
               allowanceTransaction
             ),
 
-          lithic:
-            getLithicIntegrationStatus(),
+          provider: {
+            name:
+              "lithic",
+
+            environment:
+              getLithicEnvironment(),
+
+            transactionToken:
+              providerToken ||
+              null,
+
+            status:
+              normalizeString(
+                allowanceTransaction
+                  .provider_status
+              ) ||
+              normalizeString(
+                allowanceTransaction
+                  .status
+              ) ||
+              "FUNDED",
+          },
 
           links: {
             card:
@@ -3085,6 +3208,9 @@ export default async function handler(
             memberCard:
               "/api/cards/member-card",
           },
+
+          generatedAt:
+            nowIso(),
         },
         "This Card Leo allowance has already been funded."
       );
@@ -3093,7 +3219,8 @@ export default async function handler(
     /* ======================================================================
        ALREADY PROCESSING
 
-       Do not initiate another provider request.
+       Another request may have already claimed this transaction.
+       Never submit another transfer while it is processing.
     ====================================================================== */
 
     if (
@@ -3101,33 +3228,24 @@ export default async function handler(
         allowanceTransaction
       )
     ) {
-      return success(
+      return conflict(
         res,
+        "This Card Leo allowance is already being processed.",
         {
+          code:
+            "ALLOWANCE_ALREADY_PROCESSING",
+
           authenticated:
             true,
 
-          funded:
-            false,
-
           processing:
-            true,
-
-          alreadyFunded:
-            false,
-
-          alreadyProcessing:
             true,
 
           allowance:
             sanitizeAllowanceTransaction(
               allowanceTransaction
             ),
-
-          lithic:
-            getLithicIntegrationStatus(),
-        },
-        "This Card Leo allowance is already processing."
+        }
       );
     }
 
@@ -3143,21 +3261,58 @@ export default async function handler(
     if (
       !allowanceValidation.valid
     ) {
-      return conflict(
+      if (
+        allowanceValidation
+          .errors
+          .completed
+      ) {
+        return conflict(
+          res,
+          allowanceValidation
+            .errors
+            .completed,
+          {
+            code:
+              "ALLOWANCE_ALREADY_FUNDED",
+
+            errors:
+              allowanceValidation
+                .errors,
+          }
+        );
+      }
+
+      if (
+        allowanceValidation
+          .errors
+          .processing
+      ) {
+        return conflict(
+          res,
+          allowanceValidation
+            .errors
+            .processing,
+          {
+            code:
+              "ALLOWANCE_ALREADY_PROCESSING",
+
+            errors:
+              allowanceValidation
+                .errors,
+          }
+        );
+      }
+
+      return badRequest(
         res,
-        "This allowance is not ready to be funded.",
+        "This allowance transaction is not eligible for funding.",
         {
           code:
-            "ALLOWANCE_NOT_READY",
+            "ALLOWANCE_NOT_ELIGIBLE",
 
           errors:
             allowanceValidation
               .errors,
-
-          allowance:
-            sanitizeAllowanceTransaction(
-              allowanceTransaction
-            ),
         }
       );
     }
@@ -3165,163 +3320,6 @@ export default async function handler(
     const amountCents =
       allowanceValidation
         .amountCents;
-
-    /* ======================================================================
-       LITHIC ENABLED
-    ====================================================================== */
-
-    if (
-      !isLithicEnabled()
-    ) {
-      return success(
-        res,
-        {
-          authenticated:
-            true,
-
-          funded:
-            false,
-
-          processing:
-            false,
-
-          alreadyFunded:
-            false,
-
-          configurationRequired:
-            true,
-
-          allowance:
-            sanitizeAllowanceTransaction(
-              allowanceTransaction
-            ),
-
-          amount: {
-            cents:
-              amountCents,
-
-            dollars:
-              centsToDollars(
-                amountCents
-              ),
-
-            currency:
-              DEFAULT_CURRENCY,
-          },
-
-          lithic:
-            getLithicIntegrationStatus(),
-        },
-        "The allowance is approved and ready, but Lithic funding is currently disabled."
-      );
-    }
-
-    if (
-      !isLithicConfigured()
-    ) {
-      return serviceUnavailable(
-        res,
-        "Lithic is enabled but is not fully configured.",
-        {
-          code:
-            "LITHIC_NOT_CONFIGURED",
-
-          lithic:
-            getLithicIntegrationStatus(),
-        }
-      );
-    }
-
-    /* ======================================================================
-       TRANSFER CONFIGURATION
-    ====================================================================== */
-
-    const transferConfig =
-      validateBookTransferConfiguration();
-
-    if (
-      !transferConfig.valid
-    ) {
-      return serviceUnavailable(
-        res,
-        "Card Leo's Lithic allowance-transfer configuration is incomplete.",
-        {
-          code:
-            "LITHIC_BOOK_TRANSFER_CONFIGURATION_REQUIRED",
-
-          errors:
-            transferConfig
-              .errors,
-
-          requirements: [
-            "LITHIC_PROGRAM_ISSUING_FINANCIAL_ACCOUNT_TOKEN",
-            "LITHIC_BOOK_TRANSFER_CATEGORY",
-            "LITHIC_BOOK_TRANSFER_SUBTYPE",
-          ],
-        }
-      );
-    }
-
-    /* ======================================================================
-       DESTINATION FINANCIAL ACCOUNT
-
-       Server resolves this from the authenticated member's Lithic account.
-    ====================================================================== */
-
-    let memberFinancialAccount;
-
-    try {
-      memberFinancialAccount =
-        await getMemberIssuingFinancialAccount(
-          accountToken
-        );
-    } catch (
-      error
-    ) {
-      logRequestError(
-        req,
-        error,
-        {
-          scope:
-            "fund_allowance_member_financial_account",
-
-          memberId,
-
-          allowanceTransactionId,
-        }
-      );
-
-      return serviceUnavailable(
-        res,
-        "Card Leo could not locate your Lithic issuing financial account.",
-        {
-          code:
-            "MEMBER_ISSUING_FINANCIAL_ACCOUNT_LOOKUP_FAILED",
-        }
-      );
-    }
-
-    if (
-      !memberFinancialAccount?.token
-    ) {
-      return conflict(
-        res,
-        "Your Lithic account exists, but an issuing financial account is not available yet.",
-        {
-          code:
-            "MEMBER_ISSUING_FINANCIAL_ACCOUNT_REQUIRED",
-
-          requiresReconciliation:
-            true,
-        }
-      );
-    }
-
-    const memberFinancialAccountToken =
-      normalizeString(
-        memberFinancialAccount
-          .token
-      );
 
     /* ======================================================================
        IDEMPOTENCY
@@ -3333,15 +3331,138 @@ export default async function handler(
       );
 
     /* ======================================================================
-       CLAIM ALLOWANCE
-
-       We save/claim the idempotency key before calling Lithic.
+       BOOK TRANSFER CONFIGURATION
     ====================================================================== */
 
-    let processingTransaction;
+    const transferConfig =
+      validateBookTransferConfiguration();
+
+    if (
+      !transferConfig.valid
+    ) {
+      return serviceUnavailable(
+        res,
+        "Card Leo allowance transfer configuration is incomplete.",
+        {
+          code:
+            "BOOK_TRANSFER_NOT_CONFIGURED",
+
+          configuration:
+            process.env.NODE_ENV ===
+              "development"
+              ? transferConfig.errors
+              : undefined,
+        }
+      );
+    }
+
+    /* ======================================================================
+       MEMBER DESTINATION FINANCIAL ACCOUNT
+    ====================================================================== */
+
+    let destinationFinancialAccount;
 
     try {
-      processingTransaction =
+      destinationFinancialAccount =
+        await getMemberIssuingFinancialAccount(
+          accountToken
+        );
+    } catch (
+      error
+    ) {
+      logRequestError(
+        req,
+        error,
+        {
+          scope:
+            "fund_allowance_destination_account",
+
+          memberId,
+
+          allowanceTransactionId,
+        }
+      );
+
+      return serviceUnavailable(
+        res,
+        "Unable to verify your Card Leo issuing account right now.",
+        {
+          code:
+            "DESTINATION_ACCOUNT_LOOKUP_FAILED",
+        }
+      );
+    }
+
+    if (
+      !destinationFinancialAccount
+    ) {
+      return forbidden(
+        res,
+        "Your Card Leo issuing financial account is not available yet.",
+        {
+          code:
+            "ISSUING_FINANCIAL_ACCOUNT_NOT_FOUND",
+
+          cardPage:
+            "/portal/card.html",
+        }
+      );
+    }
+
+    const destinationFinancialAccountToken =
+      normalizeString(
+        destinationFinancialAccount
+          .token
+      );
+
+    if (
+      !destinationFinancialAccountToken
+    ) {
+      return serviceUnavailable(
+        res,
+        "Your Card Leo issuing account could not be resolved.",
+        {
+          code:
+            "ISSUING_FINANCIAL_ACCOUNT_TOKEN_MISSING",
+        }
+      );
+    }
+
+    /* ======================================================================
+       SOURCE FINANCIAL ACCOUNT
+
+       This value comes ONLY from Card Leo's server environment.
+    ====================================================================== */
+
+    const sourceFinancialAccountToken =
+      transferConfig
+        .sourceToken;
+
+    if (
+      sourceFinancialAccountToken ===
+      destinationFinancialAccountToken
+    ) {
+      return serviceUnavailable(
+        res,
+        "Card Leo allowance transfer accounts are not configured correctly.",
+        {
+          code:
+            "SOURCE_DESTINATION_ACCOUNT_MATCH",
+        }
+      );
+    }
+
+    /* ======================================================================
+       CLAIM ALLOWANCE
+
+       The transaction must be successfully changed from a READY state to
+       PROCESSING before any provider transfer is submitted.
+    ====================================================================== */
+
+    let claimedAllowance;
+
+    try {
+      claimedAllowance =
         await claimAllowanceForProcessing({
           transaction:
             allowanceTransaction,
@@ -3356,7 +3477,7 @@ export default async function handler(
         error,
         {
           scope:
-            "fund_allowance_claim_processing",
+            "fund_allowance_claim",
 
           memberId,
 
@@ -3364,94 +3485,128 @@ export default async function handler(
         }
       );
 
-      return serverError(
-        res,
-        "Card Leo could not safely lock this allowance for processing.",
-        {
-          code:
-            "ALLOWANCE_PROCESSING_LOCK_FAILED",
-        }
-      );
+      throw error;
     }
 
-    /*
-     * Another request may have claimed it between our SELECT and UPDATE.
-     */
-
     if (
-      !processingTransaction
+      !claimedAllowance
     ) {
+      /*
+       * Another request may have updated the row after we originally read it.
+       * Re-read the transaction before deciding what happened.
+       */
+
       const {
         transaction:
-          currentTransaction,
+          latestAllowance,
       } =
         await getAllowanceTransaction({
           allowanceTransactionId,
-
           memberId,
         });
 
       if (
+        latestAllowance &&
         isAlreadyFunded(
-          currentTransaction
+          latestAllowance
         )
       ) {
         return success(
           res,
           {
-            funded:
+            authenticated:
+              true,
+
+            alreadyFunded:
               true,
 
             processing:
               false,
 
-            alreadyFunded:
-              true,
+            member:
+              buildSafeMember(
+                member
+              ),
 
             allowance:
               sanitizeAllowanceTransaction(
-                currentTransaction
+                latestAllowance
               ),
+
+            provider: {
+              name:
+                "lithic",
+
+              environment:
+                getLithicEnvironment(),
+
+              transactionToken:
+                getExistingProviderTransactionToken(
+                  latestAllowance
+                ) ||
+                null,
+
+              status:
+                normalizeString(
+                  latestAllowance
+                    .provider_status
+                ) ||
+                "FUNDED",
+            },
+
+            generatedAt:
+              nowIso(),
           },
           "This Card Leo allowance has already been funded."
         );
       }
 
-      return success(
+      if (
+        latestAllowance &&
+        isAlreadyProcessing(
+          latestAllowance
+        )
+      ) {
+        return conflict(
+          res,
+          "This Card Leo allowance is already being processed.",
+          {
+            code:
+              "ALLOWANCE_ALREADY_PROCESSING",
+
+            authenticated:
+              true,
+
+            processing:
+              true,
+
+            allowance:
+              sanitizeAllowanceTransaction(
+                latestAllowance
+              ),
+          }
+        );
+      }
+
+      return conflict(
         res,
+        "This Card Leo allowance could not be claimed for funding. Refresh your rewards and try again.",
         {
-          funded:
-            false,
-
-          processing:
-            true,
-
-          alreadyFunded:
-            false,
-
-          alreadyProcessing:
-            true,
-
-          allowance:
-            sanitizeAllowanceTransaction(
-              currentTransaction ||
-              allowanceTransaction
-            ),
-        },
-        "This Card Leo allowance is already being processed."
+          code:
+            "ALLOWANCE_CLAIM_FAILED",
+        }
       );
     }
 
     /* ======================================================================
-       TRANSFER
+       BUILD TRANSFER
     ====================================================================== */
 
     const memo =
       buildTransferMemo({
         member,
-
         transaction:
-          processingTransaction,
+          claimedAllowance,
       });
 
     let transferResult;
@@ -3460,11 +3615,10 @@ export default async function handler(
       transferResult =
         await createLithicBookTransfer({
           fromFinancialAccountToken:
-            transferConfig
-              .sourceToken,
+            sourceFinancialAccountToken,
 
           toFinancialAccountToken:
-            memberFinancialAccountToken,
+            destinationFinancialAccountToken,
 
           amountCents,
 
@@ -3481,37 +3635,18 @@ export default async function handler(
           idempotencyKey,
         });
     } catch (
-      lithicError
+      error
     ) {
-      logRequestError(
-        req,
-        lithicError,
-        {
-          scope:
-            "fund_allowance_lithic_transfer",
-
-          memberId,
-
-          allowanceTransactionId,
-
-          amountCents,
-
-          environment:
-            getLithicEnvironment(),
-        }
-      );
-
       /*
-       * IMPORTANT:
+       * The provider call failed.
        *
-       * We retain the same idempotency key.
-       *
-       * Do not create a different one on retry.
+       * Mark the allowance failed so it does not remain permanently
+       * stuck in PROCESSING.
        */
 
       try {
         await updateAllowanceTransaction(
-          allowanceTransaction.id,
+          allowanceTransactionId,
           {
             status:
               "failed",
@@ -3520,15 +3655,16 @@ export default async function handler(
               "lithic",
 
             provider_status:
-              "failed",
-
-            provider_error:
-              lithicError
-                ?.message ||
-              "Lithic book transfer failed.",
+              "request_failed",
 
             funding_failed_at:
               nowIso(),
+
+            funding_error:
+              normalizeString(
+                error?.message
+              ) ||
+              "Lithic transfer request failed.",
           }
         );
       } catch (
@@ -3539,7 +3675,7 @@ export default async function handler(
           updateError,
           {
             scope:
-              "fund_allowance_save_provider_failure",
+              "fund_allowance_failure_update",
 
             memberId,
 
@@ -3548,25 +3684,412 @@ export default async function handler(
         );
       }
 
-      const providerStatus =
-        Number(
-          lithicError
-            ?.status
-        ) ||
-        502;
-
-      return sendJson(
-        res,
-        providerStatus >= 400 &&
-        providerStatus <= 599
-          ? providerStatus
-          : 502,
+      logRequestError(
+        req,
+        error,
         {
-          success:
-            false,
+          scope:
+            "fund_allowance_provider_transfer",
 
-          ok:
-            false,
+          memberId,
+
+          allowanceTransactionId,
+        }
+      );
+
+      return serviceUnavailable(
+        res,
+        "Card Leo could not submit your allowance transfer right now.",
+        {
+          code:
+            "ALLOWANCE_TRANSFER_FAILED",
+        }
+      );
+    }
+
+    /* ======================================================================
+       PARSE PROVIDER RESPONSE
+    ====================================================================== */
+
+    const transfer =
+      parseBookTransfer(
+        transferResult
+      );
+
+    const providerTransactionToken =
+      normalizeString(
+        transfer.token
+      );
+
+    const providerStatus =
+      normalizeString(
+        transfer.status
+      ).toUpperCase();
+
+    const providerResult =
+      normalizeString(
+        transfer.result
+      ).toUpperCase();
+
+    /*
+     * A successful API call must still return a provider transaction token.
+     */
+
+    if (
+      !providerTransactionToken
+    ) {
+      try {
+        await updateAllowanceTransaction(
+          allowanceTransactionId,
+          {
+            status:
+              "failed",
+
+            provider:
+              "lithic",
+
+            provider_status:
+              providerStatus ||
+              "missing_transaction_token",
+
+            funding_failed_at:
+              nowIso(),
+
+            funding_error:
+              "Lithic transfer response did not include a transaction token.",
+          }
+        );
+      } catch (
+        updateError
+      ) {
+        logRequestError(
+          req,
+          updateError,
+          {
+            scope:
+              "fund_allowance_missing_token_update",
+
+            memberId,
+
+            allowanceTransactionId,
+          }
+        );
+      }
+
+      return serviceUnavailable(
+        res,
+        "Card Leo could not confirm the allowance transfer.",
+        {
+          code:
+            "TRANSFER_TOKEN_MISSING",
+        }
+      );
+    }
+
+    /* ======================================================================
+       CLASSIFY PROVIDER RESULT
+    ====================================================================== */
+
+    const approvedProviderStatuses =
+      new Set([
+        "APPROVED",
+        "COMPLETED",
+        "COMPLETE",
+        "SETTLED",
+        "SUCCEEDED",
+        "SUCCESS",
+      ]);
+
+    const processingProviderStatuses =
+      new Set([
+        "PENDING",
+        "PROCESSING",
+        "SUBMITTED",
+        "OPEN",
+        "CREATED",
+      ]);
+
+    const rejectedProviderStatuses =
+      new Set([
+        "DECLINED",
+        "REJECTED",
+        "FAILED",
+        "CANCELED",
+        "CANCELLED",
+        "REVERSED",
+      ]);
+
+    const providerState =
+      providerResult ||
+      providerStatus;
+
+    const transferApproved =
+      approvedProviderStatuses.has(
+        providerResult
+      ) ||
+      approvedProviderStatuses.has(
+        providerStatus
+      );
+
+    const transferRejected =
+      rejectedProviderStatuses.has(
+        providerResult
+      ) ||
+      rejectedProviderStatuses.has(
+        providerStatus
+      );
+
+    const transferProcessing =
+      !transferApproved &&
+      !transferRejected &&
+      (
+        processingProviderStatuses.has(
+          providerResult
+        ) ||
+        processingProviderStatuses.has(
+          providerStatus
+        ) ||
+        Boolean(
+          providerTransactionToken
+        )
+      );
+
+    /* ======================================================================
+       DATABASE STATUS
+    ====================================================================== */
+
+    let nextAllowanceStatus =
+      "processing";
+
+    let nextProviderStatus =
+      providerState ||
+      "PROCESSING";
+
+    if (
+      transferApproved
+    ) {
+      nextAllowanceStatus =
+        "funded";
+
+      nextProviderStatus =
+        providerState ||
+        "APPROVED";
+    } else if (
+      transferRejected
+    ) {
+      nextAllowanceStatus =
+        "failed";
+
+      nextProviderStatus =
+        providerState ||
+        "FAILED";
+    } else if (
+      transferProcessing
+    ) {
+      nextAllowanceStatus =
+        "processing";
+
+      nextProviderStatus =
+        providerState ||
+        "PROCESSING";
+    }
+
+    /* ======================================================================
+       SAVE PROVIDER RESULT
+    ====================================================================== */
+
+    const updatePayload = {
+      status:
+        nextAllowanceStatus,
+
+      provider:
+        "lithic",
+
+      provider_status:
+        nextProviderStatus,
+
+      provider_transaction_token:
+        providerTransactionToken,
+
+      lithic_transaction_token:
+        providerTransactionToken,
+
+      external_reference:
+        providerTransactionToken,
+
+      idempotency_key:
+        idempotencyKey,
+
+      provider_category:
+        transfer.category ||
+        transferConfig.category,
+
+      provider_subtype:
+        transfer.subtype ||
+        transferConfig.subtype,
+
+      provider_created_at:
+        transfer.createdAt,
+
+      provider_updated_at:
+        transfer.updatedAt,
+    };
+
+    if (
+      transferApproved
+    ) {
+      updatePayload.funded_at =
+        nowIso();
+
+      updatePayload.funding_completed_at =
+        nowIso();
+
+      updatePayload.funding_failed_at =
+        null;
+
+      updatePayload.funding_error =
+        null;
+    }
+
+    if (
+      transferRejected
+    ) {
+      updatePayload.funding_failed_at =
+        nowIso();
+
+      updatePayload.funding_error =
+        `Lithic transfer returned ${nextProviderStatus}.`;
+    }
+
+    let updatedAllowance;
+
+    try {
+      updatedAllowance =
+        await updateAllowanceTransaction(
+          allowanceTransactionId,
+          updatePayload
+        );
+    } catch (
+      error
+    ) {
+      /*
+       * IMPORTANT:
+       *
+       * The provider transfer already exists at this point.
+       *
+       * DO NOT retry the transfer here.
+       *
+       * The deterministic idempotency key protects against a future
+       * duplicate provider transfer, but this database error must still
+       * be surfaced for reconciliation.
+       */
+
+      logRequestError(
+        req,
+        error,
+        {
+          scope:
+            "fund_allowance_provider_saved_db_failed",
+
+          memberId,
+
+          allowanceTransactionId,
+
+          providerTransactionToken,
+        }
+      );
+
+      return serverError(
+        res,
+        "Your allowance transfer was submitted, but Card Leo could not finish saving the transfer status. Please contact support before trying again.",
+        {
+          code:
+            "TRANSFER_CREATED_DATABASE_UPDATE_FAILED",
+
+          transferSubmitted:
+            true,
+
+          providerTransactionToken,
+
+          providerStatus:
+            nextProviderStatus,
+        }
+      );
+    }
+        /* ======================================================================
+       UPDATED BALANCE
+    ====================================================================== */
+
+    let balance =
+      null;
+
+    /*
+     * Balance lookup is best effort.
+     *
+     * A balance-read failure must NOT turn a successfully submitted
+     * allowance transfer into a failed transfer.
+     */
+
+    try {
+      balance =
+        await getFinancialAccountBalance(
+          destinationFinancialAccountToken
+        );
+    } catch (
+      balanceError
+    ) {
+      logRequestError(
+        req,
+        balanceError,
+        {
+          scope:
+            "fund_allowance_balance_refresh",
+
+          memberId,
+
+          allowanceTransactionId,
+
+          providerTransactionToken,
+        }
+      );
+
+      balance =
+        null;
+    }
+
+    /* ======================================================================
+       PROVIDER REJECTED
+    ====================================================================== */
+
+    if (
+      transferRejected
+    ) {
+      logRequestError(
+        req,
+        new Error(
+          `Lithic allowance transfer returned ${nextProviderStatus}.`
+        ),
+        {
+          scope:
+            "fund_allowance_provider_rejected",
+
+          memberId,
+
+          allowanceTransactionId,
+
+          providerTransactionToken,
+
+          providerStatus:
+            nextProviderStatus,
+        }
+      );
+
+      return conflict(
+        res,
+        "Card Leo could not fund this allowance because the card provider rejected the transfer.",
+        {
+          code:
+            "ALLOWANCE_TRANSFER_REJECTED",
 
           authenticated:
             true,
@@ -3577,20 +4100,102 @@ export default async function handler(
           processing:
             false,
 
-          message:
-            lithicError
-              ?.message ||
-            "Lithic could not fund the Card Leo allowance.",
+          member:
+            buildSafeMember(
+              member
+            ),
 
-          code:
-            lithicError
-              ?.code ||
-            "LITHIC_BOOK_TRANSFER_FAILED",
+          allowance:
+            sanitizeAllowanceTransaction(
+              updatedAllowance
+            ),
 
-          allowance: {
-            id:
-              allowanceTransaction.id,
+          provider: {
+            name:
+              "lithic",
 
+            environment:
+              getLithicEnvironment(),
+
+            transactionToken:
+              providerTransactionToken,
+
+            status:
+              nextProviderStatus,
+
+            result:
+              providerResult ||
+              null,
+          },
+
+          balance,
+
+          links: {
+            card:
+              "/portal/card.html",
+
+            memberCard:
+              "/api/cards/member-card",
+          },
+
+          generatedAt:
+            nowIso(),
+        }
+      );
+    }
+
+    /* ======================================================================
+       PROVIDER PROCESSING
+    ====================================================================== */
+
+    if (
+      transferProcessing
+    ) {
+      logRequestSuccess(
+        req,
+        {
+          scope:
+            "fund_allowance_processing",
+
+          memberId,
+
+          allowanceTransactionId,
+
+          providerTransactionToken,
+
+          providerStatus:
+            nextProviderStatus,
+
+          amountCents,
+        }
+      );
+
+      return success(
+        res,
+        {
+          authenticated:
+            true,
+
+          funded:
+            false,
+
+          processing:
+            true,
+
+          alreadyFunded:
+            false,
+
+          member:
+            buildSafeMember(
+              member
+            ),
+
+          allowance:
+            sanitizeAllowanceTransaction(
+              updatedAllowance
+            ),
+
+          transfer: {
             amountCents,
 
             amount:
@@ -3599,324 +4204,72 @@ export default async function handler(
               ),
 
             currency:
+              normalizeString(
+                allowanceTransaction
+                  .currency
+              ) ||
               DEFAULT_CURRENCY,
+
+            memo,
           },
 
-          requiresReview:
-            true,
-        }
-      );
-    }
-
-    /* ======================================================================
-       PARSE TRANSFER
-    ====================================================================== */
-
-    const transfer =
-      parseBookTransfer(
-        transferResult
-      );
-
-    if (
-      !transfer.token
-    ) {
-      /*
-       * Provider may have executed transfer.
-       *
-       * Do not automatically try again.
-       */
-
-      try {
-        await updateAllowanceTransaction(
-          allowanceTransaction.id,
-          {
-            status:
-              "processing",
-
-            provider:
+          provider: {
+            name:
               "lithic",
 
-            provider_status:
-              transfer.status ||
-              transfer.result ||
-              "unknown",
+            environment:
+              getLithicEnvironment(),
 
-            provider_error:
-              "Lithic response did not include a transfer token.",
-          }
-        );
-      } catch (
-        updateError
-      ) {
-        logRequestError(
-          req,
-          updateError,
-          {
-            scope:
-              "fund_allowance_missing_transfer_token_save",
+            transactionToken:
+              providerTransactionToken,
 
-            memberId,
-
-            allowanceTransactionId,
-          }
-        );
-      }
-
-      return serverError(
-        res,
-        "Lithic returned an unexpected transfer response. Do not retry automatically.",
-        {
-          code:
-            "LITHIC_TRANSFER_TOKEN_MISSING",
-
-          requiresReconciliation:
-            true,
-
-          allowanceTransactionId,
-        }
-      );
-    }
-
-    /* ======================================================================
-       PROVIDER STATUS
-    ====================================================================== */
-
-    const providerState =
-      transfer.result ||
-      transfer.status ||
-      "";
-
-    const transferApproved =
-      [
-        "APPROVED",
-        "COMPLETED",
-        "COMPLETE",
-        "SETTLED",
-        "SUCCESS",
-        "SUCCEEDED",
-      ].includes(
-        providerState
-      );
-
-    const transferRejected =
-      [
-        "DECLINED",
-        "FAILED",
-        "REJECTED",
-        "CANCELLED",
-        "CANCELED",
-        "REVERSED",
-      ].includes(
-        providerState
-      );
-
-    const finalStatus =
-      transferApproved
-        ? "funded"
-        : transferRejected
-          ? "failed"
-          : "processing";
-
-    /* ======================================================================
-       SAVE RESULT
-    ====================================================================== */
-
-    let finalTransaction;
-
-    try {
-      finalTransaction =
-        await updateAllowanceTransaction(
-          allowanceTransaction.id,
-          {
             status:
-              finalStatus,
+              nextProviderStatus,
 
-            provider:
-              "lithic",
+            result:
+              providerResult ||
+              null,
+          },
 
-            provider_status:
-              providerState ||
-              "processing",
+          balance,
 
-            provider_transaction_token:
-              transfer.token,
+          links: {
+            card:
+              "/portal/card.html",
 
-            lithic_transaction_token:
-              transfer.token,
+            memberCard:
+              "/api/cards/member-card",
+          },
 
-            external_reference:
-              transfer.token,
-
-            funded_at:
-              transferApproved
-                ? nowIso()
-                : null,
-
-            funding_failed_at:
-              transferRejected
-                ? nowIso()
-                : null,
-
-            provider_error:
-              transferRejected
-                ? "Lithic rejected the allowance transfer."
-                : null,
-
-            provider_response: {
-              /*
-               * Safe transfer metadata only.
-               */
-
-              token:
-                transfer.token,
-
-              result:
-                transfer.result,
-
-              status:
-                transfer.status,
-
-              category:
-                transfer.category,
-
-              subtype:
-                transfer.subtype,
-
-              created_at:
-                transfer.createdAt,
-
-              updated_at:
-                transfer.updatedAt,
-            },
-          }
-        );
-    } catch (
-      databaseError
-    ) {
-      logRequestError(
-        req,
-        databaseError,
-        {
-          scope:
-            "fund_allowance_save_transfer",
-
-          memberId,
-
-          allowanceTransactionId,
-
-          lithicTransferCreated:
-            true,
-        }
-      );
-
-      /*
-       * A Lithic transfer now exists.
-       *
-       * Never automatically create another transfer.
-       */
-
-      return serverError(
-        res,
-        "Lithic processed the allowance transfer, but Card Leo could not save the final transaction state. Do not retry automatically.",
-        {
-          code:
-            "LITHIC_TRANSFER_DATABASE_SAVE_FAILED",
-
-          requiresReconciliation:
-            true,
-
-          allowanceTransactionId,
-
-          providerTransactionRecorded:
-            true,
-        }
+          generatedAt:
+            nowIso(),
+        },
+        "Your Card Leo allowance transfer has been submitted and is processing."
       );
     }
 
     /* ======================================================================
-       BALANCE
-
-       Failure here does not undo successful funding.
-    ====================================================================== */
-
-    let balance =
-      null;
-
-    try {
-      balance =
-        await getFinancialAccountBalance(
-          memberFinancialAccountToken
-        );
-    } catch (
-      balanceError
-    ) {
-      logRequestError(
-        req,
-        balanceError,
-        {
-          scope:
-            "fund_allowance_balance_lookup",
-
-          memberId,
-
-          allowanceTransactionId,
-        }
-      );
-    }
-
-    /* ======================================================================
-       LOG SUCCESS
+       PROVIDER APPROVED
     ====================================================================== */
 
     logRequestSuccess(
       req,
       {
         scope:
-          "fund_allowance",
+          "fund_allowance_success",
 
         memberId,
 
         allowanceTransactionId,
 
-        amountCents,
-
-        amount:
-          centsToDollars(
-            amountCents
-          ),
-
-        provider:
-          "lithic",
+        providerTransactionToken,
 
         providerStatus:
-          providerState,
+          nextProviderStatus,
 
-        funded:
-          transferApproved,
-
-        processing:
-          !transferApproved &&
-          !transferRejected,
-
-        failed:
-          transferRejected,
-
-        environment:
-          getLithicEnvironment(),
+        amountCents,
       }
     );
-
-    /* ======================================================================
-       SAFE RESPONSE
-
-       DO NOT expose:
-       - Lithic account token
-       - Lithic card token
-       - account holder token
-       - financial account token
-       - program source account
-       - raw provider response
-    ====================================================================== */
 
     return success(
       res,
@@ -3925,19 +4278,12 @@ export default async function handler(
           true,
 
         funded:
-          transferApproved,
+          true,
 
         processing:
-          !transferApproved &&
-          !transferRejected,
-
-        failed:
-          transferRejected,
-
-        alreadyFunded:
           false,
 
-        alreadyProcessing:
+        alreadyFunded:
           false,
 
         member:
@@ -3947,71 +4293,46 @@ export default async function handler(
 
         allowance:
           sanitizeAllowanceTransaction(
-            finalTransaction
+            updatedAllowance
           ),
 
-        amount: {
-          cents:
-            amountCents,
+        transfer: {
+          amountCents,
 
-          dollars:
+          amount:
             centsToDollars(
               amountCents
             ),
 
           currency:
+            normalizeString(
+              allowanceTransaction
+                .currency
+            ) ||
             DEFAULT_CURRENCY,
+
+          memo,
         },
 
-        balance:
-          balance
-            ? {
-                available:
-                  balance.available,
-
-                availableCents:
-                  balance
-                    .availableCents,
-
-                pending:
-                  balance.pending,
-
-                pendingCents:
-                  balance
-                    .pendingCents,
-
-                total:
-                  balance.total,
-
-                totalCents:
-                  balance
-                    .totalCents,
-
-                currency:
-                  balance.currency,
-
-                updatedAt:
-                  balance.updatedAt,
-              }
-            : null,
-
-        lithic: {
-          enabled:
-            true,
-
-          configured:
-            true,
+        provider: {
+          name:
+            "lithic",
 
           environment:
             getLithicEnvironment(),
 
-          transferCreated:
-            true,
+          transactionToken:
+            providerTransactionToken,
 
-          transferStatus:
-            providerState ||
-            "PROCESSING",
+          status:
+            nextProviderStatus,
+
+          result:
+            providerResult ||
+            null,
         },
+
+        balance,
 
         links: {
           card:
@@ -4024,59 +4345,57 @@ export default async function handler(
         generatedAt:
           nowIso(),
       },
-      transferApproved
-        ? "Your Card Leo allowance was successfully added to your card account."
-        : transferRejected
-          ? "The Card Leo allowance transfer was not approved."
-          : "Your Card Leo allowance transfer has been submitted and is processing."
+      "Your Card Leo allowance has been funded successfully."
     );
   } catch (
     error
   ) {
-    /*
-     * IMPORTANT:
-     *
-     * A provider/database error does NOT prove member authentication failed.
-     *
-     * Never clear auth cookies from this catch.
-     */
+    /* ======================================================================
+       UNEXPECTED ERROR
+    ====================================================================== */
 
     logRequestError(
       req,
       error,
       {
         scope:
-          "fund_allowance_unexpected",
+          "fund_allowance",
       }
     );
 
-    console.error(
-      "Card Leo fund-allowance error:",
-      error
-    );
-
-    return serverError(
-      res,
-      "Unable to fund your Card Leo allowance right now.",
+    const debug =
       process.env.NODE_ENV ===
         "development"
         ? {
-            error:
-              error?.message ||
-              "Unknown error.",
+            message:
+              normalizeString(
+                error?.message
+              ) ||
+              "Unknown error",
 
-            code:
-              error?.code ||
-              null,
-
-            details:
-              error?.details ||
+            stack:
+              normalizeString(
+                error?.stack
+              ) ||
               null,
 
             lithic:
-              getLithicConfigForDebug(),
+              typeof getLithicConfigForDebug ===
+                "function"
+                ? getLithicConfigForDebug()
+                : null,
           }
-        : {}
+        : undefined;
+
+    return serverError(
+      res,
+      "Card Leo could not process your allowance funding request.",
+      {
+        code:
+          "FUND_ALLOWANCE_FAILED",
+
+        debug,
+      }
     );
   }
 }

@@ -1,12 +1,8 @@
 // api/portal/growth-pool.js
 
-import { supabaseAdmin } from "../../lib/supabase-admin.js";
-
 import {
-  clearAuthCookies,
-  getSessionCookieName,
-  safeJsonParse,
-} from "../../lib/cookies.js";
+  supabaseAdmin,
+} from "../../lib/supabase-admin.js";
 
 import {
   ok,
@@ -25,37 +21,67 @@ import {
 
 /* ==========================================================================
    CARD LEO REWARDS
-   STEP #26
-   PORTAL GROWTH POOL API
+   GROWTH POOL — ADMIN READ-ONLY API
 
    ROUTE
    -----
    GET /api/portal/growth-pool
 
-   PURPOSE
-   -------
-   Secure read-only Growth Pool endpoint for the Card Leo member portal.
-
-   RETURNS
-   -------
-   - Current Growth Pool balance
-   - Total contributed
-   - Number of contributing members
-   - $2 contribution amount
-   - Recent qualifying Growth Pool transactions
-   - Member's own contribution status
-   - Last contribution timestamp
-
    IMPORTANT
    ---------
-   This endpoint DOES NOT:
-   - create Growth Pool contributions
-   - modify balances
-   - process Stripe payments
-   - fund Lithic cards
-   - modify member allowance
+   Despite the historical /api/portal/ path, this endpoint is now
+   ADMIN-ONLY.
 
-   All Growth Pool writes continue through:
+   Ordinary Card Leo members must NEVER receive Growth Pool accounting.
+
+   PURPOSE
+   -------
+   Give authorized Card Leo administrators a read-only view of:
+
+   - Growth Pool balance
+   - Total contributions
+   - Total qualifying members
+   - Contribution count
+   - $2 contribution rule
+   - Recent Growth Pool ledger transactions
+   - Aggregate-vs-ledger reconciliation
+   - Last contribution timestamp
+   - Database readiness
+
+   SECURITY
+   --------
+   Admin authentication is based on the Supabase access token supplied
+   in:
+
+     Authorization: Bearer <access-token>
+
+   The authenticated Supabase user must also resolve to a Card Leo admin
+   through:
+
+     profiles
+     admin_roles
+
+   This endpoint NEVER trusts a client-supplied:
+   - admin ID
+   - profile ID
+   - email
+   - role
+   - permission flag
+
+   READ ONLY
+   ---------
+   This endpoint DOES NOT:
+
+   - create Growth Pool transactions
+   - modify Growth Pool balances
+   - process Stripe payments
+   - activate members
+   - fund cards
+   - fund member allowance
+   - issue referral rewards
+
+   ALL GROWTH POOL WRITES CONTINUE THROUGH:
+
      lib/growth-pool.js
      api/billing/webhook.js
 
@@ -65,7 +91,8 @@ import {
    CONFIG
 ============================================================================ */
 
-const GROWTH_POOL_ID = 1;
+const GROWTH_POOL_ID =
+  1;
 
 const GROWTH_POOL_NAME =
   "Card Leo Growth Pool";
@@ -76,78 +103,78 @@ const CONTRIBUTION_AMOUNT_CENTS =
 const CONTRIBUTION_AMOUNT =
   2.0;
 
-const DEFAULT_RECENT_LIMIT =
-  20;
+const DEFAULT_LIMIT =
+  25;
 
-const MAX_RECENT_LIMIT =
+const MAX_LIMIT =
   100;
 
-const POSSIBLE_SESSION_COOKIE_NAMES = [
-  "cardleo_session",
-  "cardleo_auth",
-  "cardleo_portal_session",
-  "card_leo_session",
-  "member_session",
-  "portal_session",
-  "session",
-];
+const COMPLETED_TRANSACTION_STATUSES =
+  new Set([
+    "completed",
+    "complete",
+    "succeeded",
+    "success",
+    "paid",
+  ]);
+
+const QUALIFYING_TRANSACTION_TYPES =
+  new Set([
+    "member_activation",
+  ]);
+
+const ADMIN_PROFILE_ROLES =
+  new Set([
+    "admin",
+    "administrator",
+    "super_admin",
+    "superadmin",
+    "owner",
+  ]);
 
 /* ==========================================================================
-   MEMBER STATUS
+   BASIC HELPERS
 ============================================================================ */
 
-const ACTIVE_STATUS_VALUES = new Set([
-  "active",
-  "approved",
-  "paid",
-  "current",
-  "complete",
-  "completed",
-  "succeeded",
-  "auto_approved",
-]);
-
-const INACTIVE_STATUS_VALUES = new Set([
-  "inactive",
-  "disabled",
-  "suspended",
-  "paused",
-  "denied",
-  "closed",
-  "cancelled",
-  "canceled",
-  "unpaid",
-  "past_due",
-  "payment_failed",
-  "failed",
-]);
-
-/* ==========================================================================
-   HELPERS
-============================================================================ */
-
-function normalizeString(value) {
-  return String(value ?? "").trim();
+function normalizeString(
+  value
+) {
+  return String(
+    value ?? ""
+  ).trim();
 }
 
-function normalizeLower(value) {
-  return normalizeString(value).toLowerCase();
+function normalizeLower(
+  value
+) {
+  return normalizeString(
+    value
+  ).toLowerCase();
 }
 
-function normalizeEmail(value) {
-  return normalizeLower(value);
+function normalizeEmail(
+  value
+) {
+  return normalizeLower(
+    value
+  );
 }
 
 function normalizeInteger(
   value,
   fallback = 0
 ) {
-  const parsed = Number.parseInt(
-    String(value ?? ""),
-    10
-  );
+  const parsed =
+    Number.parseInt(
+      String(
+        value ?? ""
+      ),
+      10
+    );
 
-  return Number.isFinite(parsed)
+  return Number.isFinite(
+    parsed
+  )
     ? parsed
     : fallback;
 }
@@ -156,33 +183,74 @@ function normalizeNumber(
   value,
   fallback = 0
 ) {
-  const parsed = Number(value);
+  const parsed =
+    Number(
+      value
+    );
 
-  return Number.isFinite(parsed)
+  return Number.isFinite(
+    parsed
+  )
     ? parsed
     : fallback;
 }
 
-function money(value) {
-  const parsed = Number(value || 0);
+function money(
+  value
+) {
+  const parsed =
+    Number(
+      value || 0
+    );
 
-  return Number.isFinite(parsed)
-    ? Number(parsed.toFixed(2))
-    : 0;
-}
+  if (
+    !Number.isFinite(
+      parsed
+    )
+  ) {
+    return 0;
+  }
 
-function centsToDollars(value) {
-  return money(
-    normalizeNumber(value, 0) / 100
+  return Number(
+    parsed.toFixed(
+      2
+    )
   );
 }
 
-function safeDate(value) {
+function centsToDollars(
+  value
+) {
+  return money(
+    normalizeNumber(
+      value,
+      0
+    ) / 100
+  );
+}
+
+function dollarsToCents(
+  value
+) {
+  return Math.round(
+    normalizeNumber(
+      value,
+      0
+    ) * 100
+  );
+}
+
+function safeDate(
+  value
+) {
   if (!value) {
     return null;
   }
 
-  const date = new Date(value);
+  const date =
+    new Date(
+      value
+    );
 
   if (
     Number.isNaN(
@@ -195,624 +263,589 @@ function safeDate(value) {
   return date.toISOString();
 }
 
-function isObject(value) {
+function isObject(
+  value
+) {
   return (
     Boolean(value) &&
-    typeof value === "object" &&
+    typeof value ===
+      "object" &&
     !Array.isArray(value)
   );
 }
 
-function titleCase(value) {
-  return normalizeString(value)
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
+function titleCase(
+  value
+) {
+  return normalizeString(
+    value
+  )
+    .replace(
+      /[_-]+/g,
+      " "
+    )
+    .replace(
+      /\s+/g,
+      " "
+    )
     .trim()
     .replace(
       /\b\w/g,
-      (character) =>
+      (
+        character
+      ) =>
         character.toUpperCase()
     );
 }
 
+function toPositiveInteger(
+  value,
+  fallback =
+    DEFAULT_LIMIT
+) {
+  const parsed =
+    normalizeInteger(
+      value,
+      fallback
+    );
+
+  if (
+    parsed <= 0
+  ) {
+    return fallback;
+  }
+
+  return Math.min(
+    parsed,
+    MAX_LIMIT
+  );
+}
+
+function getClientIp(
+  req
+) {
+  const forwarded =
+    req?.headers?.[
+      "x-forwarded-for"
+    ];
+
+  if (
+    typeof forwarded ===
+      "string" &&
+    forwarded.trim()
+  ) {
+    return forwarded
+      .split(",")[0]
+      .trim();
+  }
+
+  return (
+    req?.socket?.remoteAddress ||
+    null
+  );
+}
+
 /* ==========================================================================
-   OPTIONAL SCHEMA ERROR
+   OPTIONAL SCHEMA SUPPORT
 ============================================================================ */
 
 function isMissingOptionalTableOrColumn(
   error
 ) {
-  const code = String(
-    error?.code || ""
-  );
+  const code =
+    String(
+      error?.code ||
+      ""
+    );
 
-  const message = String(
-    error?.message || ""
-  ).toLowerCase();
+  const message =
+    String(
+      error?.message ||
+      ""
+    ).toLowerCase();
 
-  const details = String(
-    error?.details || ""
-  ).toLowerCase();
+  const details =
+    String(
+      error?.details ||
+      ""
+    ).toLowerCase();
 
   return (
-    code === "42P01" ||
-    code === "42703" ||
-    code === "PGRST204" ||
-    code === "PGRST205" ||
-    message.includes("does not exist") ||
-    message.includes("could not find") ||
-    message.includes("schema cache") ||
-    details.includes("does not exist") ||
-    details.includes("could not find") ||
-    details.includes("schema cache")
-  );
-}
+    code ===
+      "42P01" ||
 
-/* ==========================================================================
-   COOKIE PARSING
-============================================================================ */
+    code ===
+      "42703" ||
 
-function parseCookieHeader(req) {
-  if (
-    req?.cookies &&
-    typeof req.cookies === "object"
-  ) {
-    return req.cookies;
-  }
+    code ===
+      "PGRST204" ||
 
-  const cookieHeader =
-    req?.headers?.cookie || "";
+    code ===
+      "PGRST205" ||
 
-  return String(cookieHeader)
-    .split(";")
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .reduce(
-      (
-        cookies,
-        part
-      ) => {
-        const index =
-          part.indexOf("=");
+    message.includes(
+      "does not exist"
+    ) ||
 
-        if (index === -1) {
-          return cookies;
-        }
+    message.includes(
+      "could not find"
+    ) ||
 
-        const name =
-          part
-            .slice(0, index)
-            .trim();
+    message.includes(
+      "schema cache"
+    ) ||
 
-        const value =
-          part
-            .slice(index + 1)
-            .trim();
+    details.includes(
+      "does not exist"
+    ) ||
 
-        if (name) {
-          cookies[name] = value;
-        }
+    details.includes(
+      "could not find"
+    ) ||
 
-        return cookies;
-      },
-      {}
-    );
-}
-
-function decodeCookieValue(value) {
-  const raw =
-    String(value || "");
-
-  if (!raw) {
-    return "";
-  }
-
-  try {
-    return decodeURIComponent(raw);
-  } catch {
-    return raw;
-  }
-}
-
-function parseJsonObject(value) {
-  if (isObject(value)) {
-    return value;
-  }
-
-  const raw =
-    normalizeString(value);
-
-  if (!raw) {
-    return null;
-  }
-
-  const decoded =
-    decodeCookieValue(raw);
-
-  const direct =
-    safeJsonParse(
-      decoded,
-      null
-    );
-
-  if (isObject(direct)) {
-    return direct;
-  }
-
-  try {
-    const base64Decoded =
-      Buffer
-        .from(
-          decoded,
-          "base64"
-        )
-        .toString("utf8");
-
-    const parsed =
-      safeJsonParse(
-        base64Decoded,
-        null
-      );
-
-    if (isObject(parsed)) {
-      return parsed;
-    }
-  } catch {
-    // Ignore invalid base64.
-  }
-
-  try {
-    const normalized =
-      decoded
-        .replace(/-/g, "+")
-        .replace(/_/g, "/");
-
-    const padded =
-      normalized.padEnd(
-        Math.ceil(
-          normalized.length / 4
-        ) * 4,
-        "="
-      );
-
-    const decodedUrl =
-      Buffer
-        .from(
-          padded,
-          "base64"
-        )
-        .toString("utf8");
-
-    const parsed =
-      safeJsonParse(
-        decodedUrl,
-        null
-      );
-
-    if (isObject(parsed)) {
-      return parsed;
-    }
-  } catch {
-    // Ignore invalid base64url.
-  }
-
-  return null;
-}
-
-function readSessionCookie(req) {
-  const cookies =
-    parseCookieHeader(req);
-
-  const configuredName =
-    typeof getSessionCookieName ===
-      "function"
-      ? normalizeString(
-          getSessionCookieName()
-        )
-      : "";
-
-  const names =
-    Array.from(
-      new Set(
-        [
-          configuredName,
-          ...POSSIBLE_SESSION_COOKIE_NAMES,
-        ].filter(Boolean)
-      )
-    );
-
-  for (const name of names) {
-    if (!cookies[name]) {
-      continue;
-    }
-
-    const parsed =
-      parseJsonObject(
-        cookies[name]
-      );
-
-    if (isObject(parsed)) {
-      return {
-        name,
-        value: parsed,
-      };
-    }
-  }
-
-  return null;
-}
-
-/* ==========================================================================
-   SESSION HELPERS
-============================================================================ */
-
-function getSessionExpiresAt(
-  sessionCookie
-) {
-  const value =
-    sessionCookie?.value || {};
-
-  const candidates = [
-    value.expires_at,
-    value.expiresAt,
-    value.exp,
-    value.session?.expires_at,
-    value.session?.expiresAt,
-  ];
-
-  for (const candidate of candidates) {
-    const number =
-      Number(candidate);
-
-    if (
-      Number.isFinite(number) &&
-      number > 0
-    ) {
-      return number;
-    }
-  }
-
-  return 0;
-}
-
-function isSessionExpired(
-  sessionCookie
-) {
-  const expiresAt =
-    getSessionExpiresAt(
-      sessionCookie
-    );
-
-  if (!expiresAt) {
-    return false;
-  }
-
-  return (
-    expiresAt <=
-    Math.floor(
-      Date.now() / 1000
+    details.includes(
+      "schema cache"
     )
   );
 }
 
-function getSessionMemberId(
-  sessionCookie
+/* ==========================================================================
+   ACCESS TOKEN
+============================================================================ */
+
+function getAccessTokenFromRequest(
+  req
 ) {
-  const value =
-    sessionCookie?.value || {};
+  const authorization =
+    normalizeString(
+      req?.headers
+        ?.authorization
+    );
+
+  if (!authorization) {
+    return "";
+  }
+
+  const match =
+    authorization.match(
+      /^Bearer\s+(.+)$/i
+    );
 
   return normalizeString(
-    value.member?.id ||
-      value.profile?.id ||
-      value.user?.id ||
-      value.member_id ||
-      value.memberId ||
-      value.signup_id ||
-      value.signupId ||
-      value.id
-  );
-}
-
-function getSessionEmail(
-  sessionCookie
-) {
-  const value =
-    sessionCookie?.value || {};
-
-  return normalizeEmail(
-    value.member?.email ||
-      value.profile?.email ||
-      value.user?.email ||
-      value.email ||
-      value.userEmail
+    match?.[1]
   );
 }
 
 /* ==========================================================================
-   MEMBER LOOKUP
+   AUTHENTICATED SUPABASE USER
 ============================================================================ */
 
-async function findMember({
-  memberId,
-  email,
-}) {
-  let query =
-    supabaseAdmin
-      .from("signups")
-      .select("*")
-      .limit(1);
+async function getAuthenticatedUser(
+  req
+) {
+  const accessToken =
+    getAccessTokenFromRequest(
+      req
+    );
 
-  if (memberId) {
-    query =
-      query.eq(
-        "id",
-        memberId
-      );
-  } else {
-    query =
-      query.ilike(
-        "email",
-        email
-      );
+  if (!accessToken) {
+    return {
+      user:
+        null,
+
+      accessToken:
+        "",
+
+      error:
+        "Administrator access token is required.",
+    };
   }
 
   const {
     data,
     error,
   } =
-    await query
-      .maybeSingle();
+    await supabaseAdmin
+      .auth
+      .getUser(
+        accessToken
+      );
 
-  if (error) {
-    throw error;
+  if (
+    error ||
+    !data?.user
+  ) {
+    return {
+      user:
+        null,
+
+      accessToken,
+
+      error:
+        error?.message ||
+        "Unable to authenticate administrator.",
+    };
   }
 
-  return data || null;
+  return {
+    user:
+      data.user,
+
+    accessToken,
+
+    error:
+      null,
+  };
 }
 
 /* ==========================================================================
-   MEMBER ACCESS
+   ADMIN PROFILE
 ============================================================================ */
 
-function memberHasPortalAccess(member) {
-  if (!member) {
-    return false;
+async function getAdminContext(
+  user
+) {
+  const profileId =
+    normalizeString(
+      user?.id
+    );
+
+  if (!profileId) {
+    return {
+      profile:
+        null,
+
+      adminRole:
+        null,
+
+      profileError:
+        null,
+
+      adminRoleError:
+        null,
+    };
   }
 
-  const status =
-    normalizeLower(
-      member.status
-    );
+  const [
+    profileResult,
+    adminRoleResult,
+  ] =
+    await Promise.all([
+      supabaseAdmin
+        .from(
+          "profiles"
+        )
+        .select(
+          [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "full_name",
+            "role",
+            "member_status",
+            "created_at",
+            "updated_at",
+          ].join(", ")
+        )
+        .eq(
+          "id",
+          profileId
+        )
+        .maybeSingle(),
 
-  const paymentStatus =
-    normalizeLower(
-      member.payment_status
-    );
+      supabaseAdmin
+        .from(
+          "admin_roles"
+        )
+        .select(
+          [
+            "profile_id",
+            "is_super_admin",
+            "can_manage_members",
+            "can_manage_rewards",
+            "can_manage_support",
+            "can_manage_referrals",
+            "can_view_audit_logs",
+            "can_manage_settings",
+          ].join(", ")
+        )
+        .eq(
+          "profile_id",
+          profileId
+        )
+        .maybeSingle(),
+    ]);
 
-  const membershipStatus =
-    normalizeLower(
-      member.membership_status
-    );
+  return {
+    profile:
+      profileResult.data ||
+      null,
 
-  if (
-    INACTIVE_STATUS_VALUES.has(
-      status
-    ) ||
-    INACTIVE_STATUS_VALUES.has(
-      paymentStatus
-    ) ||
-    INACTIVE_STATUS_VALUES.has(
-      membershipStatus
-    )
-  ) {
-    return false;
-  }
+    profileError:
+      profileResult.error ||
+      null,
 
-  return (
-    ACTIVE_STATUS_VALUES.has(
-      status
-    ) ||
-    ACTIVE_STATUS_VALUES.has(
-      paymentStatus
-    ) ||
-    ACTIVE_STATUS_VALUES.has(
-      membershipStatus
-    )
-  );
+    adminRole:
+      adminRoleResult.data ||
+      null,
+
+    adminRoleError:
+      adminRoleResult.error ||
+      null,
+  };
 }
 
-function sanitizeMember(member) {
-  if (!member) {
-    return null;
+/* ==========================================================================
+   ADMIN AUTHORIZATION
+============================================================================ */
+
+function isAuthorizedAdmin({
+  profile,
+  adminRole,
+}) {
+  const profileRole =
+    normalizeLower(
+      profile?.role
+    );
+
+  /*
+   * A recognized admin role on the profile is sufficient.
+   */
+
+  if (
+    ADMIN_PROFILE_ROLES.has(
+      profileRole
+    )
+  ) {
+    return true;
   }
 
+  /*
+   * A row in admin_roles means the user has explicitly been provisioned
+   * as an administrator.
+   */
+
+  if (
+    adminRole?.profile_id
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/* ==========================================================================
+   ADMIN DISPLAY PAYLOAD
+============================================================================ */
+
+function sanitizeAdmin({
+  user,
+  profile,
+  adminRole,
+}) {
   const fullName =
     normalizeString(
-      member.full_name
+      profile?.full_name
     ) ||
     [
-      member.first_name,
-      member.last_name,
+      profile?.first_name,
+      profile?.last_name,
     ]
-      .map(normalizeString)
+      .map(
+        normalizeString
+      )
       .filter(Boolean)
       .join(" ");
 
   return {
     id:
-      member.id || null,
+      profile?.id ||
+      user?.id ||
+      null,
 
     email:
       normalizeEmail(
-        member.email
+        profile?.email ||
+        user?.email
       ),
-
-    fullName,
 
     firstName:
       normalizeString(
-        member.first_name
+        profile?.first_name
       ),
 
     lastName:
       normalizeString(
-        member.last_name
+        profile?.last_name
       ),
 
-    status:
+    fullName:
+      fullName ||
+      "Card Leo Admin",
+
+    role:
       normalizeString(
-        member.status
+        profile?.role ||
+        "admin"
       ),
 
-    paymentStatus:
-      normalizeString(
-        member.payment_status
+    isSuperAdmin:
+      Boolean(
+        adminRole
+          ?.is_super_admin
       ),
 
-    membershipStatus:
-      normalizeString(
-        member.membership_status
-      ),
+    permissions: {
+      canManageMembers:
+        Boolean(
+          adminRole
+            ?.can_manage_members
+        ),
 
-    portalAccess:
-      memberHasPortalAccess(
-        member
-      ),
+      canManageRewards:
+        Boolean(
+          adminRole
+            ?.can_manage_rewards
+        ),
+
+      canManageSupport:
+        Boolean(
+          adminRole
+            ?.can_manage_support
+        ),
+
+      canManageReferrals:
+        Boolean(
+          adminRole
+            ?.can_manage_referrals
+        ),
+
+      canViewAuditLogs:
+        Boolean(
+          adminRole
+            ?.can_view_audit_logs
+        ),
+
+      canManageSettings:
+        Boolean(
+          adminRole
+            ?.can_manage_settings
+        ),
+    },
   };
 }
 
 /* ==========================================================================
-   AUTHENTICATE
+   AUTHENTICATE ADMIN
 ============================================================================ */
 
-async function authenticateMember(
+async function authenticateAdmin(
   req,
   res
 ) {
-  const sessionCookie =
-    readSessionCookie(req);
+  const {
+    user,
+    error:
+      authError,
+  } =
+    await getAuthenticatedUser(
+      req
+    );
 
-  if (!sessionCookie?.value) {
+  if (!user) {
     return {
-      member: null,
+      admin:
+        null,
 
       response:
         unauthorized(
           res,
-          "Unauthorized. Please sign in."
+          authError ||
+          "Administrator authentication required."
         ),
     };
   }
 
+  const context =
+    await getAdminContext(
+      user
+    );
+
+  /*
+   * Database failures are server failures, not logout events.
+   */
+
   if (
-    isSessionExpired(
-      sessionCookie
+    context.profileError
+  ) {
+    throw context
+      .profileError;
+  }
+
+  /*
+   * If admin_roles does not exist yet, profile.role can still provide
+   * authorization.
+   *
+   * Other admin_roles failures should surface.
+   */
+
+  if (
+    context.adminRoleError &&
+    !isMissingOptionalTableOrColumn(
+      context.adminRoleError
     )
   ) {
-    clearAuthCookies(res);
-
-    return {
-      member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Session expired. Please sign in again."
-        ),
-    };
+    throw context
+      .adminRoleError;
   }
 
-  if (
-    sessionCookie
-      .value
-      .authenticated !== true
-  ) {
-    clearAuthCookies(res);
+  const authorized =
+    isAuthorizedAdmin({
+      profile:
+        context.profile,
 
-    return {
-      member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Session invalid. Please sign in again."
-        ),
-    };
-  }
-
-  const memberId =
-    getSessionMemberId(
-      sessionCookie
-    );
-
-  const email =
-    getSessionEmail(
-      sessionCookie
-    );
-
-  if (!memberId && !email) {
-    clearAuthCookies(res);
-
-    return {
-      member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Session missing member information."
-        ),
-    };
-  }
-
-  const member =
-    await findMember({
-      memberId,
-      email,
+      adminRole:
+        context.adminRole,
     });
 
-  if (!member?.id) {
-    clearAuthCookies(res);
-
+  if (!authorized) {
     return {
-      member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Card Leo member record not found."
-        ),
-    };
-  }
-
-  if (
-    !memberHasPortalAccess(
-      member
-    )
-  ) {
-    return {
-      member: null,
+      admin:
+        null,
 
       response:
         forbidden(
           res,
-          "Your Card Leo membership must be active before viewing the Growth Pool.",
+          "Administrator permission is required to view the Card Leo Growth Pool.",
           {
-            authenticated: true,
+            authenticated:
+              true,
 
-            requiresPayment: true,
+            admin:
+              false,
 
-            member:
-              sanitizeMember(
-                member
-              ),
+            code:
+              "ADMIN_REQUIRED",
           }
         ),
     };
   }
 
   return {
-    member,
-    response: null,
+    admin:
+      sanitizeAdmin({
+        user,
+
+        profile:
+          context.profile,
+
+        adminRole:
+          context.adminRole,
+      }),
+
+    response:
+      null,
   };
 }
 
@@ -826,7 +859,9 @@ async function getGrowthPoolSummary() {
     error,
   } =
     await supabaseAdmin
-      .from("growth_pool")
+      .from(
+        "growth_pool"
+      )
       .select(
         [
           "id",
@@ -845,11 +880,64 @@ async function getGrowthPoolSummary() {
       .maybeSingle();
 
   if (error) {
+    if (
+      isMissingOptionalTableOrColumn(
+        error
+      )
+    ) {
+      return {
+        databaseReady:
+          false,
+
+        exists:
+          false,
+
+        id:
+          GROWTH_POOL_ID,
+
+        poolName:
+          GROWTH_POOL_NAME,
+
+        balance:
+          0,
+
+        balanceCents:
+          0,
+
+        totalContributed:
+          0,
+
+        totalContributedCents:
+          0,
+
+        totalMembersContributed:
+          0,
+
+        contributionAmount:
+          CONTRIBUTION_AMOUNT,
+
+        contributionAmountCents:
+          CONTRIBUTION_AMOUNT_CENTS,
+
+        updatedAt:
+          null,
+
+        createdAt:
+          null,
+      };
+    }
+
     throw error;
   }
 
   if (!data) {
     return {
+      databaseReady:
+        true,
+
+      exists:
+        false,
+
       id:
         GROWTH_POOL_ID,
 
@@ -882,9 +970,6 @@ async function getGrowthPoolSummary() {
 
       createdAt:
         null,
-
-      exists:
-        false,
     };
   }
 
@@ -895,10 +980,17 @@ async function getGrowthPoolSummary() {
 
   const totalContributed =
     money(
-      data.total_contributed
+      data
+        .total_contributed
     );
 
   return {
+    databaseReady:
+      true,
+
+    exists:
+      true,
+
     id:
       data.id,
 
@@ -911,20 +1003,21 @@ async function getGrowthPoolSummary() {
     balance,
 
     balanceCents:
-      Math.round(
-        balance * 100
+      dollarsToCents(
+        balance
       ),
 
     totalContributed,
 
     totalContributedCents:
-      Math.round(
-        totalContributed * 100
+      dollarsToCents(
+        totalContributed
       ),
 
     totalMembersContributed:
       normalizeInteger(
-        data.total_members_contributed,
+        data
+          .total_members_contributed,
         0
       ),
 
@@ -943,17 +1036,14 @@ async function getGrowthPoolSummary() {
       safeDate(
         data.created_at
       ),
-
-    exists:
-      true,
   };
 }
 
 /* ==========================================================================
-   LEDGER TOTALS
+   LEDGER ROWS
 ============================================================================ */
 
-async function getLedgerTotals() {
+async function getGrowthPoolLedger() {
   const {
     data,
     error,
@@ -964,28 +1054,34 @@ async function getLedgerTotals() {
       )
       .select(
         [
+          "id",
+          "growth_pool_id",
           "member_id",
-          "amount_cents",
-          "status",
+          "member_email",
           "transaction_type",
+          "status",
+          "amount_cents",
+          "amount",
+          "currency",
+          "provider",
+          "provider_event_id",
+          "provider_payment_id",
+          "description",
+          "metadata",
           "created_at",
+          "updated_at",
         ].join(", ")
       )
       .eq(
         "growth_pool_id",
         GROWTH_POOL_ID
       )
-      .eq(
-        "transaction_type",
-        "member_activation"
-      )
-      .in(
-        "status",
-        [
-          "completed",
-          "succeeded",
-          "paid",
-        ]
+      .order(
+        "created_at",
+        {
+          ascending:
+            false,
+        }
       );
 
   if (error) {
@@ -995,21 +1091,94 @@ async function getLedgerTotals() {
       )
     ) {
       return {
-        contributionCount: 0,
-        memberCount: 0,
-        totalCents: 0,
-        total: 0,
-        lastContributionAt: null,
+        databaseReady:
+          false,
+
+        rows:
+          [],
       };
     }
 
     throw error;
   }
 
-  const rows =
-    Array.isArray(data)
-      ? data
-      : [];
+  return {
+    databaseReady:
+      true,
+
+    rows:
+      Array.isArray(
+        data
+      )
+        ? data
+        : [],
+  };
+}
+
+/* ==========================================================================
+   QUALIFYING LEDGER ROW
+============================================================================ */
+
+function isQualifyingContribution(
+  row
+) {
+  const type =
+    normalizeLower(
+      row
+        ?.transaction_type
+    );
+
+  const status =
+    normalizeLower(
+      row?.status
+    );
+
+  return (
+    QUALIFYING_TRANSACTION_TYPES
+      .has(type) &&
+    COMPLETED_TRANSACTION_STATUSES
+      .has(status)
+  );
+}
+
+/* ==========================================================================
+   TRANSACTION AMOUNT
+============================================================================ */
+
+function getTransactionAmountCents(
+  row
+) {
+  const amountCents =
+    normalizeInteger(
+      row?.amount_cents,
+      0
+    );
+
+  if (
+    amountCents !== 0
+  ) {
+    return amountCents;
+  }
+
+  return dollarsToCents(
+    row?.amount
+  );
+}
+
+/* ==========================================================================
+   LEDGER TOTALS
+============================================================================ */
+
+function calculateLedgerTotals(
+  rows
+) {
+  const qualifyingRows =
+    rows.filter(
+      isQualifyingContribution
+    );
+
+  const memberIds =
+    new Set();
 
   let totalCents =
     0;
@@ -1017,19 +1186,23 @@ async function getLedgerTotals() {
   let lastContributionAt =
     null;
 
-  const memberIds =
-    new Set();
-
-  for (const row of rows) {
+  for (
+    const row
+    of qualifyingRows
+  ) {
     totalCents +=
-      normalizeInteger(
-        row.amount_cents,
-        0
+      getTransactionAmountCents(
+        row
       );
 
-    if (row.member_id) {
+    const memberId =
+      normalizeString(
+        row.member_id
+      );
+
+    if (memberId) {
       memberIds.add(
-        String(row.member_id)
+        memberId
       );
     }
 
@@ -1053,7 +1226,7 @@ async function getLedgerTotals() {
 
   return {
     contributionCount:
-      rows.length,
+      qualifyingRows.length,
 
     memberCount:
       memberIds.size,
@@ -1066,151 +1239,120 @@ async function getLedgerTotals() {
       ),
 
     lastContributionAt,
+
+    qualifyingRows,
   };
 }
 
 /* ==========================================================================
-   MEMBER CONTRIBUTION
+   TRANSACTION SANITIZER
 ============================================================================ */
 
-async function getMemberContribution(
-  memberId
+function sanitizeGrowthPoolTransaction(
+  row
 ) {
-  const safeMemberId =
-    normalizeString(
-      memberId
+  const amountCents =
+    getTransactionAmountCents(
+      row
     );
 
-  if (!safeMemberId) {
-    return {
-      contributed: false,
-      amount: 0,
-      amountCents: 0,
-      transaction: null,
-    };
-  }
-
-  const {
-    data,
-    error,
-  } =
-    await supabaseAdmin
-      .from(
-        "growth_pool_transactions"
-      )
-      .select(
-        [
-          "id",
-          "member_id",
-          "member_email",
-          "transaction_type",
-          "status",
-          "amount_cents",
-          "amount",
-          "provider",
-          "created_at",
-        ].join(", ")
-      )
-      .eq(
-        "growth_pool_id",
-        GROWTH_POOL_ID
-      )
-      .eq(
-        "member_id",
-        safeMemberId
-      )
-      .eq(
-        "transaction_type",
-        "member_activation"
-      )
-      .in(
-        "status",
-        [
-          "completed",
-          "succeeded",
-          "paid",
-        ]
-      )
-      .order(
-        "created_at",
-        {
-          ascending: true,
-        }
-      )
-      .limit(1)
-      .maybeSingle();
-
-  if (error) {
-    if (
-      isMissingOptionalTableOrColumn(
-        error
-      )
-    ) {
-      return {
-        contributed: false,
-        amount: 0,
-        amountCents: 0,
-        transaction: null,
-      };
-    }
-
-    throw error;
-  }
-
-  if (!data) {
-    return {
-      contributed: false,
-      amount: 0,
-      amountCents: 0,
-      transaction: null,
-    };
-  }
-
-  const amountCents =
-    normalizeInteger(
-      data.amount_cents,
-      Math.round(
-        normalizeNumber(
-          data.amount,
-          0
-        ) * 100
-      )
+  const transactionType =
+    normalizeString(
+      row
+        .transaction_type
     );
 
   return {
-    contributed: true,
+    id:
+      row.id ||
+      null,
+
+    growthPoolId:
+      row
+        .growth_pool_id ||
+      GROWTH_POOL_ID,
+
+    memberId:
+      row.member_id ||
+      null,
+
+    memberEmail:
+      normalizeEmail(
+        row.member_email
+      ),
+
+    transactionType,
+
+    transactionLabel:
+      titleCase(
+        transactionType
+      ),
+
+    status:
+      normalizeString(
+        row.status
+      ),
+
+    amountCents,
 
     amount:
       centsToDollars(
         amountCents
       ),
 
-    amountCents,
+    currency:
+      normalizeString(
+        row.currency ||
+        "USD"
+      ),
 
-    transaction: {
-      id:
-        data.id,
+    provider:
+      normalizeString(
+        row.provider ||
+        "stripe"
+      ),
 
-      status:
-        normalizeString(
-          data.status
-        ),
+    providerEventId:
+      normalizeString(
+        row
+          .provider_event_id
+      ) ||
+      null,
 
-      transactionType:
-        normalizeString(
-          data.transaction_type
-        ),
+    providerPaymentId:
+      normalizeString(
+        row
+          .provider_payment_id
+      ) ||
+      null,
 
-      provider:
-        normalizeString(
-          data.provider
-        ),
+    description:
+      normalizeString(
+        row.description
+      ) ||
+      null,
 
-      createdAt:
-        safeDate(
-          data.created_at
-        ),
-    },
+    metadata:
+      isObject(
+        row.metadata
+      )
+        ? row.metadata
+        : {},
+
+    qualifies:
+      isQualifyingContribution(
+        row
+      ),
+
+    createdAt:
+      safeDate(
+        row.created_at
+      ),
+
+    updatedAt:
+      safeDate(
+        row.updated_at
+      ),
   };
 }
 
@@ -1218,158 +1360,221 @@ async function getMemberContribution(
    RECENT TRANSACTIONS
 ============================================================================ */
 
-async function getRecentTransactions(
+function getRecentTransactions(
+  rows,
   limit
 ) {
-  const safeLimit =
-    Math.min(
-      Math.max(
-        normalizeInteger(
-          limit,
-          DEFAULT_RECENT_LIMIT
-        ),
-        1
-      ),
-      MAX_RECENT_LIMIT
+  return rows
+    .slice(
+      0,
+      limit
+    )
+    .map(
+      sanitizeGrowthPoolTransaction
+    );
+}
+
+/* ==========================================================================
+   RECONCILIATION
+============================================================================ */
+
+function buildReconciliation({
+  summary,
+  ledger,
+}) {
+  const summaryBalanceCents =
+    normalizeInteger(
+      summary
+        .balanceCents,
+      0
     );
 
-  const {
-    data,
-    error,
-  } =
-    await supabaseAdmin
-      .from(
-        "growth_pool_transactions"
-      )
-      .select(
-        [
-          "id",
-          "member_id",
-          "member_email",
-          "transaction_type",
-          "status",
-          "amount_cents",
-          "amount",
-          "currency",
-          "provider",
-          "created_at",
-        ].join(", ")
-      )
-      .eq(
-        "growth_pool_id",
-        GROWTH_POOL_ID
-      )
-      .eq(
-        "transaction_type",
-        "member_activation"
-      )
-      .in(
-        "status",
-        [
-          "completed",
-          "succeeded",
-          "paid",
-        ]
-      )
-      .order(
-        "created_at",
-        {
-          ascending: false,
-        }
-      )
-      .limit(
-        safeLimit
-      );
+  const summaryContributedCents =
+    normalizeInteger(
+      summary
+        .totalContributedCents,
+      0
+    );
 
-  if (error) {
-    if (
-      isMissingOptionalTableOrColumn(
-        error
-      )
-    ) {
-      return [];
-    }
+  const summaryMemberCount =
+    normalizeInteger(
+      summary
+        .totalMembersContributed,
+      0
+    );
 
-    throw error;
-  }
+  const ledgerTotalCents =
+    normalizeInteger(
+      ledger
+        .totalCents,
+      0
+    );
 
-  return (
-    Array.isArray(data)
-      ? data
-      : []
-  ).map(
-    (transaction) => {
-      const amountCents =
-        normalizeInteger(
-          transaction
-            .amount_cents,
-          Math.round(
-            normalizeNumber(
-              transaction.amount,
-              0
-            ) * 100
-          )
-        );
+  const ledgerMemberCount =
+    normalizeInteger(
+      ledger
+        .memberCount,
+      0
+    );
 
-      return {
-        id:
-          transaction.id,
+  const balanceMatches =
+    summaryBalanceCents ===
+    ledgerTotalCents;
 
-        memberId:
-          transaction
-            .member_id ||
-          null,
+  const contributionTotalMatches =
+    summaryContributedCents ===
+    ledgerTotalCents;
 
-        memberEmail:
-          normalizeEmail(
-            transaction
-              .member_email
-          ),
+  const memberCountMatches =
+    summaryMemberCount ===
+    ledgerMemberCount;
 
-        transactionType:
-          normalizeString(
-            transaction
-              .transaction_type
-          ),
+  const summaryMatchesLedger =
+    (
+      balanceMatches &&
+      contributionTotalMatches &&
+      memberCountMatches
+    );
 
-        transactionLabel:
-          titleCase(
-            transaction
-              .transaction_type
-          ),
+  return {
+    healthy:
+      summaryMatchesLedger,
 
-        status:
-          normalizeString(
-            transaction.status
-          ),
+    summaryMatchesLedger,
 
-        amountCents,
+    balanceMatches,
 
-        amount:
-          centsToDollars(
-            amountCents
-          ),
+    contributionTotalMatches,
 
-        currency:
-          normalizeString(
-            transaction.currency ||
-            "USD"
-          ),
+    memberCountMatches,
 
-        provider:
-          normalizeString(
-            transaction.provider ||
-            "stripe"
-          ),
+    summary: {
+      balance:
+        summary.balance,
 
-        createdAt:
-          safeDate(
-            transaction
-              .created_at
-          ),
-      };
-    }
-  );
+      balanceCents:
+        summaryBalanceCents,
+
+      totalContributed:
+        summary
+          .totalContributed,
+
+      totalContributedCents:
+        summaryContributedCents,
+
+      totalMembersContributed:
+        summaryMemberCount,
+    },
+
+    ledger: {
+      balance:
+        ledger.total,
+
+      balanceCents:
+        ledgerTotalCents,
+
+      contributionCount:
+        ledger
+          .contributionCount,
+
+      uniqueMembers:
+        ledgerMemberCount,
+
+      lastContributionAt:
+        ledger
+          .lastContributionAt,
+    },
+
+    difference:
+      money(
+        summary.balance -
+        ledger.total
+      ),
+
+    differenceCents:
+      summaryBalanceCents -
+      ledgerTotalCents,
+  };
+}
+
+/* ==========================================================================
+   BUSINESS RULES
+============================================================================ */
+
+function buildBusinessRules() {
+  return {
+    contributionPerQualifiedMember:
+      CONTRIBUTION_AMOUNT,
+
+    contributionPerQualifiedMemberCents:
+      CONTRIBUTION_AMOUNT_CENTS,
+
+    currency:
+      "USD",
+
+    trigger:
+      "initial_paid_membership_activation",
+
+    transactionType:
+      "member_activation",
+
+    recurringMonthlyPaymentAddsContribution:
+      false,
+
+    contributionFrequency:
+      "once_per_qualifying_new_member",
+
+    memberReward:
+      false,
+
+    memberAllowance:
+      false,
+
+    referralReward:
+      false,
+
+    companyGrowthPool:
+      true,
+
+    visibility:
+      "admin_only",
+
+    writesHandledBy: [
+      "lib/growth-pool.js",
+      "api/billing/webhook.js",
+    ],
+  };
+}
+
+/* ==========================================================================
+   DATABASE STATUS
+============================================================================ */
+
+function buildDatabaseStatus({
+  summary,
+  ledgerState,
+}) {
+  return {
+    growthPoolTable:
+      Boolean(
+        summary
+          .databaseReady
+      ),
+
+    growthPoolTransactionsTable:
+      Boolean(
+        ledgerState
+          .databaseReady
+      ),
+
+    ready:
+      Boolean(
+        summary
+          .databaseReady &&
+        ledgerState
+          .databaseReady
+      ),
+  };
 }
 
 /* ==========================================================================
@@ -1380,18 +1585,25 @@ export default async function handler(
   req,
   res
 ) {
-  setNoStore(res);
+  setNoStore(
+    res
+  );
 
   logRequestStart(
     req,
     {
       scope:
-        "portal_growth_pool",
+        "admin_growth_pool",
     }
   );
 
+  /* ========================================================================
+     GET ONLY
+  ======================================================================== */
+
   if (
-    req.method !== "GET"
+    req.method !==
+    "GET"
   ) {
     return methodNotAllowed(
       res,
@@ -1402,111 +1614,131 @@ export default async function handler(
 
   try {
     /* ======================================================================
-       AUTH
+       ADMIN AUTH
     ====================================================================== */
 
     const {
-      member,
+      admin,
       response,
     } =
-      await authenticateMember(
+      await authenticateAdmin(
         req,
         res
       );
 
-    if (!member) {
+    if (!admin) {
       return response;
     }
 
-    const safeMember =
-      sanitizeMember(
-        member
-      );
-
     /* ======================================================================
-       QUERY PARAMS
+       LIMIT
     ====================================================================== */
 
-    const recentLimit =
-      Math.min(
-        Math.max(
-          normalizeInteger(
-            req.query?.limit,
-            DEFAULT_RECENT_LIMIT
-          ),
-          1
-        ),
-        MAX_RECENT_LIMIT
+    const limit =
+      toPositiveInteger(
+        req.query?.limit,
+        DEFAULT_LIMIT
       );
 
     /* ======================================================================
-       LOAD DATA
+       LOAD GROWTH POOL + LEDGER
     ====================================================================== */
 
     const [
       summary,
-      ledger,
-      memberContribution,
-      recentTransactions,
+      ledgerState,
     ] =
       await Promise.all([
         getGrowthPoolSummary(),
 
-        getLedgerTotals(),
-
-        getMemberContribution(
-          safeMember.id
-        ),
-
-        getRecentTransactions(
-          recentLimit
-        ),
+        getGrowthPoolLedger(),
       ]);
+
+    /* ======================================================================
+       LEDGER TOTALS
+    ====================================================================== */
+
+    const ledger =
+      calculateLedgerTotals(
+        ledgerState.rows
+      );
+
+    /* ======================================================================
+       RECENT TRANSACTIONS
+    ====================================================================== */
+
+    const recentTransactions =
+      getRecentTransactions(
+        ledgerState.rows,
+        limit
+      );
 
     /* ======================================================================
        RECONCILIATION
     ====================================================================== */
 
-    const summaryMatchesLedger =
-      (
-        summary.balanceCents ===
-          ledger.totalCents
-      ) &&
-      (
-        summary.totalContributedCents ===
-          ledger.totalCents
-      ) &&
-      (
-        summary.totalMembersContributed ===
-          ledger.memberCount
-      );
+    const reconciliation =
+      buildReconciliation({
+        summary,
+        ledger,
+      });
 
     /* ======================================================================
-       LOG
+       DATABASE
+    ====================================================================== */
+
+    const database =
+      buildDatabaseStatus({
+        summary,
+        ledgerState,
+      });
+
+    /* ======================================================================
+       ADMIN AUDIT LOG
     ====================================================================== */
 
     logRequestSuccess(
       req,
       {
         scope:
-          "portal_growth_pool",
+          "admin_growth_pool",
 
-        memberId:
-          safeMember.id,
+        adminId:
+          admin.id,
 
-        email:
-          safeMember.email,
+        adminEmail:
+          admin.email,
 
         balance:
           summary.balance,
 
+        balanceCents:
+          summary
+            .balanceCents,
+
+        totalContributed:
+          summary
+            .totalContributed,
+
+        totalMembers:
+          summary
+            .totalMembersContributed,
+
+        ledgerContributionCount:
+          ledger
+            .contributionCount,
+
         ledgerTotal:
           ledger.total,
 
-        totalMembers:
-          ledger.memberCount,
+        reconciliationHealthy:
+          reconciliation
+            .healthy,
 
-        summaryMatchesLedger,
+        ip:
+          getClientIp(
+            req
+          ),
       }
     );
 
@@ -1520,8 +1752,21 @@ export default async function handler(
         authenticated:
           true,
 
-        member:
-          safeMember,
+        adminAccess:
+          true,
+
+        visibility:
+          "admin_only",
+
+        /* ================================================================
+           ADMIN
+        ================================================================= */
+
+        admin,
+
+        /* ================================================================
+           GROWTH POOL
+        ================================================================= */
 
         growthPool: {
           id:
@@ -1534,10 +1779,12 @@ export default async function handler(
             summary.balance,
 
           balanceCents:
-            summary.balanceCents,
+            summary
+              .balanceCents,
 
           totalContributed:
-            summary.totalContributed,
+            summary
+              .totalContributed,
 
           totalContributedCents:
             summary
@@ -1548,15 +1795,16 @@ export default async function handler(
               .totalMembersContributed,
 
           contributionAmount:
-            summary
-              .contributionAmount,
+            CONTRIBUTION_AMOUNT,
 
           contributionAmountCents:
-            summary
-              .contributionAmountCents,
+            CONTRIBUTION_AMOUNT_CENTS,
 
           currency:
             "USD",
+
+          exists:
+            summary.exists,
 
           updatedAt:
             summary.updatedAt,
@@ -1564,6 +1812,10 @@ export default async function handler(
           createdAt:
             summary.createdAt,
         },
+
+        /* ================================================================
+           LEDGER
+        ================================================================= */
 
         ledger: {
           contributionCount:
@@ -1586,67 +1838,54 @@ export default async function handler(
               .lastContributionAt,
         },
 
-        memberContribution,
+        /* ================================================================
+           RECENT TRANSACTIONS
+        ================================================================= */
 
         recentTransactions,
 
-        reconciliation: {
-          summaryMatchesLedger,
+        transactions:
+          recentTransactions,
 
-          summaryBalance:
-            summary.balance,
+        /* ================================================================
+           RECONCILIATION
+        ================================================================= */
 
-          ledgerBalance:
-            ledger.total,
+        reconciliation,
 
-          summaryMemberCount:
-            summary
-              .totalMembersContributed,
+        /* ================================================================
+           BUSINESS RULES
+        ================================================================= */
 
-          ledgerMemberCount:
-            ledger
-              .memberCount,
+        businessRule:
+          buildBusinessRules(),
 
-          difference:
-            money(
-              summary.balance -
-              ledger.total
-            ),
+        /* ================================================================
+           DATABASE READINESS
+        ================================================================= */
 
-          differenceCents:
-            summary.balanceCents -
-            ledger.totalCents,
+        database,
+
+        /* ================================================================
+           FILTERS
+        ================================================================= */
+
+        filters: {
+          limit,
         },
 
-        businessRule: {
-          contributionPerQualifiedMember:
-            CONTRIBUTION_AMOUNT,
+        /* ================================================================
+           LINKS
 
-          contributionPerQualifiedMemberCents:
-            CONTRIBUTION_AMOUNT_CENTS,
-
-          contributionTrigger:
-            "initial_paid_membership_activation",
-
-          recurringMonthlyPaymentAddsAnotherContribution:
-            false,
-
-          memberAllowance:
-            false,
-
-          companyGrowthPool:
-            true,
-        },
+           No member portal links are returned here.
+        ================================================================= */
 
         links: {
-          portal:
-            "/portal/index.html",
+          adminDashboard:
+            "/admin/index.html",
 
-          rewards:
-            "/portal/rewards.html",
-
-          benefits:
-            "/portal/benefits.html",
+          adminGrowthPool:
+            "/admin/growth-pool.html",
         },
 
         fetchedAt:
@@ -1656,24 +1895,26 @@ export default async function handler(
 
       "Growth Pool loaded successfully."
     );
-  } catch (error) {
+  } catch (
+    error
+  ) {
     logRequestError(
       req,
       error,
       {
         scope:
-          "portal_growth_pool_unexpected",
+          "admin_growth_pool_unexpected",
       }
     );
 
     console.error(
-      "Card Leo portal Growth Pool error:",
+      "Card Leo Growth Pool admin API error:",
       error
     );
 
     return serverError(
       res,
-      "Failed to load Growth Pool.",
+      "Failed to load Card Leo Growth Pool.",
       process.env.NODE_ENV ===
         "development"
         ? {
@@ -1683,6 +1924,14 @@ export default async function handler(
 
             code:
               error?.code ||
+              null,
+
+            details:
+              error?.details ||
+              null,
+
+            hint:
+              error?.hint ||
               null,
           }
         : null

@@ -19,7 +19,7 @@ import {
 /* ==========================================================================
    CARD LEO REWARDS
    STRIPE WEBHOOK
-   STEP #23
+   STEP #33
 
    PURPOSE
    -------
@@ -41,7 +41,7 @@ import {
 
    IMPORTANT GROWTH POOL RULE
    --------------------------
-   Growth Pool accounting now lives in:
+   Growth Pool accounting lives in:
 
      lib/growth-pool.js
 
@@ -1043,7 +1043,6 @@ async function findSignupByCheckoutSession(
     ? result.data
     : null;
 }
-
 /* ==========================================================================
    FIND MEMBER FROM STRIPE EVENT OBJECT
 ============================================================================ */
@@ -2044,7 +2043,6 @@ async function saveAccessFailure(
     );
   }
 }
-
 /* ==========================================================================
    ACCESS OPEN
 ============================================================================ */
@@ -2104,9 +2102,7 @@ async function syncActiveMemberToAccess(
 
     await saveAccessSuccess(
       member,
-
       accessResult,
-
       "OPEN"
     );
 
@@ -2141,9 +2137,7 @@ async function syncActiveMemberToAccess(
 
     await saveAccessFailure(
       member,
-
       error,
-
       "sync_failed"
     );
 
@@ -2203,9 +2197,7 @@ async function suspendMemberFromAccess(
 
     await saveAccessSuccess(
       member,
-
       accessResult,
-
       "SUSPEND"
     );
 
@@ -2240,9 +2232,7 @@ async function suspendMemberFromAccess(
 
     await saveAccessFailure(
       member,
-
       error,
-
       "suspend_failed"
     );
 
@@ -2268,7 +2258,6 @@ async function suspendMemberFromAccess(
    All duplicate protection and accounting are handled by:
 
      lib/growth-pool.js
-
 ============================================================================ */
 
 async function processGrowthPool({
@@ -2559,6 +2548,7 @@ async function handleCheckoutCompleted(
    ASYNC CHECKOUT PAYMENT SUCCEEDED
 
    Some payment methods complete checkout before payment settles.
+
    This event is the paid activation fallback.
 ============================================================================ */
 
@@ -2727,7 +2717,6 @@ async function handleCheckoutAsyncPaymentFailed(
 
    IMPORTANT
    ---------
-   #22 now checks invoice.billing_reason.
 
    subscription_create:
      May qualify as fallback initial activation.
@@ -2992,17 +2981,14 @@ async function handleSubscriptionUpdated(
       accessSync,
     };
   }
-
-  /* ========================================================================
-     INACTIVE
+    /* ========================================================================
+     PAST DUE / UNPAID / INCOMPLETE
   ======================================================================== */
 
   if (
     [
       "past_due",
       "unpaid",
-      "canceled",
-      "cancelled",
       "incomplete",
       "incomplete_expired",
       "paused",
@@ -3018,7 +3004,10 @@ async function handleSubscriptionUpdated(
             "inactive",
 
           payment_status:
-            stripeStatus,
+            stripeStatus ===
+            "past_due"
+              ? "past_due"
+              : "unpaid",
 
           membership_status:
             "inactive",
@@ -3063,12 +3052,86 @@ async function handleSubscriptionUpdated(
           0,
 
         reason:
-          "inactive_subscription_never_credits_growth_pool",
+          "subscription_status_event_does_not_credit_growth_pool",
       },
 
       accessSync,
     };
   }
+
+  /* ========================================================================
+     CANCELED
+  ======================================================================== */
+
+  if (
+    stripeStatus ===
+    "canceled" ||
+    stripeStatus ===
+    "cancelled"
+  ) {
+    const updatedMember =
+      await updateSignupPastDueOrInactive(
+        member,
+        {
+          status:
+            "cancelled",
+
+          payment_status:
+            "cancelled",
+
+          membership_status:
+            "cancelled",
+
+          approval_status:
+            "cancelled",
+        }
+      );
+
+    const accessSync =
+      await suspendMemberFromAccess(
+        updatedMember
+      );
+
+    return {
+      handled:
+        true,
+
+      member_id:
+        updatedMember.id,
+
+      email:
+        updatedMember.email,
+
+      status:
+        "cancelled",
+
+      stripe_status:
+        stripeStatus,
+
+      growth_pool: {
+        success:
+          true,
+
+        created:
+          false,
+
+        skipped:
+          true,
+
+        amount:
+          0,
+
+        reason:
+          "subscription_cancelled_never_credits_growth_pool",
+      },
+
+      accessSync,
+    };
+  }
+
+  /* ========================================================================
+     UNKNOWN / NON-ACTIONABLE STATUS
+  ======================================================================== */
 
   return {
     handled:
@@ -3081,7 +3144,9 @@ async function handleSubscriptionUpdated(
       member.email,
 
     status:
-      "ignored_subscription_status",
+      normalizeString(
+        member.status
+      ),
 
     stripe_status:
       stripeStatus,
@@ -3100,7 +3165,18 @@ async function handleSubscriptionUpdated(
         0,
 
       reason:
-        "subscription_status_not_qualifying",
+        "subscription_status_not_actionable",
+    },
+
+    accessSync: {
+      success:
+        false,
+
+      skipped:
+        true,
+
+      reason:
+        "subscription_status_not_actionable",
     },
   };
 }
@@ -3134,16 +3210,16 @@ async function handleSubscriptionDeleted(
       member,
       {
         status:
-          "inactive",
+          "cancelled",
 
         payment_status:
-          "canceled",
+          "cancelled",
 
         membership_status:
-          "inactive",
+          "cancelled",
 
         approval_status:
-          "canceled",
+          "cancelled",
       }
     );
 
@@ -3163,7 +3239,13 @@ async function handleSubscriptionDeleted(
       updatedMember.email,
 
     status:
-      "canceled",
+      "cancelled",
+
+    stripe_status:
+      normalizeLower(
+        subscription.status ||
+        "canceled"
+      ),
 
     growth_pool: {
       success:
@@ -3187,68 +3269,249 @@ async function handleSubscriptionDeleted(
 }
 
 /* ==========================================================================
-   SAFE EVENT SUMMARY
+   CUSTOMER UPDATED
+
+   This event does not change membership state.
+
+   We only use it to preserve Stripe customer linkage where possible.
 ============================================================================ */
 
-function buildEventSummary(
-  event
+async function handleCustomerUpdated(
+  customer
 ) {
-  const object =
-    event
-      ?.data
-      ?.object ||
-    {};
+  const customerId =
+    extractStripeId(
+      customer
+    );
+
+  const email =
+    getEmailFromEventObject(
+      customer
+    ) ||
+    normalizeEmail(
+      customer.email
+    );
+
+  let member =
+    null;
+
+  if (customerId) {
+    member =
+      await findSignupByStripeCustomer(
+        customerId
+      );
+  }
+
+  if (
+    !member?.id &&
+    email
+  ) {
+    member =
+      await findSignupByEmail(
+        email
+      );
+  }
+
+  if (
+    !member?.id
+  ) {
+    return {
+      handled:
+        false,
+
+      reason:
+        "signup_not_found",
+    };
+  }
+
+  const updatedMember =
+    await updateSignupStripeLinkage(
+      member,
+      {
+        ...customer,
+
+        customer:
+          customerId,
+      }
+    );
 
   return {
-    event_id:
-      normalizeString(
-        event?.id
-      ),
+    handled:
+      true,
 
-    event_type:
-      normalizeString(
-        event?.type
-      ),
-
-    object_type:
-      normalizeString(
-        object.object
-      ),
-
-    customer_id:
-      getStripeCustomerIdFromEventObject(
-        object
-      ),
-
-    subscription_id:
-      getStripeSubscriptionIdFromEventObject(
-        object
-      ),
-
-    checkout_session_id:
-      getStripeCheckoutSessionIdFromEventObject(
-        object
-      ),
-
-    invoice_id:
-      getStripeInvoiceIdFromEventObject(
-        object
-      ),
-
-    billing_reason:
-      getInvoiceBillingReason(
-        object
-      ),
+    member_id:
+      updatedMember.id,
 
     email:
-      getEmailFromEventObject(
-        object
+      updatedMember.email,
+
+    status:
+      normalizeString(
+        updatedMember.status
       ),
+
+    growth_pool: {
+      success:
+        true,
+
+      created:
+        false,
+
+      skipped:
+        true,
+
+      amount:
+        0,
+
+      reason:
+        "customer_update_does_not_credit_growth_pool",
+    },
+
+    accessSync: {
+      success:
+        false,
+
+      skipped:
+        true,
+
+      reason:
+        "customer_update_does_not_change_access",
+    },
   };
 }
 
 /* ==========================================================================
-   MAIN WEBHOOK
+   EVENT ROUTER
+============================================================================ */
+
+async function processStripeEvent(
+  event
+) {
+  const object =
+    event?.data?.object ||
+    {};
+
+  switch (
+    event.type
+  ) {
+    /* ======================================================================
+       CHECKOUT
+    ====================================================================== */
+
+    case "checkout.session.completed":
+      return handleCheckoutCompleted(
+        object,
+        event
+      );
+
+    case "checkout.session.async_payment_succeeded":
+      return handleCheckoutAsyncPaymentSucceeded(
+        object,
+        event
+      );
+
+    case "checkout.session.async_payment_failed":
+      return handleCheckoutAsyncPaymentFailed(
+        object,
+        event
+      );
+
+    /* ======================================================================
+       INVOICES
+    ====================================================================== */
+
+    case "invoice.paid":
+    case "invoice.payment_succeeded":
+      return handleInvoicePaid(
+        object,
+        event
+      );
+
+    case "invoice.payment_failed":
+      return handleInvoicePaymentFailed(
+        object
+      );
+
+    /* ======================================================================
+       SUBSCRIPTIONS
+    ====================================================================== */
+
+    case "customer.subscription.created":
+    case "customer.subscription.updated":
+      return handleSubscriptionUpdated(
+        object
+      );
+
+    case "customer.subscription.deleted":
+      return handleSubscriptionDeleted(
+        object
+      );
+
+    /* ======================================================================
+       CUSTOMER
+    ====================================================================== */
+
+    case "customer.updated":
+      return handleCustomerUpdated(
+        object
+      );
+
+    /* ======================================================================
+       EVERYTHING ELSE
+    ====================================================================== */
+
+    default:
+      return {
+        handled:
+          false,
+
+        ignored:
+          true,
+
+        reason:
+          "event_type_not_used",
+
+        event_type:
+          event.type,
+      };
+  }
+}
+
+/* ==========================================================================
+   WEBHOOK CONFIGURATION CHECK
+============================================================================ */
+
+function validateWebhookConfiguration() {
+  const missing =
+    [];
+
+  if (
+    !STRIPE_SECRET_KEY
+  ) {
+    missing.push(
+      "STRIPE_SECRET_KEY"
+    );
+  }
+
+  if (
+    !STRIPE_WEBHOOK_SECRET
+  ) {
+    missing.push(
+      "STRIPE_WEBHOOK_SECRET"
+    );
+  }
+
+  return {
+    valid:
+      missing.length ===
+      0,
+
+    missing,
+  };
+}
+
+/* ==========================================================================
+   WEBHOOK HANDLER
 ============================================================================ */
 
 export default async function handler(
@@ -3256,7 +3519,7 @@ export default async function handler(
   res
 ) {
   /* ========================================================================
-     METHOD
+     POST ONLY
   ======================================================================== */
 
   if (
@@ -3285,10 +3548,21 @@ export default async function handler(
   }
 
   /* ========================================================================
-     STRIPE SECRET KEY
+     CONFIGURATION
   ======================================================================== */
 
-  if (!stripe) {
+  const configuration =
+    validateWebhookConfiguration();
+
+  if (
+    !configuration.valid ||
+    !stripe
+  ) {
+    console.error(
+      "Card Leo Stripe webhook configuration is incomplete:",
+      configuration.missing
+    );
+
     return sendJson(
       res,
       500,
@@ -3300,21 +3574,29 @@ export default async function handler(
           false,
 
         message:
-          "Missing STRIPE_SECRET_KEY environment variable.",
+          "Stripe webhook is not configured.",
+
+        code:
+          "STRIPE_WEBHOOK_NOT_CONFIGURED",
       }
     );
   }
 
   /* ========================================================================
-     WEBHOOK SECRET
+     STRIPE SIGNATURE
   ======================================================================== */
 
-  if (
-    !STRIPE_WEBHOOK_SECRET
-  ) {
+  const signature =
+    normalizeString(
+      req.headers[
+        "stripe-signature"
+      ]
+    );
+
+  if (!signature) {
     return sendJson(
       res,
-      500,
+      400,
       {
         success:
           false,
@@ -3323,7 +3605,10 @@ export default async function handler(
           false,
 
         message:
-          "Missing STRIPE_WEBHOOK_SECRET environment variable.",
+          "Missing Stripe signature.",
+
+        code:
+          "STRIPE_SIGNATURE_MISSING",
       }
     );
   }
@@ -3331,7 +3616,7 @@ export default async function handler(
   let event;
 
   /* ========================================================================
-     VERIFY STRIPE SIGNATURE
+     VERIFY RAW BODY
   ======================================================================== */
 
   try {
@@ -3340,43 +3625,19 @@ export default async function handler(
         req
       );
 
-    const signature =
-      req.headers[
-        "stripe-signature"
-      ];
-
-    if (!signature) {
-      return sendJson(
-        res,
-        400,
-        {
-          success:
-            false,
-
-          ok:
-            false,
-
-          message:
-            "Missing Stripe signature.",
-        }
-      );
-    }
-
     event =
       stripe
         .webhooks
         .constructEvent(
           rawBody,
-
           signature,
-
           STRIPE_WEBHOOK_SECRET
         );
   } catch (
     error
   ) {
     console.error(
-      "Stripe webhook signature verification failed:",
+      "Card Leo Stripe webhook signature verification failed:",
       error
     );
 
@@ -3391,10 +3652,10 @@ export default async function handler(
           false,
 
         message:
-          `Webhook signature verification failed: ${
-            error?.message ||
-            "Invalid signature."
-          }`,
+          "Invalid Stripe webhook signature.",
+
+        code:
+          "STRIPE_SIGNATURE_INVALID",
       }
     );
   }
@@ -3404,147 +3665,89 @@ export default async function handler(
   ======================================================================== */
 
   try {
-    const object =
-      event
-        .data
-        ?.object ||
-      {};
+    console.log(
+      "Card Leo Stripe webhook received:",
+      {
+        eventId:
+          event.id,
 
-    let result = {
-      handled:
-        false,
+        eventType:
+          event.type,
 
-      reason:
-        "event_not_handled",
-    };
-
-    switch (
-      event.type
-    ) {
-      /* ====================================================================
-         CHECKOUT COMPLETED
-      ==================================================================== */
-
-      case "checkout.session.completed": {
-        result =
-          await handleCheckoutCompleted(
-            object,
-            event
-          );
-
-        break;
+        created:
+          event.created,
       }
+    );
 
-      /* ====================================================================
-         ASYNC CHECKOUT PAYMENT SUCCEEDED
-      ==================================================================== */
-
-      case "checkout.session.async_payment_succeeded": {
-        result =
-          await handleCheckoutAsyncPaymentSucceeded(
-            object,
-            event
-          );
-
-        break;
-      }
-
-      /* ====================================================================
-         ASYNC CHECKOUT PAYMENT FAILED
-      ==================================================================== */
-
-      case "checkout.session.async_payment_failed": {
-        result =
-          await handleCheckoutAsyncPaymentFailed(
-            object
-          );
-
-        break;
-      }
-
-      /* ====================================================================
-         INVOICE PAID
-
-         #22 determines whether this is:
-           subscription_create → possible first activation
-           subscription_cycle  → no Growth Pool
-      ==================================================================== */
-
-      case "invoice.paid":
-
-      case "invoice.payment_succeeded": {
-        result =
-          await handleInvoicePaid(
-            object,
-            event
-          );
-
-        break;
-      }
-
-      /* ====================================================================
-         INVOICE FAILED
-      ==================================================================== */
-
-      case "invoice.payment_failed": {
-        result =
-          await handleInvoicePaymentFailed(
-            object
-          );
-
-        break;
-      }
-
-      /* ====================================================================
-         SUBSCRIPTION CREATED / UPDATED
-      ==================================================================== */
-
-      case "customer.subscription.created":
-
-      case "customer.subscription.updated": {
-        result =
-          await handleSubscriptionUpdated(
-            object
-          );
-
-        break;
-      }
-
-      /* ====================================================================
-         SUBSCRIPTION DELETED
-      ==================================================================== */
-
-      case "customer.subscription.deleted": {
-        result =
-          await handleSubscriptionDeleted(
-            object
-          );
-
-        break;
-      }
-
-      /* ====================================================================
-         UNSUPPORTED
-      ==================================================================== */
-
-      default: {
-        result = {
-          handled:
-            false,
-
-          reason:
-            "unsupported_event_type",
-
-          type:
-            event.type,
-        };
-
-        break;
-      }
-    }
+    const result =
+      await processStripeEvent(
+        event
+      );
 
     /* ======================================================================
-       SUCCESS
+       LOG RESULT
+    ====================================================================== */
+
+    console.log(
+      "Card Leo Stripe webhook processed:",
+      {
+        eventId:
+          event.id,
+
+        eventType:
+          event.type,
+
+        handled:
+          Boolean(
+            result?.handled
+          ),
+
+        ignored:
+          Boolean(
+            result?.ignored
+          ),
+
+        memberId:
+          result?.member_id ||
+          null,
+
+        status:
+          result?.status ||
+          null,
+
+        growthPoolCreated:
+          Boolean(
+            result
+              ?.growth_pool
+              ?.created
+          ),
+
+        growthPoolAmount:
+          normalizeNumber(
+            result
+              ?.growth_pool
+              ?.amount,
+            0
+          ),
+
+        accessStatus:
+          result
+            ?.accessSync
+            ?.status ||
+          null,
+      }
+    );
+
+    /* ======================================================================
+       ACKNOWLEDGE STRIPE
+
+       IMPORTANT:
+       Return 2xx only after our event handler completes.
+
+       If an internal operation throws, the catch below returns 500 so
+       Stripe can retry the webhook.
+
+       Growth Pool duplicate protection makes those retries safe.
     ====================================================================== */
 
     return sendJson(
@@ -3560,51 +3763,69 @@ export default async function handler(
         received:
           true,
 
-        type:
-          event.type,
-
         event_id:
           event.id,
 
-        event:
-          buildEventSummary(
-            event
+        event_type:
+          event.type,
+
+        handled:
+          Boolean(
+            result?.handled
           ),
 
-        result,
+        ignored:
+          Boolean(
+            result?.ignored
+          ),
+
+        result:
+          result ||
+          null,
       }
     );
   } catch (
     error
   ) {
+    /* ======================================================================
+       PROCESSING ERROR
+
+       Return 500.
+
+       Stripe should retry this webhook.
+
+       The Growth Pool helper is idempotent, so retrying a qualifying
+       activation event must not create a second $2 contribution.
+    ====================================================================== */
+
     console.error(
-      "Card Leo Stripe webhook error:",
+      "Card Leo Stripe webhook processing failed:",
       {
-        type:
-          event?.type,
+        eventId:
+          event?.id ||
+          null,
 
-        event_id:
-          event?.id,
+        eventType:
+          event?.type ||
+          null,
 
-        event:
-          buildEventSummary(
-            event
-          ),
+        error:
+          error?.message ||
+          error,
 
-        error,
+        code:
+          error?.code ||
+          null,
+
+        details:
+          error?.details ||
+          null,
+
+        hint:
+          error?.hint ||
+          null,
       }
     );
-
-    /*
-     * IMPORTANT:
-     *
-     * Returning HTTP 500 tells Stripe that processing was incomplete.
-     *
-     * Stripe may retry the event.
-     *
-     * Growth Pool retries are safe because lib/growth-pool.js provides
-     * event, checkout-session, and member-level idempotency.
-     */
 
     return sendJson(
       res,
@@ -3619,21 +3840,42 @@ export default async function handler(
         received:
           true,
 
-        type:
-          event?.type ||
-          "",
-
         event_id:
           event?.id ||
-          "",
+          null,
+
+        event_type:
+          event?.type ||
+          null,
 
         message:
-          error?.message ||
-          "Stripe webhook processing failed.",
+          "Card Leo could not finish processing this Stripe webhook.",
 
         code:
-          error?.code ||
-          null,
+          "STRIPE_WEBHOOK_PROCESSING_FAILED",
+
+        ...(process.env.NODE_ENV ===
+        "development"
+          ? {
+              debug: {
+                message:
+                  error?.message ||
+                  "Unknown error",
+
+                code:
+                  error?.code ||
+                  null,
+
+                details:
+                  error?.details ||
+                  null,
+
+                hint:
+                  error?.hint ||
+                  null,
+              },
+            }
+          : {}),
       }
     );
   }

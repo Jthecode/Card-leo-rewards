@@ -1,13 +1,14 @@
 // api/access/offers.js
 
-import { supabaseAdmin } from "../../lib/supabase-admin.js";
+import {
+  supabaseAdmin,
+} from "../../lib/supabase-admin.js";
 
 import {
   buildPortalAccessCatalog,
   fetchAccessOffersPage,
   fetchAllAccessOffers,
   filterAccessOffers,
-  getAccessOffersConfigForDebug,
   getAccessOffersIntegrationStatus,
   sanitizeAccessOfferForPortal,
   validateAccessOffersConfiguration,
@@ -19,68 +20,48 @@ import {
   safeJsonParse,
 } from "../../lib/cookies.js";
 
-/* ==========================================================================
-   CARD LEO REWARDS
-   STEP #15
-   ACCESS OFFERS API
+/*
+ * Card Leo Rewards
+ * File #5 — Access Offers endpoint
+ *
+ * GET /api/access/offers
+ *
+ * Preserves:
+ * - Existing Card Leo session cookies.
+ * - Member lookup by ID, then email.
+ * - Existing paid/active membership rules.
+ * - Page and full-catalog modes.
+ * - Existing offers/benefits response aliases.
+ *
+ * Adds:
+ * - Permanent Access member key passed to the Offers helper.
+ * - ZIP/postal-code options.
+ * - Official 100-offer maximum page size.
+ *
+ * Required helper contract in lib/access-offers.js:
+ *
+ * fetchAccessOffersPage(options)
+ * fetchAllAccessOffers(options)
+ *
+ * Both must forward:
+ *   options.memberKey  -> member_key
+ *   options.postalCode -> postal_code
+ *
+ * The browser cannot select another Access member's key.
+ * The key always comes from signups.access_member_identifier.
+ */
 
-   ROUTE
-   -----
-   GET /api/access/offers
-
-   PURPOSE
-   -------
-   Secure authenticated proxy between Card Leo members and the
-   Access Development Offers API.
-
-   THIS ROUTE:
-
-   - retrieves ALL Access offers through pagination
-   - retrieves one Access page when explicitly requested
-   - searches offers
-   - filters by category
-   - filters online/local
-   - filters featured
-   - filters active
-   - supports lat/lng/radius when supported by Access
-   - normalizes merchants
-   - normalizes locations
-   - normalizes categories
-   - returns safe portal offer data
-   - keeps actual redemption credentials private
-
-   IMPORTANT
-   ---------
-   This route DOES NOT generate:
-
-   - QR codes
-   - barcodes
-   - coupon codes
-   - redemption URLs
-
-   Actual member redemption belongs to:
-
-     /api/access/redeem-offer
-
-============================================================================ */
-
-/* ==========================================================================
-   CONFIG
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Configuration
+// -----------------------------------------------------------------------------
 
 const DEFAULT_PAGE_SIZE = 100;
-
-const MAX_PUBLIC_PAGE_SIZE = 500;
+const MAX_PUBLIC_PAGE_SIZE = 100;
 
 const DEFAULT_MAX_PAGES = 100;
-
 const MAX_PUBLIC_MAX_PAGES = 250;
 
 const DEFAULT_RESPONSE_LIMIT = 0;
-
-/* ==========================================================================
-   ACTIVE MEMBERSHIP VALUES
-============================================================================ */
 
 const ACTIVE_MEMBER_STATUSES = new Set([
   "active",
@@ -133,10 +114,6 @@ const INACTIVE_STATUSES = new Set([
   "payment_failed",
 ]);
 
-/* ==========================================================================
-   SESSION COOKIE NAMES
-============================================================================ */
-
 const SESSION_COOKIE_NAMES = [
   "cardleo_session",
   "cardleo_auth",
@@ -147,15 +124,11 @@ const SESSION_COOKIE_NAMES = [
   "session",
 ];
 
-/* ==========================================================================
-   RESPONSE
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Response helpers
+// -----------------------------------------------------------------------------
 
-function sendJson(
-  res,
-  status,
-  payload
-) {
+function sendJson(res, status, payload) {
   res.statusCode = status;
 
   res.setHeader(
@@ -163,127 +136,71 @@ function sendJson(
     "application/json; charset=utf-8"
   );
 
-  /*
-   * Offers are member-only.
-   *
-   * Never allow a browser/CDN to cache one member's response
-   * and accidentally serve it to another member.
-   */
-
   res.setHeader(
     "Cache-Control",
     "private, no-store, no-cache, must-revalidate"
   );
 
-  res.setHeader(
-    "Pragma",
-    "no-cache"
-  );
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
 
-  res.setHeader(
-    "Expires",
-    "0"
-  );
-
-  return res.end(
-    JSON.stringify(
-      payload
-    )
-  );
+  return res.end(JSON.stringify(payload));
 }
 
-function badRequest(
-  res,
-  message,
-  extra = {}
-) {
-  return sendJson(
-    res,
-    400,
-    {
-      success: false,
-      ok: false,
-      message,
-      ...extra,
-    }
-  );
+function badRequest(res, message, extra = {}) {
+  return sendJson(res, 400, {
+    success: false,
+    ok: false,
+    message,
+    ...extra,
+  });
 }
 
 function unauthorized(
   res,
   message = "Please sign in to continue."
 ) {
-  return sendJson(
-    res,
-    401,
-    {
-      success: false,
-      ok: false,
-      authenticated: false,
-      message,
-    }
-  );
+  return sendJson(res, 401, {
+    success: false,
+    ok: false,
+    authenticated: false,
+    message,
+  });
 }
 
-function forbidden(
-  res,
-  message,
-  extra = {}
-) {
-  return sendJson(
-    res,
-    403,
-    {
-      success: false,
-      ok: false,
-      authenticated: true,
-      message,
-      ...extra,
-    }
-  );
+function forbidden(res, message, extra = {}) {
+  return sendJson(res, 403, {
+    success: false,
+    ok: false,
+    authenticated: true,
+    message,
+    ...extra,
+  });
 }
 
-function serviceUnavailable(
-  res,
-  message,
-  extra = {}
-) {
-  return sendJson(
-    res,
-    503,
-    {
-      success: false,
-      ok: false,
-      message,
-      ...extra,
-    }
-  );
+function serviceUnavailable(res, message, extra = {}) {
+  return sendJson(res, 503, {
+    success: false,
+    ok: false,
+    message,
+    ...extra,
+  });
 }
 
-function serverError(
-  res,
-  message,
-  extra = {}
-) {
-  return sendJson(
-    res,
-    500,
-    {
-      success: false,
-      ok: false,
-      message,
-      ...extra,
-    }
-  );
+function serverError(res, message, extra = {}) {
+  return sendJson(res, 500, {
+    success: false,
+    ok: false,
+    message,
+    ...extra,
+  });
 }
 
-/* ==========================================================================
-   BASIC HELPERS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// General helpers
+// -----------------------------------------------------------------------------
 
-function isObject(
-  value
-) {
+function isObject(value) {
   return (
     Boolean(value) &&
     typeof value === "object" &&
@@ -291,79 +208,41 @@ function isObject(
   );
 }
 
-function normalizeString(
-  value
-) {
-  return String(
-    value ?? ""
-  ).trim();
+function normalizeString(value) {
+  return String(value ?? "").trim();
 }
 
-function normalizeEmail(
-  value
-) {
-  return normalizeString(
-    value
-  ).toLowerCase();
+function normalizeEmail(value) {
+  return normalizeString(value).toLowerCase();
 }
 
-function normalizeLower(
-  value
-) {
-  return normalizeString(
-    value
-  ).toLowerCase();
+function normalizeLower(value) {
+  return normalizeString(value).toLowerCase();
 }
 
-function normalizeStatus(
-  value
-) {
-  return normalizeString(
-    value
-  ).toLowerCase();
+function normalizeStatus(value) {
+  return normalizeLower(value);
 }
 
-function normalizeBoolean(
-  value,
-  fallback = false
-) {
-  if (
-    typeof value === "boolean"
-  ) {
+function normalizeBoolean(value, fallback = false) {
+  if (typeof value === "boolean") {
     return value;
   }
 
-  if (
-    typeof value === "number"
-  ) {
+  if (typeof value === "number") {
     return value !== 0;
   }
 
-  const normalized =
-    normalizeLower(
-      value
-    );
+  const normalized = normalizeLower(value);
 
   if (
-    [
-      "true",
-      "1",
-      "yes",
-      "y",
-      "on",
-    ].includes(normalized)
+    ["true", "1", "yes", "y", "on"].includes(normalized)
   ) {
     return true;
   }
 
   if (
-    [
-      "false",
-      "0",
-      "no",
-      "n",
-      "off",
-    ].includes(normalized)
+    ["false", "0", "no", "n", "off"].includes(normalized)
   ) {
     return false;
   }
@@ -371,27 +250,16 @@ function normalizeBoolean(
   return fallback;
 }
 
-function normalizeInteger(
-  value,
-  fallback = 0
-) {
-  const parsed =
-    Number.parseInt(
-      String(
-        value ?? ""
-      ),
-      10
-    );
+function normalizeInteger(value, fallback = 0) {
+  const parsed = Number.parseInt(
+    String(value ?? ""),
+    10
+  );
 
-  return Number.isFinite(parsed)
-    ? parsed
-    : fallback;
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function normalizeNumber(
-  value,
-  fallback = null
-) {
+function normalizeNumber(value, fallback = null) {
   if (
     value === undefined ||
     value === null ||
@@ -400,52 +268,36 @@ function normalizeNumber(
     return fallback;
   }
 
-  const parsed =
-    Number(value);
+  const parsed = Number(value);
 
-  return Number.isFinite(parsed)
-    ? parsed
-    : fallback;
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function clamp(
-  value,
-  min,
-  max
-) {
-  return Math.min(
-    Math.max(
-      value,
-      min
-    ),
-    max
-  );
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
 
-function safeDate(
-  value
-) {
+function safeDate(value) {
   if (!value) {
     return null;
   }
 
-  const date =
-    new Date(value);
+  const date = new Date(value);
 
-  return Number.isNaN(
-    date.getTime()
-  )
+  return Number.isNaN(date.getTime())
     ? null
     : date.toISOString();
 }
 
-/* ==========================================================================
-   COOKIE PARSING
-============================================================================ */
+function firstValue(value) {
+  return Array.isArray(value) ? value[0] : value;
+}
 
-function parseCookies(
-  req
-) {
+// -----------------------------------------------------------------------------
+// Existing cookie parsing
+// -----------------------------------------------------------------------------
+
+function parseCookies(req) {
   if (
     req?.cookies &&
     typeof req.cookies === "object"
@@ -453,226 +305,126 @@ function parseCookies(
     return req.cookies;
   }
 
-  const header =
-    req?.headers?.cookie ||
-    "";
+  const header = req?.headers?.cookie || "";
 
   return String(header)
     .split(";")
-    .map(
-      (part) =>
-        part.trim()
-    )
+    .map((part) => part.trim())
     .filter(Boolean)
-    .reduce(
-      (
-        output,
-        part
-      ) => {
-        const separator =
-          part.indexOf("=");
+    .reduce((output, part) => {
+      const separator = part.indexOf("=");
 
-        if (
-          separator === -1
-        ) {
-          return output;
-        }
-
-        const name =
-          part
-            .slice(
-              0,
-              separator
-            )
-            .trim();
-
-        const rawValue =
-          part
-            .slice(
-              separator + 1
-            )
-            .trim();
-
-        if (!name) {
-          return output;
-        }
-
-        try {
-          output[name] =
-            decodeURIComponent(
-              rawValue
-            );
-        } catch {
-          output[name] =
-            rawValue;
-        }
-
+      if (separator === -1) {
         return output;
-      },
-      {}
-    );
+      }
+
+      const name = part.slice(0, separator).trim();
+      const rawValue = part.slice(separator + 1).trim();
+
+      if (!name) {
+        return output;
+      }
+
+      try {
+        output[name] = decodeURIComponent(rawValue);
+      } catch {
+        output[name] = rawValue;
+      }
+
+      return output;
+    }, {});
 }
 
-/* ==========================================================================
-   SESSION PARSER
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Existing session parser
+// -----------------------------------------------------------------------------
 
-function parseSessionValue(
-  value
-) {
-  if (
-    isObject(value)
-  ) {
+function parseSessionValue(value) {
+  if (isObject(value)) {
     return value;
   }
 
-  const raw =
-    normalizeString(
-      value
-    );
+  const raw = normalizeString(value);
 
   if (!raw) {
     return null;
   }
 
-  const direct =
-    safeJsonParse(
-      raw,
-      null
-    );
+  const direct = safeJsonParse(raw, null);
 
-  if (
-    isObject(direct)
-  ) {
+  if (isObject(direct)) {
     return direct;
   }
 
-  /*
-   * Compatibility with older encoded Card Leo sessions.
-   */
-
   try {
-    const decoded =
-      Buffer
-        .from(
-          raw,
-          "base64"
-        )
-        .toString(
-          "utf8"
-        );
+    const decoded = Buffer.from(
+      raw,
+      "base64"
+    ).toString("utf8");
 
-    const parsed =
-      safeJsonParse(
-        decoded,
-        null
-      );
+    const parsed = safeJsonParse(decoded, null);
 
-    if (
-      isObject(parsed)
-    ) {
+    if (isObject(parsed)) {
       return parsed;
     }
   } catch {
-    // Ignore.
+    // Continue.
   }
 
   try {
-    const normalized =
-      raw
-        .replace(
-          /-/g,
-          "+"
-        )
-        .replace(
-          /_/g,
-          "/"
-        );
+    const normalized = raw
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
 
-    const padded =
-      normalized.padEnd(
-        Math.ceil(
-          normalized.length / 4
-        ) * 4,
-        "="
-      );
+    const padded = normalized.padEnd(
+      Math.ceil(normalized.length / 4) * 4,
+      "="
+    );
 
-    const decoded =
-      Buffer
-        .from(
-          padded,
-          "base64"
-        )
-        .toString(
-          "utf8"
-        );
+    const decoded = Buffer.from(
+      padded,
+      "base64"
+    ).toString("utf8");
 
-    const parsed =
-      safeJsonParse(
-        decoded,
-        null
-      );
+    const parsed = safeJsonParse(decoded, null);
 
-    if (
-      isObject(parsed)
-    ) {
+    if (isObject(parsed)) {
       return parsed;
     }
   } catch {
-    // Ignore.
+    // Ignore invalid session values.
   }
 
   return null;
 }
 
-/* ==========================================================================
-   SESSION LOOKUP
-============================================================================ */
-
-function readSessionCookie(
-  req
-) {
-  const cookies =
-    parseCookies(
-      req
-    );
+function readSessionCookie(req) {
+  const cookies = parseCookies(req);
 
   const configuredName =
     typeof getSessionCookieName === "function"
-      ? normalizeString(
-          getSessionCookieName()
-        )
+      ? normalizeString(getSessionCookieName())
       : "";
 
-  const names =
-    Array.from(
-      new Set(
-        [
-          configuredName,
-          ...SESSION_COOKIE_NAMES,
-        ].filter(Boolean)
-      )
-    );
+  const names = Array.from(
+    new Set(
+      [
+        configuredName,
+        ...SESSION_COOKIE_NAMES,
+      ].filter(Boolean)
+    )
+  );
 
-  for (
-    const name
-    of names
-  ) {
-    const raw =
-      cookies[name];
+  for (const name of names) {
+    const raw = cookies[name];
 
     if (!raw) {
       continue;
     }
 
-    const data =
-      parseSessionValue(
-        raw
-      );
+    const data = parseSessionValue(raw);
 
-    if (
-      isObject(data)
-    ) {
+    if (isObject(data)) {
       return {
         name,
         raw,
@@ -684,37 +436,24 @@ function readSessionCookie(
   return null;
 }
 
-/* ==========================================================================
-   SESSION MEMBER ID
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Existing session identity
+// -----------------------------------------------------------------------------
 
-function getSessionMemberId(
-  sessionMeta
-) {
-  const session =
-    sessionMeta?.data ||
-    {};
+function getSessionMemberId(sessionMeta) {
+  const session = sessionMeta?.data || {};
 
-  const member =
-    isObject(
-      session.member
-    )
-      ? session.member
-      : {};
+  const member = isObject(session.member)
+    ? session.member
+    : {};
 
-  const profile =
-    isObject(
-      session.profile
-    )
-      ? session.profile
-      : {};
+  const profile = isObject(session.profile)
+    ? session.profile
+    : {};
 
-  const user =
-    isObject(
-      session.user
-    )
-      ? session.user
-      : {};
+  const user = isObject(session.user)
+    ? session.user
+    : {};
 
   return normalizeString(
     member.id ||
@@ -736,37 +475,20 @@ function getSessionMemberId(
   );
 }
 
-/* ==========================================================================
-   SESSION EMAIL
-============================================================================ */
+function getSessionEmail(sessionMeta) {
+  const session = sessionMeta?.data || {};
 
-function getSessionEmail(
-  sessionMeta
-) {
-  const session =
-    sessionMeta?.data ||
-    {};
+  const member = isObject(session.member)
+    ? session.member
+    : {};
 
-  const member =
-    isObject(
-      session.member
-    )
-      ? session.member
-      : {};
+  const profile = isObject(session.profile)
+    ? session.profile
+    : {};
 
-  const profile =
-    isObject(
-      session.profile
-    )
-      ? session.profile
-      : {};
-
-  const user =
-    isObject(
-      session.user
-    )
-      ? session.user
-      : {};
+  const user = isObject(session.user)
+    ? session.user
+    : {};
 
   return normalizeEmail(
     member.email ||
@@ -777,16 +499,12 @@ function getSessionEmail(
   );
 }
 
-/* ==========================================================================
-   SESSION EXPIRATION
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Existing expiration behavior
+// -----------------------------------------------------------------------------
 
-function getSessionExpiresAt(
-  sessionMeta
-) {
-  const session =
-    sessionMeta?.data ||
-    {};
+function getSessionExpiresAt(sessionMeta) {
+  const session = sessionMeta?.data || {};
 
   const candidates = [
     session.expires_at,
@@ -796,12 +514,8 @@ function getSessionExpiresAt(
     session.session?.expiresAt,
   ];
 
-  for (
-    const value
-    of candidates
-  ) {
-    const numeric =
-      Number(value);
+  for (const value of candidates) {
+    const numeric = Number(value);
 
     if (
       Number.isFinite(numeric) &&
@@ -814,364 +528,193 @@ function getSessionExpiresAt(
   return 0;
 }
 
-function isSessionExpired(
-  sessionMeta
-) {
-  const expiresAt =
-    getSessionExpiresAt(
-      sessionMeta
-    );
+function isSessionExpired(sessionMeta) {
+  const expiresAt = getSessionExpiresAt(sessionMeta);
 
-  /*
-   * Preserve compatibility with older Card Leo sessions that
-   * may not have an expires_at field.
-   */
-
+  // Preserve older sessions without an explicit expiration field.
   if (!expiresAt) {
     return false;
   }
 
-  return (
-    expiresAt <=
-    Math.floor(
-      Date.now() / 1000
-    )
-  );
+  return expiresAt <= Math.floor(Date.now() / 1000);
 }
 
-/* ==========================================================================
-   MEMBER STATUS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Existing membership rules
+// -----------------------------------------------------------------------------
 
-function isMemberActive(
-  member
-) {
+function isMemberActive(member) {
   if (!member) {
     return false;
   }
 
-  const status =
-    normalizeStatus(
-      member.status
-    );
+  const status = normalizeStatus(member.status);
 
-  const paymentStatus =
-    normalizeStatus(
-      member.payment_status
-    );
+  const paymentStatus = normalizeStatus(
+    member.payment_status
+  );
 
-  const membershipStatus =
-    normalizeStatus(
-      member.membership_status
-    );
+  const membershipStatus = normalizeStatus(
+    member.membership_status
+  );
 
-  const approvalStatus =
-    normalizeStatus(
-      member.approval_status
-    );
-
-  /*
-   * Explicit inactive state always wins.
-   */
+  const approvalStatus = normalizeStatus(
+    member.approval_status
+  );
 
   if (
-    INACTIVE_STATUSES.has(
-      status
-    ) ||
-    INACTIVE_STATUSES.has(
-      paymentStatus
-    ) ||
-    INACTIVE_STATUSES.has(
-      membershipStatus
-    ) ||
-    INACTIVE_STATUSES.has(
-      approvalStatus
-    )
+    INACTIVE_STATUSES.has(status) ||
+    INACTIVE_STATUSES.has(paymentStatus) ||
+    INACTIVE_STATUSES.has(membershipStatus) ||
+    INACTIVE_STATUSES.has(approvalStatus)
   ) {
     return false;
   }
 
-  /*
-   * Payment must actually be current.
-   */
-
-  const paid =
-    ACTIVE_PAYMENT_STATUSES.has(
-      paymentStatus
-    );
+  const paid = ACTIVE_PAYMENT_STATUSES.has(
+    paymentStatus
+  );
 
   const active =
-    ACTIVE_MEMBER_STATUSES.has(
-      status
-    ) ||
-    ACTIVE_MEMBERSHIP_STATUSES.has(
-      membershipStatus
-    ) ||
-    ACTIVE_APPROVAL_STATUSES.has(
-      approvalStatus
-    );
+    ACTIVE_MEMBER_STATUSES.has(status) ||
+    ACTIVE_MEMBERSHIP_STATUSES.has(membershipStatus) ||
+    ACTIVE_APPROVAL_STATUSES.has(approvalStatus);
 
-  return (
-    paid &&
-    active
-  );
+  return paid && active;
 }
 
-/* ==========================================================================
-   ACCESS PERKS STATUS
-============================================================================ */
+function isAccessMemberReady(member) {
+  const ready = member?.access_perks_ready;
 
-function isAccessMemberReady(
-  member
-) {
-  const ready =
-    member
-      ?.access_perks_ready;
-
-  if (
-    typeof ready === "boolean"
-  ) {
+  if (typeof ready === "boolean") {
     return ready;
   }
 
-  const status =
-    normalizeString(
-      member
-        ?.access_member_status
-    ).toUpperCase();
-
   return (
-    status === "OPEN"
+    normalizeString(
+      member?.access_member_status
+    ).toUpperCase() === "OPEN"
   );
 }
 
-/* ==========================================================================
-   MEMBER LOOKUP
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Existing member lookup
+// -----------------------------------------------------------------------------
 
-async function findMember({
-  memberId,
-  email,
-}) {
-  let query =
-    supabaseAdmin
-      .from(
-        "signups"
-      )
-      .select("*")
-      .limit(1);
+async function findMember({ memberId, email }) {
+  let query = supabaseAdmin
+    .from("signups")
+    .select("*")
+    .limit(1);
 
   if (memberId) {
-    query =
-      query.eq(
-        "id",
-        memberId
-      );
+    query = query.eq("id", memberId);
   } else if (email) {
-    query =
-      query.ilike(
-        "email",
-        email
-      );
+    query = query.ilike("email", email);
   } else {
     return null;
   }
 
-  const {
-    data,
-    error,
-  } =
-    await query
-      .maybeSingle();
+  const { data, error } = await query.maybeSingle();
 
   if (error) {
     throw error;
   }
 
-  return (
-    data ||
-    null
-  );
+  return data || null;
 }
 
-/* ==========================================================================
-   AUTHENTICATION
+function safelyClearAuthCookies(res) {
+  try {
+    clearAuthCookies(res);
+  } catch {
+    // Best effort only.
+  }
+}
 
-   IMPORTANT
-   ---------
-   We do NOT require:
+async function authenticateMember(req, res) {
+  const session = readSessionCookie(req);
 
-     session.data.authenticated === true
-
-   Older/newer Card Leo session versions may not all contain that exact
-   boolean. Instead, we resolve the real member from the server-side
-   Supabase record using session identity.
-
-============================================================================ */
-
-async function authenticateMember(
-  req,
-  res
-) {
-  const session =
-    readSessionCookie(
-      req
-    );
-
-  if (
-    !session?.data
-  ) {
+  if (!session?.data) {
     return {
       member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Please sign in to view Card Leo benefits."
-        ),
+      response: unauthorized(
+        res,
+        "Please sign in before viewing Card Leo benefits."
+      ),
     };
   }
 
-  if (
-    isSessionExpired(
-      session
-    )
-  ) {
-    try {
-      clearAuthCookies(
-        res
-      );
-    } catch {
-      // Best effort.
-    }
+  if (isSessionExpired(session)) {
+    safelyClearAuthCookies(res);
 
     return {
       member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Your session has expired. Please sign in again."
-        ),
+      response: unauthorized(
+        res,
+        "Your Card Leo session expired. Please sign in again."
+      ),
     };
   }
 
-  const memberId =
-    getSessionMemberId(
-      session
-    );
+  const memberId = getSessionMemberId(session);
+  const email = getSessionEmail(session);
 
-  const email =
-    getSessionEmail(
-      session
-    );
-
-  if (
-    !memberId &&
-    !email
-  ) {
-    try {
-      clearAuthCookies(
-        res
-      );
-    } catch {
-      // Best effort.
-    }
+  if (!memberId && !email) {
+    safelyClearAuthCookies(res);
 
     return {
       member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Member information is missing from your login session."
-        ),
+      response: unauthorized(
+        res,
+        "Member information is missing from your login session."
+      ),
     };
   }
 
-  let member =
-    null;
-
-  /*
-   * Try the immutable member ID first.
-   */
+  let member = null;
 
   if (memberId) {
-    member =
-      await findMember({
-        memberId,
-        email: "",
-      });
+    member = await findMember({
+      memberId,
+      email: "",
+    });
   }
 
-  /*
-   * Compatibility fallback:
-   *
-   * If an older session contains an ID that no longer resolves but has
-   * the member email, try the email before declaring the session invalid.
-   */
-
-  if (
-    !member?.id &&
-    email
-  ) {
-    member =
-      await findMember({
-        memberId: "",
-        email,
-      });
+  // Preserve the existing email fallback for older sessions.
+  if (!member?.id && email) {
+    member = await findMember({
+      memberId: "",
+      email,
+    });
   }
 
-  if (
-    !member?.id
-  ) {
-    try {
-      clearAuthCookies(
-        res
-      );
-    } catch {
-      // Best effort.
-    }
+  if (!member?.id) {
+    safelyClearAuthCookies(res);
 
     return {
       member: null,
-
-      response:
-        unauthorized(
-          res,
-          "Your Card Leo member record could not be found."
-        ),
+      response: unauthorized(
+        res,
+        "Your Card Leo member record could not be found."
+      ),
     };
   }
 
-  /*
-   * IMPORTANT:
-   *
-   * Membership/payment problems are authorization failures, NOT
-   * authentication failures. Do not clear the member's login cookies.
-   */
-
-  if (
-    !isMemberActive(
-      member
-    )
-  ) {
+  // Payment problems do not clear a valid login.
+  if (!isMemberActive(member)) {
     return {
       member: null,
-
-      response:
-        forbidden(
-          res,
-          "Your Card Leo membership must be active and paid before benefits can be viewed.",
-          {
-            requiresPayment: true,
-
-            requires_payment: true,
-
-            redirectTo:
-              "/signup.html?status=payment_required",
-          }
-        ),
+      response: forbidden(
+        res,
+        "Your Card Leo membership must be active and paid before benefits can be viewed.",
+        {
+          requiresPayment: true,
+          requires_payment: true,
+          redirectTo:
+            "/signup.html?status=payment_required",
+        }
+      ),
     };
   }
 
@@ -1181,956 +724,556 @@ async function authenticateMember(
   };
 }
 
-/* ==========================================================================
-   SAFE MEMBER
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Safe member response
+// -----------------------------------------------------------------------------
 
-function sanitizeMember(
-  member
-) {
+function sanitizeMember(member) {
   return {
-    id:
-      member?.id ||
-      null,
-
-    email:
-      normalizeEmail(
-        member?.email
-      ),
-
-    firstName:
-      normalizeString(
-        member?.first_name
-      ),
-
-    lastName:
-      normalizeString(
-        member?.last_name
-      ),
-
+    id: member?.id || null,
+    email: normalizeEmail(member?.email),
+    firstName: normalizeString(member?.first_name),
+    lastName: normalizeString(member?.last_name),
     fullName:
-      normalizeString(
-        member?.full_name
-      ) ||
+      normalizeString(member?.full_name) ||
       [
         member?.first_name,
         member?.last_name,
       ]
-        .map(
-          normalizeString
-        )
+        .map(normalizeString)
         .filter(Boolean)
         .join(" "),
-
     membershipStatus:
-      normalizeString(
-        member
-          ?.membership_status
-      ),
-
+      normalizeString(member?.membership_status),
     paymentStatus:
-      normalizeString(
-        member
-          ?.payment_status
-      ),
-
+      normalizeString(member?.payment_status),
     approvalStatus:
-      normalizeString(
-        member
-          ?.approval_status
-      ),
-
+      normalizeString(member?.approval_status),
     accessMemberIdentifier:
-      normalizeString(
-        member
-          ?.access_member_identifier
-      ),
-
+      normalizeString(member?.access_member_identifier),
     accessMemberStatus:
-      normalizeString(
-        member
-          ?.access_member_status
-      ),
-
-    accessPerksReady:
-      isAccessMemberReady(
-        member
-      ),
+      normalizeString(member?.access_member_status),
+    accessPerksReady: isAccessMemberReady(member),
   };
 }
 
-/* ==========================================================================
-   QUERY OPTIONS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Query options
+// -----------------------------------------------------------------------------
 
-function buildQueryOptions(
-  req
-) {
-  const query =
-    req.query ||
-    {};
+function buildQueryOptions(req) {
+  const query = req.query || {};
 
-  const mode =
-    normalizeLower(
-      query.mode ||
+  const mode = normalizeLower(
+    firstValue(query.mode) ||
       (
-        normalizeBoolean(
-          query.all,
-          true
-        )
+        normalizeBoolean(firstValue(query.all), true)
           ? "all"
           : "page"
       )
-    );
+  );
 
-  const page =
-    clamp(
-      normalizeInteger(
-        query.page,
-        1
-      ),
+  return {
+    mode: mode === "page" ? "page" : "all",
+
+    page: clamp(
+      normalizeInteger(firstValue(query.page), 1),
       1,
       100000
-    );
+    ),
 
-  const pageSize =
-    clamp(
+    pageSize: clamp(
       normalizeInteger(
-        query.page_size ??
-        query.pageSize ??
-        query.limit,
+        firstValue(
+          query.per_page ??
+            query.page_size ??
+            query.pageSize ??
+            query.limit
+        ),
         DEFAULT_PAGE_SIZE
       ),
       1,
       MAX_PUBLIC_PAGE_SIZE
-    );
+    ),
 
-  const maxPages =
-    clamp(
+    maxPages: clamp(
       normalizeInteger(
-        query.max_pages ??
-        query.maxPages,
+        firstValue(query.max_pages ?? query.maxPages),
         DEFAULT_MAX_PAGES
       ),
       1,
       MAX_PUBLIC_MAX_PAGES
-    );
+    ),
 
-  const resultLimit =
-    Math.max(
+    resultLimit: Math.max(
       normalizeInteger(
-        query.result_limit ??
-        query.resultLimit ??
-        query.return_limit ??
-        query.returnLimit,
+        firstValue(
+          query.result_limit ??
+            query.resultLimit ??
+            query.return_limit ??
+            query.returnLimit
+        ),
         DEFAULT_RESPONSE_LIMIT
       ),
       0
-    );
+    ),
 
-  const latitude =
-    normalizeNumber(
-      query.latitude ??
-      query.lat,
-      null
-    );
+    cursor: normalizeString(firstValue(query.cursor)),
 
-  const longitude =
-    normalizeNumber(
-      query.longitude ??
-      query.lng ??
-      query.lon,
-      null
-    );
-
-  const radius =
-    normalizeNumber(
-      query.radius,
-      null
-    );
-
-  const hasOnlineFilter =
-    query.online !==
-    undefined;
-
-  const hasLocalFilter =
-    query.local !==
-    undefined;
-
-  const hasFeaturedFilter =
-    query.featured !==
-    undefined;
-
-  const hasActiveFilter =
-    query.active !==
-    undefined;
-
-  return {
-    mode:
-      mode === "page"
-        ? "page"
-        : "all",
-
-    page,
-
-    pageSize,
-
-    maxPages,
-
-    resultLimit,
-
-    cursor:
-      normalizeString(
-        query.cursor
-      ),
-
-    search:
-      normalizeString(
+    search: normalizeString(
+      firstValue(
         query.search ??
-        query.q ??
-        query.query
+          query.q ??
+          query.query
+      )
+    ),
+
+    category: normalizeString(
+      firstValue(
+        query.category_key ??
+          query.category
+      )
+    ),
+
+    postalCode: normalizeString(
+      firstValue(
+        query.postal_code ??
+          query.postalCode ??
+          query.zip_code ??
+          query.zip
+      )
+    ),
+
+    latitude: normalizeNumber(
+      firstValue(query.latitude ?? query.lat),
+      null
+    ),
+
+    longitude: normalizeNumber(
+      firstValue(
+        query.longitude ??
+          query.lng ??
+          query.lon
       ),
+      null
+    ),
 
-    category:
-      normalizeString(
-        query.category
-      ),
-
-    latitude,
-
-    longitude,
-
-    radius,
+    radius: normalizeNumber(
+      firstValue(query.radius),
+      null
+    ),
 
     online:
-      hasOnlineFilter
-        ? normalizeBoolean(
-            query.online
-          )
+      query.online !== undefined
+        ? normalizeBoolean(firstValue(query.online))
         : undefined,
 
     local:
-      hasLocalFilter
-        ? normalizeBoolean(
-            query.local
-          )
+      query.local !== undefined
+        ? normalizeBoolean(firstValue(query.local))
         : undefined,
 
     featured:
-      hasFeaturedFilter
-        ? normalizeBoolean(
-            query.featured
-          )
+      query.featured !== undefined
+        ? normalizeBoolean(firstValue(query.featured))
         : undefined,
 
     active:
-      hasActiveFilter
-        ? normalizeBoolean(
-            query.active,
-            true
-          )
+      query.active !== undefined
+        ? normalizeBoolean(firstValue(query.active), true)
         : true,
-
-    debug:
-      normalizeBoolean(
-        query.debug,
-        false
-      ),
   };
 }
 
-/* ==========================================================================
-   SERVER SEARCH / FILTER
-============================================================================ */
-
-function buildAccessFetchOptions(
-  options
-) {
-  return {
-    page:
-      options.page,
-
-    pageSize:
-      options.pageSize,
-
-    maxPages:
-      options.maxPages,
-
-    cursor:
-      options.cursor ||
-      undefined,
-
-    search:
-      options.search ||
-      undefined,
-
-    category:
-      options.category ||
-      undefined,
-
-    latitude:
-      options.latitude ??
-      undefined,
-
-    longitude:
-      options.longitude ??
-      undefined,
-
-    radius:
-      options.radius ??
-      undefined,
-
-    online:
-      options.online,
-
-    featured:
-      options.featured,
-  };
-}
-
-/* ==========================================================================
-   APPLY PORTAL FILTERS
-============================================================================ */
-
-function applyPortalFilters(
-  offers,
-  options
-) {
-  return filterAccessOffers(
-    offers,
-    {
-      search:
-        options.search,
-
-      category:
-        options.category,
-
-      online:
-        options.online,
-
-      local:
-        options.local,
-
-      featured:
-        options.featured,
-
-      active:
-        options.active,
-    }
-  );
-}
-
-/* ==========================================================================
-   LIMIT RESPONSE
-============================================================================ */
-
-function limitOffers(
-  offers,
-  limit
-) {
+function validateQueryOptions(options) {
   if (
-    !limit ||
-    limit <= 0
+    options.latitude !== null &&
+    (
+      options.latitude < -90 ||
+      options.latitude > 90
+    )
   ) {
-    return offers;
+    return "Latitude must be between -90 and 90.";
   }
 
-  return offers.slice(
-    0,
-    limit
-  );
-}
-
-/* ==========================================================================
-   FETCH PAGE MODE
-============================================================================ */
-
-async function loadSinglePage(
-  options
-) {
-  const result =
-    await fetchAccessOffersPage(
-      buildAccessFetchOptions(
-        options
-      )
-    );
-
-  let offers =
-    result.offers ||
-    [];
-
-  offers =
-    applyPortalFilters(
-      offers,
-      options
-    );
-
-  offers =
-    offers
-      .map(
-        sanitizeAccessOfferForPortal
-      )
-      .filter(Boolean);
-
-  offers =
-    limitOffers(
-      offers,
-      options.resultLimit
-    );
-
-  return {
-    mode:
-      "page",
-
-    offers,
-
-    count:
-      offers.length,
-
-    totalCatalogCount:
-      result.pagination?.total ||
-      null,
-
-    pagesFetched:
-      1,
-
-    page:
-      result.pagination?.page ||
-      options.page,
-
-    pageSize:
-      options.pageSize,
-
-    pagination:
-      result.pagination ||
-      null,
-
-    hitSafetyLimit:
-      false,
-  };
-}
-
-/* ==========================================================================
-   FETCH ALL MODE
-
-   This fixes the old small/fixed benefits catalog behavior.
-============================================================================ */
-
-async function loadFullCatalog(
-  options
-) {
-  const result =
-    await fetchAllAccessOffers(
-      buildAccessFetchOptions(
-        options
-      )
-    );
-
-  let offers =
-    result.offers ||
-    [];
-
-  const rawCatalogCount =
-    offers.length;
-
-  /*
-   * Apply Card Leo filters after every Access page has been combined.
-   */
-
-  offers =
-    applyPortalFilters(
-      offers,
-      options
-    );
-
-  /*
-   * Build normalized catalog before optional result limit.
-   */
-
-  const catalog =
-    buildPortalAccessCatalog(
-      offers
-    );
-
-  const fullFilteredCount =
-    catalog.offers.length;
-
-  const returnedOffers =
-    limitOffers(
-      catalog.offers,
-      options.resultLimit
-    );
-
-  return {
-    mode:
-      "all",
-
-    offers:
-      returnedOffers,
-
-    count:
-      returnedOffers.length,
-
-    fullFilteredCount,
-
-    rawCatalogCount,
-
-    categories:
-      catalog.categories,
-
-    merchants:
-      catalog.merchants,
-
-    pagesFetched:
-      result.pagesFetched,
-
-    pageSize:
-      result.pageSize,
-
-    hitSafetyLimit:
-      Boolean(
-        result.hitSafetyLimit
-      ),
-
-    pagination:
-      result.pagination ||
-      null,
-  };
-}
-
-/* ==========================================================================
-   HANDLER
-============================================================================ */
-
-export default async function handler(
-  req,
-  res
-) {
-  /* ========================================================================
-     METHOD
-  ======================================================================== */
+  if (
+    options.longitude !== null &&
+    (
+      options.longitude < -180 ||
+      options.longitude > 180
+    )
+  ) {
+    return "Longitude must be between -180 and 180.";
+  }
 
   if (
-    req.method !== "GET"
+    (options.latitude === null) !==
+    (options.longitude === null)
   ) {
-    res.setHeader(
-      "Allow",
-      "GET"
-    );
+    return "Provide both latitude and longitude, or use a ZIP code.";
+  }
 
-    return sendJson(
-      res,
-      405,
-      {
-        success: false,
-        ok: false,
-        message:
-          "Method not allowed. Use GET.",
-      }
-    );
+  if (
+    options.radius !== null &&
+    options.radius <= 0
+  ) {
+    return "Radius must be greater than zero.";
+  }
+
+  return "";
+}
+
+// -----------------------------------------------------------------------------
+// Provider options
+// -----------------------------------------------------------------------------
+
+function buildAccessFetchOptions(options, memberKey) {
+  return {
+    page: options.page,
+    pageSize: options.pageSize,
+    maxPages: options.maxPages,
+    cursor: options.cursor || undefined,
+    search: options.search || undefined,
+    category: options.category || undefined,
+    latitude: options.latitude ?? undefined,
+    longitude: options.longitude ?? undefined,
+    radius: options.radius ?? undefined,
+    online: options.online,
+    featured: options.featured,
+
+    // Always supplied from the database, never request query parameters.
+    memberKey,
+    member_key: memberKey,
+
+    postalCode: options.postalCode || undefined,
+    postal_code: options.postalCode || undefined,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// Existing portal filters
+// -----------------------------------------------------------------------------
+
+function applyPortalFilters(offers, options) {
+  return filterAccessOffers(offers, {
+    search: options.search,
+    category: options.category,
+    online: options.online,
+    local: options.local,
+    featured: options.featured,
+    active: options.active,
+  });
+}
+
+function limitOffers(offers, limit) {
+  return limit > 0 ? offers.slice(0, limit) : offers;
+}
+
+function sanitizeOffers(offers) {
+  return offers
+    .map((offer) => sanitizeAccessOfferForPortal(offer))
+    .filter(Boolean);
+}
+
+// -----------------------------------------------------------------------------
+// Single-page mode
+// -----------------------------------------------------------------------------
+
+async function loadSinglePage(options, memberKey) {
+  const result = await fetchAccessOffersPage(
+    buildAccessFetchOptions(options, memberKey)
+  );
+
+  const rawOffers = Array.isArray(result.offers)
+    ? result.offers
+    : [];
+
+  const filteredOffers = applyPortalFilters(
+    rawOffers,
+    options
+  );
+
+  const safeOffers = sanitizeOffers(filteredOffers);
+
+  const offers = limitOffers(
+    safeOffers,
+    options.resultLimit
+  );
+
+  return {
+    mode: "page",
+    offers,
+    count: offers.length,
+    fullFilteredCount: safeOffers.length,
+    rawCatalogCount: rawOffers.length,
+    totalCatalogCount:
+      result.pagination?.total ??
+      result.pagination?.total_results ??
+      null,
+    pagesFetched: 1,
+    page: result.pagination?.page ?? options.page,
+    pageSize: options.pageSize,
+    pagination: result.pagination || null,
+    hitSafetyLimit: false,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// Full-catalog mode
+// -----------------------------------------------------------------------------
+
+async function loadFullCatalog(options, memberKey) {
+  const result = await fetchAllAccessOffers(
+    buildAccessFetchOptions(options, memberKey)
+  );
+
+  const rawOffers = Array.isArray(result.offers)
+    ? result.offers
+    : [];
+
+  const filteredOffers = applyPortalFilters(
+    rawOffers,
+    options
+  );
+
+  const catalog = buildPortalAccessCatalog(
+    filteredOffers
+  );
+
+  const safeOffers = sanitizeOffers(
+    Array.isArray(catalog.offers)
+      ? catalog.offers
+      : []
+  );
+
+  const offers = limitOffers(
+    safeOffers,
+    options.resultLimit
+  );
+
+  return {
+    mode: "all",
+    offers,
+    count: offers.length,
+    fullFilteredCount: safeOffers.length,
+    rawCatalogCount: rawOffers.length,
+    categories: catalog.categories || [],
+    merchants: catalog.merchants || [],
+    pagesFetched: result.pagesFetched,
+    pageSize: result.pageSize ?? options.pageSize,
+    hitSafetyLimit: Boolean(result.hitSafetyLimit),
+    pagination: result.pagination || null,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// Handler
+// -----------------------------------------------------------------------------
+
+export default async function handler(req, res) {
+  if (req.method !== "GET") {
+    res.setHeader("Allow", "GET");
+
+    return sendJson(res, 405, {
+      success: false,
+      ok: false,
+      message: "Method not allowed. Use GET.",
+    });
   }
 
   try {
-    /* ======================================================================
-       AUTHENTICATION
-    ====================================================================== */
-
     const {
       member,
       response,
-    } =
-      await authenticateMember(
-        req,
-        res
-      );
+    } = await authenticateMember(req, res);
 
     if (!member) {
       return response;
     }
 
-    /* ======================================================================
-       OPTIONS
-    ====================================================================== */
+    const options = buildQueryOptions(req);
 
-    const options =
-      buildQueryOptions(
-        req
-      );
+    const queryError = validateQueryOptions(options);
 
-    /* ======================================================================
-       ACCESS CONFIGURATION
-    ====================================================================== */
+    if (queryError) {
+      return badRequest(res, queryError, {
+        code: "ACCESS_OFFERS_QUERY_INVALID",
+      });
+    }
 
     const validation =
       validateAccessOffersConfiguration();
 
-    if (
-      !validation.valid
-    ) {
+    if (!validation.valid) {
       return serviceUnavailable(
         res,
         "Access Offers API is not fully configured yet.",
         {
-          code:
-            "ACCESS_OFFERS_CONFIGURATION_REQUIRED",
-
-          errors:
-            validation.errors,
-
-          config:
-            options.debug
-              ? validation.config
-              : undefined,
-
+          code: "ACCESS_OFFERS_CONFIGURATION_REQUIRED",
           nextStep:
-            "Add the approved Access Offers endpoint configuration to Vercel.",
+            "Check the approved Access Offers configuration in Vercel.",
         }
       );
     }
 
-    /* ======================================================================
-       ACCESS ENROLLMENT
-    ====================================================================== */
-
-    const accessReady =
-      isAccessMemberReady(
-        member
-      );
-
-    /*
-     * Member may be paid/active while Access is still syncing.
-     *
-     * Do not expose catalog access until their Access membership is OPEN.
-     */
+    const accessReady = isAccessMemberReady(member);
 
     if (!accessReady) {
       return forbidden(
         res,
         "Your Card Leo membership is active, but Access Perks enrollment is not ready yet.",
         {
-          code:
-            "ACCESS_MEMBER_NOT_READY",
-
-          member:
-            sanitizeMember(
-              member
-            ),
-
+          code: "ACCESS_MEMBER_NOT_READY",
+          member: sanitizeMember(member),
           access: {
-            ready:
-              false,
-
+            ready: false,
             memberStatus:
               normalizeString(
-                member
-                  .access_member_status
-              ) ||
-              "pending",
-
-            syncError:
-              normalizeString(
-                member
-                  .access_sync_error
-              ) ||
-              null,
-
-            syncedAt:
-              safeDate(
-                member
-                  .access_synced_at
-              ),
-
-            syncEndpoint:
-              "/api/access/sync-member",
+                member.access_member_status
+              ) || "pending",
+            syncedAt: safeDate(
+              member.access_synced_at
+            ),
+            syncEndpoint: "/api/access/sync-member",
           },
         }
       );
     }
 
-    /* ======================================================================
-       FETCH ACCESS OFFERS
-    ====================================================================== */
+    // Reuse the permanent identifier saved by Access AMT enrollment.
+    // Do not generate a different identity while requesting offers.
+    const memberKey = normalizeString(
+      member.access_member_identifier
+    );
 
-    let catalog;
-
-    if (
-      options.mode ===
-      "page"
-    ) {
-      catalog =
-        await loadSinglePage(
-          options
-        );
-    } else {
-      /*
-       * DEFAULT:
-       *
-       * Full catalog mode.
-       */
-
-      catalog =
-        await loadFullCatalog(
-          options
-        );
+    if (!memberKey) {
+      return forbidden(
+        res,
+        "Your Access Perks member profile must finish synchronizing before offers can be loaded.",
+        {
+          code: "ACCESS_MEMBER_IDENTIFIER_MISSING",
+          member: sanitizeMember(member),
+          access: {
+            ready: false,
+            syncEndpoint: "/api/access/sync-member",
+          },
+        }
+      );
     }
 
-    /* ======================================================================
-       RESPONSE
-    ====================================================================== */
+    const catalog =
+      options.mode === "page"
+        ? await loadSinglePage(options, memberKey)
+        : await loadFullCatalog(options, memberKey);
 
     const integrationStatus =
       getAccessOffersIntegrationStatus();
 
-    return sendJson(
-      res,
-      200,
-      {
-        success:
-          true,
+    return sendJson(res, 200, {
+      success: true,
+      ok: true,
+      authenticated: true,
 
-        ok:
-          true,
+      message: catalog.hitSafetyLimit
+        ? `Loaded ${catalog.count} Card Leo benefit offers. Additional offers may remain beyond the configured pagination limit.`
+        : `Loaded ${catalog.count} Card Leo benefit offers from Access.`,
 
-        authenticated:
-          true,
+      member: sanitizeMember(member),
 
-        message:
-          options.mode === "all"
-            ? `Loaded ${catalog.count} Card Leo benefit offers from the Access catalog.`
-            : `Loaded ${catalog.count} Card Leo benefit offers from Access.`,
+      access: {
+        ready: true,
+        memberStatus:
+          normalizeString(
+            member.access_member_status
+          ) || "OPEN",
+        perksReady: true,
+        environment: integrationStatus.environment,
+      },
 
-        member:
-          sanitizeMember(
-            member
-          ),
+      catalog: {
+        mode: catalog.mode,
+        count: catalog.count,
+        fullFilteredCount:
+          catalog.fullFilteredCount ?? catalog.count,
+        rawCatalogCount:
+          catalog.rawCatalogCount ??
+          catalog.totalCatalogCount ??
+          null,
+        totalCatalogCount:
+          catalog.totalCatalogCount ?? null,
+        pagesFetched: catalog.pagesFetched,
+        pageSize: catalog.pageSize,
+        hitSafetyLimit: catalog.hitSafetyLimit,
+        pagination: catalog.pagination,
+        categories: catalog.categories || [],
+        merchants: catalog.merchants || [],
+      },
 
-        access: {
-          ready:
-            true,
+      filters: {
+        search: options.search || "",
+        category: options.category || "",
+        postalCode: options.postalCode || "",
+        online: options.online ?? null,
+        local: options.local ?? null,
+        featured: options.featured ?? null,
+        active: options.active,
+        latitude: options.latitude,
+        longitude: options.longitude,
+        radius: options.radius,
+        resultLimit: options.resultLimit || null,
+      },
 
-          memberStatus:
-            normalizeString(
-              member
-                .access_member_status
-            ) ||
-            "OPEN",
+      offers: catalog.offers,
 
-          perksReady:
-            true,
+      // Preserve the alias used by the existing Benefits frontend.
+      benefits: catalog.offers,
 
-          environment:
-            integrationStatus
-              .environment,
-        },
+      links: {
+        syncMember: "/api/access/sync-member",
+        offers: "/api/access/offers",
+        offer: "/api/access/offer",
+        redeemOffer: "/api/access/redeem-offer",
+        sso: "/api/access/sso",
+        portalBenefits: "/portal/benefits.html",
+      },
 
-        catalog: {
-          mode:
-            catalog.mode,
+      fetchedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    const providerStatus = Number(error?.status);
 
-          /*
-           * Number actually returned to the browser.
-           */
-
-          count:
-            catalog.count,
-
-          /*
-           * Total after Card Leo filtering but before result_limit.
-           */
-
-          fullFilteredCount:
-            catalog.fullFilteredCount ??
-            catalog.count,
-
-          /*
-           * Total retrieved from Access before Card Leo filters.
-           */
-
-          rawCatalogCount:
-            catalog.rawCatalogCount ??
-            catalog.totalCatalogCount ??
-            null,
-
-          pagesFetched:
-            catalog.pagesFetched,
-
-          pageSize:
-            catalog.pageSize,
-
-          hitSafetyLimit:
-            catalog.hitSafetyLimit,
-
-          pagination:
-            catalog.pagination,
-
-          categories:
-            catalog.categories ||
-            [],
-
-          merchants:
-            catalog.merchants ||
-            [],
-        },
-
-        filters: {
-          search:
-            options.search ||
-            "",
-
-          category:
-            options.category ||
-            "",
-
-          online:
-            options.online ??
-            null,
-
-          local:
-            options.local ??
-            null,
-
-          featured:
-            options.featured ??
-            null,
-
-          active:
-            options.active,
-
-          latitude:
-            options.latitude,
-
-          longitude:
-            options.longitude,
-
-          radius:
-            options.radius,
-
-          resultLimit:
-            options.resultLimit ||
-            null,
-        },
-
-        offers:
-          catalog.offers,
-
-        /*
-         * Backward-compatible alias for older Benefits frontend code.
-         */
-
-        benefits:
-          catalog.offers,
-
-        links: {
-          syncMember:
-            "/api/access/sync-member",
-
-          offers:
-            "/api/access/offers",
-
-          redeemOffer:
-            "/api/access/redeem-offer",
-
-          portalBenefits:
-            "/portal/benefits.html",
-        },
-
-        config:
-          options.debug
-            ? getAccessOffersConfigForDebug()
-            : undefined,
-
-        fetchedAt:
-          new Date()
-            .toISOString(),
-      }
-    );
-  } catch (
-    error
-  ) {
-    console.error(
-      "Card Leo Access offers error:",
-      error
-    );
-
-    /* ======================================================================
-       KNOWN ACCESS ERROR
-    ====================================================================== */
-
-    const providerStatus =
-      Number(
-        error?.status
-      );
+    // Avoid logging raw provider URLs/responses that may contain tokens.
+    console.error("Card Leo Access offers error:", {
+      code: normalizeString(error?.code) ||
+        "ACCESS_OFFERS_REQUEST_FAILED",
+      status: Number.isFinite(providerStatus)
+        ? providerStatus
+        : null,
+    });
 
     if (
-      Number.isFinite(
-        providerStatus
-      ) &&
+      Number.isInteger(providerStatus) &&
       providerStatus >= 400 &&
       providerStatus <= 599
     ) {
-      return sendJson(
-        res,
-        providerStatus,
-        {
-          success:
-            false,
-
-          ok:
-            false,
-
-          message:
-            error?.message ||
-            "Access rejected the benefits request.",
-
-          code:
-            error?.code ||
-            "ACCESS_OFFERS_REQUEST_FAILED",
-
-          access: {
-            status:
-              providerStatus,
-
-            statusText:
-              normalizeString(
-                error?.statusText
-              ),
-
-            /*
-             * URL is useful for endpoint debugging.
-             * No Access token is included.
-             */
-
-            url:
-              normalizeString(
-                error?.url
-              ),
-          },
-        }
-      );
+      return sendJson(res, providerStatus, {
+        success: false,
+        ok: false,
+        message:
+          "Access could not complete the benefits request. Please try again.",
+        code: "ACCESS_OFFERS_REQUEST_FAILED",
+        access: {
+          status: providerStatus,
+        },
+      });
     }
-
-    /* ======================================================================
-       UNKNOWN ERROR
-    ====================================================================== */
 
     return serverError(
       res,
       "Unable to load Card Leo benefits right now.",
-      process.env.NODE_ENV ===
-        "development"
-        ? {
-            error:
-              error?.message ||
-              "Unknown error.",
-
-            code:
-              error?.code ||
-              null,
-
-            config:
-              getAccessOffersConfigForDebug(),
-          }
-        : {}
+      {
+        code: "ACCESS_OFFERS_FAILED",
+      }
     );
   }
 }

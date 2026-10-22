@@ -1,0 +1,1481 @@
+<!-- portal/offer.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <title>Offer Details | Card Leo Rewards</title>
+
+    <meta
+      name="description"
+      content="View your Card Leo Rewards member offer, participating locations, terms, and redemption options."
+    />
+
+    <meta name="theme-color" content="#030303" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+
+    <link rel="stylesheet" href="../style.css" />
+
+    <style>
+      :root {
+        --bg: #030303;
+        --panel: rgba(13, 13, 13, 0.94);
+        --panel-soft: rgba(255, 255, 255, 0.035);
+
+        --gold: #e7b64f;
+        --gold-light: #f7d98b;
+
+        --text: #f8f3e7;
+        --muted: rgba(248, 243, 231, 0.7);
+
+        --line: rgba(231, 182, 79, 0.2);
+
+        --green: #48f06b;
+        --red: #ff8585;
+
+        --radius: 22px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        font-family: Inter, Arial, sans-serif;
+        background:
+          radial-gradient(
+            circle at 85% 0,
+            rgba(231, 182, 79, 0.09),
+            transparent 38%
+          ),
+          var(--bg);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--gold-light);
+        outline-offset: 4px;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      .site-header {
+        border-bottom: 1px solid var(--line);
+        background: rgba(3, 3, 3, 0.92);
+      }
+
+      .header-inner {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 22px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .brand {
+        text-decoration: none;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: var(--gold-light);
+      }
+
+      .brand small {
+        display: block;
+        margin-top: 5px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.22em;
+        color: var(--muted);
+      }
+
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 18px;
+      }
+
+      .nav a {
+        text-decoration: none;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .nav a:hover {
+        color: var(--gold-light);
+      }
+
+      .container {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 36px 24px 64px;
+      }
+
+      .breadcrumb {
+        display: inline-block;
+        margin-bottom: 24px;
+        color: var(--gold-light);
+        font-size: 14px;
+        text-decoration: none;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: 0 20px 65px rgba(0, 0, 0, 0.25);
+      }
+
+      .status-banner {
+        margin-bottom: 24px;
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--panel-soft);
+        line-height: 1.6;
+      }
+
+      .status-banner.error {
+        color: #ffd5d5;
+        border-color: rgba(255, 133, 133, 0.35);
+      }
+
+      .status-banner.success {
+        color: #c9ffd6;
+        border-color: rgba(72, 240, 107, 0.3);
+      }
+
+      .status-banner.warning {
+        color: var(--gold-light);
+      }
+
+      .state-panel {
+        padding: 42px 26px;
+        text-align: center;
+      }
+
+      .state-panel h1,
+      .state-panel h2 {
+        margin: 0 0 14px;
+      }
+
+      .state-panel p {
+        max-width: 580px;
+        margin: 0 auto 22px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .offer-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        align-items: start;
+        gap: 24px;
+      }
+
+      .offer-main {
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .offer-image-wrap {
+        padding: 24px;
+        background: var(--panel-soft);
+        border-bottom: 1px solid var(--line);
+      }
+
+      .offer-image {
+        display: block;
+        width: 100%;
+        max-height: 330px;
+        object-fit: contain;
+        border-radius: 12px;
+      }
+
+      .offer-content {
+        padding: 30px;
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: var(--gold);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0 0 16px;
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.15;
+        overflow-wrap: anywhere;
+      }
+
+      .merchant {
+        margin: 0 0 20px;
+        font-size: 16px;
+        color: var(--muted);
+      }
+
+      .pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 26px;
+      }
+
+      .pill {
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        font-size: 12px;
+        color: var(--gold-light);
+        background: rgba(231, 182, 79, 0.05);
+      }
+
+      .section {
+        padding-top: 24px;
+        margin-top: 24px;
+        border-top: 1px solid var(--line);
+      }
+
+      .section h2 {
+        margin: 0 0 14px;
+        font-size: 19px;
+      }
+
+      .copy {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.8;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .locations {
+        display: grid;
+        gap: 12px;
+      }
+
+      .location {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--panel-soft);
+      }
+
+      .location h3 {
+        margin: 0 0 8px;
+        font-size: 15px;
+      }
+
+      .location p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+
+      .offer-sidebar {
+        padding: 24px;
+      }
+
+      .offer-sidebar h2 {
+        margin: 0 0 12px;
+        font-size: 21px;
+      }
+
+      .sidebar-copy {
+        margin: 0 0 20px;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 14px;
+      }
+
+      .button {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        min-height: 46px;
+        padding: 12px 18px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        text-decoration: none;
+        text-align: center;
+        cursor: pointer;
+        transition: opacity 0.2s, transform 0.2s;
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+      }
+
+      .button:disabled {
+        cursor: wait;
+        opacity: 0.6;
+        transform: none;
+      }
+
+      .button-primary {
+        color: #171003;
+        background: linear-gradient(
+          135deg,
+          var(--gold-light),
+          var(--gold)
+        );
+      }
+
+      .button-ghost {
+        color: var(--text);
+        background: var(--panel-soft);
+      }
+
+      .button-wide {
+        width: 100%;
+      }
+
+      .button-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .sidebar-note {
+        margin: 20px 0 0;
+        padding-top: 18px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.7;
+      }
+
+      .redemption-result {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+      }
+
+      .redemption-result h3 {
+        margin: 18px 0 10px;
+        font-size: 15px;
+      }
+
+      .redemption-code {
+        display: block;
+        padding: 14px;
+        margin-bottom: 12px;
+        border: 1px dashed var(--gold);
+        border-radius: 10px;
+        color: var(--gold-light);
+        font-family: monospace;
+        font-size: 20px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .redemption-qr {
+        display: block;
+        max-width: 100%;
+        max-height: 280px;
+        margin: 14px auto;
+        padding: 10px;
+        background: white;
+        border-radius: 12px;
+      }
+
+      .footer {
+        margin-top: 30px;
+        color: var(--muted);
+        font-size: 12px;
+        text-align: center;
+        line-height: 1.7;
+      }
+
+      @media (max-width: 900px) {
+        .offer-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .header-inner {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .container {
+          padding: 24px 16px 44px;
+        }
+
+        .offer-content {
+          padding: 22px;
+        }
+
+        .offer-sidebar {
+          padding: 22px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/portal/index.html">
+          CARD LEO
+          <small>REWARDS MEMBER PORTAL</small>
+        </a>
+
+        <nav class="nav" aria-label="Member navigation">
+          <a href="/portal/index.html">Dashboard</a>
+          <a href="/portal/benefits.html">Benefits</a>
+          <a href="/portal/rewards.html">Rewards</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <a class="breadcrumb" href="/portal/benefits.html">
+        ← Back To Benefits
+      </a>
+
+      <div
+        id="statusBanner"
+        class="status-banner"
+        role="status"
+        aria-live="polite"
+        hidden
+      ></div>
+
+      <section
+        id="loadingState"
+        class="panel state-panel"
+        aria-live="polite"
+      >
+        <h1>Loading Your Offer</h1>
+        <p>
+          Retrieving the latest offer details for your
+          Card Leo Rewards membership.
+        </p>
+      </section>
+
+      <section
+        id="errorState"
+        class="panel state-panel"
+        hidden
+      >
+        <h1 id="errorTitle">Unable To Load Offer</h1>
+
+        <p id="errorMessage"></p>
+
+        <div class="actions">
+          <button
+            id="retryButton"
+            class="button button-primary"
+            type="button"
+          >
+            Try Again
+          </button>
+
+          <a
+            class="button button-ghost"
+            href="/portal/benefits.html"
+          >
+            Back To Benefits
+          </a>
+        </div>
+      </section>
+
+      <div id="offerLayout" class="offer-layout" hidden>
+        <article class="panel offer-main">
+          <div
+            id="offerImageWrap"
+            class="offer-image-wrap"
+            hidden
+          >
+            <img
+              id="offerImage"
+              class="offer-image"
+              alt=""
+            />
+          </div>
+
+          <div class="offer-content">
+            <p class="eyebrow">Card Leo Member Benefit</p>
+
+            <h1 id="offerTitle"></h1>
+
+            <p id="merchantName" class="merchant"></p>
+
+            <div id="offerPills" class="pills"></div>
+
+            <section class="section">
+              <h2>About This Offer</h2>
+              <p id="offerDescription" class="copy"></p>
+            </section>
+
+            <section
+              id="instructionsSection"
+              class="section"
+              hidden
+            >
+              <h2>How To Redeem</h2>
+              <p id="offerInstructions" class="copy"></p>
+            </section>
+
+            <section
+              id="locationsSection"
+              class="section"
+              hidden
+            >
+              <h2>Participating Locations</h2>
+              <div id="offerLocations" class="locations"></div>
+            </section>
+
+            <section class="section">
+              <h2>Terms And Conditions</h2>
+              <p id="offerTerms" class="copy"></p>
+            </section>
+
+            <section
+              id="expirationSection"
+              class="section"
+              hidden
+            >
+              <h2>Offer Availability</h2>
+              <p id="offerExpiration" class="copy"></p>
+            </section>
+          </div>
+        </article>
+
+        <aside class="panel offer-sidebar">
+          <p class="eyebrow">Member Access</p>
+
+          <h2>Use Your Benefit</h2>
+
+          <p id="redemptionHelp" class="sidebar-copy">
+            Review the offer instructions and terms before
+            using this benefit.
+          </p>
+
+          <div class="button-stack">
+            <button
+              id="claimButton"
+              class="button button-primary button-wide"
+              type="button"
+              hidden
+            >
+              Request Redemption
+            </button>
+
+            <a
+              id="accessPerksButton"
+              class="button button-primary button-wide"
+              href="/api/access/sso"
+            >
+              Open Access Perks
+            </a>
+
+            <a
+              class="button button-ghost button-wide"
+              href="/portal/benefits.html"
+            >
+              Browse More Benefits
+            </a>
+          </div>
+
+          <div
+            id="redemptionResult"
+            class="redemption-result"
+            aria-live="polite"
+            hidden
+          ></div>
+
+          <p class="sidebar-note">
+            Opening Access Perks takes you into your member
+            benefits experience. Follow the selected offer’s
+            instructions for redemption.
+          </p>
+        </aside>
+      </div>
+
+      <footer class="footer">
+        Card Leo Rewards<br />
+        Offer availability and participating locations may vary.
+      </footer>
+    </main>
+
+    <script>
+      (() => {
+        "use strict";
+
+        // ---------------------------------------------------------------------
+        // API
+        // ---------------------------------------------------------------------
+
+        const API = {
+          offer: "/api/access/offer",
+          redeem: "/api/access/redeem-offer",
+          sso: "/api/access/sso",
+        };
+
+        // ---------------------------------------------------------------------
+        // State
+        // ---------------------------------------------------------------------
+
+        const state = {
+          offer: null,
+          offerKey: "",
+          loading: false,
+          claiming: false,
+        };
+
+        // ---------------------------------------------------------------------
+        // Elements
+        // ---------------------------------------------------------------------
+
+        const els = {
+          banner: document.getElementById("statusBanner"),
+          loading: document.getElementById("loadingState"),
+          error: document.getElementById("errorState"),
+          errorTitle: document.getElementById("errorTitle"),
+          errorMessage: document.getElementById("errorMessage"),
+          retry: document.getElementById("retryButton"),
+          layout: document.getElementById("offerLayout"),
+          title: document.getElementById("offerTitle"),
+          merchant: document.getElementById("merchantName"),
+          description: document.getElementById("offerDescription"),
+          terms: document.getElementById("offerTerms"),
+          pills: document.getElementById("offerPills"),
+          imageWrap: document.getElementById("offerImageWrap"),
+          image: document.getElementById("offerImage"),
+          instructionsSection:
+            document.getElementById("instructionsSection"),
+          instructions: document.getElementById("offerInstructions"),
+          locationsSection:
+            document.getElementById("locationsSection"),
+          locations: document.getElementById("offerLocations"),
+          expirationSection:
+            document.getElementById("expirationSection"),
+          expiration: document.getElementById("offerExpiration"),
+          claim: document.getElementById("claimButton"),
+          redemptionHelp: document.getElementById("redemptionHelp"),
+          redemptionResult:
+            document.getElementById("redemptionResult"),
+          accessPerks: document.getElementById("accessPerksButton"),
+        };
+
+        // ---------------------------------------------------------------------
+        // Helpers
+        // ---------------------------------------------------------------------
+
+        function text(value, fallback = "") {
+          if (
+            typeof value !== "string" &&
+            typeof value !== "number"
+          ) {
+            return fallback;
+          }
+
+          const result = String(value).trim();
+
+          return result || fallback;
+        }
+
+        function isObject(value) {
+          return (
+            value !== null &&
+            typeof value === "object" &&
+            !Array.isArray(value)
+          );
+        }
+
+        function unwrap(payload) {
+          return isObject(payload?.data)
+            ? payload.data
+            : payload;
+        }
+
+        function displayText(value, fallback = "") {
+          const source = text(value);
+
+          if (!source) {
+            return fallback;
+          }
+
+          // Convert any remaining provider markup into display text.
+          const documentValue = new DOMParser().parseFromString(
+            source,
+            "text/html"
+          );
+
+          return (
+            documentValue.body.textContent.trim() ||
+            fallback
+          );
+        }
+
+        function safeWebUrl(value) {
+          const source = text(value);
+
+          if (!source) {
+            return "";
+          }
+
+          try {
+            const url = new URL(source);
+
+            if (
+              url.protocol !== "https:" ||
+              url.username ||
+              url.password
+            ) {
+              return "";
+            }
+
+            return url.href;
+          } catch {
+            return "";
+          }
+        }
+
+        function safeQrImage(value) {
+          const source = text(value);
+
+          if (
+            /^data:image\/(?:png|jpeg|webp|gif);base64,[a-z0-9+/=\s]+$/i.test(
+              source
+            )
+          ) {
+            return source;
+          }
+
+          return safeWebUrl(source);
+        }
+
+        function formatDate(value) {
+          if (!value) {
+            return "";
+          }
+
+          const date = new Date(value);
+
+          return Number.isNaN(date.getTime())
+            ? ""
+            : date.toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              });
+        }
+
+        function showBanner(message = "", type = "") {
+          els.banner.hidden = !message;
+          els.banner.className =
+            `status-banner ${type}`.trim();
+          els.banner.textContent = message;
+        }
+
+        function showError(message, title = "Unable To Load Offer") {
+          els.loading.hidden = true;
+          els.layout.hidden = true;
+          els.error.hidden = false;
+          els.errorTitle.textContent = title;
+          els.errorMessage.textContent = message;
+        }
+
+        function redirectToLogin() {
+          const next =
+            window.location.pathname +
+            window.location.search;
+
+          window.location.replace(
+            "/login.html?next=" + encodeURIComponent(next)
+          );
+        }
+
+        function readOfferKey() {
+          const params = new URLSearchParams(
+            window.location.search
+          );
+
+          return text(
+            params.get("offer_key") ||
+            params.get("offerKey") ||
+            params.get("id")
+          );
+        }
+
+        // ---------------------------------------------------------------------
+        // Requests
+        // ---------------------------------------------------------------------
+
+        async function fetchJson(url, options = {}) {
+          const controller = new AbortController();
+
+          const timeout = window.setTimeout(() => {
+            controller.abort();
+          }, 30000);
+
+          try {
+            const response = await fetch(url, {
+              ...options,
+              credentials: "include",
+              cache: "no-store",
+              signal: controller.signal,
+              headers: {
+                Accept: "application/json",
+                ...(options.body
+                  ? {
+                      "Content-Type": "application/json",
+                    }
+                  : {}),
+                ...(options.headers || {}),
+              },
+            });
+
+            let payload;
+
+            try {
+              payload = await response.json();
+            } catch {
+              const error = new Error(
+                "The server returned an unreadable response."
+              );
+
+              error.status = response.status;
+              throw error;
+            }
+
+            if (
+              !response.ok ||
+              payload?.success === false ||
+              payload?.ok === false
+            ) {
+              const error = new Error(
+                text(
+                  payload?.message,
+                  "Unable to complete this request."
+                )
+              );
+
+              error.status = response.status;
+              error.payload = payload;
+
+              throw error;
+            }
+
+            return unwrap(payload);
+          } catch (error) {
+            if (controller.signal.aborted) {
+              throw new Error(
+                "The request took too long. Please try again."
+              );
+            }
+
+            throw error;
+          } finally {
+            window.clearTimeout(timeout);
+          }
+        }
+
+        // ---------------------------------------------------------------------
+        // Rendering
+        // ---------------------------------------------------------------------
+
+        function addPill(value) {
+          const label = text(value);
+
+          if (!label) {
+            return;
+          }
+
+          const pill = document.createElement("span");
+
+          pill.className = "pill";
+          pill.textContent = label;
+
+          els.pills.appendChild(pill);
+        }
+
+        function renderLocations(offer) {
+          const locations = Array.isArray(offer.locations)
+            ? offer.locations.filter(isObject)
+            : [];
+
+          els.locations.replaceChildren();
+          els.locationsSection.hidden = !locations.length;
+
+          for (const location of locations) {
+            const card = document.createElement("article");
+            card.className = "location";
+
+            const name = text(location.name);
+
+            if (name) {
+              const heading = document.createElement("h3");
+              heading.textContent = name;
+              card.appendChild(heading);
+            }
+
+            const address = [
+              location.address ||
+                location.address1 ||
+                location.address_1,
+              location.address2,
+              location.city || location.city_locality,
+              location.state || location.state_region,
+              location.postalCode || location.postal_code,
+              location.country,
+            ]
+              .map((value) => text(value))
+              .filter(Boolean)
+              .join(", ");
+
+            const addressLine = document.createElement("p");
+
+            addressLine.textContent =
+              address || "See offer instructions for location details.";
+
+            card.appendChild(addressLine);
+
+            const phone = text(location.phone);
+
+            if (phone) {
+              const phoneLine = document.createElement("p");
+              phoneLine.textContent = phone;
+              card.appendChild(phoneLine);
+            }
+
+            els.locations.appendChild(card);
+          }
+        }
+
+        function renderOffer(offer) {
+          const title = text(
+            offer.title || offer.name,
+            "Member Offer"
+          );
+
+          document.title =
+            title + " | Card Leo Rewards";
+
+          els.title.textContent = title;
+
+          els.merchant.textContent = text(
+            offer.merchantName ||
+              offer.storeName ||
+              offer.store_name ||
+              offer.merchant?.name,
+            "Card Leo Member Benefit"
+          );
+
+          els.description.textContent = displayText(
+            offer.description ||
+              offer.shortDescription,
+            "Review the offer terms and redemption instructions."
+          );
+
+          els.terms.textContent = displayText(
+            offer.terms || offer.termsAndConditions,
+            "Review the current terms in Access Perks before redeeming."
+          );
+
+          els.pills.replaceChildren();
+
+          const categories = Array.isArray(offer.categories)
+            ? offer.categories
+            : [];
+
+          const categoryNames = categories
+            .map((category) =>
+              typeof category === "string"
+                ? text(category)
+                : text(category?.name)
+            )
+            .filter(Boolean);
+
+          if (categoryNames.length) {
+            for (
+              const category of new Set(categoryNames)
+            ) {
+              addPill(category);
+            }
+          } else {
+            addPill(
+              typeof offer.category === "string"
+                ? offer.category
+                : offer.category?.name
+            );
+          }
+
+          if (offer.national === true) {
+            addPill("National Offer");
+          }
+
+          const method = text(
+            offer.redemptionMethod ||
+              offer.redemption?.method
+          );
+
+          if (method) {
+            addPill(
+              method.replace(/[_-]/g, " ")
+            );
+          }
+
+          const imageUrl = safeWebUrl(
+            offer.imageUrl ||
+              offer.image_url ||
+              offer.image
+          );
+
+          els.imageWrap.hidden = !imageUrl;
+
+          if (imageUrl) {
+            els.image.alt = title;
+            els.image.src = imageUrl;
+          } else {
+            els.image.removeAttribute("src");
+          }
+
+          const instructions = displayText(
+            offer.redemption?.instructions ||
+              offer.redemptionInstructions ||
+              offer.instructions
+          );
+
+          els.instructionsSection.hidden = !instructions;
+          els.instructions.textContent = instructions;
+
+          renderLocations(offer);
+
+          const start = formatDate(
+            offer.startDate || offer.start_date
+          );
+
+          const end = formatDate(
+            offer.endDate || offer.end_date
+          );
+
+          const availability = [];
+
+          if (start) {
+            availability.push("Starts: " + start);
+          }
+
+          if (end) {
+            availability.push("Ends: " + end);
+          }
+
+          els.expirationSection.hidden =
+            !availability.length;
+
+          els.expiration.textContent =
+            availability.join("\n");
+
+          /*
+           * A redemption method alone does not establish that the
+           * existing redemption endpoint supports this particular offer.
+           *
+           * Show the direct request button only when the API explicitly
+           * marks the offer claimable/redeemable.
+           */
+          const claimable =
+            offer.claimable === true ||
+            offer.redeemable === true;
+
+          els.claim.hidden = !claimable;
+          els.claim.disabled = false;
+          els.claim.textContent = "Request Redemption";
+
+          els.accessPerks.href = API.sso;
+
+          els.redemptionHelp.textContent = claimable
+            ? "Request the redemption information for this offer, or open your Access Perks benefits experience."
+            : "Use the instructions shown on this page. You can also open Access Perks to locate and redeem this benefit.";
+
+          els.redemptionResult.hidden = true;
+          els.redemptionResult.replaceChildren();
+
+          els.loading.hidden = true;
+          els.error.hidden = true;
+          els.layout.hidden = false;
+        }
+
+        // ---------------------------------------------------------------------
+        // Redemption display
+        //
+        // Displays only information returned by the redemption endpoint.
+        // No coupon codes, barcodes, or QR credentials are invented.
+        // ---------------------------------------------------------------------
+
+        function appendResultText(container, heading, value) {
+          const content = text(value);
+
+          if (!content) {
+            return;
+          }
+
+          const title = document.createElement("h3");
+          title.textContent = heading;
+
+          const paragraph = document.createElement("p");
+          paragraph.className = "copy";
+          paragraph.textContent = content;
+
+          container.append(title, paragraph);
+        }
+
+        function renderRedemption(redemption) {
+          const container = els.redemptionResult;
+
+          container.replaceChildren();
+          container.hidden = false;
+
+          const code = text(
+            redemption.code || redemption.couponCode
+          );
+
+          const barcode = text(redemption.barcode);
+
+          const instructions = displayText(
+            redemption.instructions
+          );
+
+          const link = safeWebUrl(
+            redemption.redemptionUrl
+          );
+
+          const qrImage = safeQrImage(
+            redemption.qrCode
+          );
+
+          const expiration = formatDate(
+            redemption.expiresAt
+          );
+
+          if (code) {
+            const title = document.createElement("h3");
+            title.textContent = "Redemption Code";
+
+            const value = document.createElement("code");
+            value.className = "redemption-code";
+            value.textContent = code;
+
+            const copyButton =
+              document.createElement("button");
+
+            copyButton.type = "button";
+            copyButton.className =
+              "button button-ghost button-wide";
+            copyButton.textContent = "Copy Code";
+
+            copyButton.addEventListener(
+              "click",
+              async () => {
+                try {
+                  await navigator.clipboard.writeText(code);
+                  showBanner("Code copied.", "success");
+                } catch {
+                  showBanner(
+                    "Select the displayed code to copy it.",
+                    "warning"
+                  );
+                }
+              }
+            );
+
+            container.append(title, value, copyButton);
+          }
+
+          if (qrImage) {
+            const image = document.createElement("img");
+
+            image.className = "redemption-qr";
+            image.alt = "Offer redemption QR code";
+            image.referrerPolicy = "no-referrer";
+            image.src = qrImage;
+
+            container.appendChild(image);
+          } else if (text(redemption.qrCode)) {
+            appendResultText(
+              container,
+              "Redemption Reference",
+              redemption.qrCode
+            );
+          }
+
+          appendResultText(
+            container,
+            "Barcode Reference",
+            barcode
+          );
+
+          appendResultText(
+            container,
+            "How To Redeem",
+            instructions
+          );
+
+          appendResultText(
+            container,
+            "Expiration",
+            expiration
+          );
+
+          if (link) {
+            const anchor = document.createElement("a");
+
+            anchor.className =
+              "button button-primary button-wide";
+            anchor.href = link;
+            anchor.target = "_blank";
+            anchor.rel = "noopener noreferrer";
+            anchor.textContent = "Open Redemption";
+
+            container.appendChild(anchor);
+          }
+
+          const usable = Boolean(
+            code ||
+              barcode ||
+              qrImage ||
+              text(redemption.qrCode) ||
+              link
+          );
+
+          if (!usable) {
+            appendResultText(
+              container,
+              "Request Received",
+              "No redemption code, barcode, QR image, or redemption link was returned. Review the instructions or open Access Perks."
+            );
+          }
+
+          return usable;
+        }
+
+        // ---------------------------------------------------------------------
+        // Load offer
+        // ---------------------------------------------------------------------
+
+        async function loadOffer() {
+          if (state.loading) {
+            return;
+          }
+
+          state.loading = true;
+
+          els.loading.hidden = false;
+          els.error.hidden = true;
+          els.layout.hidden = true;
+          els.retry.disabled = true;
+
+          showBanner();
+
+          try {
+            state.offerKey = readOfferKey();
+
+            if (
+              !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(
+                state.offerKey
+              )
+            ) {
+              showError(
+                "Open an offer from the Benefits page to view its details.",
+                "Select An Offer"
+              );
+
+              return;
+            }
+
+            const data = await fetchJson(
+              API.offer +
+                "?offer_key=" +
+                encodeURIComponent(state.offerKey)
+            );
+
+            const offer = data.offer || data.benefit;
+
+            if (!isObject(offer)) {
+              throw new Error(
+                "No offer details were returned."
+              );
+            }
+
+            const returnedKey = text(
+              offer.offer_key ||
+                offer.offerKey ||
+                offer.id
+            );
+
+            if (returnedKey !== state.offerKey) {
+              throw new Error(
+                "The returned offer did not match the selected offer."
+              );
+            }
+
+            state.offer = offer;
+
+            renderOffer(offer);
+          } catch (error) {
+            if (error.status === 401) {
+              redirectToLogin();
+              return;
+            }
+
+            if (error.status === 404) {
+              showError(
+                error.message,
+                "Offer Not Available"
+              );
+              return;
+            }
+
+            if (error.status === 403) {
+              showError(
+                error.message,
+                "Membership Access Required"
+              );
+              return;
+            }
+
+            showError(
+              error.message ||
+                "Unable to load this offer right now."
+            );
+          } finally {
+            state.loading = false;
+            els.retry.disabled = false;
+          }
+        }
+
+        // ---------------------------------------------------------------------
+        // Request redemption
+        // ---------------------------------------------------------------------
+
+        async function claimOffer() {
+          if (
+            state.claiming ||
+            !state.offer ||
+            !state.offerKey
+          ) {
+            return;
+          }
+
+          if (
+            state.offer.claimable !== true &&
+            state.offer.redeemable !== true
+          ) {
+            return;
+          }
+
+          state.claiming = true;
+
+          els.claim.disabled = true;
+          els.claim.textContent = "Requesting Redemption...";
+
+          showBanner(
+            "Requesting your offer redemption information."
+          );
+
+          try {
+            const data = await fetchJson(API.redeem, {
+              method: "POST",
+              body: JSON.stringify({
+                offerId: state.offerKey,
+                offer_key: state.offerKey,
+              }),
+            });
+
+            const redemption = isObject(data.redemption)
+              ? data.redemption
+              : {};
+
+            const usable = renderRedemption(redemption);
+
+            els.claim.textContent = usable
+              ? "Redemption Ready"
+              : "Request Received";
+
+            showBanner(
+              usable
+                ? "Your redemption information is ready."
+                : "The request completed without redemption material.",
+              usable ? "success" : "warning"
+            );
+          } catch (error) {
+            if (error.status === 401) {
+              redirectToLogin();
+              return;
+            }
+
+            els.claim.disabled = false;
+            els.claim.textContent = "Try Again";
+
+            showBanner(
+              error.message ||
+                "Unable to request redemption right now.",
+              "error"
+            );
+          } finally {
+            state.claiming = false;
+          }
+        }
+
+        // ---------------------------------------------------------------------
+        // Events
+        // ---------------------------------------------------------------------
+
+        els.retry.addEventListener("click", loadOffer);
+
+        els.claim.addEventListener("click", claimOffer);
+
+        els.image.addEventListener("error", () => {
+          els.imageWrap.hidden = true;
+        });
+
+        loadOffer();
+      })();
+    </script>
+  </body>
+</html>

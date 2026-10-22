@@ -36,6 +36,16 @@
       "source": "/benefits",
       "destination": "/portal/benefits.html",
       "permanent": false
+    },
+    {
+      "source": "/travel",
+      "destination": "/portal/travel.html",
+      "permanent": false
+    },
+    {
+      "source": "/offer",
+      "destination": "/portal/offer.html",
+      "permanent": false
     }
   ],
   "crons": [
@@ -50,7 +60,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate"
+          "value": "private, no-store, no-cache, must-revalidate"
         }
       ]
     },
@@ -59,7 +69,7 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate"
+          "value": "private, no-store, no-cache, must-revalidate"
         }
       ]
     },
@@ -68,12 +78,20 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate"
+          "value": "private, no-store, no-cache, must-revalidate"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
         }
       ]
     },
     {
-      "source": "/(.*).html",
+      "source": "/((?!portal/).*).html",
       "headers": [
         {
           "key": "Cache-Control",

@@ -1,0 +1,3177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <title>Cart | Card Leo Rewards</title>
+
+    <meta
+      name="description"
+      content="Review your Card Leo Rewards Shop cart before secure checkout."
+    />
+
+    <meta name="theme-color" content="#030303" />
+
+    <link
+      rel="canonical"
+      href="https://www.cardleorewards.com/cart.html"
+    />
+
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --leo-black: #030303;
+        --leo-black-2: #080808;
+        --leo-panel: rgba(14, 14, 14, 0.95);
+
+        --leo-gold: #e7b64f;
+        --leo-gold-2: #f7d98b;
+        --leo-gold-dark: #95620c;
+
+        --leo-white: #f8f3e7;
+
+        --leo-muted:
+          rgba(
+            248,
+            243,
+            231,
+            0.68
+          );
+
+        --leo-muted-2:
+          rgba(
+            248,
+            243,
+            231,
+            0.46
+          );
+
+        --leo-line:
+          rgba(
+            231,
+            182,
+            79,
+            0.2
+          );
+
+        --leo-green: #5ef28a;
+        --leo-red: #ff7676;
+
+        --leo-shadow:
+          0 30px 90px
+          rgba(
+            0,
+            0,
+            0,
+            0.58
+          );
+      }
+
+      * {
+        box-sizing:
+          border-box;
+      }
+
+      html {
+        scroll-behavior:
+          smooth;
+      }
+
+      body {
+        margin:
+          0;
+
+        min-height:
+          100vh;
+
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+
+        color:
+          var(--leo-white);
+
+        background:
+          radial-gradient(
+            circle at 82% 10%,
+            rgba(
+              231,
+              182,
+              79,
+              0.12
+            ),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 30% 100%,
+            rgba(
+              231,
+              182,
+              79,
+              0.06
+            ),
+            transparent 30%
+          ),
+          linear-gradient(
+            180deg,
+            #020202 0%,
+            #070707 45%,
+            #010101 100%
+          );
+      }
+
+      a {
+        color:
+          inherit;
+
+        text-decoration:
+          none;
+      }
+
+      button,
+      input {
+        font:
+          inherit;
+      }
+
+      button {
+        cursor:
+          pointer;
+      }
+
+      .container {
+        width:
+          min(
+            1240px,
+            calc(
+              100% - 32px
+            )
+          );
+
+        margin:
+          0 auto;
+      }
+
+      /* ================================================================
+         HEADER
+      ================================================================ */
+
+      .site-header {
+        position:
+          sticky;
+
+        top:
+          0;
+
+        z-index:
+          100;
+
+        border-bottom:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.16
+          );
+
+        background:
+          rgba(
+            0,
+            0,
+            0,
+            0.88
+          );
+
+        backdrop-filter:
+          blur(
+            18px
+          );
+      }
+
+      .nav-wrap {
+        min-height:
+          78px;
+
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          space-between;
+
+        gap:
+          18px;
+      }
+
+      .brand {
+        display:
+          inline-flex;
+
+        align-items:
+          center;
+
+        gap:
+          12px;
+      }
+
+      .brand-mark {
+        width:
+          48px;
+
+        height:
+          48px;
+
+        display:
+          grid;
+
+        place-items:
+          center;
+
+        border-radius:
+          16px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.35
+          );
+
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(
+              247,
+              217,
+              139,
+              0.25
+            ),
+            transparent 48%
+          ),
+          linear-gradient(
+            145deg,
+            #0c0c0c,
+            #000
+          );
+
+        color:
+          var(--leo-gold-2);
+
+        font-weight:
+          900;
+      }
+
+      .brand-copy {
+        display:
+          grid;
+
+        gap:
+          1px;
+      }
+
+      .brand-copy strong {
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          1.1rem;
+      }
+
+      .brand-copy span {
+        color:
+          var(--leo-gold);
+
+        font-size:
+          0.68rem;
+
+        font-weight:
+          800;
+
+        letter-spacing:
+          0.12em;
+
+        text-transform:
+          uppercase;
+      }
+
+      .nav-links {
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        gap:
+          18px;
+      }
+
+      .nav-links a {
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.9rem;
+
+        font-weight:
+          700;
+      }
+
+      .nav-links a:hover,
+      .nav-links a.active {
+        color:
+          var(--leo-gold-2);
+      }
+
+      .cart-link {
+        min-height:
+          44px;
+
+        display:
+          inline-flex;
+
+        align-items:
+          center;
+
+        gap:
+          9px;
+
+        padding:
+          0 16px;
+
+        border-radius:
+          999px;
+
+        border:
+          1px solid
+          var(--leo-line);
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.04
+          );
+      }
+
+      .cart-count {
+        min-width:
+          24px;
+
+        height:
+          24px;
+
+        display:
+          inline-grid;
+
+        place-items:
+          center;
+
+        padding:
+          0 7px;
+
+        border-radius:
+          999px;
+
+        background:
+          linear-gradient(
+            135deg,
+            #f7d98b,
+            #b87912
+          );
+
+        color:
+          #060606;
+
+        font-size:
+          0.72rem;
+
+        font-weight:
+          900;
+      }
+
+      /* ================================================================
+         HERO
+      ================================================================ */
+
+      .hero {
+        padding:
+          72px 0 32px;
+      }
+
+      .eyebrow {
+        color:
+          var(--leo-gold);
+
+        font-size:
+          0.7rem;
+
+        font-weight:
+          900;
+
+        letter-spacing:
+          0.14em;
+
+        text-transform:
+          uppercase;
+      }
+
+      .hero h1 {
+        margin:
+          10px 0 0;
+
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          clamp(
+            2.8rem,
+            6vw,
+            5.3rem
+          );
+
+        line-height:
+          0.96;
+
+        letter-spacing:
+          -0.055em;
+      }
+
+      .hero p {
+        max-width:
+          720px;
+
+        margin:
+          18px 0 0;
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          1rem;
+
+        line-height:
+          1.75;
+      }
+
+      /* ================================================================
+         CART
+      ================================================================ */
+
+      .cart-section {
+        padding:
+          20px 0 90px;
+      }
+
+      .cart-layout {
+        display:
+          grid;
+
+        grid-template-columns:
+          minmax(
+            0,
+            1.35fr
+          )
+          minmax(
+            320px,
+            0.65fr
+          );
+
+        gap:
+          28px;
+
+        align-items:
+          start;
+      }
+
+      /* ================================================================
+         CART ITEMS
+      ================================================================ */
+
+      .cart-items-panel,
+      .summary-panel {
+        border-radius:
+          26px;
+
+        border:
+          1px solid
+          var(--leo-line);
+
+        background:
+          radial-gradient(
+            circle at top right,
+            rgba(
+              231,
+              182,
+              79,
+              0.08
+            ),
+            transparent 33%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(
+              17,
+              17,
+              17,
+              0.96
+            ),
+            rgba(
+              5,
+              5,
+              5,
+              0.98
+            )
+          );
+
+        box-shadow:
+          var(--leo-shadow);
+      }
+
+      .panel-header {
+        padding:
+          22px;
+
+        border-bottom:
+          1px solid
+          rgba(
+            255,
+            255,
+            255,
+            0.06
+          );
+      }
+
+      .panel-header h2 {
+        margin:
+          0;
+
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          1.7rem;
+      }
+
+      .panel-header p {
+        margin:
+          8px 0 0;
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.85rem;
+
+        line-height:
+          1.5;
+      }
+
+      .cart-items {
+        display:
+          grid;
+      }
+
+      .cart-item {
+        display:
+          grid;
+
+        grid-template-columns:
+          120px
+          minmax(
+            0,
+            1fr
+          )
+          auto;
+
+        gap:
+          18px;
+
+        padding:
+          20px 22px;
+
+        border-bottom:
+          1px solid
+          rgba(
+            255,
+            255,
+            255,
+            0.06
+          );
+      }
+
+      .cart-item:last-child {
+        border-bottom:
+          0;
+      }
+
+      .cart-item-image {
+        width:
+          120px;
+
+        height:
+          120px;
+
+        border-radius:
+          18px;
+
+        overflow:
+          hidden;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.14
+          );
+
+        background:
+          radial-gradient(
+            circle at 70% 18%,
+            rgba(
+              231,
+              182,
+              79,
+              0.12
+            ),
+            transparent 30%
+          ),
+          #0a0a0a;
+
+        display:
+          grid;
+
+        place-items:
+          center;
+      }
+
+      .cart-item-image img {
+        width:
+          100%;
+
+        height:
+          100%;
+
+        object-fit:
+          cover;
+      }
+
+      .image-placeholder {
+        color:
+          var(--leo-gold-2);
+
+        font-size:
+          0.8rem;
+
+        font-weight:
+          900;
+
+        letter-spacing:
+          0.08em;
+
+        text-align:
+          center;
+      }
+
+      .cart-item-body {
+        min-width:
+          0;
+      }
+
+      .cart-item-category {
+        color:
+          var(--leo-gold);
+
+        font-size:
+          0.66rem;
+
+        font-weight:
+          900;
+
+        letter-spacing:
+          0.11em;
+
+        text-transform:
+          uppercase;
+      }
+
+      .cart-item-title {
+        margin:
+          6px 0 0;
+
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          1.22rem;
+
+        line-height:
+          1.25;
+      }
+
+      .cart-item-options {
+        margin-top:
+          8px;
+
+        display:
+          flex;
+
+        flex-wrap:
+          wrap;
+
+        gap:
+          7px;
+      }
+
+      .option-chip {
+        padding:
+          5px 8px;
+
+        border-radius:
+          999px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.14
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.03
+          );
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.72rem;
+      }
+
+      .cart-item-pricing {
+        margin-top:
+          12px;
+
+        display:
+          flex;
+
+        flex-wrap:
+          wrap;
+
+        align-items:
+          baseline;
+
+        gap:
+          8px;
+      }
+
+      .item-price {
+        font-size:
+          1rem;
+
+        font-weight:
+          900;
+      }
+
+      .member-price {
+        color:
+          var(--leo-green);
+
+        font-size:
+          0.78rem;
+
+        font-weight:
+          800;
+      }
+
+      .quantity-row {
+        margin-top:
+          14px;
+
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        gap:
+          8px;
+      }
+
+      .qty-button {
+        width:
+          36px;
+
+        height:
+          36px;
+
+        border-radius:
+          10px;
+
+        border:
+          1px solid
+          var(--leo-line);
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.04
+          );
+
+        color:
+          var(--leo-white);
+
+        font-weight:
+          900;
+      }
+
+      .qty-input {
+        width:
+          64px;
+
+        height:
+          36px;
+
+        border-radius:
+          10px;
+
+        border:
+          1px solid
+          var(--leo-line);
+
+        background:
+          #101010;
+
+        color:
+          var(--leo-white);
+
+        text-align:
+          center;
+
+        outline:
+          none;
+      }
+
+      .remove-button {
+        margin-left:
+          10px;
+
+        border:
+          0;
+
+        background:
+          transparent;
+
+        color:
+          var(--leo-red);
+
+        font-size:
+          0.76rem;
+
+        font-weight:
+          800;
+      }
+
+      .cart-item-total {
+        min-width:
+          100px;
+
+        text-align:
+          right;
+      }
+
+      .cart-item-total strong {
+        display:
+          block;
+
+        font-size:
+          1.08rem;
+      }
+
+      .cart-item-total span {
+        display:
+          block;
+
+        margin-top:
+          5px;
+
+        color:
+          var(--leo-muted-2);
+
+        font-size:
+          0.72rem;
+      }
+
+      /* ================================================================
+         EMPTY
+      ================================================================ */
+
+      .empty-cart {
+        padding:
+          50px 22px;
+
+        text-align:
+          center;
+
+        color:
+          var(--leo-muted);
+
+        line-height:
+          1.65;
+      }
+
+      .empty-cart strong {
+        display:
+          block;
+
+        margin-bottom:
+          8px;
+
+        color:
+          var(--leo-gold-2);
+
+        font-size:
+          1.2rem;
+      }
+
+      /* ================================================================
+         SUMMARY
+      ================================================================ */
+
+      .summary-panel {
+        position:
+          sticky;
+
+        top:
+          105px;
+
+        padding:
+          24px;
+      }
+
+      .summary-panel h2 {
+        margin:
+          0;
+
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          1.7rem;
+      }
+
+      .summary-lines {
+        margin-top:
+          18px;
+
+        display:
+          grid;
+
+        gap:
+          10px;
+      }
+
+      .summary-line {
+        display:
+          flex;
+
+        justify-content:
+          space-between;
+
+        gap:
+          14px;
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.88rem;
+      }
+
+      .summary-line strong {
+        color:
+          var(--leo-white);
+      }
+
+      .summary-line.member {
+        color:
+          var(--leo-green);
+      }
+
+      .summary-line.member strong {
+        color:
+          var(--leo-green);
+      }
+
+      .summary-divider {
+        height:
+          1px;
+
+        margin:
+          16px 0;
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.07
+          );
+      }
+
+      .summary-total {
+        display:
+          flex;
+
+        justify-content:
+          space-between;
+
+        align-items:
+          baseline;
+
+        gap:
+          14px;
+      }
+
+      .summary-total span {
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.9rem;
+      }
+
+      .summary-total strong {
+        color:
+          var(--leo-gold-2);
+
+        font-size:
+          1.7rem;
+      }
+
+      .member-note {
+        margin-top:
+          16px;
+
+        padding:
+          13px 14px;
+
+        border-radius:
+          14px;
+
+        border:
+          1px solid
+          rgba(
+            94,
+            242,
+            138,
+            0.15
+          );
+
+        background:
+          rgba(
+            94,
+            242,
+            138,
+            0.06
+          );
+
+        color:
+          rgba(
+            205,
+            255,
+            218,
+            0.78
+          );
+
+        font-size:
+          0.78rem;
+
+        line-height:
+          1.55;
+      }
+
+      .checkout-button {
+        width:
+          100%;
+
+        min-height:
+          54px;
+
+        margin-top:
+          20px;
+
+        border:
+          0;
+
+        border-radius:
+          999px;
+
+        background:
+          linear-gradient(
+            135deg,
+            #f7d98b,
+            #d89a22 55%,
+            #8b5b0b
+          );
+
+        color:
+          #060606;
+
+        font-weight:
+          900;
+
+        box-shadow:
+          0 18px 44px
+          rgba(
+            216,
+            154,
+            34,
+            0.22
+          );
+      }
+
+      .checkout-button:disabled {
+        opacity:
+          0.45;
+
+        cursor:
+          not-allowed;
+      }
+
+      .continue-shopping {
+        min-height:
+          48px;
+
+        margin-top:
+          10px;
+
+        border-radius:
+          999px;
+
+        border:
+          1px solid
+          var(--leo-line);
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.04
+          );
+
+        color:
+          var(--leo-white);
+
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          center;
+
+        font-size:
+          0.85rem;
+
+        font-weight:
+          800;
+      }
+
+      .checkout-disclaimer {
+        margin-top:
+          14px;
+
+        color:
+          var(--leo-muted-2);
+
+        font-size:
+          0.7rem;
+
+        line-height:
+          1.5;
+
+        text-align:
+          center;
+      }
+
+      /* ================================================================
+         ERROR
+      ================================================================ */
+
+      .error-box {
+        margin-bottom:
+          16px;
+
+        padding:
+          13px 14px;
+
+        border-radius:
+          14px;
+
+        border:
+          1px solid
+          rgba(
+            255,
+            118,
+            118,
+            0.2
+          );
+
+        background:
+          rgba(
+            255,
+            118,
+            118,
+            0.06
+          );
+
+        color:
+          #ffc1c1;
+
+        font-size:
+          0.8rem;
+
+        line-height:
+          1.5;
+
+        display:
+          none;
+      }
+
+      .error-box.show {
+        display:
+          block;
+      }
+
+      /* ================================================================
+         TOAST
+      ================================================================ */
+
+      .toast {
+        position:
+          fixed;
+
+        right:
+          20px;
+
+        bottom:
+          20px;
+
+        z-index:
+          200;
+
+        max-width:
+          340px;
+
+        padding:
+          14px 16px;
+
+        border-radius:
+          15px;
+
+        border:
+          1px solid
+          var(--leo-line);
+
+        background:
+          #0b0b0b;
+
+        color:
+          var(--leo-white);
+
+        box-shadow:
+          0 22px 60px
+          rgba(
+            0,
+            0,
+            0,
+            0.6
+          );
+
+        opacity:
+          0;
+
+        transform:
+          translateY(
+            12px
+          );
+
+        pointer-events:
+          none;
+
+        transition:
+          0.2s ease;
+      }
+
+      .toast.show {
+        opacity:
+          1;
+
+        transform:
+          translateY(
+            0
+          );
+      }
+
+      /* ================================================================
+         FOOTER
+      ================================================================ */
+
+      footer {
+        border-top:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.13
+          );
+
+        padding:
+          28px 0 36px;
+
+        color:
+          var(--leo-muted-2);
+
+        font-size:
+          0.78rem;
+      }
+
+      .footer-wrap {
+        display:
+          flex;
+
+        justify-content:
+          space-between;
+
+        gap:
+          20px;
+
+        flex-wrap:
+          wrap;
+      }
+
+      /* ================================================================
+         RESPONSIVE
+      ================================================================ */
+
+      @media (
+        max-width:
+          980px
+      ) {
+        .cart-layout {
+          grid-template-columns:
+            1fr;
+        }
+
+        .summary-panel {
+          position:
+            static;
+        }
+      }
+
+      @media (
+        max-width:
+          760px
+      ) {
+        .nav-links a:not(
+          .cart-link
+        ) {
+          display:
+            none;
+        }
+
+        .cart-item {
+          grid-template-columns:
+            90px
+            minmax(
+              0,
+              1fr
+            );
+
+          gap:
+            14px;
+        }
+
+        .cart-item-image {
+          width:
+            90px;
+
+          height:
+            90px;
+        }
+
+        .cart-item-total {
+          grid-column:
+            2;
+
+          text-align:
+            left;
+        }
+
+        .hero {
+          padding-top:
+            54px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ================================================================
+         HEADER
+    ================================================================= -->
+
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a
+          class="brand"
+          href="/"
+        >
+          <div class="brand-mark">
+            CL
+          </div>
+
+          <div class="brand-copy">
+            <strong>
+              Card Leo Rewards
+            </strong>
+
+            <span>
+              Card Leo Shop
+            </span>
+          </div>
+        </a>
+
+        <nav class="nav-links">
+          <a href="/">
+            Home
+          </a>
+
+          <a href="/shop.html">
+            Shop
+          </a>
+
+          <a href="/login.html">
+            Member Login
+          </a>
+
+          <a
+            class="cart-link active"
+            href="/cart.html"
+          >
+            Cart
+
+            <span
+              class="cart-count"
+              id="cartCount"
+            >
+              0
+            </span>
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- ================================================================
+         HERO
+    ================================================================= -->
+
+    <section class="hero">
+      <div class="container">
+        <div class="eyebrow">
+          Card Leo Shop
+        </div>
+
+        <h1>
+          Your Cart
+        </h1>
+
+        <p>
+          Review your Card Leo merchandise before secure checkout.
+          Product pricing and inventory will be verified again by the
+          Card Leo server before Stripe Checkout is created.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         CART
+    ================================================================= -->
+
+    <main class="cart-section">
+      <div class="container cart-layout">
+
+        <!-- ============================================================
+             ITEMS
+        ============================================================= -->
+
+        <section class="cart-items-panel">
+          <div class="panel-header">
+            <h2>
+              Shopping Bag
+            </h2>
+
+            <p id="cartSubtitle">
+              Loading your Card Leo Shop items...
+            </p>
+          </div>
+
+          <div
+            class="cart-items"
+            id="cartItems"
+          >
+            <div class="empty-cart">
+              <strong>
+                Loading Cart
+              </strong>
+
+              Preparing your items...
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             SUMMARY
+        ============================================================= -->
+
+        <aside class="summary-panel">
+
+          <div
+            class="error-box"
+            id="checkoutError"
+          ></div>
+
+          <h2>
+            Order Summary
+          </h2>
+
+          <div class="summary-lines">
+
+            <div class="summary-line">
+              <span>
+                Merchandise
+              </span>
+
+              <strong id="subtotal">
+                $0.00
+              </strong>
+            </div>
+
+            <div
+              class="summary-line member"
+              id="memberSavingsRow"
+              style="display: none;"
+            >
+              <span>
+                Member Savings
+              </span>
+
+              <strong id="memberSavings">
+                -$0.00
+              </strong>
+            </div>
+
+            <div class="summary-line">
+              <span>
+                Shipping
+              </span>
+
+              <strong>
+                Calculated At Checkout
+              </strong>
+            </div>
+
+            <div class="summary-line">
+              <span>
+                Tax
+              </span>
+
+              <strong>
+                Calculated At Checkout
+              </strong>
+            </div>
+
+          </div>
+
+          <div class="summary-divider"></div>
+
+          <div class="summary-total">
+            <span>
+              Estimated Total
+            </span>
+
+            <strong id="estimatedTotal">
+              $0.00
+            </strong>
+          </div>
+
+          <div class="member-note">
+            Card Leo member pricing is shown as an estimate when available.
+            Final eligibility and pricing will be verified securely by the
+            Card Leo server before payment.
+          </div>
+
+          <button
+            type="button"
+            class="checkout-button"
+            id="checkoutButton"
+            disabled
+          >
+            Secure Checkout
+          </button>
+
+          <a
+            href="/shop.html"
+            class="continue-shopping"
+          >
+            Continue Shopping
+          </a>
+
+          <div class="checkout-disclaimer">
+            Shop purchases are separate from Card Leo membership billing.
+            Stripe will securely process the merchandise payment.
+          </div>
+        </aside>
+
+      </div>
+    </main>
+
+    <!-- ================================================================
+         FOOTER
+    ================================================================= -->
+
+    <footer>
+      <div class="container footer-wrap">
+        <span>
+          © Card Leo Rewards
+        </span>
+
+        <span>
+          Secure Card Leo Shop Checkout
+        </span>
+      </div>
+    </footer>
+
+    <!-- ================================================================
+         TOAST
+    ================================================================= -->
+
+    <div
+      class="toast"
+      id="toast"
+      role="status"
+      aria-live="polite"
+    ></div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        /* ==============================================================
+           CONFIG
+        ============================================================== */
+
+        const PRODUCTS_API =
+          "/api/shop/products";
+
+        const CHECKOUT_API =
+          "/api/shop/create-checkout-session";
+
+        const CART_STORAGE_KEY =
+          "cardleo_shop_cart";
+
+        /* ==============================================================
+           ELEMENTS
+        ============================================================== */
+
+        const els = {
+          cartItems:
+            document.getElementById(
+              "cartItems"
+            ),
+
+          cartCount:
+            document.getElementById(
+              "cartCount"
+            ),
+
+          cartSubtitle:
+            document.getElementById(
+              "cartSubtitle"
+            ),
+
+          subtotal:
+            document.getElementById(
+              "subtotal"
+            ),
+
+          memberSavingsRow:
+            document.getElementById(
+              "memberSavingsRow"
+            ),
+
+          memberSavings:
+            document.getElementById(
+              "memberSavings"
+            ),
+
+          estimatedTotal:
+            document.getElementById(
+              "estimatedTotal"
+            ),
+
+          checkoutButton:
+            document.getElementById(
+              "checkoutButton"
+            ),
+
+          checkoutError:
+            document.getElementById(
+              "checkoutError"
+            ),
+
+          toast:
+            document.getElementById(
+              "toast"
+            ),
+        };
+
+        /* ==============================================================
+           STATE
+        ============================================================== */
+
+        let cart =
+          [];
+
+        let products =
+          [];
+
+        let hydratedItems =
+          [];
+
+        let checkoutBusy =
+          false;
+
+        /* ==============================================================
+           FALLBACK PRODUCTS
+
+           Temporary until /api/shop/products is live.
+        ============================================================== */
+
+        const fallbackProducts = [
+          {
+            id:
+              "fallback-cologne",
+
+            name:
+              "Card Leo Signature Cologne",
+
+            slug:
+              "card-leo-signature-cologne",
+
+            short_description:
+              "Premium Card Leo signature fragrance.",
+
+            category:
+              "fragrance",
+
+            product_type:
+              "fragrance",
+
+            price_cents:
+              8999,
+
+            member_price_cents:
+              6999,
+
+            compare_at_price_cents:
+              9999,
+
+            inventory_quantity:
+              100,
+
+            image_url:
+              "",
+
+            currency:
+              "USD",
+          },
+
+          {
+            id:
+              "fallback-shirt",
+
+            name:
+              "Card Leo Signature T-Shirt",
+
+            slug:
+              "card-leo-signature-t-shirt",
+
+            short_description:
+              "Premium Card Leo signature shirt.",
+
+            category:
+              "apparel",
+
+            product_type:
+              "apparel",
+
+            price_cents:
+              4999,
+
+            member_price_cents:
+              3999,
+
+            compare_at_price_cents:
+              5999,
+
+            inventory_quantity:
+              100,
+
+            image_url:
+              "",
+
+            currency:
+              "USD",
+          },
+        ];
+
+        /* ==============================================================
+           HELPERS
+        ============================================================== */
+
+        function normalizeText(
+          value
+        ) {
+          return String(
+            value ?? ""
+          ).trim();
+        }
+
+        function centsToMoney(
+          cents
+        ) {
+          const value =
+            Number(
+              cents ||
+              0
+            );
+
+          const dollars =
+            Number.isFinite(
+              value
+            )
+              ? value / 100
+              : 0;
+
+          return new Intl.NumberFormat(
+            "en-US",
+            {
+              style:
+                "currency",
+
+              currency:
+                "USD",
+            }
+          ).format(
+            dollars
+          );
+        }
+
+        function escapeHtml(
+          value
+        ) {
+          return String(
+            value ?? ""
+          )
+            .replaceAll(
+              "&",
+              "&amp;"
+            )
+            .replaceAll(
+              "<",
+              "&lt;"
+            )
+            .replaceAll(
+              ">",
+              "&gt;"
+            )
+            .replaceAll(
+              '"',
+              "&quot;"
+            )
+            .replaceAll(
+              "'",
+              "&#39;"
+            );
+        }
+
+        function titleCase(
+          value
+        ) {
+          return normalizeText(
+            value
+          )
+            .replace(
+              /[_-]+/g,
+              " "
+            )
+            .split(
+              /\s+/
+            )
+            .filter(Boolean)
+            .map(
+              (word) =>
+                word
+                  .charAt(0)
+                  .toUpperCase() +
+                word
+                  .slice(1)
+                  .toLowerCase()
+            )
+            .join(" ");
+        }
+
+        /* ==============================================================
+           CART STORAGE
+        ============================================================== */
+
+        function readCart() {
+          try {
+            const raw =
+              localStorage.getItem(
+                CART_STORAGE_KEY
+              );
+
+            const parsed =
+              raw
+                ? JSON.parse(
+                    raw
+                  )
+                : [];
+
+            return Array.isArray(
+              parsed
+            )
+              ? parsed
+              : [];
+          } catch {
+            return [];
+          }
+        }
+
+        function saveCart() {
+          localStorage.setItem(
+            CART_STORAGE_KEY,
+            JSON.stringify(
+              cart
+            )
+          );
+
+          updateCartCount();
+        }
+
+        function updateCartCount() {
+          const count =
+            cart.reduce(
+              (
+                total,
+                item
+              ) =>
+                total +
+                Math.max(
+                  1,
+                  Number(
+                    item.quantity ||
+                    1
+                  )
+                ),
+              0
+            );
+
+          if (
+            els.cartCount
+          ) {
+            els.cartCount.textContent =
+              String(
+                count
+              );
+          }
+        }
+
+        /* ==============================================================
+           TOAST
+        ============================================================== */
+
+        let toastTimer =
+          null;
+
+        function showToast(
+          message
+        ) {
+          if (
+            !els.toast
+          ) {
+            return;
+          }
+
+          els.toast.textContent =
+            message;
+
+          els.toast.classList.add(
+            "show"
+          );
+
+          clearTimeout(
+            toastTimer
+          );
+
+          toastTimer =
+            setTimeout(
+              () => {
+                els.toast
+                  ?.classList
+                  .remove(
+                    "show"
+                  );
+              },
+              2500
+            );
+        }
+
+        /* ==============================================================
+           ERROR
+        ============================================================== */
+
+        function showCheckoutError(
+          message
+        ) {
+          if (
+            !els.checkoutError
+          ) {
+            return;
+          }
+
+          els.checkoutError.textContent =
+            message;
+
+          els.checkoutError.classList.add(
+            "show"
+          );
+        }
+
+        function clearCheckoutError() {
+          els.checkoutError
+            ?.classList
+            .remove(
+              "show"
+            );
+
+          if (
+            els.checkoutError
+          ) {
+            els.checkoutError.textContent =
+              "";
+          }
+        }
+
+        /* ==============================================================
+           PRODUCT NORMALIZATION
+        ============================================================== */
+
+        function normalizeProduct(
+          product
+        ) {
+          return {
+            id:
+              product.id,
+
+            name:
+              normalizeText(
+                product.name
+              ),
+
+            slug:
+              normalizeText(
+                product.slug
+              ),
+
+            category:
+              normalizeText(
+                product.category ||
+                "merchandise"
+              ),
+
+            product_type:
+              normalizeText(
+                product.product_type ||
+                "physical"
+              ),
+
+            price_cents:
+              Number(
+                product.price_cents ||
+                0
+              ),
+
+            member_price_cents:
+              product.member_price_cents ==
+              null
+                ? null
+                : Number(
+                    product.member_price_cents
+                  ),
+
+            inventory_quantity:
+              Number(
+                product.inventory_quantity ??
+                0
+              ),
+
+            image_url:
+              normalizeText(
+                product.image_url
+              ),
+
+            currency:
+              normalizeText(
+                product.currency ||
+                "USD"
+              ),
+          };
+        }
+
+        /* ==============================================================
+           LOAD PRODUCTS
+        ============================================================== */
+
+        async function loadProducts() {
+          try {
+            const response =
+              await fetch(
+                PRODUCTS_API,
+                {
+                  method:
+                    "GET",
+
+                  headers: {
+                    Accept:
+                      "application/json",
+                  },
+
+                  cache:
+                    "no-store",
+                }
+              );
+
+            const payload =
+              await response
+                .json()
+                .catch(
+                  () => ({})
+                );
+
+            if (
+              !response.ok
+            ) {
+              throw new Error(
+                payload?.message ||
+                "Unable to load products."
+              );
+            }
+
+            const rows =
+              payload.products ||
+              payload.data?.products ||
+              payload.data ||
+              [];
+
+            if (
+              !Array.isArray(
+                rows
+              )
+            ) {
+              throw new Error(
+                "Invalid product response."
+              );
+            }
+
+            products =
+              rows.map(
+                normalizeProduct
+              );
+
+            if (
+              !products.length
+            ) {
+              products =
+                fallbackProducts.map(
+                  normalizeProduct
+                );
+            }
+          } catch (
+            error
+          ) {
+            console.warn(
+              "Shop product API unavailable:",
+              error
+            );
+
+            products =
+              fallbackProducts.map(
+                normalizeProduct
+              );
+          }
+        }
+
+        /* ==============================================================
+           HYDRATE CART
+
+           IMPORTANT:
+           The browser values are only display estimates.
+
+           The checkout API MUST reload pricing from Supabase before
+           creating the Stripe session.
+        ============================================================== */
+
+        function hydrateCart() {
+          hydratedItems =
+            cart
+              .map(
+                (cartItem) => {
+                  const product =
+                    products.find(
+                      (item) =>
+                        String(
+                          item.id
+                        ) ===
+                          String(
+                            cartItem.productId
+                          ) ||
+                        (
+                          cartItem.slug &&
+                          item.slug ===
+                            cartItem.slug
+                        )
+                    );
+
+                  if (!product) {
+                    return null;
+                  }
+
+                  const quantity =
+                    Math.max(
+                      1,
+                      Math.min(
+                        Number(
+                          product.inventory_quantity ||
+                          1
+                        ),
+                        Number(
+                          cartItem.quantity ||
+                          1
+                        )
+                      )
+                    );
+
+                  return {
+                    ...cartItem,
+
+                    product,
+
+                    quantity,
+                  };
+                }
+              )
+              .filter(Boolean);
+        }
+
+        /* ==============================================================
+           ITEM PRICE
+
+           This is display-only.
+
+           For now we show member pricing where available, but #8 must
+           verify active Card Leo membership server-side before applying it.
+        ============================================================== */
+
+        function getDisplayUnitPrice(
+          item
+        ) {
+          const memberPrice =
+            Number(
+              item.product
+                .member_price_cents ||
+              0
+            );
+
+          if (
+            memberPrice > 0 &&
+            memberPrice <
+              item.product.price_cents
+          ) {
+            return memberPrice;
+          }
+
+          return item.product
+            .price_cents;
+        }
+
+        /* ==============================================================
+           CART ITEM HTML
+        ============================================================== */
+
+        function cartItemHtml(
+          item,
+          index
+        ) {
+          const product =
+            item.product;
+
+          const quantity =
+            item.quantity;
+
+          const displayPrice =
+            getDisplayUnitPrice(
+              item
+            );
+
+          const lineTotal =
+            displayPrice *
+            quantity;
+
+          const memberPrice =
+            Number(
+              product.member_price_cents ||
+              0
+            );
+
+          const imageHtml =
+            product.image_url
+              ? `
+                  <img
+                    src="${escapeHtml(
+                      product.image_url
+                    )}"
+                    alt="${escapeHtml(
+                      product.name
+                    )}"
+                  />
+                `
+              : `
+                  <div class="image-placeholder">
+                    CARD LEO
+                  </div>
+                `;
+
+          const optionChips =
+            [
+              item.size
+                ? `Size: ${item.size}`
+                : "",
+
+              item.color
+                ? `Color: ${item.color}`
+                : "",
+
+              item.fragranceSizeMl
+                ? `${item.fragranceSizeMl} ML`
+                : "",
+            ]
+              .filter(Boolean)
+              .map(
+                (value) => `
+                  <span class="option-chip">
+                    ${escapeHtml(
+                      value
+                    )}
+                  </span>
+                `
+              )
+              .join("");
+
+          return `
+            <article class="cart-item">
+
+              <a
+                class="cart-item-image"
+                href="/product.html?slug=${encodeURIComponent(
+                  product.slug
+                )}"
+              >
+                ${imageHtml}
+              </a>
+
+              <div class="cart-item-body">
+
+                <div class="cart-item-category">
+                  ${escapeHtml(
+                    titleCase(
+                      product.category
+                    )
+                  )}
+                </div>
+
+                <a
+                  href="/product.html?slug=${encodeURIComponent(
+                    product.slug
+                  )}"
+                >
+                  <h3 class="cart-item-title">
+                    ${escapeHtml(
+                      product.name
+                    )}
+                  </h3>
+                </a>
+
+                ${
+                  optionChips
+                    ? `
+                        <div class="cart-item-options">
+                          ${optionChips}
+                        </div>
+                      `
+                    : ""
+                }
+
+                <div class="cart-item-pricing">
+
+                  <span class="item-price">
+                    ${escapeHtml(
+                      centsToMoney(
+                        displayPrice
+                      )
+                    )}
+                  </span>
+
+                  ${
+                    memberPrice > 0 &&
+                    memberPrice <
+                      product.price_cents
+                      ? `
+                          <span class="member-price">
+                            Member Price Available
+                          </span>
+                        `
+                      : ""
+                  }
+
+                </div>
+
+                <div class="quantity-row">
+
+                  <button
+                    type="button"
+                    class="qty-button"
+                    data-qty-minus="${index}"
+                  >
+                    −
+                  </button>
+
+                  <input
+                    class="qty-input"
+                    type="number"
+                    min="1"
+                    max="${Math.max(
+                      1,
+                      product.inventory_quantity
+                    )}"
+                    value="${quantity}"
+                    data-qty-input="${index}"
+                  />
+
+                  <button
+                    type="button"
+                    class="qty-button"
+                    data-qty-plus="${index}"
+                  >
+                    +
+                  </button>
+
+                  <button
+                    type="button"
+                    class="remove-button"
+                    data-remove="${index}"
+                  >
+                    Remove
+                  </button>
+
+                </div>
+
+              </div>
+
+              <div class="cart-item-total">
+
+                <strong>
+                  ${escapeHtml(
+                    centsToMoney(
+                      lineTotal
+                    )
+                  )}
+                </strong>
+
+                <span>
+                  ${quantity}
+                  ×
+                  ${escapeHtml(
+                    centsToMoney(
+                      displayPrice
+                    )
+                  )}
+                </span>
+
+              </div>
+
+            </article>
+          `;
+        }
+
+        /* ==============================================================
+           SUMMARY
+        ============================================================== */
+
+        function updateSummary() {
+          let regularSubtotal =
+            0;
+
+          let estimatedSubtotal =
+            0;
+
+          for (
+            const item
+            of hydratedItems
+          ) {
+            const quantity =
+              Number(
+                item.quantity ||
+                1
+              );
+
+            regularSubtotal +=
+              item.product.price_cents *
+              quantity;
+
+            estimatedSubtotal +=
+              getDisplayUnitPrice(
+                item
+              ) *
+              quantity;
+          }
+
+          const savings =
+            Math.max(
+              0,
+              regularSubtotal -
+              estimatedSubtotal
+            );
+
+          if (
+            els.subtotal
+          ) {
+            els.subtotal.textContent =
+              centsToMoney(
+                regularSubtotal
+              );
+          }
+
+          if (
+            savings > 0
+          ) {
+            els.memberSavingsRow.style.display =
+              "flex";
+
+            els.memberSavings.textContent =
+              `-${centsToMoney(
+                savings
+              )}`;
+          } else {
+            els.memberSavingsRow.style.display =
+              "none";
+          }
+
+          if (
+            els.estimatedTotal
+          ) {
+            els.estimatedTotal.textContent =
+              centsToMoney(
+                estimatedSubtotal
+              );
+          }
+
+          if (
+            els.checkoutButton
+          ) {
+            els.checkoutButton.disabled =
+              !hydratedItems.length ||
+              checkoutBusy;
+          }
+        }
+
+        /* ==============================================================
+           RENDER
+        ============================================================== */
+
+        function renderCart() {
+          hydrateCart();
+
+          updateCartCount();
+
+          if (
+            !hydratedItems.length
+          ) {
+            els.cartItems.innerHTML = `
+              <div class="empty-cart">
+
+                <strong>
+                  Your Cart Is Empty
+                </strong>
+
+                Add Card Leo merchandise or fragrance to begin your order.
+
+                <br /><br />
+
+                <a href="/shop.html">
+                  Return To Shop
+                </a>
+
+              </div>
+            `;
+
+            if (
+              els.cartSubtitle
+            ) {
+              els.cartSubtitle.textContent =
+                "No products are currently in your cart.";
+            }
+
+            updateSummary();
+
+            return;
+          }
+
+          els.cartItems.innerHTML =
+            hydratedItems
+              .map(
+                cartItemHtml
+              )
+              .join("");
+
+          if (
+            els.cartSubtitle
+          ) {
+            const count =
+              hydratedItems.reduce(
+                (
+                  total,
+                  item
+                ) =>
+                  total +
+                  Number(
+                    item.quantity ||
+                    1
+                  ),
+                0
+              );
+
+            els.cartSubtitle.textContent =
+              `${count} item${
+                count === 1
+                  ? ""
+                  : "s"
+              } in your bag.`;
+          }
+
+          bindCartEvents();
+
+          updateSummary();
+        }
+
+        /* ==============================================================
+           UPDATE CART ITEM
+        ============================================================== */
+
+        function updateCartItemQuantity(
+          index,
+          value
+        ) {
+          const hydrated =
+            hydratedItems[
+              index
+            ];
+
+          if (!hydrated) {
+            return;
+          }
+
+          const max =
+            Math.max(
+              1,
+              Number(
+                hydrated.product
+                  .inventory_quantity ||
+                1
+              )
+            );
+
+          const quantity =
+            Math.max(
+              1,
+              Math.min(
+                max,
+                Number(
+                  value ||
+                  1
+                )
+              )
+            );
+
+          const originalIndex =
+            cart.findIndex(
+              (item) =>
+                item ===
+                  hydrated ||
+                (
+                  String(
+                    item.productId
+                  ) ===
+                    String(
+                      hydrated.productId
+                    ) &&
+                  normalizeText(
+                    item.size
+                  ) ===
+                    normalizeText(
+                      hydrated.size
+                    ) &&
+                  normalizeText(
+                    item.color
+                  ) ===
+                    normalizeText(
+                      hydrated.color
+                    )
+                )
+            );
+
+          if (
+            originalIndex >= 0
+          ) {
+            cart[
+              originalIndex
+            ].quantity =
+              quantity;
+          }
+
+          saveCart();
+
+          renderCart();
+        }
+
+        /* ==============================================================
+           REMOVE CART ITEM
+        ============================================================== */
+
+        function removeCartItem(
+          index
+        ) {
+          const hydrated =
+            hydratedItems[
+              index
+            ];
+
+          if (!hydrated) {
+            return;
+          }
+
+          const originalIndex =
+            cart.findIndex(
+              (item) =>
+                String(
+                  item.productId
+                ) ===
+                  String(
+                    hydrated.productId
+                  ) &&
+                normalizeText(
+                  item.size
+                ) ===
+                  normalizeText(
+                    hydrated.size
+                  ) &&
+                normalizeText(
+                  item.color
+                ) ===
+                  normalizeText(
+                    hydrated.color
+                  )
+            );
+
+          if (
+            originalIndex >= 0
+          ) {
+            cart.splice(
+              originalIndex,
+              1
+            );
+          }
+
+          saveCart();
+
+          renderCart();
+
+          showToast(
+            "Item removed from cart."
+          );
+        }
+
+        /* ==============================================================
+           EVENTS
+        ============================================================== */
+
+        function bindCartEvents() {
+          document
+            .querySelectorAll(
+              "[data-qty-minus]"
+            )
+            .forEach(
+              (button) => {
+                button.addEventListener(
+                  "click",
+                  () => {
+                    const index =
+                      Number(
+                        button.dataset
+                          .qtyMinus
+                      );
+
+                    const item =
+                      hydratedItems[
+                        index
+                      ];
+
+                    updateCartItemQuantity(
+                      index,
+                      Number(
+                        item?.quantity ||
+                        1
+                      ) -
+                      1
+                    );
+                  }
+                );
+              }
+            );
+
+          document
+            .querySelectorAll(
+              "[data-qty-plus]"
+            )
+            .forEach(
+              (button) => {
+                button.addEventListener(
+                  "click",
+                  () => {
+                    const index =
+                      Number(
+                        button.dataset
+                          .qtyPlus
+                      );
+
+                    const item =
+                      hydratedItems[
+                        index
+                      ];
+
+                    updateCartItemQuantity(
+                      index,
+                      Number(
+                        item?.quantity ||
+                        1
+                      ) +
+                      1
+                    );
+                  }
+                );
+              }
+            );
+
+          document
+            .querySelectorAll(
+              "[data-qty-input]"
+            )
+            .forEach(
+              (input) => {
+                input.addEventListener(
+                  "change",
+                  () => {
+                    const index =
+                      Number(
+                        input.dataset
+                          .qtyInput
+                      );
+
+                    updateCartItemQuantity(
+                      index,
+                      input.value
+                    );
+                  }
+                );
+              }
+            );
+
+          document
+            .querySelectorAll(
+              "[data-remove]"
+            )
+            .forEach(
+              (button) => {
+                button.addEventListener(
+                  "click",
+                  () => {
+                    removeCartItem(
+                      Number(
+                        button.dataset
+                          .remove
+                      )
+                    );
+                  }
+                );
+              }
+            );
+        }
+
+        /* ==============================================================
+           CHECKOUT PAYLOAD
+
+           IMPORTANT:
+           We send only identity/options/quantity.
+
+           We DO NOT send authoritative prices.
+
+           #8 /api/shop/create-checkout-session.js must reload each product
+           from Supabase and determine the actual price server-side.
+        ============================================================== */
+
+        function buildCheckoutItems() {
+          return hydratedItems.map(
+            (item) => ({
+              productId:
+                item.product.id,
+
+              slug:
+                item.product.slug,
+
+              quantity:
+                Number(
+                  item.quantity ||
+                  1
+                ),
+
+              size:
+                normalizeText(
+                  item.size
+                ),
+
+              color:
+                normalizeText(
+                  item.color
+                ),
+
+              fragranceSizeMl:
+                item.fragranceSizeMl ||
+                null,
+            })
+          );
+        }
+
+        /* ==============================================================
+           CHECKOUT
+        ============================================================== */
+
+        async function startCheckout() {
+          clearCheckoutError();
+
+          if (
+            checkoutBusy ||
+            !hydratedItems.length
+          ) {
+            return;
+          }
+
+          checkoutBusy =
+            true;
+
+          updateSummary();
+
+          if (
+            els.checkoutButton
+          ) {
+            els.checkoutButton.textContent =
+              "Preparing Secure Checkout...";
+          }
+
+          try {
+            const response =
+              await fetch(
+                CHECKOUT_API,
+                {
+                  method:
+                    "POST",
+
+                  headers: {
+                    "Content-Type":
+                      "application/json",
+
+                    Accept:
+                      "application/json",
+                  },
+
+                  credentials:
+                    "include",
+
+                  body:
+                    JSON.stringify({
+                      items:
+                        buildCheckoutItems(),
+
+                      successUrl:
+                        "/order-success.html",
+
+                      cancelUrl:
+                        "/cart.html",
+                    }),
+                }
+              );
+
+            const payload =
+              await response
+                .json()
+                .catch(
+                  () => ({})
+                );
+
+            if (
+              !response.ok
+            ) {
+              throw new Error(
+                payload?.message ||
+                "Unable to start checkout."
+              );
+            }
+
+            const checkoutUrl =
+              payload.checkoutUrl ||
+              payload.checkout_url ||
+              payload.url ||
+              "";
+
+            if (
+              !checkoutUrl
+            ) {
+              throw new Error(
+                "Checkout URL was not returned."
+              );
+            }
+
+            window.location.href =
+              checkoutUrl;
+          } catch (
+            error
+          ) {
+            console.error(
+              "Card Leo Shop checkout error:",
+              error
+            );
+
+            showCheckoutError(
+              error?.message ||
+              "Unable to start secure checkout."
+            );
+
+            checkoutBusy =
+              false;
+
+            if (
+              els.checkoutButton
+            ) {
+              els.checkoutButton.textContent =
+                "Secure Checkout";
+            }
+
+            updateSummary();
+          }
+        }
+
+        els.checkoutButton
+          ?.addEventListener(
+            "click",
+            startCheckout
+          );
+
+        /* ==============================================================
+           START
+        ============================================================== */
+
+        async function start() {
+          cart =
+            readCart();
+
+          updateCartCount();
+
+          await loadProducts();
+
+          renderCart();
+        }
+
+        start();
+      })();
+    </script>
+  </body>
+</html>

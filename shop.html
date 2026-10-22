@@ -1,0 +1,4096 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+
+    <title>Shop | Card Leo Rewards</title>
+
+    <meta
+      name="description"
+      content="Shop Card Leo Rewards merchandise, fragrance, apparel, accessories, and limited editions."
+    />
+
+    <meta name="theme-color" content="#030303" />
+
+    <link
+      rel="canonical"
+      href="https://www.cardleorewards.com/shop.html"
+    />
+
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --leo-black: #030303;
+        --leo-black-2: #080808;
+        --leo-panel: rgba(14, 14, 14, 0.94);
+
+        --leo-gold: #e7b64f;
+        --leo-gold-2: #f7d98b;
+        --leo-gold-dark: #95620c;
+
+        --leo-white: #f8f3e7;
+
+        --leo-muted:
+          rgba(
+            248,
+            243,
+            231,
+            0.68
+          );
+
+        --leo-muted-2:
+          rgba(
+            248,
+            243,
+            231,
+            0.48
+          );
+
+        --leo-line:
+          rgba(
+            231,
+            182,
+            79,
+            0.2
+          );
+
+        --leo-green: #5ef28a;
+
+        --leo-red: #ff7777;
+
+        --leo-shadow:
+          0 30px 90px
+          rgba(
+            0,
+            0,
+            0,
+            0.58
+          );
+      }
+
+      * {
+        box-sizing:
+          border-box;
+      }
+
+      html {
+        scroll-behavior:
+          smooth;
+      }
+
+      body {
+        margin:
+          0;
+
+        min-height:
+          100vh;
+
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+
+        color:
+          var(--leo-white);
+
+        background:
+          radial-gradient(
+            circle at 82% 10%,
+            rgba(
+              231,
+              182,
+              79,
+              0.12
+            ),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 40% 100%,
+            rgba(
+              231,
+              182,
+              79,
+              0.06
+            ),
+            transparent 30%
+          ),
+          linear-gradient(
+            180deg,
+            #020202 0%,
+            #070707 45%,
+            #010101 100%
+          );
+      }
+
+      body.menu-open {
+        overflow:
+          hidden;
+      }
+
+      a {
+        color:
+          inherit;
+
+        text-decoration:
+          none;
+      }
+
+      button,
+      input,
+      select {
+        font:
+          inherit;
+      }
+
+      button {
+        cursor:
+          pointer;
+      }
+
+      .container {
+        width:
+          min(
+            1240px,
+            calc(
+              100% - 32px
+            )
+          );
+
+        margin:
+          0 auto;
+      }
+
+      /* ================================================================
+         HEADER
+      ================================================================ */
+
+      .site-header {
+        position:
+          sticky;
+
+        top:
+          0;
+
+        z-index:
+          100;
+
+        border-bottom:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.16
+          );
+
+        background:
+          rgba(
+            0,
+            0,
+            0,
+            0.86
+          );
+
+        backdrop-filter:
+          blur(
+            18px
+          );
+      }
+
+      .nav-wrap {
+        min-height:
+          78px;
+
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          space-between;
+
+        gap:
+          20px;
+      }
+
+      .brand {
+        display:
+          inline-flex;
+
+        align-items:
+          center;
+
+        gap:
+          12px;
+
+        min-width:
+          0;
+      }
+
+      .brand-mark {
+        width:
+          48px;
+
+        height:
+          48px;
+
+        flex:
+          0 0 auto;
+
+        display:
+          grid;
+
+        place-items:
+          center;
+
+        border-radius:
+          16px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.36
+          );
+
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(
+              247,
+              217,
+              139,
+              0.25
+            ),
+            transparent 48%
+          ),
+          linear-gradient(
+            145deg,
+            #0c0c0c,
+            #000
+          );
+
+        color:
+          var(--leo-gold-2);
+
+        font-weight:
+          900;
+
+        letter-spacing:
+          0.06em;
+      }
+
+      .brand-copy {
+        display:
+          grid;
+
+        gap:
+          1px;
+      }
+
+      .brand-copy strong {
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          1.12rem;
+
+        letter-spacing:
+          -0.02em;
+      }
+
+      .brand-copy span {
+        color:
+          var(--leo-gold);
+
+        font-size:
+          0.68rem;
+
+        font-weight:
+          800;
+
+        letter-spacing:
+          0.13em;
+
+        text-transform:
+          uppercase;
+      }
+
+      .desktop-nav {
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        gap:
+          20px;
+      }
+
+      .desktop-nav a {
+        color:
+          rgba(
+            248,
+            243,
+            231,
+            0.72
+          );
+
+        font-size:
+          0.9rem;
+
+        font-weight:
+          700;
+      }
+
+      .desktop-nav a:hover,
+      .desktop-nav a.active {
+        color:
+          var(--leo-gold-2);
+      }
+
+      .cart-link {
+        min-height:
+          44px;
+
+        display:
+          inline-flex;
+
+        align-items:
+          center;
+
+        gap:
+          9px;
+
+        padding:
+          0 16px;
+
+        border-radius:
+          999px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.25
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.045
+          );
+      }
+
+      .cart-count {
+        min-width:
+          24px;
+
+        height:
+          24px;
+
+        padding:
+          0 7px;
+
+        border-radius:
+          999px;
+
+        display:
+          inline-grid;
+
+        place-items:
+          center;
+
+        background:
+          linear-gradient(
+            135deg,
+            #f7d98b,
+            #b87912
+          );
+
+        color:
+          #050505;
+
+        font-size:
+          0.72rem;
+
+        font-weight:
+          900;
+      }
+
+      .menu-button {
+        display:
+          none;
+
+        width:
+          44px;
+
+        height:
+          44px;
+
+        border-radius:
+          14px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.22
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.04
+          );
+
+        color:
+          var(--leo-white);
+
+        font-size:
+          1.18rem;
+      }
+
+      /* ================================================================
+         MOBILE MENU
+      ================================================================ */
+
+      .mobile-menu-backdrop {
+        display:
+          none;
+
+        position:
+          fixed;
+
+        inset:
+          0;
+
+        z-index:
+          109;
+
+        background:
+          rgba(
+            0,
+            0,
+            0,
+            0.72
+          );
+
+        backdrop-filter:
+          blur(
+            4px
+          );
+      }
+
+      .mobile-menu-backdrop.show {
+        display:
+          block;
+      }
+
+      .mobile-menu {
+        display:
+          none;
+
+        position:
+          fixed;
+
+        top:
+          0;
+
+        right:
+          0;
+
+        z-index:
+          110;
+
+        width:
+          min(
+            86vw,
+            340px
+          );
+
+        height:
+          100vh;
+
+        padding:
+          24px;
+
+        overflow-y:
+          auto;
+
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(
+              231,
+              182,
+              79,
+              0.13
+            ),
+            transparent 27%
+          ),
+          #070707;
+
+        border-left:
+          1px solid
+          var(--leo-line);
+
+        box-shadow:
+          -28px 0 80px
+          rgba(
+            0,
+            0,
+            0,
+            0.7
+          );
+      }
+
+      .mobile-menu.show {
+        display:
+          block;
+      }
+
+      .mobile-menu-header {
+        display:
+          flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          space-between;
+
+        gap:
+          12px;
+
+        margin-bottom:
+          22px;
+      }
+
+      .mobile-menu-header strong {
+        color:
+          var(--leo-gold-2);
+      }
+
+      .mobile-menu-close {
+        width:
+          42px;
+
+        height:
+          42px;
+
+        border:
+          1px solid
+          var(--leo-line);
+
+        border-radius:
+          12px;
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.04
+          );
+
+        color:
+          var(--leo-white);
+      }
+
+      .mobile-nav {
+        display:
+          grid;
+
+        gap:
+          9px;
+      }
+
+      .mobile-nav a {
+        padding:
+          15px 16px;
+
+        border-radius:
+          14px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.12
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.035
+          );
+
+        font-weight:
+          700;
+      }
+
+      /* ================================================================
+         HERO
+      ================================================================ */
+
+      .hero {
+        padding:
+          92px 0 60px;
+      }
+
+      .hero-grid {
+        display:
+          grid;
+
+        grid-template-columns:
+          minmax(
+            0,
+            1.1fr
+          )
+          minmax(
+            320px,
+            0.9fr
+          );
+
+        gap:
+          40px;
+
+        align-items:
+          center;
+      }
+
+      .eyebrow {
+        display:
+          inline-flex;
+
+        align-items:
+          center;
+
+        gap:
+          10px;
+
+        color:
+          var(--leo-gold);
+
+        font-size:
+          0.72rem;
+
+        font-weight:
+          900;
+
+        letter-spacing:
+          0.16em;
+
+        text-transform:
+          uppercase;
+      }
+
+      .eyebrow::before {
+        content:
+          "";
+
+        width:
+          32px;
+
+        height:
+          1px;
+
+        background:
+          linear-gradient(
+            90deg,
+            var(--leo-gold),
+            transparent
+          );
+      }
+
+      .hero h1 {
+        margin:
+          18px 0 0;
+
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          clamp(
+            3rem,
+            7vw,
+            6.2rem
+          );
+
+        line-height:
+          0.91;
+
+        letter-spacing:
+          -0.065em;
+      }
+
+      .hero h1 span {
+        color:
+          var(--leo-gold);
+      }
+
+      .hero-copy p {
+        max-width:
+          720px;
+
+        margin:
+          24px 0 0;
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          1.04rem;
+
+        line-height:
+          1.8;
+      }
+
+      .hero-actions {
+        display:
+          flex;
+
+        flex-wrap:
+          wrap;
+
+        gap:
+          12px;
+
+        margin-top:
+          28px;
+      }
+
+      .btn {
+        min-height:
+          50px;
+
+        display:
+          inline-flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          center;
+
+        gap:
+          9px;
+
+        padding:
+          0 20px;
+
+        border:
+          1px solid
+          transparent;
+
+        border-radius:
+          999px;
+
+        font-weight:
+          900;
+
+        transition:
+          0.2s ease;
+      }
+
+      .btn:hover {
+        transform:
+          translateY(
+            -1px
+          );
+
+        filter:
+          brightness(
+            1.05
+          );
+      }
+
+      .btn-primary {
+        background:
+          linear-gradient(
+            135deg,
+            #f7d98b 0%,
+            #d89a22 52%,
+            #8b5b0b 100%
+          );
+
+        color:
+          #070707;
+
+        box-shadow:
+          0 18px 44px
+          rgba(
+            216,
+            154,
+            34,
+            0.24
+          );
+      }
+
+      .btn-secondary {
+        border-color:
+          var(--leo-line);
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.045
+          );
+
+        color:
+          var(--leo-white);
+      }
+
+      /* ================================================================
+         HERO FEATURE CARD
+      ================================================================ */
+
+      .feature-visual {
+        min-height:
+          430px;
+
+        position:
+          relative;
+
+        overflow:
+          hidden;
+
+        border-radius:
+          32px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.26
+          );
+
+        background:
+          radial-gradient(
+            circle at 75% 17%,
+            rgba(
+              247,
+              217,
+              139,
+              0.2
+            ),
+            transparent 32%
+          ),
+          linear-gradient(
+            145deg,
+            #080808,
+            #111 50%,
+            #000
+          );
+
+        box-shadow:
+          var(--leo-shadow);
+      }
+
+      .feature-visual::after {
+        content:
+          "";
+
+        position:
+          absolute;
+
+        inset:
+          -25%;
+
+        background:
+          linear-gradient(
+            115deg,
+            transparent 35%,
+            rgba(
+              255,
+              255,
+              255,
+              0.05
+            ) 48%,
+            transparent 62%
+          );
+
+        transform:
+          rotate(
+            8deg
+          );
+      }
+
+      .feature-bottle {
+        position:
+          absolute;
+
+        left:
+          50%;
+
+        top:
+          48%;
+
+        z-index:
+          2;
+
+        transform:
+          translate(
+            -50%,
+            -50%
+          );
+
+        width:
+          190px;
+
+        height:
+          260px;
+
+        border-radius:
+          34px 34px 25px 25px;
+
+        border:
+          1px solid
+          rgba(
+            247,
+            217,
+            139,
+            0.3
+          );
+
+        background:
+          linear-gradient(
+            145deg,
+            rgba(
+              255,
+              255,
+              255,
+              0.06
+            ),
+            rgba(
+              255,
+              255,
+              255,
+              0.015
+            )
+          );
+
+        box-shadow:
+          inset
+            0
+            0
+            40px
+            rgba(
+              231,
+              182,
+              79,
+              0.08
+            ),
+          0
+            34px
+            70px
+            rgba(
+              0,
+              0,
+              0,
+              0.65
+            );
+
+        display:
+          grid;
+
+        place-items:
+          center;
+      }
+
+      .feature-bottle::before {
+        content:
+          "";
+
+        position:
+          absolute;
+
+        top:
+          -55px;
+
+        width:
+          88px;
+
+        height:
+          58px;
+
+        border-radius:
+          14px 14px 5px 5px;
+
+        background:
+          linear-gradient(
+            145deg,
+            #d9ad56,
+            #5f3c05
+          );
+
+        box-shadow:
+          0 10px 28px
+          rgba(
+            231,
+            182,
+            79,
+            0.18
+          );
+      }
+
+      .bottle-label {
+        text-align:
+          center;
+      }
+
+      .bottle-label strong {
+        display:
+          block;
+
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          1.55rem;
+
+        letter-spacing:
+          0.04em;
+      }
+
+      .bottle-label span {
+        display:
+          block;
+
+        margin-top:
+          8px;
+
+        color:
+          var(--leo-gold);
+
+        font-size:
+          0.72rem;
+
+        font-weight:
+          900;
+
+        letter-spacing:
+          0.16em;
+
+        text-transform:
+          uppercase;
+      }
+
+      .feature-caption {
+        position:
+          absolute;
+
+        z-index:
+          3;
+
+        left:
+          24px;
+
+        right:
+          24px;
+
+        bottom:
+          22px;
+
+        display:
+          flex;
+
+        justify-content:
+          space-between;
+
+        gap:
+          12px;
+
+        align-items:
+          flex-end;
+      }
+
+      .feature-caption strong {
+        display:
+          block;
+
+        font-size:
+          1.05rem;
+      }
+
+      .feature-caption span {
+        display:
+          block;
+
+        margin-top:
+          4px;
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.82rem;
+      }
+
+      .feature-caption-price {
+        color:
+          var(--leo-gold-2);
+
+        font-size:
+          1.35rem;
+
+        font-weight:
+          900;
+      }
+
+      /* ================================================================
+         BENEFITS STRIP
+      ================================================================ */
+
+      .shop-benefits {
+        padding:
+          0 0 34px;
+      }
+
+      .shop-benefits-grid {
+        display:
+          grid;
+
+        grid-template-columns:
+          repeat(
+            4,
+            1fr
+          );
+
+        gap:
+          12px;
+      }
+
+      .shop-benefit {
+        padding:
+          18px;
+
+        border-radius:
+          18px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.14
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.03
+          );
+      }
+
+      .shop-benefit strong {
+        display:
+          block;
+
+        color:
+          var(--leo-gold-2);
+
+        font-size:
+          0.9rem;
+      }
+
+      .shop-benefit span {
+        display:
+          block;
+
+        margin-top:
+          6px;
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.8rem;
+
+        line-height:
+          1.5;
+      }
+
+      /* ================================================================
+         SHOP SECTION
+      ================================================================ */
+
+      .shop-section {
+        padding:
+          50px 0 90px;
+      }
+
+      .section-heading {
+        display:
+          flex;
+
+        justify-content:
+          space-between;
+
+        gap:
+          20px;
+
+        align-items:
+          flex-end;
+
+        margin-bottom:
+          24px;
+      }
+
+      .section-heading h2 {
+        margin:
+          0;
+
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          clamp(
+            2rem,
+            4vw,
+            3.3rem
+          );
+
+        letter-spacing:
+          -0.05em;
+      }
+
+      .section-heading p {
+        max-width:
+          640px;
+
+        margin:
+          9px 0 0;
+
+        color:
+          var(--leo-muted);
+
+        line-height:
+          1.65;
+      }
+
+      /* ================================================================
+         TOOLBAR
+      ================================================================ */
+
+      .shop-toolbar {
+        display:
+          grid;
+
+        grid-template-columns:
+          minmax(
+            250px,
+            1fr
+          )
+          auto;
+
+        gap:
+          14px;
+
+        margin-bottom:
+          26px;
+      }
+
+      .search-box {
+        position:
+          relative;
+      }
+
+      .search-box input {
+        width:
+          100%;
+
+        min-height:
+          50px;
+
+        padding:
+          0 18px;
+
+        border-radius:
+          16px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.2
+          );
+
+        outline:
+          none;
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.035
+          );
+
+        color:
+          var(--leo-white);
+      }
+
+      .search-box input:focus {
+        border-color:
+          rgba(
+            231,
+            182,
+            79,
+            0.55
+          );
+
+        box-shadow:
+          0 0 0 3px
+          rgba(
+            231,
+            182,
+            79,
+            0.08
+          );
+      }
+
+      .category-filter {
+        min-height:
+          50px;
+
+        min-width:
+          190px;
+
+        padding:
+          0 14px;
+
+        border-radius:
+          16px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.2
+          );
+
+        background:
+          #111;
+
+        color:
+          var(--leo-white);
+
+        outline:
+          none;
+      }
+
+      /* ================================================================
+         PRODUCT GRID
+      ================================================================ */
+
+      .products-grid {
+        display:
+          grid;
+
+        grid-template-columns:
+          repeat(
+            3,
+            minmax(
+              0,
+              1fr
+            )
+          );
+
+        gap:
+          20px;
+      }
+
+      .product-card {
+        overflow:
+          hidden;
+
+        border-radius:
+          24px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.16
+          );
+
+        background:
+          radial-gradient(
+            circle at top right,
+            rgba(
+              231,
+              182,
+              79,
+              0.08
+            ),
+            transparent 35%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(
+              17,
+              17,
+              17,
+              0.96
+            ),
+            rgba(
+              5,
+              5,
+              5,
+              0.98
+            )
+          );
+
+        box-shadow:
+          0 22px 54px
+          rgba(
+            0,
+            0,
+            0,
+            0.34
+          );
+
+        transition:
+          transform 0.2s ease,
+          border-color 0.2s ease;
+      }
+
+      .product-card:hover {
+        transform:
+          translateY(
+            -4px
+          );
+
+        border-color:
+          rgba(
+            231,
+            182,
+            79,
+            0.34
+          );
+      }
+
+      .product-image-wrap {
+        position:
+          relative;
+
+        aspect-ratio:
+          1 / 1;
+
+        overflow:
+          hidden;
+
+        background:
+          radial-gradient(
+            circle at 70% 18%,
+            rgba(
+              247,
+              217,
+              139,
+              0.13
+            ),
+            transparent 31%
+          ),
+          #090909;
+      }
+
+      .product-image-wrap img {
+        width:
+          100%;
+
+        height:
+          100%;
+
+        object-fit:
+          cover;
+
+        display:
+          block;
+      }
+
+      .product-placeholder {
+        width:
+          100%;
+
+        height:
+          100%;
+
+        display:
+          grid;
+
+        place-items:
+          center;
+
+        text-align:
+          center;
+
+        color:
+          var(--leo-gold-2);
+      }
+
+      .product-placeholder strong {
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          1.55rem;
+      }
+
+      .product-placeholder span {
+        display:
+          block;
+
+        margin-top:
+          8px;
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.75rem;
+      }
+
+      .product-badges {
+        position:
+          absolute;
+
+        top:
+          14px;
+
+        left:
+          14px;
+
+        z-index:
+          3;
+
+        display:
+          flex;
+
+        flex-wrap:
+          wrap;
+
+        gap:
+          7px;
+      }
+
+      .product-badge {
+        min-height:
+          29px;
+
+        display:
+          inline-flex;
+
+        align-items:
+          center;
+
+        padding:
+          0 10px;
+
+        border-radius:
+          999px;
+
+        background:
+          rgba(
+            0,
+            0,
+            0,
+            0.74
+          );
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.25
+          );
+
+        color:
+          var(--leo-gold-2);
+
+        font-size:
+          0.68rem;
+
+        font-weight:
+          900;
+
+        letter-spacing:
+          0.08em;
+
+        text-transform:
+          uppercase;
+      }
+
+      .product-body {
+        padding:
+          20px;
+      }
+
+      .product-category {
+        color:
+          var(--leo-gold);
+
+        font-size:
+          0.68rem;
+
+        font-weight:
+          900;
+
+        letter-spacing:
+          0.12em;
+
+        text-transform:
+          uppercase;
+      }
+
+      .product-title {
+        margin:
+          8px 0 0;
+
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          1.35rem;
+
+        line-height:
+          1.2;
+
+        letter-spacing:
+          -0.025em;
+      }
+
+      .product-description {
+        margin:
+          10px 0 0;
+
+        min-height:
+          44px;
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.85rem;
+
+        line-height:
+          1.55;
+      }
+
+      .product-price-wrap {
+        display:
+          flex;
+
+        flex-wrap:
+          wrap;
+
+        align-items:
+          baseline;
+
+        gap:
+          8px;
+
+        margin-top:
+          16px;
+      }
+
+      .product-price {
+        color:
+          var(--leo-white);
+
+        font-size:
+          1.3rem;
+
+        font-weight:
+          900;
+      }
+
+      .compare-price {
+        color:
+          var(--leo-muted-2);
+
+        text-decoration:
+          line-through;
+
+        font-size:
+          0.84rem;
+      }
+
+      .member-price-box {
+        margin-top:
+          10px;
+
+        padding:
+          10px 12px;
+
+        border-radius:
+          13px;
+
+        border:
+          1px solid
+          rgba(
+            94,
+            242,
+            138,
+            0.16
+          );
+
+        background:
+          rgba(
+            94,
+            242,
+            138,
+            0.07
+          );
+      }
+
+      .member-price-box span {
+        color:
+          rgba(
+            203,
+            255,
+            218,
+            0.72
+          );
+
+        font-size:
+          0.72rem;
+
+        font-weight:
+          700;
+      }
+
+      .member-price-box strong {
+        margin-left:
+          5px;
+
+        color:
+          var(--leo-green);
+
+        font-size:
+          1rem;
+      }
+
+      .product-actions {
+        display:
+          grid;
+
+        grid-template-columns:
+          1fr 1fr;
+
+        gap:
+          9px;
+
+        margin-top:
+          18px;
+      }
+
+      .product-button {
+        min-height:
+          44px;
+
+        border-radius:
+          13px;
+
+        border:
+          1px solid
+          var(--leo-line);
+
+        display:
+          inline-flex;
+
+        justify-content:
+          center;
+
+        align-items:
+          center;
+
+        padding:
+          0 12px;
+
+        font-size:
+          0.8rem;
+
+        font-weight:
+          900;
+      }
+
+      .product-button.view {
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.04
+          );
+
+        color:
+          var(--leo-white);
+      }
+
+      .product-button.cart {
+        border-color:
+          transparent;
+
+        background:
+          linear-gradient(
+            135deg,
+            #f7d98b,
+            #b87912
+          );
+
+        color:
+          #070707;
+      }
+
+      .product-button:disabled {
+        opacity:
+          0.45;
+
+        cursor:
+          not-allowed;
+      }
+
+      /* ================================================================
+         STATE BOXES
+      ================================================================ */
+
+      .state-box {
+        grid-column:
+          1 / -1;
+
+        padding:
+          40px 20px;
+
+        border-radius:
+          22px;
+
+        border:
+          1px dashed
+          rgba(
+            231,
+            182,
+            79,
+            0.22
+          );
+
+        background:
+          rgba(
+            255,
+            255,
+            255,
+            0.025
+          );
+
+        text-align:
+          center;
+
+        color:
+          var(--leo-muted);
+
+        line-height:
+          1.6;
+      }
+
+      .state-box strong {
+        display:
+          block;
+
+        margin-bottom:
+          7px;
+
+        color:
+          var(--leo-gold-2);
+
+        font-size:
+          1.05rem;
+      }
+
+      /* ================================================================
+         COLLECTIONS
+      ================================================================ */
+
+      .collections-section {
+        padding:
+          0 0 90px;
+      }
+
+      .collections-grid {
+        display:
+          grid;
+
+        grid-template-columns:
+          repeat(
+            4,
+            1fr
+          );
+
+        gap:
+          14px;
+      }
+
+      .collection-card {
+        min-height:
+          170px;
+
+        padding:
+          20px;
+
+        border-radius:
+          22px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.16
+          );
+
+        background:
+          radial-gradient(
+            circle at top right,
+            rgba(
+              231,
+              182,
+              79,
+              0.1
+            ),
+            transparent 37%
+          ),
+          rgba(
+            255,
+            255,
+            255,
+            0.03
+          );
+
+        display:
+          flex;
+
+        flex-direction:
+          column;
+
+        justify-content:
+          flex-end;
+
+        transition:
+          0.2s ease;
+      }
+
+      .collection-card:hover {
+        transform:
+          translateY(
+            -3px
+          );
+
+        border-color:
+          rgba(
+            231,
+            182,
+            79,
+            0.33
+          );
+      }
+
+      .collection-icon {
+        margin-bottom:
+          auto;
+
+        font-size:
+          1.5rem;
+      }
+
+      .collection-card strong {
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          1.2rem;
+      }
+
+      .collection-card span {
+        margin-top:
+          6px;
+
+        color:
+          var(--leo-muted);
+
+        font-size:
+          0.8rem;
+
+        line-height:
+          1.45;
+      }
+
+      /* ================================================================
+         CTA
+      ================================================================ */
+
+      .member-cta {
+        padding:
+          0 0 90px;
+      }
+
+      .member-cta-card {
+        padding:
+          34px;
+
+        border-radius:
+          28px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.23
+          );
+
+        background:
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(
+              231,
+              182,
+              79,
+              0.13
+            ),
+            transparent 35%
+          ),
+          linear-gradient(
+            145deg,
+            #0b0b0b,
+            #030303
+          );
+
+        display:
+          flex;
+
+        justify-content:
+          space-between;
+
+        gap:
+          24px;
+
+        align-items:
+          center;
+      }
+
+      .member-cta-card h2 {
+        margin:
+          0;
+
+        font-family:
+          "Playfair Display",
+          serif;
+
+        font-size:
+          clamp(
+            1.8rem,
+            4vw,
+            3rem
+          );
+
+        letter-spacing:
+          -0.045em;
+      }
+
+      .member-cta-card p {
+        max-width:
+          680px;
+
+        margin:
+          11px 0 0;
+
+        color:
+          var(--leo-muted);
+
+        line-height:
+          1.65;
+      }
+
+      /* ================================================================
+         FOOTER
+      ================================================================ */
+
+      footer {
+        border-top:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.13
+          );
+
+        padding:
+          28px 0 36px;
+
+        color:
+          var(--leo-muted-2);
+
+        font-size:
+          0.78rem;
+      }
+
+      .footer-wrap {
+        display:
+          flex;
+
+        justify-content:
+          space-between;
+
+        gap:
+          20px;
+
+        flex-wrap:
+          wrap;
+      }
+
+      /* ================================================================
+         TOAST
+      ================================================================ */
+
+      .toast {
+        position:
+          fixed;
+
+        right:
+          20px;
+
+        bottom:
+          20px;
+
+        z-index:
+          200;
+
+        max-width:
+          340px;
+
+        padding:
+          14px 16px;
+
+        border-radius:
+          16px;
+
+        border:
+          1px solid
+          rgba(
+            231,
+            182,
+            79,
+            0.25
+          );
+
+        background:
+          #0b0b0b;
+
+        color:
+          var(--leo-white);
+
+        box-shadow:
+          0 22px 60px
+          rgba(
+            0,
+            0,
+            0,
+            0.58
+          );
+
+        opacity:
+          0;
+
+        pointer-events:
+          none;
+
+        transform:
+          translateY(
+            12px
+          );
+
+        transition:
+          0.2s ease;
+      }
+
+      .toast.show {
+        opacity:
+          1;
+
+        transform:
+          translateY(
+            0
+          );
+      }
+
+      /* ================================================================
+         RESPONSIVE
+      ================================================================ */
+
+      @media (
+        max-width:
+          1020px
+      ) {
+        .desktop-nav {
+          display:
+            none;
+        }
+
+        .menu-button {
+          display:
+            inline-grid;
+
+          place-items:
+            center;
+        }
+
+        .hero-grid {
+          grid-template-columns:
+            1fr;
+        }
+
+        .feature-visual {
+          min-height:
+            390px;
+        }
+
+        .shop-benefits-grid,
+        .collections-grid {
+          grid-template-columns:
+            repeat(
+              2,
+              1fr
+            );
+        }
+
+        .products-grid {
+          grid-template-columns:
+            repeat(
+              2,
+              minmax(
+                0,
+                1fr
+              )
+            );
+        }
+      }
+
+      @media (
+        max-width:
+          680px
+      ) {
+        .container {
+          width:
+            min(
+              100% - 22px,
+              1240px
+            );
+        }
+
+        .hero {
+          padding:
+            62px 0 38px;
+        }
+
+        .hero h1 {
+          font-size:
+            clamp(
+              2.8rem,
+              15vw,
+              4.5rem
+            );
+        }
+
+        .shop-benefits-grid,
+        .collections-grid,
+        .products-grid {
+          grid-template-columns:
+            1fr;
+        }
+
+        .shop-toolbar {
+          grid-template-columns:
+            1fr;
+        }
+
+        .category-filter {
+          width:
+            100%;
+        }
+
+        .section-heading {
+          align-items:
+            flex-start;
+
+          flex-direction:
+            column;
+        }
+
+        .member-cta-card {
+          padding:
+            24px;
+
+          flex-direction:
+            column;
+
+          align-items:
+            flex-start;
+        }
+
+        .product-actions {
+          grid-template-columns:
+            1fr;
+        }
+
+        .feature-caption {
+          flex-direction:
+            column;
+
+          align-items:
+            flex-start;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ================================================================
+         HEADER
+    ================================================================= -->
+
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a
+          class="brand"
+          href="/"
+        >
+          <div class="brand-mark">
+            CL
+          </div>
+
+          <div class="brand-copy">
+            <strong>
+              Card Leo Rewards
+            </strong>
+
+            <span>
+              The Card Leo Shop
+            </span>
+          </div>
+        </a>
+
+        <nav class="desktop-nav">
+          <a href="/">
+            Home
+          </a>
+
+          <a href="/portal/benefits.html">
+            Benefits
+          </a>
+
+          <a
+            class="active"
+            href="/shop.html"
+          >
+            Shop
+          </a>
+
+          <a href="/login.html">
+            Member Login
+          </a>
+
+          <a
+            class="cart-link"
+            href="/cart.html"
+          >
+            Cart
+
+            <span
+              class="cart-count"
+              id="cartCount"
+            >
+              0
+            </span>
+          </a>
+        </nav>
+
+        <button
+          type="button"
+          class="menu-button"
+          id="menuButton"
+          aria-label="Open navigation"
+          aria-expanded="false"
+        >
+          ☰
+        </button>
+      </div>
+    </header>
+
+    <!-- ================================================================
+         MOBILE NAVIGATION
+    ================================================================= -->
+
+    <div
+      class="mobile-menu-backdrop"
+      id="mobileMenuBackdrop"
+    ></div>
+
+    <aside
+      class="mobile-menu"
+      id="mobileMenu"
+    >
+      <div class="mobile-menu-header">
+        <strong>
+          Card Leo Shop
+        </strong>
+
+        <button
+          type="button"
+          class="mobile-menu-close"
+          id="mobileMenuClose"
+        >
+          ✕
+        </button>
+      </div>
+
+      <nav class="mobile-nav">
+        <a href="/">
+          Home
+        </a>
+
+        <a href="/portal/benefits.html">
+          Benefits
+        </a>
+
+        <a href="/shop.html">
+          Shop
+        </a>
+
+        <a href="/login.html">
+          Member Login
+        </a>
+
+        <a href="/cart.html">
+          Cart
+          (<span id="mobileCartCount">0</span>)
+        </a>
+      </nav>
+    </aside>
+
+    <main>
+      <!-- ==============================================================
+           HERO
+      ============================================================== -->
+
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <div class="eyebrow">
+              Card Leo Collection
+            </div>
+
+            <h1>
+              Wear It.
+              <br />
+
+              Live It.
+              <br />
+
+              <span>
+                Lead It.
+              </span>
+            </h1>
+
+            <p>
+              Discover the Card Leo collection — premium fragrance,
+              apparel, accessories, and limited-edition merchandise
+              built around the Card Leo lifestyle.
+            </p>
+
+            <div class="hero-actions">
+              <a
+                class="btn btn-primary"
+                href="#shop"
+              >
+                Shop The Collection
+              </a>
+
+              <a
+                class="btn btn-secondary"
+                href="/login.html"
+              >
+                Member Login
+              </a>
+            </div>
+          </div>
+
+          <div class="feature-visual">
+            <div class="feature-bottle">
+              <div class="bottle-label">
+                <strong>
+                  CARD LEO
+                </strong>
+
+                <span>
+                  Signature
+                </span>
+              </div>
+            </div>
+
+            <div class="feature-caption">
+              <div>
+                <strong>
+                  Card Leo Signature Cologne
+                </strong>
+
+                <span>
+                  Premium fragrance collection
+                </span>
+              </div>
+
+              <div class="feature-caption-price">
+                $89.99
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           SHOP BENEFITS
+      ============================================================== -->
+
+      <section class="shop-benefits">
+        <div class="container shop-benefits-grid">
+          <div class="shop-benefit">
+            <strong>
+              Member Pricing
+            </strong>
+
+            <span>
+              Eligible Card Leo members can receive exclusive pricing
+              on selected products.
+            </span>
+          </div>
+
+          <div class="shop-benefit">
+            <strong>
+              Secure Checkout
+            </strong>
+
+            <span>
+              Shop payments will be processed securely through Stripe.
+            </span>
+          </div>
+
+          <div class="shop-benefit">
+            <strong>
+              Premium Products
+            </strong>
+
+            <span>
+              Curated Card Leo fragrance, apparel, accessories,
+              and limited drops.
+            </span>
+          </div>
+
+          <div class="shop-benefit">
+            <strong>
+              Order Tracking
+            </strong>
+
+            <span>
+              Shop purchases are tracked separately from Card Leo
+              membership billing.
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           SHOP
+      ============================================================== -->
+
+      <section
+        class="shop-section"
+        id="shop"
+      >
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">
+                Shop
+              </div>
+
+              <h2>
+                The Card Leo Collection
+              </h2>
+
+              <p>
+                Shop fragrance, apparel, accessories, and limited
+                Card Leo releases.
+              </p>
+            </div>
+          </div>
+
+          <!-- ==========================================================
+               FILTERS
+          ========================================================== -->
+
+          <div class="shop-toolbar">
+            <div class="search-box">
+              <input
+                type="search"
+                id="searchInput"
+                placeholder="Search Card Leo products..."
+                autocomplete="off"
+              />
+            </div>
+
+            <select
+              class="category-filter"
+              id="categoryFilter"
+            >
+              <option value="all">
+                All Products
+              </option>
+
+              <option value="fragrance">
+                Fragrance
+              </option>
+
+              <option value="apparel">
+                Apparel
+              </option>
+
+              <option value="accessories">
+                Accessories
+              </option>
+
+              <option value="limited">
+                Limited Editions
+              </option>
+            </select>
+          </div>
+
+          <!-- ==========================================================
+               PRODUCTS
+          ========================================================== -->
+
+          <div
+            class="products-grid"
+            id="productsGrid"
+          >
+            <div class="state-box">
+              <strong>
+                Loading The Card Leo Collection
+              </strong>
+
+              Preparing products...
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           COLLECTIONS
+      ============================================================== -->
+
+      <section class="collections-section">
+        <div class="container">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">
+                Collections
+              </div>
+
+              <h2>
+                Shop By Collection
+              </h2>
+            </div>
+          </div>
+
+          <div class="collections-grid">
+            <a
+              href="#shop"
+              class="collection-card"
+              data-category-link="fragrance"
+            >
+              <div class="collection-icon">
+                ◈
+              </div>
+
+              <strong>
+                Fragrance
+              </strong>
+
+              <span>
+                Signature Card Leo cologne and future premium scents.
+              </span>
+            </a>
+
+            <a
+              href="#shop"
+              class="collection-card"
+              data-category-link="apparel"
+            >
+              <div class="collection-icon">
+                ◇
+              </div>
+
+              <strong>
+                Apparel
+              </strong>
+
+              <span>
+                Shirts, hoodies, jackets, and Card Leo clothing.
+              </span>
+            </a>
+
+            <a
+              href="#shop"
+              class="collection-card"
+              data-category-link="accessories"
+            >
+              <div class="collection-icon">
+                ◆
+              </div>
+
+              <strong>
+                Accessories
+              </strong>
+
+              <span>
+                Hats and future Card Leo lifestyle accessories.
+              </span>
+            </a>
+
+            <a
+              href="#shop"
+              class="collection-card"
+              data-category-link="limited"
+            >
+              <div class="collection-icon">
+                ★
+              </div>
+
+              <strong>
+                Limited Editions
+              </strong>
+
+              <span>
+                Exclusive Card Leo products available for limited runs.
+              </span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           MEMBER CTA
+      ============================================================== -->
+
+      <section class="member-cta">
+        <div class="container">
+          <div class="member-cta-card">
+            <div>
+              <h2>
+                Card Leo Member Pricing
+              </h2>
+
+              <p>
+                Card Leo members may qualify for exclusive shop pricing.
+                Sign in before checkout so Card Leo can verify your
+                membership securely.
+              </p>
+            </div>
+
+            <a
+              href="/login.html"
+              class="btn btn-primary"
+            >
+              Member Login
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ================================================================
+         FOOTER
+    ================================================================= -->
+
+    <footer>
+      <div class="container footer-wrap">
+        <span>
+          © Card Leo Rewards
+        </span>
+
+        <span>
+          Merchandise purchases are separate from Card Leo membership.
+        </span>
+      </div>
+    </footer>
+
+    <!-- ================================================================
+         TOAST
+    ================================================================= -->
+
+    <div
+      class="toast"
+      id="toast"
+      role="status"
+      aria-live="polite"
+    ></div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        /* ==============================================================
+           API
+        ============================================================== */
+
+        const PRODUCTS_API =
+          "/api/shop/products";
+
+        /* ==============================================================
+           ELEMENTS
+        ============================================================== */
+
+        const els = {
+          productsGrid:
+            document.getElementById(
+              "productsGrid"
+            ),
+
+          searchInput:
+            document.getElementById(
+              "searchInput"
+            ),
+
+          categoryFilter:
+            document.getElementById(
+              "categoryFilter"
+            ),
+
+          cartCount:
+            document.getElementById(
+              "cartCount"
+            ),
+
+          mobileCartCount:
+            document.getElementById(
+              "mobileCartCount"
+            ),
+
+          menuButton:
+            document.getElementById(
+              "menuButton"
+            ),
+
+          mobileMenu:
+            document.getElementById(
+              "mobileMenu"
+            ),
+
+          mobileMenuClose:
+            document.getElementById(
+              "mobileMenuClose"
+            ),
+
+          mobileMenuBackdrop:
+            document.getElementById(
+              "mobileMenuBackdrop"
+            ),
+
+          toast:
+            document.getElementById(
+              "toast"
+            ),
+        };
+
+        /* ==============================================================
+           STATE
+        ============================================================== */
+
+        let products =
+          [];
+
+        let filteredProducts =
+          [];
+
+        /* ==============================================================
+           FALLBACK PRODUCTS
+
+           Temporary fallback until #7 /api/shop/products.js is live.
+        ============================================================== */
+
+        const fallbackProducts = [
+          {
+            id:
+              "fallback-cologne",
+
+            name:
+              "Card Leo Signature Cologne",
+
+            slug:
+              "card-leo-signature-cologne",
+
+            short_description:
+              "Premium Card Leo signature fragrance.",
+
+            category:
+              "fragrance",
+
+            product_type:
+              "fragrance",
+
+            price_cents:
+              8999,
+
+            member_price_cents:
+              6999,
+
+            compare_at_price_cents:
+              9999,
+
+            currency:
+              "USD",
+
+            image_url:
+              "",
+
+            is_active:
+              true,
+
+            is_featured:
+              true,
+
+            is_new:
+              true,
+
+            is_limited_edition:
+              false,
+
+            inventory_quantity:
+              100,
+          },
+
+          {
+            id:
+              "fallback-shirt",
+
+            name:
+              "Card Leo Signature T-Shirt",
+
+            slug:
+              "card-leo-signature-t-shirt",
+
+            short_description:
+              "Premium Card Leo signature shirt.",
+
+            category:
+              "apparel",
+
+            product_type:
+              "apparel",
+
+            price_cents:
+              4999,
+
+            member_price_cents:
+              3999,
+
+            compare_at_price_cents:
+              5999,
+
+            currency:
+              "USD",
+
+            image_url:
+              "",
+
+            is_active:
+              true,
+
+            is_featured:
+              true,
+
+            is_new:
+              true,
+
+            is_limited_edition:
+              false,
+
+            inventory_quantity:
+              100,
+          },
+        ];
+
+        /* ==============================================================
+           HELPERS
+        ============================================================== */
+
+        function normalizeText(
+          value
+        ) {
+          return String(
+            value ?? ""
+          ).trim();
+        }
+
+        function normalizeLower(
+          value
+        ) {
+          return normalizeText(
+            value
+          ).toLowerCase();
+        }
+
+        function centsToMoney(
+          cents
+        ) {
+          const number =
+            Number(
+              cents ||
+              0
+            );
+
+          const dollars =
+            Number.isFinite(
+              number
+            )
+              ? number / 100
+              : 0;
+
+          return new Intl.NumberFormat(
+            "en-US",
+            {
+              style:
+                "currency",
+
+              currency:
+                "USD",
+            }
+          ).format(
+            dollars
+          );
+        }
+
+        function escapeHtml(
+          value
+        ) {
+          return String(
+            value ?? ""
+          )
+            .replaceAll(
+              "&",
+              "&amp;"
+            )
+            .replaceAll(
+              "<",
+              "&lt;"
+            )
+            .replaceAll(
+              ">",
+              "&gt;"
+            )
+            .replaceAll(
+              '"',
+              "&quot;"
+            )
+            .replaceAll(
+              "'",
+              "&#39;"
+            );
+        }
+
+        function titleCase(
+          value
+        ) {
+          return normalizeText(
+            value
+          )
+            .replace(
+              /[_-]+/g,
+              " "
+            )
+            .split(
+              /\s+/
+            )
+            .filter(
+              Boolean
+            )
+            .map(
+              (word) =>
+                word
+                  .charAt(0)
+                  .toUpperCase() +
+                word
+                  .slice(1)
+                  .toLowerCase()
+            )
+            .join(" ");
+        }
+
+        /* ==============================================================
+           TOAST
+        ============================================================== */
+
+        let toastTimer =
+          null;
+
+        function showToast(
+          message
+        ) {
+          if (
+            !els.toast
+          ) {
+            return;
+          }
+
+          els.toast.textContent =
+            message;
+
+          els.toast.classList.add(
+            "show"
+          );
+
+          clearTimeout(
+            toastTimer
+          );
+
+          toastTimer =
+            setTimeout(
+              () => {
+                els.toast
+                  ?.classList
+                  .remove(
+                    "show"
+                  );
+              },
+              2600
+            );
+        }
+
+        /* ==============================================================
+           CART
+        ============================================================== */
+
+        function getCart() {
+          try {
+            const raw =
+              localStorage.getItem(
+                "cardleo_shop_cart"
+              );
+
+            const parsed =
+              raw
+                ? JSON.parse(
+                    raw
+                  )
+                : [];
+
+            return Array.isArray(
+              parsed
+            )
+              ? parsed
+              : [];
+          } catch {
+            return [];
+          }
+        }
+
+        function saveCart(
+          cart
+        ) {
+          localStorage.setItem(
+            "cardleo_shop_cart",
+            JSON.stringify(
+              cart
+            )
+          );
+
+          updateCartCount();
+        }
+
+        function updateCartCount() {
+          const cart =
+            getCart();
+
+          const count =
+            cart.reduce(
+              (
+                total,
+                item
+              ) =>
+                total +
+                Number(
+                  item.quantity ||
+                  1
+                ),
+              0
+            );
+
+          if (
+            els.cartCount
+          ) {
+            els.cartCount.textContent =
+              String(
+                count
+              );
+          }
+
+          if (
+            els.mobileCartCount
+          ) {
+            els.mobileCartCount.textContent =
+              String(
+                count
+              );
+          }
+        }
+
+        function addToCart(
+          productId
+        ) {
+          const product =
+            products.find(
+              (item) =>
+                String(
+                  item.id
+                ) ===
+                String(
+                  productId
+                )
+            );
+
+          if (!product) {
+            showToast(
+              "Product could not be added."
+            );
+
+            return;
+          }
+
+          if (
+            Number(
+              product
+                .inventory_quantity ??
+              1
+            ) <= 0
+          ) {
+            showToast(
+              "This product is currently sold out."
+            );
+
+            return;
+          }
+
+          const cart =
+            getCart();
+
+          const existing =
+            cart.find(
+              (item) =>
+                String(
+                  item.productId
+                ) ===
+                String(
+                  product.id
+                )
+            );
+
+          if (existing) {
+            existing.quantity =
+              Number(
+                existing.quantity ||
+                1
+              ) +
+              1;
+          } else {
+            cart.push({
+              productId:
+                product.id,
+
+              slug:
+                product.slug,
+
+              quantity:
+                1,
+            });
+          }
+
+          saveCart(
+            cart
+          );
+
+          showToast(
+            `${product.name} added to cart.`
+          );
+        }
+
+        /* ==============================================================
+           PRODUCT NORMALIZER
+        ============================================================== */
+
+        function normalizeProduct(
+          product
+        ) {
+          return {
+            id:
+              product.id,
+
+            name:
+              normalizeText(
+                product.name
+              ),
+
+            slug:
+              normalizeText(
+                product.slug
+              ),
+
+            short_description:
+              normalizeText(
+                product
+                  .short_description ||
+                product.description
+              ),
+
+            category:
+              normalizeLower(
+                product.category ||
+                "merchandise"
+              ),
+
+            product_type:
+              normalizeLower(
+                product
+                  .product_type ||
+                "physical"
+              ),
+
+            price_cents:
+              Number(
+                product
+                  .price_cents ||
+                0
+              ),
+
+            member_price_cents:
+              product
+                .member_price_cents ===
+                null ||
+              product
+                .member_price_cents ===
+                undefined
+                ? null
+                : Number(
+                    product
+                      .member_price_cents
+                  ),
+
+            compare_at_price_cents:
+              product
+                .compare_at_price_cents ===
+                null ||
+              product
+                .compare_at_price_cents ===
+                undefined
+                ? null
+                : Number(
+                    product
+                      .compare_at_price_cents
+                  ),
+
+            currency:
+              normalizeText(
+                product.currency ||
+                "USD"
+              ),
+
+            image_url:
+              normalizeText(
+                product.image_url
+              ),
+
+            is_active:
+              product.is_active !==
+              false,
+
+            is_featured:
+              Boolean(
+                product.is_featured
+              ),
+
+            is_new:
+              Boolean(
+                product.is_new
+              ),
+
+            is_limited_edition:
+              Boolean(
+                product
+                  .is_limited_edition
+              ),
+
+            inventory_quantity:
+              Number(
+                product
+                  .inventory_quantity ??
+                0
+              ),
+          };
+        }
+
+        /* ==============================================================
+           PRODUCT CARD
+        ============================================================== */
+
+        function productCardHtml(
+          product
+        ) {
+          const soldOut =
+            product.inventory_quantity <=
+            0;
+
+          const badges =
+            [];
+
+          if (
+            product.is_new
+          ) {
+            badges.push(
+              "New"
+            );
+          }
+
+          if (
+            product
+              .is_limited_edition
+          ) {
+            badges.push(
+              "Limited"
+            );
+          }
+
+          if (
+            product.is_featured
+          ) {
+            badges.push(
+              "Featured"
+            );
+          }
+
+          const imageHtml =
+            product.image_url
+              ? `
+                  <img
+                    src="${escapeHtml(
+                      product.image_url
+                    )}"
+                    alt="${escapeHtml(
+                      product.name
+                    )}"
+                    loading="lazy"
+                  />
+                `
+              : `
+                  <div class="product-placeholder">
+                    <div>
+                      <strong>
+                        CARD LEO
+                      </strong>
+
+                      <span>
+                        ${escapeHtml(
+                          titleCase(
+                            product.category
+                          )
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                `;
+
+          const comparePrice =
+            Number(
+              product
+                .compare_at_price_cents ||
+              0
+            );
+
+          const memberPrice =
+            Number(
+              product
+                .member_price_cents ||
+              0
+            );
+
+          return `
+            <article class="product-card">
+
+              <div class="product-image-wrap">
+
+                ${imageHtml}
+
+                <div class="product-badges">
+
+                  ${badges
+                    .map(
+                      (badge) => `
+                        <span class="product-badge">
+                          ${escapeHtml(
+                            badge
+                          )}
+                        </span>
+                      `
+                    )
+                    .join("")}
+
+                  ${
+                    soldOut
+                      ? `
+                          <span class="product-badge">
+                            Sold Out
+                          </span>
+                        `
+                      : ""
+                  }
+
+                </div>
+
+              </div>
+
+              <div class="product-body">
+
+                <div class="product-category">
+                  ${escapeHtml(
+                    titleCase(
+                      product.category
+                    )
+                  )}
+                </div>
+
+                <h3 class="product-title">
+                  ${escapeHtml(
+                    product.name
+                  )}
+                </h3>
+
+                <p class="product-description">
+                  ${escapeHtml(
+                    product
+                      .short_description ||
+                    "Premium Card Leo product."
+                  )}
+                </p>
+
+                <div class="product-price-wrap">
+
+                  <span class="product-price">
+                    ${escapeHtml(
+                      centsToMoney(
+                        product.price_cents
+                      )
+                    )}
+                  </span>
+
+                  ${
+                    comparePrice >
+                    product.price_cents
+                      ? `
+                          <span class="compare-price">
+                            ${escapeHtml(
+                              centsToMoney(
+                                comparePrice
+                              )
+                            )}
+                          </span>
+                        `
+                      : ""
+                  }
+
+                </div>
+
+                ${
+                  memberPrice > 0 &&
+                  memberPrice <
+                    product.price_cents
+                    ? `
+                        <div class="member-price-box">
+                          <span>
+                            Card Leo Member:
+                          </span>
+
+                          <strong>
+                            ${escapeHtml(
+                              centsToMoney(
+                                memberPrice
+                              )
+                            )}
+                          </strong>
+                        </div>
+                      `
+                    : ""
+                }
+
+                <div class="product-actions">
+
+                  <a
+                    class="product-button view"
+                    href="/product.html?slug=${encodeURIComponent(
+                      product.slug
+                    )}"
+                  >
+                    View Product
+                  </a>
+
+                  <button
+                    type="button"
+                    class="product-button cart"
+                    data-add-to-cart="${escapeHtml(
+                      product.id
+                    )}"
+                    ${
+                      soldOut
+                        ? "disabled"
+                        : ""
+                    }
+                  >
+                    ${
+                      soldOut
+                        ? "Sold Out"
+                        : "Add To Cart"
+                    }
+                  </button>
+
+                </div>
+
+              </div>
+
+            </article>
+          `;
+        }
+
+        /* ==============================================================
+           RENDER PRODUCTS
+        ============================================================== */
+
+        function renderProducts() {
+          if (
+            !filteredProducts.length
+          ) {
+            els.productsGrid.innerHTML = `
+              <div class="state-box">
+                <strong>
+                  No Products Found
+                </strong>
+
+                Try another search or category.
+              </div>
+            `;
+
+            return;
+          }
+
+          els.productsGrid.innerHTML =
+            filteredProducts
+              .map(
+                productCardHtml
+              )
+              .join("");
+
+          els.productsGrid
+            .querySelectorAll(
+              "[data-add-to-cart]"
+            )
+            .forEach(
+              (button) => {
+                button.addEventListener(
+                  "click",
+                  () => {
+                    addToCart(
+                      button.dataset
+                        .addToCart
+                    );
+                  }
+                );
+              }
+            );
+        }
+
+        /* ==============================================================
+           FILTER PRODUCTS
+        ============================================================== */
+
+        function applyFilters() {
+          const search =
+            normalizeLower(
+              els.searchInput
+                ?.value
+            );
+
+          const category =
+            normalizeLower(
+              els.categoryFilter
+                ?.value ||
+              "all"
+            );
+
+          filteredProducts =
+            products.filter(
+              (product) => {
+                const matchesSearch =
+                  !search ||
+                  [
+                    product.name,
+                    product
+                      .short_description,
+                    product.category,
+                    product
+                      .product_type,
+                  ]
+                    .join(" ")
+                    .toLowerCase()
+                    .includes(
+                      search
+                    );
+
+                let matchesCategory =
+                  category ===
+                  "all";
+
+                if (
+                  category ===
+                  "limited"
+                ) {
+                  matchesCategory =
+                    product
+                      .is_limited_edition;
+                } else if (
+                  category !==
+                  "all"
+                ) {
+                  matchesCategory =
+                    product.category ===
+                      category ||
+                    product
+                      .product_type ===
+                      category;
+                }
+
+                return (
+                  matchesSearch &&
+                  matchesCategory
+                );
+              }
+            );
+
+          renderProducts();
+        }
+
+        /* ==============================================================
+           LOAD PRODUCTS
+        ============================================================== */
+
+        async function loadProducts() {
+          try {
+            const response =
+              await fetch(
+                PRODUCTS_API,
+                {
+                  method:
+                    "GET",
+
+                  headers: {
+                    Accept:
+                      "application/json",
+                  },
+
+                  cache:
+                    "no-store",
+                }
+              );
+
+            const payload =
+              await response
+                .json()
+                .catch(
+                  () => ({})
+                );
+
+            if (
+              !response.ok
+            ) {
+              throw new Error(
+                payload?.message ||
+                "Unable to load products."
+              );
+            }
+
+            const rows =
+              payload.products ||
+              payload.data?.products ||
+              payload.data ||
+              [];
+
+            if (
+              !Array.isArray(
+                rows
+              )
+            ) {
+              throw new Error(
+                "Product response was invalid."
+              );
+            }
+
+            products =
+              rows
+                .map(
+                  normalizeProduct
+                )
+                .filter(
+                  (product) =>
+                    product
+                      .is_active
+                );
+
+            if (
+              !products.length
+            ) {
+              products =
+                fallbackProducts.map(
+                  normalizeProduct
+                );
+            }
+
+            filteredProducts =
+              [
+                ...products,
+              ];
+
+            renderProducts();
+          } catch (
+            error
+          ) {
+            console.warn(
+              "Card Leo Shop API unavailable:",
+              error
+            );
+
+            products =
+              fallbackProducts.map(
+                normalizeProduct
+              );
+
+            filteredProducts =
+              [
+                ...products,
+              ];
+
+            renderProducts();
+          }
+        }
+
+        /* ==============================================================
+           EVENTS
+        ============================================================== */
+
+        els.searchInput
+          ?.addEventListener(
+            "input",
+            applyFilters
+          );
+
+        els.categoryFilter
+          ?.addEventListener(
+            "change",
+            applyFilters
+          );
+
+        document
+          .querySelectorAll(
+            "[data-category-link]"
+          )
+          .forEach(
+            (link) => {
+              link.addEventListener(
+                "click",
+                () => {
+                  const category =
+                    link.dataset
+                      .categoryLink ||
+                    "all";
+
+                  if (
+                    els.categoryFilter
+                  ) {
+                    els.categoryFilter.value =
+                      category;
+                  }
+
+                  applyFilters();
+                }
+              );
+            }
+          );
+
+        /* ==============================================================
+           MOBILE MENU
+        ============================================================== */
+
+        function openMenu() {
+          els.mobileMenu
+            ?.classList
+            .add(
+              "show"
+            );
+
+          els.mobileMenuBackdrop
+            ?.classList
+            .add(
+              "show"
+            );
+
+          els.menuButton
+            ?.setAttribute(
+              "aria-expanded",
+              "true"
+            );
+
+          document.body.classList.add(
+            "menu-open"
+          );
+        }
+
+        function closeMenu() {
+          els.mobileMenu
+            ?.classList
+            .remove(
+              "show"
+            );
+
+          els.mobileMenuBackdrop
+            ?.classList
+            .remove(
+              "show"
+            );
+
+          els.menuButton
+            ?.setAttribute(
+              "aria-expanded",
+              "false"
+            );
+
+          document.body.classList.remove(
+            "menu-open"
+          );
+        }
+
+        els.menuButton
+          ?.addEventListener(
+            "click",
+            openMenu
+          );
+
+        els.mobileMenuClose
+          ?.addEventListener(
+            "click",
+            closeMenu
+          );
+
+        els.mobileMenuBackdrop
+          ?.addEventListener(
+            "click",
+            closeMenu
+          );
+
+        document.addEventListener(
+          "keydown",
+          (event) => {
+            if (
+              event.key ===
+              "Escape"
+            ) {
+              closeMenu();
+            }
+          }
+        );
+
+        /* ==============================================================
+           START
+        ============================================================== */
+
+        updateCartCount();
+
+        loadProducts();
+      })();
+    </script>
+  </body>
+</html>

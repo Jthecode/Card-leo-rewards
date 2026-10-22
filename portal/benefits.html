@@ -2537,6 +2537,19 @@
                 Clear
               </button>
             </div>
+            <div style="margin-top:14px">
+              <label for="postalCodeInput" class="detail-label">
+                ZIP / Postal Code For Nearby Offers
+              </label>
+              <input
+                class="input"
+                id="postalCodeInput"
+                type="text"
+                autocomplete="postal-code"
+                placeholder="Enter ZIP / postal code, then select Search"
+                maxlength="20"
+              />
+            </div>
           </article>
         </section>
 
@@ -2602,6 +2615,13 @@
               </div>
 
               <div class="catalog-actions">
+                <a
+                  class="button button-primary"
+                  href="/api/access/sso"
+                  id="openAccessPerksButton"
+                >
+                  Open Access Perks
+                </a>
                 <button
                   class="button button-secondary"
                   id="showAllButton"
@@ -2800,6 +2820,12 @@
           accessOffers:
             "/api/access/offers",
 
+          accessOffer:
+            "/api/access/offer",
+
+          accessSso:
+            "/api/access/sso",
+
           redeemOffer:
             "/api/access/redeem-offer",
 
@@ -2853,6 +2879,12 @@
 
           claiming:
             false,
+
+          postalCode:
+            "",
+
+          detailRequestId:
+            0,
         };
 
         /* ================================================================
@@ -3437,7 +3469,7 @@
                 member.last_name,
             ]
               .map(
-                normalizeText
+                (value) => normalizeText(value)
               )
               .filter(Boolean)
               .join(" ") ||
@@ -3637,7 +3669,7 @@
               catalog.loaded
             ) {
               els.accessStatusCopy.textContent =
-                "Your Access Perks membership is active and your complete benefit catalog is available.";
+                "Your Access Perks membership is active and the retrieved benefit offers are available.";
             } else if (
               ready
             ) {
@@ -3697,20 +3729,15 @@
            OFFER HELPERS
         ================================================================= */
 
-        function getOfferId(
-          offer
-        ) {
+        function getOfferId(offer) {
           return normalizeText(
-            offer
-              ?.accessOfferId ||
-            offer
-              ?.access_offer_id ||
-            offer
-              ?.offerId ||
-            offer
-              ?.offer_id ||
-            offer
-              ?.id
+            offer?.offer_key ||
+            offer?.offerKey ||
+            offer?.accessOfferId ||
+            offer?.access_offer_id ||
+            offer?.offerId ||
+            offer?.offer_id ||
+            offer?.id
           );
         }
 
@@ -3723,19 +3750,13 @@
           );
         }
 
-        function getMerchantName(
-          offer
-        ) {
-          return (
-            normalizeText(
-              offer
-                ?.merchantName
-            ) ||
-            normalizeText(
-              offer
-                ?.merchant
-                ?.name
-            ) ||
+        function getMerchantName(offer) {
+          return normalizeText(
+            offer?.merchantName ||
+            offer?.storeName ||
+            offer?.store_name ||
+            offer?.merchant?.name ||
+            offer?.store?.name,
             "Card Leo Rewards"
           );
         }
@@ -3766,64 +3787,51 @@
           );
         }
 
-        function getOfferCategory(
-          offer
-        ) {
-          return (
-            normalizeText(
-              offer
-                ?.categoryName
-            ) ||
-            normalizeText(
-              offer
-                ?.category
-                ?.name
-            ) ||
-            normalizeText(
-              offer
-                ?.categories
-                ?.[0]
-                ?.name
-            ) ||
+        function getOfferCategory(offer) {
+          return normalizeText(
+            offer?.categoryName ||
+            (typeof offer?.category === "string"
+              ? offer.category
+              : offer?.category?.name) ||
+            offer?.categories?.[0]?.name,
             "Offers"
           );
         }
 
-        function getOfferImage(
-          offer
-        ) {
-          return normalizeText(
-            offer
-              ?.image ||
-            offer
-              ?.logo ||
-            offer
-              ?.merchant
-              ?.logo
+        function getOfferImage(offer) {
+          const value = normalizeText(
+            offer?.imageUrl ||
+            offer?.image_url ||
+            offer?.image ||
+            offer?.logo ||
+            offer?.merchant?.logoUrl ||
+            offer?.merchant?.logo
           );
-        }
 
-        function getOfferLocation(
-          offer
-        ) {
-          const location =
-            toArray(
-              offer?.locations
-            )[0];
+          if (!value) return "";
 
-          if (!location) {
+          try {
+            const url = new URL(value, window.location.origin);
+            return ["https:", "http:"].includes(url.protocol)
+              ? url.href
+              : "";
+          } catch {
             return "";
           }
+        }
+
+        function getOfferLocation(offer) {
+          const location = toArray(offer?.locations)[0];
+
+          if (!location) return "";
 
           return [
-            location.address1,
-            location.city,
-            location.state,
-            location.postalCode,
+            location.address1 || location.address || location.address_1,
+            location.city || location.city_locality,
+            location.state || location.state_region,
+            location.postalCode || location.postal_code,
           ]
-            .map(
-              normalizeText
-            )
+            .map((value) => normalizeText(value))
             .filter(Boolean)
             .join(", ");
         }
@@ -3898,7 +3906,7 @@
             ),
           ]
             .map(
-              normalizeText
+              (value) => normalizeText(value)
             )
             .join(" ")
             .toLowerCase();
@@ -4341,7 +4349,7 @@
                 `${offers.length} matching benefits from ${state.allOffers.length} loaded offers.`;
             } else {
               els.benefitsSubtitle.textContent =
-                `${state.allOffers.length} Access offers loaded. Browse the complete available catalog.`;
+                `${state.allOffers.length} Access offers loaded. Browse the available offers below.`;
             }
           }
 
@@ -4617,6 +4625,8 @@
 
           state.selectedOffer =
             null;
+
+          state.detailRequestId += 1;
         }
 
         function renderOfferModal(
@@ -4825,30 +4835,72 @@
             );
         }
 
-        async function openOfferModal(
-          offer,
-          autoClaim = false
-        ) {
+        async function openOfferModal(offer, autoClaim = false) {
+          const offerKey = getOfferId(offer);
+          const requestId = ++state.detailRequestId;
+
           openModal();
+          renderOfferModal(offer);
 
-          renderOfferModal(
-            offer
-          );
+          if (!offerKey) {
+            showBanner("This offer is missing its Access offer key.", "error");
+            return;
+          }
 
-          if (
-            autoClaim &&
-            (
-              offer
-                ?.claimable ===
-                true ||
-              offer
-                ?.redeemable ===
-                true
-            )
-          ) {
-            await claimOffer(
-              offer
+          const claimButton = document.getElementById("modalClaimButton");
+          if (claimButton) claimButton.disabled = true;
+
+          const result = document.getElementById("claimResult");
+          if (result) {
+            result.textContent = "Loading the latest offer details...";
+          }
+
+          try {
+            const data = await fetchJson(
+              API.accessOffer + "?offer_key=" + encodeURIComponent(offerKey)
             );
+
+            if (requestId !== state.detailRequestId) return;
+
+            const details = data.offer || data.benefit;
+            if (!isObject(details)) {
+              throw new Error("Access did not return offer details.");
+            }
+
+            const detailedOffer = {
+              ...offer,
+              ...details,
+              // The details endpoint does not itself confirm claim support.
+              claimable: details.claimable ?? offer.claimable,
+              redeemable: details.redeemable ?? offer.redeemable,
+            };
+
+            renderOfferModal(detailedOffer);
+
+            if (
+              autoClaim &&
+              (detailedOffer.claimable === true || detailedOffer.redeemable === true)
+            ) {
+              await claimOffer(detailedOffer);
+            }
+          } catch (error) {
+            if (requestId !== state.detailRequestId) return;
+
+            if (error.status === 401) {
+              window.location.replace(
+                "/login.html?next=" + encodeURIComponent(window.location.pathname)
+              );
+              return;
+            }
+
+            // Keep the original catalog details visible if detail loading fails.
+            const currentResult = document.getElementById("claimResult");
+            if (currentResult) {
+              currentResult.textContent = error.message || "Unable to load updated offer details.";
+            }
+
+            const currentButton = document.getElementById("modalClaimButton");
+            if (currentButton) currentButton.disabled = false;
           }
         }
 
@@ -5273,6 +5325,7 @@
                   body:
                     JSON.stringify({
                       offerId,
+                      offer_key: offerId,
                     }),
                 }
               );
@@ -5280,6 +5333,9 @@
             const redemption =
               data.redemption ||
               {};
+
+            // Ignore a response if the member has switched or closed the modal.
+            if (getOfferId(state.selectedOffer) !== offerId) return;
 
             renderClaimResult(
               redemption
@@ -5290,9 +5346,20 @@
                 "Benefit Ready";
             }
 
+            const usableRedemption = Boolean(
+              redemption.code || redemption.barcode ||
+              redemption.qrCode || redemption.redemptionUrl
+            );
+
+            if (button && !usableRedemption) {
+              button.textContent = "Request Received";
+            }
+
             showBanner(
-              "Your benefit redemption is ready.",
-              "success"
+              usableRedemption
+                ? "Your benefit redemption is ready."
+                : "The request completed, but Access has not returned redemption material yet.",
+              usableRedemption ? "success" : "warning"
             );
           } catch (
             error
@@ -5335,251 +5402,146 @@
         ================================================================= */
 
         async function loadPortalBenefits() {
-          state.loading =
-            true;
+          if (state.loading) return;
 
-          showBanner(
-            "Loading your complete benefits catalog..."
-          );
+          state.loading = true;
+          if (els.refreshButton) els.refreshButton.disabled = true;
+          if (els.searchButton) els.searchButton.disabled = true;
 
-          if (
-            els.benefitsGrid
-          ) {
-            els.benefitsGrid.innerHTML =
-              `
-                <div class="status-state">
-                  <span class="loading">
-                    <span class="loading-dot"></span>
-                    Loading all Access offers...
-                  </span>
-                </div>
-              `;
+          showBanner("Loading your Access benefits catalog...");
+
+          if (els.benefitsGrid) {
+            els.benefitsGrid.innerHTML = `
+              <div class="status-state">
+                <span class="loading">
+                  <span class="loading-dot"></span>
+                  Loading official Access offers...
+                </span>
+              </div>
+            `;
           }
 
           try {
-            /*
-             * #19 already loads the full Access catalog.
-             *
-             * No 32/48-item frontend limit.
-             */
+            const params = new URLSearchParams({
+              mode: "all",
+              page_size: "100",
+            });
 
-            const data =
-              await fetchJson(
-                API.portalBenefits
-              );
+            if (state.postalCode) params.set("postal_code", state.postalCode);
 
-            state.member =
-              data.member ||
-              data.profile ||
-              null;
+            const data = await fetchJson(API.accessOffers + "?" + params.toString());
 
-            state.access =
-              data.access ||
-              data.accessPerks ||
-              {};
+            state.member = data.member || data.profile || null;
 
-            state.accessCatalog =
-              data.accessCatalog ||
-              {};
+            const access = data.access || data.accessPerks || {};
+            const member = state.member || {};
+            state.access = {
+              ...access,
+              member_identifier:
+                access.member_identifier || access.memberIdentifier ||
+                access.member_customer_identifier || member.accessMemberIdentifier ||
+                member.access_member_identifier || "",
+              member_status:
+                access.member_status || access.memberStatus || access.status ||
+                member.accessMemberStatus || member.access_member_status || "",
+              perks_ready:
+                access.perks_ready ?? access.perksReady ?? access.ready ??
+                member.accessPerksReady ?? member.access_perks_ready ?? false,
+            };
 
-            state.redemption =
-              data.redemption ||
-              {};
+            const catalog = data.catalog || data.accessCatalog || {};
 
-            const offers =
-              toArray(
-                data.accessOffers
-              ).length
-                ? toArray(
-                    data.accessOffers
-                  )
-                : toArray(
-                    data
-                      .accessCatalog
-                      ?.offers
-                  ).length
-                  ? toArray(
-                      data
-                        .accessCatalog
-                        ?.offers
-                    )
-                  : toArray(
-                      data.offers
-                    );
+            const offers = [
+              data.offers,
+              data.accessOffers,
+              catalog.offers,
+              data.benefits,
+            ].find(Array.isArray) || [];
 
-            state.allOffers =
-              offers;
+            state.allOffers = offers.filter(isObject);
+            state.accessCatalog = {
+              ...catalog,
+              loaded: true,
+              count: state.allOffers.length,
+              pagesFetched: catalog.pagesFetched || 0,
+            };
 
-            /*
-             * Prefer category counts generated by backend.
-             */
+            // Do not infer redemption availability from successful catalog access.
+            state.redemption = data.redemption || {};
+            state.merchants = toArray(catalog.merchants || data.accessMerchants);
 
-            const backendCategories =
-              toArray(
-                data
-                  .accessCategories
-              ).length
-                ? toArray(
-                    data
-                      .accessCategories
-                  )
-                : toArray(
-                    state
-                      .accessCatalog
-                      ?.categories
-                  );
+            const backendCategories = toArray(
+              data.accessCategories || catalog.categories
+            );
 
-            if (
-              backendCategories.length
-            ) {
-              state.categories =
-                backendCategories.map(
-                  (
-                    category
-                  ) => ({
-                    slug:
-                      normalizeText(
-                        category.slug
-                      ) ||
-                      slugify(
-                        category.name
-                      ),
-
-                    name:
-                      normalizeText(
-                        category.name,
-                        "Other"
-                      ),
-
-                    count:
-                      Number(
-                        category.count ||
-                        0
-                      ),
-                  })
-                );
+            if (backendCategories.length) {
+              state.categories = backendCategories.map((category) => {
+                const name = typeof category === "string"
+                  ? category
+                  : normalizeText(category?.name || category?.title, "Other");
+                return {
+                  slug: normalizeText(category?.slug) || slugify(name),
+                  name,
+                  count: Number(category?.count || 0),
+                };
+              });
             } else {
               buildCategoriesFromOffers();
             }
 
-            state.visibleOffers =
-              [
-                ...state.allOffers,
-              ];
-
             renderMember();
             renderAccessStatus();
             renderCategories();
-            renderOffers();
+            applyFilters();
 
-            if (
-              state.accessCatalog
-                ?.loaded
-            ) {
+            if (catalog.hitSafetyLimit) {
               showBanner(
-                `${state.allOffers.length} Access benefit offers loaded successfully.`,
-                "success"
+                `${state.allOffers.length} Access offers loaded. Additional offers may remain beyond the current page limit.`,
+                "warning"
               );
+            } else if (!state.allOffers.length) {
+              showBanner("No offers were returned for this location. Try another ZIP code.", "warning");
             } else {
-              const reason =
-                normalizeText(
-                  state
-                    .accessCatalog
-                    ?.reason
-                );
-
-              if (
-                reason ===
-                "access_member_not_open" ||
-                reason ===
-                "access_member_sync_failed"
-              ) {
-                showBanner(
-                  "Your Card Leo membership is active, but Access Perks enrollment must finish before the live catalog can load.",
-                  "warning"
-                );
-              } else if (
-                reason ===
-                "access_offers_not_configured"
-              ) {
-                showBanner(
-                  "Access Perks enrollment is active, but the approved Offers API endpoint still needs to be configured.",
-                  "warning"
-                );
-              } else if (
-                reason ===
-                "access_catalog_request_failed"
-              ) {
-                showBanner(
-                  "Access Perks is connected, but the offer catalog could not be retrieved right now.",
-                  "warning"
-                );
-              } else if (
-                !state.allOffers.length
-              ) {
-                showBanner(
-                  "No Access offers were returned yet.",
-                  "warning"
-                );
-              }
+              showBanner(`${state.allOffers.length} Access offers loaded successfully.`, "success");
             }
-          } catch (
-            error
-          ) {
-            console.error(
-              "[Card Leo] benefits load error:",
-              error
-            );
-
-            if (
-              error.status ===
-              401
-            ) {
+          } catch (error) {
+            if (error.status === 401) {
               window.location.replace(
-                "/login.html?next=" +
-                encodeURIComponent(
-                  window
-                    .location
-                    .pathname
-                )
+                "/login.html?next=" + encodeURIComponent(window.location.pathname)
               );
-
               return;
             }
 
-            if (
-              error.status ===
-              403
-            ) {
-              showBanner(
-                error.message ||
-                "Your membership must be active before benefits can be used.",
-                "error"
-              );
-            } else {
-              showBanner(
-                error.message ||
-                "Unable to load benefits right now.",
-                "error"
-              );
+            const data = unwrap(error.payload || {});
+            if (data.member) state.member = data.member;
+            if (data.access) {
+              state.access = {
+                ...data.access,
+                member_identifier: data.member?.accessMemberIdentifier || "",
+                member_status: data.access.memberStatus || data.member?.accessMemberStatus || "Pending",
+                perks_ready: false,
+              };
             }
 
-            if (
-              els.benefitsGrid
-            ) {
-              els.benefitsGrid.innerHTML =
-                `
-                  <div class="empty-state">
-                    ${escapeHtml(
-                      error.message ||
-                      "Unable to load your benefits."
-                    )}
-                  </div>
-                `;
+            state.allOffers = [];
+            state.visibleOffers = [];
+            state.categories = [];
+            state.accessCatalog = {loaded: false, reason: data.code || "access_catalog_request_failed"};
+            renderMember();
+            renderAccessStatus();
+            renderCategories();
+            renderHero();
+
+            const message = error.message || "Unable to load benefits right now.";
+            showBanner(message, "error");
+
+            if (els.benefitsGrid) {
+              els.benefitsGrid.innerHTML = `<div class="empty-state">${escapeHtml(message)}</div>`;
             }
           } finally {
-            state.loading =
-              false;
+            state.loading = false;
+            if (els.refreshButton) els.refreshButton.disabled = false;
+            if (els.searchButton) els.searchButton.disabled = false;
           }
         }
 
@@ -5588,19 +5550,20 @@
         ================================================================= */
 
         function runSearch() {
-          state.search =
-            normalizeText(
-              els
-                .searchInput
-                ?.value
-            );
+          if (state.loading) return;
 
-          state.category =
-            normalizeText(
-              els
-                .categorySelect
-                ?.value
-            );
+          state.search = normalizeText(els.searchInput?.value);
+          state.category = normalizeText(els.categorySelect?.value);
+
+          const postalCode = normalizeText(
+            document.getElementById("postalCodeInput")?.value
+          );
+
+          if (postalCode !== state.postalCode) {
+            state.postalCode = postalCode;
+            loadPortalBenefits();
+            return;
+          }
 
           applyFilters();
         }
@@ -5871,6 +5834,13 @@
         ================================================================= */
 
         bindEvents();
+
+        document.getElementById("postalCodeInput")?.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            runSearch();
+          }
+        });
 
         loadPortalBenefits();
       })();

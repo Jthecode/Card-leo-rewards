@@ -1,4 +1,7 @@
 // api/access/offers.js
+// Offers requests use lib/access-offers.js.
+// Confirmed Stage URL: https://offer.adcrws-stage.com/v1/offers
+// Keep ACCESS_OFFERS_API_BASE_URL aligned with that hostname in Vercel.
 
 import {
   supabaseAdmin,
@@ -719,7 +722,7 @@ async function authenticateMember(req, res) {
           requiresPayment: true,
           requires_payment: true,
           redirectTo:
-            "/signup.html?status=payment_required",
+            "/login.html?payment_required=1&next=%2Fportal%2Fbenefits.html",
         }
       ),
     };
@@ -1217,6 +1220,10 @@ export default async function handler(req, res) {
             ready:
               false,
 
+          catalog_ready: false,
+          perks_ready: false,
+          benefits_ready: false,
+
             perksReady:
               false,
 
@@ -1253,6 +1260,10 @@ export default async function handler(req, res) {
           access: {
             ready:
               false,
+
+          catalog_ready: false,
+          perks_ready: false,
+          benefits_ready: false,
 
             syncEndpoint:
               "/api/access/sync-member",
@@ -1300,6 +1311,10 @@ export default async function handler(req, res) {
         catalogReady:
           true,
 
+        catalog_ready: true,
+        perks_ready: true,
+        benefits_ready: true,
+
         memberStatus: isAccessMemberReady(member)
           ? normalizeString(member.access_member_status) || "OPEN"
           : "catalog_ready",
@@ -1324,6 +1339,9 @@ export default async function handler(req, res) {
       },
 
       catalog: {
+        loaded: true,
+        ready: true,
+
         mode:
           catalog.mode,
 
@@ -1477,6 +1495,10 @@ export default async function handler(req, res) {
         access: {
           ready:
             false,
+
+          catalog_ready: false,
+          perks_ready: false,
+          benefits_ready: false,
 
           catalogReady:
             false,

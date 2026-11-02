@@ -1,4 +1,26 @@
 // api/access/offer.js
+//
+// Card Leo Rewards — Individual Access offer details.
+//
+// GET /api/access/offer?offer_key=...
+//
+// Also accepts:
+//   ?offerKey=...
+//   ?id=...
+//
+// Stage Offers endpoint confirmed by Access Development:
+// https://offer.adcrws-stage.com/v1/offers
+//
+// Required:
+// ACCESS_OFFERS_API_TOKEN
+//
+// Stage configuration:
+// ACCESS_ENVIRONMENT=stage
+// ACCESS_OFFERS_API_BASE_URL=https://offer.adcrws-stage.com
+// ACCESS_OFFERS_ENDPOINT_PATH=/v1/offers
+//
+// Uses an exact offer_key filter on the Offers search endpoint.
+// Does not redeem offers or generate redemption credentials.
 
 import {
   supabaseAdmin,
@@ -10,52 +32,17 @@ import {
   safeJsonParse,
 } from "../../lib/cookies.js";
 
-/*
- * Card Leo Rewards
- * File #6 — Individual Access offer details
- *
- * GET /api/access/offer?offer_key=...
- *
- * Also accepts:
- *   ?offerKey=...
- *   ?id=...
- *
- * Uses the Access Offers search endpoint with an exact offer_key filter.
- * Does not guess an undocumented detail endpoint.
- *
- * Preserves the existing Card Leo session/member lookup pattern.
- *
- * Required server environment:
- *   ACCESS_OFFERS_API_TOKEN
- *
- * Optional server environment:
- *   ACCESS_ENVIRONMENT=stage
- *   ACCESS_OFFERS_API_BASE_URL (use the Offers URL confirmed by Access)
- *   ACCESS_OFFERS_ENDPOINT_PATH=/v1/offers
- *
- * The existing stage default is retained pending Access confirmation.
- * It returned HTTP 503 / No Valid Endpoint during testing.
- * This update does not claim that the stage route is working.
- *
- * Production Offers host:
- *   https://offer.adcrws.com
- *
- * This endpoint reads offer details.
- * It does not redeem offers or generate redemption credentials.
- */
-
 // -----------------------------------------------------------------------------
 // Configuration
 // -----------------------------------------------------------------------------
 
 const DEFAULT_STAGE_BASE_URL =
-  "https://offer-stage.adcrws.com";
+  "https://offer.adcrws-stage.com";
 
 const DEFAULT_PRODUCTION_BASE_URL =
   "https://offer.adcrws.com";
 
-const DEFAULT_OFFERS_ENDPOINT_PATH =
-  "/v1/offers";
+const DEFAULT_OFFERS_ENDPOINT_PATH = "/v1/offers";
 
 const REQUEST_TIMEOUT_MS = 20000;
 
@@ -152,14 +139,11 @@ function firstValue(value) {
 }
 
 function getEnv(name, fallback = "") {
-  return normalizeString(
-    process.env[name] ?? fallback
-  );
+  return normalizeString(process.env[name] ?? fallback);
 }
 
 function createError(message, code, status = 500) {
   const error = new Error(message);
-
   error.code = code;
   error.status = status;
 
@@ -226,11 +210,7 @@ function applyPrivateHeaders(res) {
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
   res.setHeader("Vary", "Cookie");
-
-  res.setHeader(
-    "X-Content-Type-Options",
-    "nosniff"
-  );
+  res.setHeader("X-Content-Type-Options", "nosniff");
 }
 
 function sendJson(res, status, payload) {
@@ -274,11 +254,17 @@ function unauthorized(res, message) {
 }
 
 function forbidden(res, message, code, extra = {}) {
-  return sendFailure(res, 403, message, code, {
-    authenticated: true,
-    benefitsPage: DEFAULT_BENEFITS_URL,
-    ...extra,
-  });
+  return sendFailure(
+    res,
+    403,
+    message,
+    code,
+    {
+      authenticated: true,
+      benefitsPage: DEFAULT_BENEFITS_URL,
+      ...extra,
+    }
+  );
 }
 
 function safelyClearAuthCookies(res) {
@@ -290,7 +276,7 @@ function safelyClearAuthCookies(res) {
 }
 
 // -----------------------------------------------------------------------------
-// Existing Card Leo cookie parsing
+// Existing cookie and session handling
 // -----------------------------------------------------------------------------
 
 function parseCookies(req) {
@@ -361,7 +347,7 @@ function parseSessionValue(value) {
         return parsed;
       }
     } catch {
-      // Try the next supported representation.
+      // Try the next existing encoding.
     }
   }
 
@@ -406,10 +392,6 @@ function readSessionCookie(req) {
   return null;
 }
 
-// -----------------------------------------------------------------------------
-// Existing session identity and expiration
-// -----------------------------------------------------------------------------
-
 function getSessionMemberId(sessionMeta) {
   const session = sessionMeta?.data || {};
 
@@ -427,21 +409,21 @@ function getSessionMemberId(sessionMeta) {
 
   return normalizeString(
     member.id ||
-      member.member_id ||
-      member.memberId ||
-      member.signup_id ||
-      member.signupId ||
-      profile.id ||
-      profile.member_id ||
-      profile.memberId ||
-      profile.signup_id ||
-      profile.signupId ||
-      user.id ||
-      session.id ||
-      session.member_id ||
-      session.memberId ||
-      session.signup_id ||
-      session.signupId
+    member.member_id ||
+    member.memberId ||
+    member.signup_id ||
+    member.signupId ||
+    profile.id ||
+    profile.member_id ||
+    profile.memberId ||
+    profile.signup_id ||
+    profile.signupId ||
+    user.id ||
+    session.id ||
+    session.member_id ||
+    session.memberId ||
+    session.signup_id ||
+    session.signupId
   );
 }
 
@@ -450,10 +432,10 @@ function getSessionEmail(sessionMeta) {
 
   return normalizeEmail(
     session.member?.email ||
-      session.profile?.email ||
-      session.user?.email ||
-      session.email ||
-      session.userEmail
+    session.profile?.email ||
+    session.user?.email ||
+    session.email ||
+    session.userEmail
   );
 }
 
@@ -537,6 +519,8 @@ function isMemberActive(member) {
 }
 
 function isAccessMemberReady(member) {
+  // Historical enrollment metadata only.
+  // This does not gate the live offer request.
   if (
     typeof member?.access_perks_ready === "boolean"
   ) {
@@ -551,7 +535,7 @@ function isAccessMemberReady(member) {
 }
 
 // -----------------------------------------------------------------------------
-// Existing member lookup
+// Member lookup
 // -----------------------------------------------------------------------------
 
 async function findMember({ memberId, email }) {
@@ -587,6 +571,7 @@ async function authenticateMember(req, res) {
   if (!session?.data) {
     return {
       member: null,
+
       response: unauthorized(
         res,
         "Please sign in before viewing this offer."
@@ -599,6 +584,7 @@ async function authenticateMember(req, res) {
 
     return {
       member: null,
+
       response: unauthorized(
         res,
         "Your Card Leo session expired. Please sign in again."
@@ -614,6 +600,7 @@ async function authenticateMember(req, res) {
 
     return {
       member: null,
+
       response: unauthorized(
         res,
         "Member information is missing from your login session."
@@ -642,6 +629,7 @@ async function authenticateMember(req, res) {
 
     return {
       member: null,
+
       response: unauthorized(
         res,
         "Your Card Leo member record could not be found."
@@ -652,6 +640,7 @@ async function authenticateMember(req, res) {
   if (!isMemberActive(member)) {
     return {
       member: null,
+
       response: forbidden(
         res,
         "Your Card Leo membership must be active and paid before offers can be viewed.",
@@ -661,7 +650,7 @@ async function authenticateMember(req, res) {
           requires_payment: true,
 
           redirectTo:
-            "/signup.html?status=payment_required",
+            "/login.html?payment_required=1&next=%2Fportal%2Fbenefits.html",
         }
       ),
     };
@@ -674,7 +663,7 @@ async function authenticateMember(req, res) {
 }
 
 // -----------------------------------------------------------------------------
-// Offers API configuration
+// Access configuration
 // -----------------------------------------------------------------------------
 
 function getAccessEnvironment() {
@@ -707,7 +696,7 @@ function getOffersConfiguration() {
   const expectedHost =
     environment === "production"
       ? "offer.adcrws.com"
-      : "offer-stage.adcrws.com";
+      : "offer.adcrws-stage.com";
 
   const baseUrl =
     getEnv("ACCESS_OFFERS_API_BASE_URL") ||
@@ -734,8 +723,8 @@ function getOffersConfiguration() {
     );
   }
 
-  // Keep credentials restricted to the existing Access host for the selected
-  // environment. Update the stage allowlist only after Access confirms it.
+  // Keep credentials restricted to Access's approved host
+  // for the selected environment.
   if (
     url.protocol !== "https:" ||
     url.hostname !== expectedHost ||
@@ -744,8 +733,13 @@ function getOffersConfiguration() {
     url.password ||
     url.search ||
     url.hash ||
-    !["/", "/v1", "/v1/", "/v1/offers", "/v1/offers/"]
-      .includes(url.pathname) ||
+    ![
+      "/",
+      "/v1",
+      "/v1/",
+      "/v1/offers",
+      "/v1/offers/",
+    ].includes(url.pathname) ||
     !/^\/(?!\/)[a-zA-Z0-9/_-]+$/.test(endpointPath) ||
     endpointPath
       .split("/")
@@ -787,20 +781,18 @@ function getRequestedOfferKey(req) {
   return normalizeString(
     firstValue(
       query.offer_key ??
-        query.offerKey ??
-        query.id
+      query.offerKey ??
+      query.id
     )
   );
 }
 
 function isValidOfferKey(value) {
-  // Access examples use numeric keys.
-  // Allow ordinary opaque keys without allowing search-list operators.
   return /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(value);
 }
 
 // -----------------------------------------------------------------------------
-// Provider request
+// Exact provider offer lookup
 // -----------------------------------------------------------------------------
 
 async function fetchMemberOffer({
@@ -810,7 +802,6 @@ async function fetchMemberOffer({
 }) {
   const url = new URL(configuration.url.toString());
 
-  // Access credentials remain server-side.
   url.searchParams.set(
     "access_token",
     configuration.token
@@ -856,20 +847,17 @@ async function fetchMemberOffer({
         message =
           "The Access Offers service is unavailable. Please try again later.";
 
-        // Recognize the known routing failure without exposing raw bodies.
         const body = await response
           .text()
           .catch(() => "");
 
         if (
-          body.trim().toLowerCase() ===
-          "no valid endpoint"
+          body.trim().toLowerCase() === "no valid endpoint"
         ) {
-          code =
-            "ACCESS_OFFERS_ENDPOINT_UNAVAILABLE";
+          code = "ACCESS_OFFERS_ENDPOINT_UNAVAILABLE";
 
           message =
-            "The Access Offers endpoint is unavailable. Card Leo is awaiting confirmation of the stage Offers route from Access.";
+            "The Access Offers endpoint is unavailable. Card Leo support must verify the configured Offers hostname and path for the selected environment.";
         }
       } else if (response.status === 429) {
         status = 429;
@@ -887,12 +875,11 @@ async function fetchMemberOffer({
         response.status === 401 ||
         response.status === 403
       ) {
-        // Provider authentication failures must not trigger Card Leo logout.
+        // Provider authentication errors must not trigger
+        // a Card Leo login redirect.
         message =
           "Access did not authorize this offer request. Card Leo support must verify the Access environment, token, program access, and member record.";
       } else if (response.status === 404) {
-        // A provider HTTP 404 may describe the endpoint or another resource.
-        // Only a valid, empty Offers response establishes offer unavailability.
         message =
           "Access could not find the requested resource. Card Leo support must verify the Offers endpoint and member record.";
       }
@@ -977,10 +964,6 @@ async function fetchMemberOffer({
 
 // -----------------------------------------------------------------------------
 // Safe provider-data mapping
-//
-// Only selected display fields are returned.
-// Provider HTML is requested as sanitized text.
-// The frontend should still render text with textContent.
 // -----------------------------------------------------------------------------
 
 function normalizeLocation(value) {
@@ -998,9 +981,9 @@ function normalizeLocation(value) {
 
     address: safeText(
       value.address ||
-        value.address_1 ||
-        value.address1 ||
-        value.street_address
+      value.address_1 ||
+      value.address1 ||
+      value.street_address
     ),
 
     address2: safeText(
@@ -1051,8 +1034,8 @@ function normalizeCategories(value) {
       return {
         id: safeText(
           category.category_key ||
-            category.id ||
-            category.key
+          category.id ||
+          category.key
         ),
 
         name: safeText(
@@ -1074,8 +1057,8 @@ function mapOfferForPortal(raw) {
 
   const merchantName = safeText(
     raw.store_name ||
-      raw.merchant_name ||
-      merchant.name
+    raw.merchant_name ||
+    merchant.name
   );
 
   const title = safeText(
@@ -1084,34 +1067,35 @@ function mapOfferForPortal(raw) {
 
   const description = safeText(
     raw.description ||
-      raw.long_description ||
-      raw.short_description
+    raw.long_description ||
+    raw.short_description
   );
 
   const terms = safeText(
     raw.terms ||
-      raw.terms_and_conditions ||
-      raw.disclaimer
+    raw.terms_and_conditions ||
+    raw.disclaimer
   );
 
   const imageUrl = safeHttpsUrl(
     raw.image_url ||
-      raw.image ||
-      merchant.image_url ||
-      merchant.logo_url
+    raw.image ||
+    merchant.image_url ||
+    merchant.logo_url
   );
 
   const categoryName = safeText(
     raw.category_name ||
-      (
-        typeof raw.category === "string"
-          ? raw.category
-          : raw.category?.name
-      )
+    (
+      typeof raw.category === "string"
+        ? raw.category
+        : raw.category?.name
+    )
   );
 
-  const categories =
-    normalizeCategories(raw.categories);
+  const categories = normalizeCategories(
+    raw.categories
+  );
 
   const sourceLocations = Array.isArray(raw.locations)
     ? raw.locations
@@ -1129,7 +1113,7 @@ function mapOfferForPortal(raw) {
 
   const instructions = safeText(
     raw.redemption_instructions ||
-      raw.instructions
+    raw.instructions
   );
 
   return {
@@ -1142,9 +1126,8 @@ function mapOfferForPortal(raw) {
     name: title,
     description,
 
-    shortDescription: safeText(
-      raw.short_description
-    ),
+    shortDescription:
+      safeText(raw.short_description),
 
     terms,
     termsAndConditions: terms,
@@ -1158,23 +1141,21 @@ function mapOfferForPortal(raw) {
     merchant: {
       id: safeText(
         raw.store_key ||
-          merchant.store_key ||
-          merchant.id
+        merchant.store_key ||
+        merchant.id
       ),
 
       name:
         merchantName,
 
-      logoUrl: safeHttpsUrl(
-        merchant.logo_url
-      ),
+      logoUrl:
+        safeHttpsUrl(merchant.logo_url),
     },
 
     category:
       categoryName,
 
     categories,
-
     locations,
 
     national:
@@ -1190,6 +1171,8 @@ function mapOfferForPortal(raw) {
 
     redemptionMethod,
 
+    // Display metadata only.
+    // Loading details does not authorize redemption.
     redemption: {
       method: redemptionMethod,
       instructions,
@@ -1245,8 +1228,8 @@ export default async function handler(req, res) {
       member.access_member_status
     ).toUpperCase();
 
-    // Preserve explicit suspension. A historical sync failure alone does not
-    // prevent the provider from checking access for an active, paid member.
+    // Explicit suspension blocks access.
+    // Historical sync_failed metadata alone does not.
     if (
       ["SUSPEND", "SUSPENDED"].includes(accessMemberStatus)
     ) {
@@ -1256,8 +1239,7 @@ export default async function handler(req, res) {
         "ACCESS_MEMBER_SUSPENDED",
         {
           access: {
-            ready:
-              false,
+            ready: false,
 
             memberStatus:
               accessMemberStatus,
@@ -1269,6 +1251,8 @@ export default async function handler(req, res) {
       );
     }
 
+    // Always use the permanent identifier saved in Supabase.
+    // Do not accept a member key from browser query parameters.
     const memberKey = normalizeString(
       member.access_member_identifier
     );
@@ -1280,8 +1264,7 @@ export default async function handler(req, res) {
         "ACCESS_MEMBER_IDENTIFIER_MISSING",
         {
           access: {
-            ready:
-              false,
+            ready: false,
 
             syncEndpoint:
               "/api/access/sync-member",
@@ -1301,27 +1284,18 @@ export default async function handler(req, res) {
     const offer = mapOfferForPortal(rawOffer);
 
     return sendJson(res, 200, {
-      success:
-        true,
-
-      ok:
-        true,
-
-      authenticated:
-        true,
-
-      message:
-        "Access offer loaded.",
+      success: true,
+      ok: true,
+      authenticated: true,
+      message: "Access offer loaded.",
 
       access: {
-        ready:
-          true,
+        ready: true,
 
         environment:
           configuration.environment,
 
-        catalogReady:
-          true,
+        catalogReady: true,
 
         memberStatus: isAccessMemberReady(member)
           ? normalizeString(member.access_member_status) || "OPEN"
@@ -1336,9 +1310,8 @@ export default async function handler(req, res) {
 
       offer,
 
-      // Compatibility alias for a frontend using "benefit".
-      benefit:
-        offer,
+      // Preserve the existing compatibility alias.
+      benefit: offer,
 
       links: {
         offers:
@@ -1371,16 +1344,20 @@ export default async function handler(req, res) {
         ? error.status
         : 500;
 
-    // Never log the upstream request URL: it contains the Access token.
-    console.error("Card Leo Access offer details failed:", {
-      code:
-        error?.code || "ACCESS_OFFER_FAILED",
+    // Never log the provider request URL.
+    // It contains the Access API token.
+    console.error(
+      "Card Leo Access offer details failed:",
+      {
+        code:
+          error?.code || "ACCESS_OFFER_FAILED",
 
-      status,
+        status,
 
-      providerStatus:
-        error?.providerStatus || null,
-    });
+        providerStatus:
+          error?.providerStatus || null,
+      }
+    );
 
     return sendFailure(
       res,
@@ -1394,11 +1371,8 @@ export default async function handler(req, res) {
 
       {
         access: {
-          ready:
-            false,
-
-          catalogReady:
-            false,
+          ready: false,
+          catalogReady: false,
 
           status:
             error?.providerStatus || null,

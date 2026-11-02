@@ -37,6 +37,13 @@ import {
  * - Permanent Access member key passed to the Offers helper.
  * - ZIP/postal-code options.
  * - Official 100-offer maximum page size.
+ * - Provider-confirmed catalog access instead of a stale AMT readiness gate.
+ * - Explicit Access suspension enforcement.
+ * - Upstream authentication errors kept separate from Card Leo login errors.
+ *
+ * A successful Offers request does not create or update AMT enrollment.
+ * Historical sync_failed/perks_ready=false does not prevent a catalog attempt.
+ * Access remains responsible for accepting the saved member identifier.
  *
  * Required helper contract in lib/access-offers.js:
  *
@@ -731,9 +738,15 @@ async function authenticateMember(req, res) {
 function sanitizeMember(member) {
   return {
     id: member?.id || null,
+
     email: normalizeEmail(member?.email),
-    firstName: normalizeString(member?.first_name),
-    lastName: normalizeString(member?.last_name),
+
+    firstName:
+      normalizeString(member?.first_name),
+
+    lastName:
+      normalizeString(member?.last_name),
+
     fullName:
       normalizeString(member?.full_name) ||
       [
@@ -743,17 +756,24 @@ function sanitizeMember(member) {
         .map(normalizeString)
         .filter(Boolean)
         .join(" "),
+
     membershipStatus:
       normalizeString(member?.membership_status),
+
     paymentStatus:
       normalizeString(member?.payment_status),
+
     approvalStatus:
       normalizeString(member?.approval_status),
+
     accessMemberIdentifier:
       normalizeString(member?.access_member_identifier),
+
     accessMemberStatus:
       normalizeString(member?.access_member_status),
-    accessPerksReady: isAccessMemberReady(member),
+
+    accessPerksReady:
+      isAccessMemberReady(member),
   };
 }
 
@@ -932,21 +952,40 @@ function buildAccessFetchOptions(options, memberKey) {
     page: options.page,
     pageSize: options.pageSize,
     maxPages: options.maxPages,
-    cursor: options.cursor || undefined,
-    search: options.search || undefined,
-    category: options.category || undefined,
-    latitude: options.latitude ?? undefined,
-    longitude: options.longitude ?? undefined,
-    radius: options.radius ?? undefined,
-    online: options.online,
-    featured: options.featured,
+
+    cursor:
+      options.cursor || undefined,
+
+    search:
+      options.search || undefined,
+
+    category:
+      options.category || undefined,
+
+    latitude:
+      options.latitude ?? undefined,
+
+    longitude:
+      options.longitude ?? undefined,
+
+    radius:
+      options.radius ?? undefined,
+
+    online:
+      options.online,
+
+    featured:
+      options.featured,
 
     // Always supplied from the database, never request query parameters.
     memberKey,
     member_key: memberKey,
 
-    postalCode: options.postalCode || undefined,
-    postal_code: options.postalCode || undefined,
+    postalCode:
+      options.postalCode || undefined,
+
+    postal_code:
+      options.postalCode || undefined,
   };
 }
 
@@ -1002,19 +1041,37 @@ async function loadSinglePage(options, memberKey) {
 
   return {
     mode: "page",
+
     offers,
-    count: offers.length,
-    fullFilteredCount: safeOffers.length,
-    rawCatalogCount: rawOffers.length,
+
+    count:
+      offers.length,
+
+    fullFilteredCount:
+      safeOffers.length,
+
+    rawCatalogCount:
+      rawOffers.length,
+
     totalCatalogCount:
       result.pagination?.total ??
       result.pagination?.total_results ??
       null,
-    pagesFetched: 1,
-    page: result.pagination?.page ?? options.page,
-    pageSize: options.pageSize,
-    pagination: result.pagination || null,
-    hitSafetyLimit: false,
+
+    pagesFetched:
+      1,
+
+    page:
+      result.pagination?.page ?? options.page,
+
+    pageSize:
+      options.pageSize,
+
+    pagination:
+      result.pagination || null,
+
+    hitSafetyLimit:
+      false,
   };
 }
 
@@ -1040,11 +1097,11 @@ async function loadFullCatalog(options, memberKey) {
     filteredOffers
   );
 
-  const safeOffers = sanitizeOffers(
-    Array.isArray(catalog.offers)
-      ? catalog.offers
-      : []
-  );
+  // buildPortalAccessCatalog already sanitizes each offer.
+  // Sanitizing again would discard existing redemption presence flags.
+  const safeOffers = Array.isArray(catalog.offers)
+    ? catalog.offers
+    : [];
 
   const offers = limitOffers(
     safeOffers,
@@ -1053,16 +1110,35 @@ async function loadFullCatalog(options, memberKey) {
 
   return {
     mode: "all",
+
     offers,
-    count: offers.length,
-    fullFilteredCount: safeOffers.length,
-    rawCatalogCount: rawOffers.length,
-    categories: catalog.categories || [],
-    merchants: catalog.merchants || [],
-    pagesFetched: result.pagesFetched,
-    pageSize: result.pageSize ?? options.pageSize,
-    hitSafetyLimit: Boolean(result.hitSafetyLimit),
-    pagination: result.pagination || null,
+
+    count:
+      offers.length,
+
+    fullFilteredCount:
+      safeOffers.length,
+
+    rawCatalogCount:
+      rawOffers.length,
+
+    categories:
+      catalog.categories || [],
+
+    merchants:
+      catalog.merchants || [],
+
+    pagesFetched:
+      result.pagesFetched,
+
+    pageSize:
+      result.pageSize ?? options.pageSize,
+
+    hitSafetyLimit:
+      Boolean(result.hitSafetyLimit),
+
+    pagination:
+      result.pagination || null,
   };
 }
 
@@ -1110,38 +1186,55 @@ export default async function handler(req, res) {
         "Access Offers API is not fully configured yet.",
         {
           code: "ACCESS_OFFERS_CONFIGURATION_REQUIRED",
+
           nextStep:
             "Check the approved Access Offers configuration in Vercel.",
         }
       );
     }
 
-    const accessReady = isAccessMemberReady(member);
+    const accessMemberStatus = normalizeString(
+      member.access_member_status
+    ).toUpperCase();
 
-    if (!accessReady) {
+    // A failed previous sync is not proof that Access will reject the member.
+    // Preserve explicit suspensions while allowing the provider to confirm
+    // catalog access for an otherwise active, paid Card Leo member.
+    if (
+      ["SUSPEND", "SUSPENDED"].includes(accessMemberStatus)
+    ) {
       return forbidden(
         res,
-        "Your Card Leo membership is active, but Access Perks enrollment is not ready yet.",
+        "Your Access Perks membership is suspended. Please contact Card Leo support.",
         {
-          code: "ACCESS_MEMBER_NOT_READY",
-          member: sanitizeMember(member),
+          code:
+            "ACCESS_MEMBER_SUSPENDED",
+
+          member:
+            sanitizeMember(member),
+
           access: {
-            ready: false,
+            ready:
+              false,
+
+            perksReady:
+              false,
+
             memberStatus:
-              normalizeString(
-                member.access_member_status
-              ) || "pending",
-            syncedAt: safeDate(
-              member.access_synced_at
-            ),
-            syncEndpoint: "/api/access/sync-member",
+              accessMemberStatus,
+
+            syncedAt:
+              safeDate(member.access_synced_at),
+
+            syncEndpoint:
+              "/api/access/sync-member",
           },
         }
       );
     }
 
-    // Reuse the permanent identifier saved by Access AMT enrollment.
-    // Do not generate a different identity while requesting offers.
+    // Reuse the saved permanent identifier regardless of the previous AMT
+    // sync result. Never accept a member key from browser query parameters.
     const memberKey = normalizeString(
       member.access_member_identifier
     );
@@ -1149,13 +1242,20 @@ export default async function handler(req, res) {
     if (!memberKey) {
       return forbidden(
         res,
-        "Your Access Perks member profile must finish synchronizing before offers can be loaded.",
+        "Your Card Leo account is missing its permanent Access member identifier. Please contact Card Leo support.",
         {
-          code: "ACCESS_MEMBER_IDENTIFIER_MISSING",
-          member: sanitizeMember(member),
+          code:
+            "ACCESS_MEMBER_IDENTIFIER_MISSING",
+
+          member:
+            sanitizeMember(member),
+
           access: {
-            ready: false,
-            syncEndpoint: "/api/access/sync-member",
+            ready:
+              false,
+
+            syncEndpoint:
+              "/api/access/sync-member",
           },
         }
       );
@@ -1169,83 +1269,171 @@ export default async function handler(req, res) {
     const integrationStatus =
       getAccessOffersIntegrationStatus();
 
+    // Catalog readiness is confirmed by this successful provider request.
+    // Do not overwrite the stored AMT status or readiness flag in Supabase.
+    const safeMember = sanitizeMember(member);
+
     return sendJson(res, 200, {
-      success: true,
-      ok: true,
-      authenticated: true,
+      success:
+        true,
+
+      ok:
+        true,
+
+      authenticated:
+        true,
 
       message: catalog.hitSafetyLimit
         ? `Loaded ${catalog.count} Card Leo benefit offers. Additional offers may remain beyond the configured pagination limit.`
         : `Loaded ${catalog.count} Card Leo benefit offers from Access.`,
 
-      member: sanitizeMember(member),
+      member:
+        safeMember,
 
       access: {
-        ready: true,
-        memberStatus:
-          normalizeString(
-            member.access_member_status
-          ) || "OPEN",
-        perksReady: true,
-        environment: integrationStatus.environment,
+        ready:
+          true,
+
+        perksReady:
+          true,
+
+        catalogReady:
+          true,
+
+        memberStatus: isAccessMemberReady(member)
+          ? normalizeString(member.access_member_status) || "OPEN"
+          : "catalog_ready",
+
+        memberIdentifier:
+          memberKey,
+
+        member_identifier:
+          memberKey,
+
+        amtMemberStatus:
+          normalizeString(member.access_member_status) || "pending",
+
+        amtPerksReady:
+          safeMember.accessPerksReady,
+
+        syncedAt:
+          safeDate(member.access_synced_at),
+
+        environment:
+          integrationStatus.environment,
       },
 
       catalog: {
-        mode: catalog.mode,
-        count: catalog.count,
+        mode:
+          catalog.mode,
+
+        count:
+          catalog.count,
+
         fullFilteredCount:
           catalog.fullFilteredCount ?? catalog.count,
+
         rawCatalogCount:
           catalog.rawCatalogCount ??
           catalog.totalCatalogCount ??
           null,
+
         totalCatalogCount:
           catalog.totalCatalogCount ?? null,
-        pagesFetched: catalog.pagesFetched,
-        pageSize: catalog.pageSize,
-        hitSafetyLimit: catalog.hitSafetyLimit,
-        pagination: catalog.pagination,
-        categories: catalog.categories || [],
-        merchants: catalog.merchants || [],
+
+        pagesFetched:
+          catalog.pagesFetched,
+
+        pageSize:
+          catalog.pageSize,
+
+        hitSafetyLimit:
+          catalog.hitSafetyLimit,
+
+        pagination:
+          catalog.pagination,
+
+        categories:
+          catalog.categories || [],
+
+        merchants:
+          catalog.merchants || [],
       },
 
       filters: {
-        search: options.search || "",
-        category: options.category || "",
-        postalCode: options.postalCode || "",
-        online: options.online ?? null,
-        local: options.local ?? null,
-        featured: options.featured ?? null,
-        active: options.active,
-        latitude: options.latitude,
-        longitude: options.longitude,
-        radius: options.radius,
-        resultLimit: options.resultLimit || null,
+        search:
+          options.search || "",
+
+        category:
+          options.category || "",
+
+        postalCode:
+          options.postalCode || "",
+
+        online:
+          options.online ?? null,
+
+        local:
+          options.local ?? null,
+
+        featured:
+          options.featured ?? null,
+
+        active:
+          options.active,
+
+        latitude:
+          options.latitude,
+
+        longitude:
+          options.longitude,
+
+        radius:
+          options.radius,
+
+        resultLimit:
+          options.resultLimit || null,
       },
 
-      offers: catalog.offers,
+      offers:
+        catalog.offers,
 
       // Preserve the alias used by the existing Benefits frontend.
-      benefits: catalog.offers,
+      benefits:
+        catalog.offers,
 
       links: {
-        syncMember: "/api/access/sync-member",
-        offers: "/api/access/offers",
-        offer: "/api/access/offer",
-        redeemOffer: "/api/access/redeem-offer",
-        sso: "/api/access/sso",
-        portalBenefits: "/portal/benefits.html",
+        syncMember:
+          "/api/access/sync-member",
+
+        offers:
+          "/api/access/offers",
+
+        offer:
+          "/api/access/offer",
+
+        redeemOffer:
+          "/api/access/redeem-offer",
+
+        sso:
+          "/api/access/sso",
+
+        portalBenefits:
+          "/portal/benefits.html",
       },
 
-      fetchedAt: new Date().toISOString(),
+      fetchedAt:
+        new Date().toISOString(),
     });
   } catch (error) {
     const providerStatus = Number(error?.status);
 
     // Avoid logging raw provider URLs/responses that may contain tokens.
     console.error("Card Leo Access offers error:", {
-      code: normalizeString(error?.code) ||
+      code:
+        normalizeString(error?.code) ||
         "ACCESS_OFFERS_REQUEST_FAILED",
+
       status: Number.isFinite(providerStatus)
         ? providerStatus
         : null,
@@ -1256,14 +1444,45 @@ export default async function handler(req, res) {
       providerStatus >= 400 &&
       providerStatus <= 599
     ) {
-      return sendJson(res, providerStatus, {
-        success: false,
-        ok: false,
-        message:
-          "Access could not complete the benefits request. Please try again.",
-        code: "ACCESS_OFFERS_REQUEST_FAILED",
+      // A provider 401/403 is not a Card Leo login failure. Returning 401
+      // here would incorrectly send an authenticated member back to login.
+      const responseStatus =
+        providerStatus === 429
+          ? 429
+          : providerStatus === 504
+            ? 504
+            : 502;
+
+      const message =
+        providerStatus === 401 || providerStatus === 403
+          ? "Access did not authorize the catalog request. Card Leo support must verify the Access token, environment, program access, and member record."
+          : providerStatus === 404
+            ? "Access could not find the requested catalog resource. Card Leo support must verify the Offers endpoint and member record in the selected environment."
+            : providerStatus === 429
+              ? "Access is receiving too many requests. Please try again shortly."
+              : "Access could not complete the benefits request. Please try again.";
+
+      return sendJson(res, responseStatus, {
+        success:
+          false,
+
+        ok:
+          false,
+
+        message,
+
+        code:
+          "ACCESS_OFFERS_REQUEST_FAILED",
+
         access: {
-          status: providerStatus,
+          ready:
+            false,
+
+          catalogReady:
+            false,
+
+          status:
+            providerStatus,
         },
       });
     }

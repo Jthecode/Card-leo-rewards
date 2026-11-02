@@ -18,19 +18,32 @@
  *
  * Optional:
  *
+ *   ACCESS_ENVIRONMENT (stage by default; production after Access approval)
  *   ACCESS_TRAVEL_AUTH_URL
  *   CARDLEO_SITE_URL
  *   APP_BASE_URL
  *
- * Default Access authentication endpoint:
+ * Default stage Access authentication endpoint:
+ *
+ *   https://auth.adcrws-stage.com/api/v1/tokens
+ *
+ * Production endpoint (ACCESS_ENVIRONMENT=production):
  *
  *   https://auth.adcrws.com/api/v1/tokens
+ *
+ * SDK member creation does not require a successful previous AMT sync.
+ * Membership eligibility and a saved permanent identifier are still required.
  *
  * Member identifiers, email addresses, and names are obtained from
  * the authenticated server response, never from the request body.
  */
 
-const DEFAULT_TRAVEL_AUTH_URL =
+const DEFAULT_ACCESS_ENVIRONMENT = "stage";
+
+const DEFAULT_STAGE_TRAVEL_AUTH_URL =
+  "https://auth.adcrws-stage.com/api/v1/tokens";
+
+const DEFAULT_PRODUCTION_TRAVEL_AUTH_URL =
   "https://auth.adcrws.com/api/v1/tokens";
 
 const DEFAULT_SITE_URL =
@@ -547,7 +560,42 @@ function getAccessMemberKey(member, data = {}) {
 // Travel configuration
 // -----------------------------------------------------------------------------
 
+function getTravelEnvironment() {
+  const value = getEnv(
+    "ACCESS_ENVIRONMENT",
+    DEFAULT_ACCESS_ENVIRONMENT
+  ).toLowerCase();
+
+  if (
+    ["stage", "staging", "test", "sandbox"].includes(value)
+  ) {
+    return "stage";
+  }
+
+  if (
+    ["production", "prod", "live"].includes(value)
+  ) {
+    return "production";
+  }
+
+  throw createError(
+    "Card Leo Travel environment must be stage or production.",
+    "TRAVEL_ENVIRONMENT_INVALID",
+    503
+  );
+}
+
 function getTravelConfiguration() {
+  const environment = getTravelEnvironment();
+
+  const defaultAuthUrl =
+    environment === "production"
+      ? DEFAULT_PRODUCTION_TRAVEL_AUTH_URL
+      : DEFAULT_STAGE_TRAVEL_AUTH_URL;
+
+  const expectedHostname =
+    new URL(defaultAuthUrl).hostname;
+
   const apiKey = getEnv(
     "ACCESS_TRAVEL_API_KEY"
   );
@@ -560,10 +608,9 @@ function getTravelConfiguration() {
     );
   }
 
-  const configuredUrl = getEnv(
-    "ACCESS_TRAVEL_AUTH_URL",
-    DEFAULT_TRAVEL_AUTH_URL
-  );
+  const configuredUrl =
+    getEnv("ACCESS_TRAVEL_AUTH_URL") ||
+    defaultAuthUrl;
 
   let url;
 
@@ -577,10 +624,11 @@ function getTravelConfiguration() {
     );
   }
 
-  // Send the Travel API key only to the documented authentication endpoint.
+  // Send the Travel API key only to the documented authentication endpoint
+  // for the configured Access environment.
   if (
     url.protocol !== "https:" ||
-    url.hostname !== "auth.adcrws.com" ||
+    url.hostname !== expectedHostname ||
     url.pathname !== "/api/v1/tokens" ||
     url.username ||
     url.password ||
@@ -589,7 +637,7 @@ function getTravelConfiguration() {
     url.hash
   ) {
     throw createError(
-      "Card Leo Travel must use the approved Access authentication endpoint.",
+      "Card Leo Travel authentication URL must match the configured Access environment.",
       "TRAVEL_AUTH_URL_INVALID",
       503
     );
@@ -812,6 +860,8 @@ export default async function handler(req, res) {
       );
     }
 
+    // Previous AMT sync failures do not block SDK member creation.
+    // Continue to enforce Card Leo membership eligibility server-side.
     if (!isEligibleMember(member)) {
       return sendFailure(
         res,
@@ -831,7 +881,7 @@ export default async function handler(req, res) {
         res,
         409,
         "ACCESS_MEMBER_KEY_MISSING",
-        "Your permanent Access member identifier must finish synchronizing before Travel can be opened."
+        "Your Card Leo account is missing its permanent Access member identifier. Please contact Card Leo support to connect your Travel access."
       );
     }
 

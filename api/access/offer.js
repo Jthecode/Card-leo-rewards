@@ -20,8 +20,8 @@ import {
  *   ?offerKey=...
  *   ?id=...
  *
- * Uses the documented Access Offers search endpoint with an exact
- * offer_key filter. Does not guess an undocumented detail endpoint.
+ * Uses the Access Offers search endpoint with an exact offer_key filter.
+ * Does not guess an undocumented detail endpoint.
  *
  * Preserves the existing Card Leo session/member lookup pattern.
  *
@@ -30,7 +30,12 @@ import {
  *
  * Optional server environment:
  *   ACCESS_ENVIRONMENT=stage
- *   ACCESS_OFFERS_API_BASE_URL=https://offer-stage.adcrws.com
+ *   ACCESS_OFFERS_API_BASE_URL (use the Offers URL confirmed by Access)
+ *   ACCESS_OFFERS_ENDPOINT_PATH=/v1/offers
+ *
+ * The existing stage default is retained pending Access confirmation.
+ * It returned HTTP 503 / No Valid Endpoint during testing.
+ * This update does not claim that the stage route is working.
  *
  * Production Offers host:
  *   https://offer.adcrws.com
@@ -49,7 +54,8 @@ const DEFAULT_STAGE_BASE_URL =
 const DEFAULT_PRODUCTION_BASE_URL =
   "https://offer.adcrws.com";
 
-const OFFERS_ENDPOINT_PATH = "/v1/offers";
+const DEFAULT_OFFERS_ENDPOINT_PATH =
+  "/v1/offers";
 
 const REQUEST_TIMEOUT_MS = 20000;
 
@@ -146,7 +152,9 @@ function firstValue(value) {
 }
 
 function getEnv(name, fallback = "") {
-  return normalizeString(process.env[name] ?? fallback);
+  return normalizeString(
+    process.env[name] ?? fallback
+  );
 }
 
 function createError(message, code, status = 500) {
@@ -218,7 +226,11 @@ function applyPrivateHeaders(res) {
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
   res.setHeader("Vary", "Cookie");
-  res.setHeader("X-Content-Type-Options", "nosniff");
+
+  res.setHeader(
+    "X-Content-Type-Options",
+    "nosniff"
+  );
 }
 
 function sendJson(res, status, payload) {
@@ -647,6 +659,7 @@ async function authenticateMember(req, res) {
         {
           requiresPayment: true,
           requires_payment: true,
+
           redirectTo:
             "/signup.html?status=payment_required",
         }
@@ -661,18 +674,31 @@ async function authenticateMember(req, res) {
 }
 
 // -----------------------------------------------------------------------------
-// Official Offers API configuration
+// Offers API configuration
 // -----------------------------------------------------------------------------
 
 function getAccessEnvironment() {
-  const environment = getEnv(
-    "ACCESS_ENVIRONMENT",
-    "stage"
+  const environment = (
+    getEnv("ACCESS_ENVIRONMENT") || "stage"
   ).toLowerCase();
 
-  return ["production", "prod", "live"].includes(environment)
-    ? "production"
-    : "stage";
+  if (
+    ["production", "prod", "live"].includes(environment)
+  ) {
+    return "production";
+  }
+
+  if (
+    ["stage", "staging", "test", "sandbox"].includes(environment)
+  ) {
+    return "stage";
+  }
+
+  throw createError(
+    "Access environment must be stage or production.",
+    "ACCESS_OFFERS_CONFIGURATION_REQUIRED",
+    503
+  );
 }
 
 function getOffersConfiguration() {
@@ -683,17 +709,18 @@ function getOffersConfiguration() {
       ? "offer.adcrws.com"
       : "offer-stage.adcrws.com";
 
-  const configuredBaseUrl = getEnv(
-    "ACCESS_OFFERS_API_BASE_URL"
-  );
-
   const baseUrl =
-    configuredBaseUrl ||
+    getEnv("ACCESS_OFFERS_API_BASE_URL") ||
+    getEnv("ACCESS_OFFERS_BASE_URL") ||
     (
       environment === "production"
         ? DEFAULT_PRODUCTION_BASE_URL
         : DEFAULT_STAGE_BASE_URL
     );
+
+  const endpointPath =
+    getEnv("ACCESS_OFFERS_ENDPOINT_PATH") ||
+    DEFAULT_OFFERS_ENDPOINT_PATH;
 
   let url;
 
@@ -707,6 +734,8 @@ function getOffersConfiguration() {
     );
   }
 
+  // Keep credentials restricted to the existing Access host for the selected
+  // environment. Update the stage allowlist only after Access confirms it.
   if (
     url.protocol !== "https:" ||
     url.hostname !== expectedHost ||
@@ -716,10 +745,14 @@ function getOffersConfiguration() {
     url.search ||
     url.hash ||
     !["/", "/v1", "/v1/", "/v1/offers", "/v1/offers/"]
-      .includes(url.pathname)
+      .includes(url.pathname) ||
+    !/^\/(?!\/)[a-zA-Z0-9/_-]+$/.test(endpointPath) ||
+    endpointPath
+      .split("/")
+      .some((part) => part === "." || part === "..")
   ) {
     throw createError(
-      "Access Offers must use the approved Offers host for the configured environment.",
+      "Access Offers must use the approved Offers host and endpoint for the configured environment.",
       "ACCESS_OFFERS_CONFIGURATION_REQUIRED",
       503
     );
@@ -735,7 +768,7 @@ function getOffersConfiguration() {
     );
   }
 
-  url.pathname = OFFERS_ENDPOINT_PATH;
+  url.pathname = endpointPath;
 
   return {
     environment,
@@ -799,36 +832,80 @@ async function fetchMemberOffer({
   try {
     const response = await fetch(url, {
       method: "GET",
+
       headers: {
         Accept: "application/json",
       },
+
       signal: controller.signal,
       redirect: "error",
       cache: "no-store",
     });
 
     if (!response.ok) {
-      if (response.status === 404) {
-        throw createError(
-          "This offer is not available.",
-          "ACCESS_OFFER_NOT_FOUND",
-          404
-        );
+      let code = "ACCESS_OFFER_PROVIDER_ERROR";
+      let status = 502;
+
+      let message =
+        "Access could not load this offer. Please try again.";
+
+      if (response.status === 503) {
+        status = 503;
+        code = "ACCESS_OFFERS_SERVICE_UNAVAILABLE";
+
+        message =
+          "The Access Offers service is unavailable. Please try again later.";
+
+        // Recognize the known routing failure without exposing raw bodies.
+        const body = await response
+          .text()
+          .catch(() => "");
+
+        if (
+          body.trim().toLowerCase() ===
+          "no valid endpoint"
+        ) {
+          code =
+            "ACCESS_OFFERS_ENDPOINT_UNAVAILABLE";
+
+          message =
+            "The Access Offers endpoint is unavailable. Card Leo is awaiting confirmation of the stage Offers route from Access.";
+        }
+      } else if (response.status === 429) {
+        status = 429;
+        code = "ACCESS_OFFERS_RATE_LIMITED";
+
+        message =
+          "Access is receiving too many requests. Please try again shortly.";
+      } else if (response.status === 504) {
+        status = 504;
+        code = "ACCESS_OFFER_TIMEOUT";
+
+        message =
+          "Access took too long to load this offer. Please try again.";
+      } else if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
+        // Provider authentication failures must not trigger Card Leo logout.
+        message =
+          "Access did not authorize this offer request. Card Leo support must verify the Access environment, token, program access, and member record.";
+      } else if (response.status === 404) {
+        // A provider HTTP 404 may describe the endpoint or another resource.
+        // Only a valid, empty Offers response establishes offer unavailability.
+        message =
+          "Access could not find the requested resource. Card Leo support must verify the Offers endpoint and member record.";
       }
 
-      if (response.status === 429) {
-        throw createError(
-          "Access is receiving too many requests. Please try again shortly.",
-          "ACCESS_OFFERS_RATE_LIMITED",
-          429
-        );
-      }
-
-      throw createError(
-        "Access could not load this offer.",
-        "ACCESS_OFFER_PROVIDER_ERROR",
-        502
+      const error = createError(
+        message,
+        code,
+        status
       );
+
+      error.providerStatus = response.status;
+
+      throw error;
     }
 
     let data;
@@ -915,27 +992,38 @@ function normalizeLocation(value) {
     id: safeText(
       value.location_key || value.id
     ),
-    name: safeText(value.name),
+
+    name:
+      safeText(value.name),
+
     address: safeText(
       value.address ||
         value.address_1 ||
         value.address1 ||
         value.street_address
     ),
+
     address2: safeText(
       value.address_2 || value.address2
     ),
+
     city: safeText(
       value.city_locality || value.city
     ),
+
     state: safeText(
       value.state_region || value.state
     ),
+
     postalCode: safeText(
       value.postal_code || value.zip
     ),
-    country: safeText(value.country),
-    phone: safeText(value.phone),
+
+    country:
+      safeText(value.country),
+
+    phone:
+      safeText(value.phone),
   };
 }
 
@@ -966,6 +1054,7 @@ function normalizeCategories(value) {
             category.id ||
             category.key
         ),
+
         name: safeText(
           category.name || category.title
         ),
@@ -1021,7 +1110,8 @@ function mapOfferForPortal(raw) {
       )
   );
 
-  const categories = normalizeCategories(raw.categories);
+  const categories =
+    normalizeCategories(raw.categories);
 
   const sourceLocations = Array.isArray(raw.locations)
     ? raw.locations
@@ -1044,12 +1134,14 @@ function mapOfferForPortal(raw) {
 
   return {
     id: offerKey,
+    accessOfferId: offerKey,
     offerKey,
     offer_key: offerKey,
 
     title,
     name: title,
     description,
+
     shortDescription: safeText(
       raw.short_description
     ),
@@ -1069,18 +1161,24 @@ function mapOfferForPortal(raw) {
           merchant.store_key ||
           merchant.id
       ),
-      name: merchantName,
+
+      name:
+        merchantName,
+
       logoUrl: safeHttpsUrl(
         merchant.logo_url
       ),
     },
 
-    category: categoryName,
+    category:
+      categoryName,
+
     categories,
 
     locations,
 
-    national: raw.national_offer === true,
+    national:
+      raw.national_offer === true,
 
     startDate: safeDate(
       raw.start_date || raw.starts_at
@@ -1143,15 +1241,29 @@ export default async function handler(req, res) {
       );
     }
 
-    if (!isAccessMemberReady(member)) {
+    const accessMemberStatus = normalizeString(
+      member.access_member_status
+    ).toUpperCase();
+
+    // Preserve explicit suspension. A historical sync failure alone does not
+    // prevent the provider from checking access for an active, paid member.
+    if (
+      ["SUSPEND", "SUSPENDED"].includes(accessMemberStatus)
+    ) {
       return forbidden(
         res,
-        "Your Access Perks enrollment is not ready yet.",
-        "ACCESS_MEMBER_NOT_READY",
+        "Your Access Perks membership is suspended. Please contact Card Leo support.",
+        "ACCESS_MEMBER_SUSPENDED",
         {
           access: {
-            ready: false,
-            syncEndpoint: "/api/access/sync-member",
+            ready:
+              false,
+
+            memberStatus:
+              accessMemberStatus,
+
+            syncEndpoint:
+              "/api/access/sync-member",
           },
         }
       );
@@ -1164,12 +1276,15 @@ export default async function handler(req, res) {
     if (!memberKey) {
       return forbidden(
         res,
-        "Your Access Perks member identifier must finish synchronizing before this offer can be viewed.",
+        "Your Card Leo account is missing its permanent Access member identifier. Please contact Card Leo support.",
         "ACCESS_MEMBER_IDENTIFIER_MISSING",
         {
           access: {
-            ready: false,
-            syncEndpoint: "/api/access/sync-member",
+            ready:
+              false,
+
+            syncEndpoint:
+              "/api/access/sync-member",
           },
         }
       );
@@ -1186,36 +1301,67 @@ export default async function handler(req, res) {
     const offer = mapOfferForPortal(rawOffer);
 
     return sendJson(res, 200, {
-      success: true,
-      ok: true,
-      authenticated: true,
-      message: "Access offer loaded.",
+      success:
+        true,
+
+      ok:
+        true,
+
+      authenticated:
+        true,
+
+      message:
+        "Access offer loaded.",
 
       access: {
-        ready: true,
-        environment: configuration.environment,
-        memberStatus:
-          normalizeString(
-            member.access_member_status
-          ) || "OPEN",
+        ready:
+          true,
+
+        environment:
+          configuration.environment,
+
+        catalogReady:
+          true,
+
+        memberStatus: isAccessMemberReady(member)
+          ? normalizeString(member.access_member_status) || "OPEN"
+          : "catalog_ready",
+
+        amtMemberStatus:
+          normalizeString(member.access_member_status) || "pending",
+
+        amtPerksReady:
+          isAccessMemberReady(member),
       },
 
       offer,
 
       // Compatibility alias for a frontend using "benefit".
-      benefit: offer,
+      benefit:
+        offer,
 
       links: {
-        offers: "/api/access/offers",
+        offers:
+          "/api/access/offers",
+
         offer:
           `/api/access/offer?offer_key=${encodeURIComponent(offerKey)}`,
-        redeemOffer: "/api/access/redeem-offer",
-        benefits: DEFAULT_BENEFITS_URL,
-        offerPage: offer.detailsUrl,
-        sso: "/api/access/sso",
+
+        redeemOffer:
+          "/api/access/redeem-offer",
+
+        benefits:
+          DEFAULT_BENEFITS_URL,
+
+        offerPage:
+          offer.detailsUrl,
+
+        sso:
+          "/api/access/sso",
       },
 
-      fetchedAt: new Date().toISOString(),
+      fetchedAt:
+        new Date().toISOString(),
     });
   } catch (error) {
     const status =
@@ -1227,17 +1373,37 @@ export default async function handler(req, res) {
 
     // Never log the upstream request URL: it contains the Access token.
     console.error("Card Leo Access offer details failed:", {
-      code: error?.code || "ACCESS_OFFER_FAILED",
+      code:
+        error?.code || "ACCESS_OFFER_FAILED",
+
       status,
+
+      providerStatus:
+        error?.providerStatus || null,
     });
 
     return sendFailure(
       res,
       status,
+
       status === 500
         ? "Unable to load this Card Leo offer right now."
         : error.message,
-      error?.code || "ACCESS_OFFER_FAILED"
+
+      error?.code || "ACCESS_OFFER_FAILED",
+
+      {
+        access: {
+          ready:
+            false,
+
+          catalogReady:
+            false,
+
+          status:
+            error?.providerStatus || null,
+        },
+      }
     );
   }
 }

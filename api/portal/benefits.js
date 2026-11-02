@@ -35,126 +35,95 @@ import {
 
 /* ==========================================================================
    CARD LEO REWARDS
-   STEP #19
    PORTAL BENEFITS API
 
-   ROUTE
-   -----
    GET /api/portal/benefits
 
-   PURPOSE
-   -------
-   Builds the complete Benefits experience for the Card Leo member portal.
+   Combines:
+   - Existing Card Leo member authentication
+   - Active and paid membership checks
+   - Access member synchronization metadata
+   - Provider-confirmed Access catalog readiness
+   - Access offers, categories, and merchants
+   - Internal Card Leo benefits
+   - Reward-account information
+   - Member-card information
+   - Onboarding information
 
-   THIS ROUTE COMBINES
-   -------------------
-   1. Card Leo authentication
-   2. Active / paid member status
-   3. Access AMT member status
-   4. Access Perks readiness
-   5. Full Access Offers catalog
-   6. Access offer categories
-   7. Access merchants
-   8. Access locations
-   9. Redemption readiness
-   10. Card Leo internal benefits
-   11. Member reward/account information
-   12. Onboarding status
-
-   IMPORTANT
-   ---------
-   Actual coupon/QR/barcode generation is NOT done here.
-
-   Actual member redemption uses:
-
-     POST /api/access/redeem-offer
-
+   Important:
+   - Historical AMT sync failure does not block a catalog attempt.
+   - Explicit Access suspension remains enforced.
+   - The permanent Access identifier comes from the member database row.
+   - Catalog access does not establish redemption authorization.
+   - This endpoint does not generate coupons, barcodes, or QR codes.
+   - This endpoint does not modify AMT synchronization fields.
 ============================================================================ */
 
 /* ==========================================================================
-   CONFIG
+   CONFIGURATION
 ============================================================================ */
 
-const DEFAULT_TIMEZONE =
-  "America/New_York";
+const DEFAULT_TIMEZONE = "America/New_York";
 
-const DEFAULT_PORTAL_PATH =
-  "/portal/index.html";
+const DEFAULT_PORTAL_PATH = "/portal/index.html";
+const DEFAULT_BENEFITS_PATH = "/portal/benefits.html";
 
-const DEFAULT_BENEFITS_PATH =
-  "/portal/benefits.html";
+const ACCESS_OFFERS_ENDPOINT = "/api/access/offers";
+const ACCESS_REDEEM_ENDPOINT = "/api/access/redeem-offer";
+const ACCESS_SYNC_ENDPOINT = "/api/access/sync-member";
 
-const ACCESS_OFFERS_ENDPOINT =
-  "/api/access/offers";
+const DEFAULT_ACCESS_PAGE_SIZE = 100;
+const DEFAULT_ACCESS_MAX_PAGES = 100;
 
-const ACCESS_REDEEM_ENDPOINT =
-  "/api/access/redeem-offer";
-
-const ACCESS_SYNC_ENDPOINT =
-  "/api/access/sync-member";
-
-const DEFAULT_ACCESS_PAGE_SIZE =
-  100;
-
-const DEFAULT_ACCESS_MAX_PAGES =
-  100;
-
-const MAX_ACCESS_PAGE_SIZE =
-  500;
-
-const MAX_ACCESS_MAX_PAGES =
-  250;
+const MAX_ACCESS_PAGE_SIZE = 100;
+const MAX_ACCESS_MAX_PAGES = 250;
 
 /* ==========================================================================
    ACTIVE MEMBER STATES
 ============================================================================ */
 
-const ACTIVE_STATUSES =
-  new Set([
-    "active",
-    "approved",
-    "invited",
-    "paid",
-    "current",
-    "complete",
-    "completed",
-    "succeeded",
-    "auto_approved",
-  ]);
+const ACTIVE_STATUSES = new Set([
+  "active",
+  "approved",
+  "invited",
+  "paid",
+  "current",
+  "complete",
+  "completed",
+  "succeeded",
+  "auto_approved",
+]);
 
-const PAID_PAYMENT_STATUSES =
-  new Set([
-    "paid",
-    "active",
-    "current",
-    "succeeded",
-    "complete",
-    "completed",
-  ]);
+const PAID_PAYMENT_STATUSES = new Set([
+  "paid",
+  "active",
+  "current",
+  "succeeded",
+  "complete",
+  "completed",
+]);
 
-const ACTIVE_MEMBERSHIP_STATUSES =
-  new Set([
-    "active",
-    "activated",
-    "approved",
-    "paid",
-    "current",
-  ]);
+const ACTIVE_MEMBERSHIP_STATUSES = new Set([
+  "active",
+  "activated",
+  "approved",
+  "paid",
+  "current",
+]);
 
-const INACTIVE_STATUSES =
-  new Set([
-    "inactive",
-    "disabled",
-    "suspended",
-    "paused",
-    "denied",
-    "closed",
-    "cancelled",
-    "canceled",
-    "unpaid",
-    "past_due",
-    "payment_failed",
-  ]);
+const INACTIVE_STATUSES = new Set([
+  "inactive",
+  "disabled",
+  "suspended",
+  "paused",
+  "denied",
+  "closed",
+  "cancelled",
+  "canceled",
+  "unpaid",
+  "past_due",
+  "payment_failed",
+]);
 
 /* ==========================================================================
    SESSION COOKIE NAMES
@@ -319,62 +288,36 @@ function isObject(value) {
 }
 
 function normalizeText(value) {
-  return String(
-    value ?? ""
-  ).trim();
+  return String(value ?? "").trim();
 }
 
 function normalizeEmail(value) {
-  return normalizeText(
-    value
-  ).toLowerCase();
+  return normalizeText(value).toLowerCase();
 }
 
 function normalizeStatus(value) {
-  return normalizeText(
-    value || ""
-  ).toLowerCase();
+  return normalizeText(value || "").toLowerCase();
 }
 
-function normalizeBoolean(
-  value,
-  fallback = false
-) {
-  if (
-    typeof value === "boolean"
-  ) {
+function normalizeBoolean(value, fallback = false) {
+  if (typeof value === "boolean") {
     return value;
   }
 
-  if (
-    typeof value === "number"
-  ) {
+  if (typeof value === "number") {
     return value !== 0;
   }
 
-  const normalized =
-    normalizeStatus(value);
+  const normalized = normalizeStatus(value);
 
   if (
-    [
-      "true",
-      "1",
-      "yes",
-      "y",
-      "on",
-    ].includes(normalized)
+    ["true", "1", "yes", "y", "on"].includes(normalized)
   ) {
     return true;
   }
 
   if (
-    [
-      "false",
-      "0",
-      "no",
-      "n",
-      "off",
-    ].includes(normalized)
+    ["false", "0", "no", "n", "off"].includes(normalized)
   ) {
     return false;
   }
@@ -382,27 +325,16 @@ function normalizeBoolean(
   return fallback;
 }
 
-function normalizeInteger(
-  value,
-  fallback = 0
-) {
-  const parsed =
-    Number.parseInt(
-      String(
-        value ?? ""
-      ),
-      10
-    );
+function normalizeInteger(value, fallback = 0) {
+  const parsed = Number.parseInt(
+    String(value ?? ""),
+    10
+  );
 
-  return Number.isFinite(parsed)
-    ? parsed
-    : fallback;
+  return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function normalizeNumber(
-  value,
-  fallback = null
-) {
+function normalizeNumber(value, fallback = null) {
   if (
     value === undefined ||
     value === null ||
@@ -411,42 +343,20 @@ function normalizeNumber(
     return fallback;
   }
 
-  const number =
-    Number(value);
+  const number = Number(value);
 
-  return Number.isFinite(number)
-    ? number
-    : fallback;
+  return Number.isFinite(number) ? number : fallback;
 }
 
-function clamp(
-  value,
-  min,
-  max
-) {
-  return Math.min(
-    Math.max(
-      value,
-      min
-    ),
-    max
-  );
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
 
 function normalizeTier(value) {
-  const tier =
-    normalizeStatus(
-      value || "core"
-    );
+  const tier = normalizeStatus(value || "core");
 
   if (
-    [
-      "core",
-      "silver",
-      "gold",
-      "platinum",
-      "vip",
-    ].includes(tier)
+    ["core", "silver", "gold", "platinum", "vip"].includes(tier)
   ) {
     return tier;
   }
@@ -455,39 +365,26 @@ function normalizeTier(value) {
 }
 
 function getUnixNow() {
-  return Math.floor(
-    Date.now() / 1000
-  );
+  return Math.floor(Date.now() / 1000);
 }
 
 function titleCase(value) {
-  return String(
-    value || ""
-  )
+  return String(value || "")
     .split(/[\s_-]+/)
     .filter(Boolean)
     .map(
       (part) =>
-        part
-          .charAt(0)
-          .toUpperCase() +
-        part
-          .slice(1)
-          .toLowerCase()
+        part.charAt(0).toUpperCase() +
+        part.slice(1).toLowerCase()
     )
     .join(" ");
 }
 
 function money(value) {
-  const number =
-    Number(
-      value || 0
-    );
+  const number = Number(value || 0);
 
   return Number.isFinite(number)
-    ? Number(
-        number.toFixed(2)
-      )
+    ? Number(number.toFixed(2))
     : 0;
 }
 
@@ -496,12 +393,9 @@ function safeDate(value) {
     return null;
   }
 
-  const date =
-    new Date(value);
+  const date = new Date(value);
 
-  return Number.isNaN(
-    date.getTime()
-  )
+  return Number.isNaN(date.getTime())
     ? null
     : date.toISOString();
 }
@@ -519,12 +413,7 @@ function getTierRank(tier) {
     vip: 5,
   };
 
-  return (
-    order[
-      normalizeTier(tier)
-    ] ||
-    1
-  );
+  return order[normalizeTier(tier)] || 1;
 }
 
 function getNextTier(tier) {
@@ -536,22 +425,18 @@ function getNextTier(tier) {
     "vip",
   ];
 
-  const currentIndex =
-    tiers.indexOf(
-      normalizeTier(tier)
-    );
+  const currentIndex = tiers.indexOf(
+    normalizeTier(tier)
+  );
 
   if (
     currentIndex < 0 ||
-    currentIndex ===
-      tiers.length - 1
+    currentIndex === tiers.length - 1
   ) {
     return null;
   }
 
-  return tiers[
-    currentIndex + 1
-  ];
+  return tiers[currentIndex + 1];
 }
 
 /* ==========================================================================
@@ -561,141 +446,79 @@ function getNextTier(tier) {
 function parseCookieHeader(req) {
   if (
     req?.cookies &&
-    typeof req.cookies ===
-      "object"
+    typeof req.cookies === "object"
   ) {
     return req.cookies;
   }
 
-  const cookieHeader =
-    req?.headers?.cookie ||
-    "";
+  const cookieHeader = req?.headers?.cookie || "";
 
-  return String(
-    cookieHeader
-  )
+  return String(cookieHeader)
     .split(";")
-    .map(
-      (part) =>
-        part.trim()
-    )
+    .map((part) => part.trim())
     .filter(Boolean)
-    .reduce(
-      (
-        cookies,
-        part
-      ) => {
-        const index =
-          part.indexOf("=");
+    .reduce((cookies, part) => {
+      const index = part.indexOf("=");
 
-        if (
-          index === -1
-        ) {
-          return cookies;
-        }
-
-        const name =
-          part
-            .slice(
-              0,
-              index
-            )
-            .trim();
-
-        const value =
-          part
-            .slice(
-              index + 1
-            )
-            .trim();
-
-        if (name) {
-          cookies[name] =
-            value;
-        }
-
+      if (index === -1) {
         return cookies;
-      },
-      {}
-    );
+      }
+
+      const name = part.slice(0, index).trim();
+      const value = part.slice(index + 1).trim();
+
+      if (name) {
+        cookies[name] = value;
+      }
+
+      return cookies;
+    }, {});
 }
 
-function decodeCookieValue(
-  value
-) {
-  const raw =
-    String(
-      value || ""
-    );
+function decodeCookieValue(value) {
+  const raw = String(value || "");
 
   if (!raw) {
     return "";
   }
 
   try {
-    return decodeURIComponent(
-      raw
-    );
+    return decodeURIComponent(raw);
   } catch {
     return raw;
   }
 }
 
-function parseJsonObject(
-  value
-) {
-  if (
-    isObject(value)
-  ) {
+function parseJsonObject(value) {
+  if (isObject(value)) {
     return value;
   }
 
-  const raw =
-    normalizeText(value);
+  const raw = normalizeText(value);
 
   if (!raw) {
     return null;
   }
 
-  const decoded =
-    decodeCookieValue(
-      raw
-    );
+  const decoded = decodeCookieValue(raw);
+  const direct = safeJsonParse(decoded, null);
 
-  const direct =
-    safeJsonParse(
-      decoded,
-      null
-    );
-
-  if (
-    isObject(direct)
-  ) {
+  if (isObject(direct)) {
     return direct;
   }
 
   try {
-    const base64Decoded =
-      Buffer
-        .from(
-          decoded,
-          "base64"
-        )
-        .toString(
-          "utf8"
-        );
+    const base64Decoded = Buffer.from(
+      decoded,
+      "base64"
+    ).toString("utf8");
 
-    const parsedBase64 =
-      safeJsonParse(
-        base64Decoded,
-        null
-      );
+    const parsedBase64 = safeJsonParse(
+      base64Decoded,
+      null
+    );
 
-    if (
-      isObject(
-        parsedBase64
-      )
-    ) {
+    if (isObject(parsedBase64)) {
       return parsedBase64;
     }
   } catch {
@@ -703,45 +526,23 @@ function parseJsonObject(
   }
 
   try {
-    const normalized =
-      decoded
-        .replace(
-          /-/g,
-          "+"
-        )
-        .replace(
-          /_/g,
-          "/"
-        );
+    const normalized = decoded
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
 
-    const padded =
-      normalized.padEnd(
-        Math.ceil(
-          normalized.length /
-          4
-        ) * 4,
-        "="
-      );
+    const padded = normalized.padEnd(
+      Math.ceil(normalized.length / 4) * 4,
+      "="
+    );
 
-    const decodedUrl =
-      Buffer
-        .from(
-          padded,
-          "base64"
-        )
-        .toString(
-          "utf8"
-        );
+    const decodedUrl = Buffer.from(
+      padded,
+      "base64"
+    ).toString("utf8");
 
-    const parsed =
-      safeJsonParse(
-        decodedUrl,
-        null
-      );
+    const parsed = safeJsonParse(decodedUrl, null);
 
-    if (
-      isObject(parsed)
-    ) {
+    if (isObject(parsed)) {
       return parsed;
     }
   } catch {
@@ -751,55 +552,36 @@ function parseJsonObject(
   return null;
 }
 
-function readSessionCookie(
-  req
-) {
-  const cookies =
-    parseCookieHeader(
-      req
-    );
+function readSessionCookie(req) {
+  const cookies = parseCookieHeader(req);
 
   const configuredName =
-    typeof getSessionCookieName ===
-      "function"
+    typeof getSessionCookieName === "function"
       ? getSessionCookieName()
       : "";
 
-  const names =
-    Array.from(
-      new Set(
-        [
-          configuredName,
-          ...POSSIBLE_SESSION_COOKIE_NAMES,
-        ]
-          .map(
-            normalizeText
-          )
-          .filter(Boolean)
-      )
-    );
+  const names = Array.from(
+    new Set(
+      [
+        configuredName,
+        ...POSSIBLE_SESSION_COOKIE_NAMES,
+      ]
+        .map(normalizeText)
+        .filter(Boolean)
+    )
+  );
 
-  for (
-    const name of names
-  ) {
-    if (
-      !cookies[name]
-    ) {
+  for (const name of names) {
+    if (!cookies[name]) {
       continue;
     }
 
-    const parsed =
-      parseJsonObject(
-        cookies[name]
-      );
+    const parsed = parseJsonObject(cookies[name]);
 
-    if (
-      isObject(parsed)
-    ) {
+    if (isObject(parsed)) {
       return {
         name,
-        value:
-          parsed,
+        value: parsed,
       };
     }
   }
@@ -811,34 +593,22 @@ function readSessionCookie(
    SESSION HELPERS
 ============================================================================ */
 
-function getSessionExpiresAt(
-  sessionCookie
-) {
-  const value =
-    sessionCookie?.value ||
-    {};
+function getSessionExpiresAt(sessionCookie) {
+  const value = sessionCookie?.value || {};
 
   const candidates = [
     value.expires_at,
     value.expiresAt,
     value.exp,
-    value.session
-      ?.expires_at,
-    value.session
-      ?.expiresAt,
+    value.session?.expires_at,
+    value.session?.expiresAt,
   ];
 
-  for (
-    const candidate
-    of candidates
-  ) {
-    const number =
-      Number(candidate);
+  for (const candidate of candidates) {
+    const number = Number(candidate);
 
     if (
-      Number.isFinite(
-        number
-      ) &&
+      Number.isFinite(number) &&
       number > 0
     ) {
       return number;
@@ -848,62 +618,37 @@ function getSessionExpiresAt(
   return 0;
 }
 
-function isSessionExpired(
-  sessionCookie
-) {
-  const expiresAt =
-    getSessionExpiresAt(
-      sessionCookie
-    );
+function isSessionExpired(sessionCookie) {
+  const expiresAt = getSessionExpiresAt(
+    sessionCookie
+  );
 
-  /*
-   * Keep compatibility with sessions that did not store expiration.
-   */
-
+  // Preserve compatibility with older sessions.
   if (!expiresAt) {
     return false;
   }
 
-  return (
-    expiresAt <=
-    getUnixNow()
-  );
+  return expiresAt <= getUnixNow();
 }
 
-function getSessionMemberId(
-  sessionCookie
-) {
-  const value =
-    sessionCookie?.value ||
-    {};
+function getSessionMemberId(sessionCookie) {
+  const value = sessionCookie?.value || {};
 
-  const member =
-    isObject(
-      value.member
-    )
-      ? value.member
-      : {};
+  const member = isObject(value.member)
+    ? value.member
+    : {};
 
-  const profile =
-    isObject(
-      value.profile
-    )
-      ? value.profile
-      : {};
+  const profile = isObject(value.profile)
+    ? value.profile
+    : {};
 
-  const user =
-    isObject(
-      value.user
-    )
-      ? value.user
-      : {};
+  const user = isObject(value.user)
+    ? value.user
+    : {};
 
-  const metadata =
-    isObject(
-      user.user_metadata
-    )
-      ? user.user_metadata
-      : {};
+  const metadata = isObject(user.user_metadata)
+    ? user.user_metadata
+    : {};
 
   return normalizeText(
     member.id ||
@@ -929,40 +674,24 @@ function getSessionMemberId(
   );
 }
 
-function getSessionEmail(
-  sessionCookie
-) {
-  const value =
-    sessionCookie?.value ||
-    {};
+function getSessionEmail(sessionCookie) {
+  const value = sessionCookie?.value || {};
 
-  const member =
-    isObject(
-      value.member
-    )
-      ? value.member
-      : {};
+  const member = isObject(value.member)
+    ? value.member
+    : {};
 
-  const profile =
-    isObject(
-      value.profile
-    )
-      ? value.profile
-      : {};
+  const profile = isObject(value.profile)
+    ? value.profile
+    : {};
 
-  const user =
-    isObject(
-      value.user
-    )
-      ? value.user
-      : {};
+  const user = isObject(value.user)
+    ? value.user
+    : {};
 
-  const metadata =
-    isObject(
-      user.user_metadata
-    )
-      ? user.user_metadata
-      : {};
+  const metadata = isObject(user.user_metadata)
+    ? user.user_metadata
+    : {};
 
   return normalizeEmail(
     member.email ||
@@ -978,50 +707,28 @@ function getSessionEmail(
    OPTIONAL DATABASE SUPPORT
 ============================================================================ */
 
-function isMissingOptionalTableOrColumn(
-  error
-) {
-  const code =
-    String(
-      error?.code ||
-      ""
-    );
+function isMissingOptionalTableOrColumn(error) {
+  const code = String(error?.code || "");
 
-  const message =
-    String(
-      error?.message ||
-      ""
-    ).toLowerCase();
+  const message = String(
+    error?.message || ""
+  ).toLowerCase();
 
-  const details =
-    String(
-      error?.details ||
-      ""
-    ).toLowerCase();
+  const details = String(
+    error?.details || ""
+  ).toLowerCase();
 
   return (
     code === "42P01" ||
     code === "42703" ||
     code === "PGRST204" ||
     code === "PGRST205" ||
-    message.includes(
-      "does not exist"
-    ) ||
-    message.includes(
-      "could not find"
-    ) ||
-    message.includes(
-      "schema cache"
-    ) ||
-    details.includes(
-      "does not exist"
-    ) ||
-    details.includes(
-      "could not find"
-    ) ||
-    details.includes(
-      "schema cache"
-    )
+    message.includes("does not exist") ||
+    message.includes("could not find") ||
+    message.includes("schema cache") ||
+    details.includes("does not exist") ||
+    details.includes("could not find") ||
+    details.includes("schema cache")
   );
 }
 
@@ -1029,246 +736,188 @@ function isMissingOptionalTableOrColumn(
    MEMBER DISPLAY
 ============================================================================ */
 
-function getDisplayName(
-  member
-) {
-  const fullName =
-    normalizeText(
-      member?.full_name
-    );
+function getDisplayName(member) {
+  const fullName = normalizeText(
+    member?.full_name
+  );
 
   if (fullName) {
     return fullName;
   }
 
-  const joined =
-    [
-      member?.first_name,
-      member?.last_name,
-    ]
-      .map(
-        normalizeText
-      )
-      .filter(Boolean)
-      .join(" ");
+  const joined = [
+    member?.first_name,
+    member?.last_name,
+  ]
+    .map(normalizeText)
+    .filter(Boolean)
+    .join(" ");
 
-  return (
-    joined ||
-    "Card Leo Member"
-  );
+  return joined || "Card Leo Member";
 }
 
 /* ==========================================================================
    PORTAL ACCESS
 ============================================================================ */
 
-function hasPortalAccess(
-  member
-) {
+function hasPortalAccess(member) {
   if (!member) {
     return false;
   }
 
-  const status =
-    normalizeStatus(
-      member.status
-    );
+  const status = normalizeStatus(member.status);
 
-  const paymentStatus =
-    normalizeStatus(
-      member.payment_status
-    );
+  const paymentStatus = normalizeStatus(
+    member.payment_status
+  );
 
-  const membershipStatus =
-    normalizeStatus(
-      member.membership_status
-    );
+  const membershipStatus = normalizeStatus(
+    member.membership_status
+  );
 
-  const approvalStatus =
-    normalizeStatus(
-      member.approval_status
-    );
+  const approvalStatus = normalizeStatus(
+    member.approval_status
+  );
 
   if (
-    INACTIVE_STATUSES.has(
-      status
-    ) ||
-    INACTIVE_STATUSES.has(
-      paymentStatus
-    ) ||
-    INACTIVE_STATUSES.has(
-      membershipStatus
-    ) ||
-    INACTIVE_STATUSES.has(
-      approvalStatus
-    )
+    [
+      status,
+      paymentStatus,
+      membershipStatus,
+      approvalStatus,
+    ].some((value) => INACTIVE_STATUSES.has(value))
   ) {
     return false;
   }
 
-  return (
-    ACTIVE_STATUSES.has(
-      status
-    ) ||
-    PAID_PAYMENT_STATUSES.has(
-      paymentStatus
-    ) ||
-    ACTIVE_MEMBERSHIP_STATUSES.has(
-      membershipStatus
-    ) ||
-    ACTIVE_STATUSES.has(
-      approvalStatus
-    )
+  const paid = PAID_PAYMENT_STATUSES.has(
+    paymentStatus
   );
+
+  const active =
+    ACTIVE_STATUSES.has(status) ||
+    ACTIVE_MEMBERSHIP_STATUSES.has(membershipStatus) ||
+    ACTIVE_STATUSES.has(approvalStatus);
+
+  return paid && active;
 }
 
-function normalizeMemberStatus(
-  member
-) {
+function normalizeMemberStatus(member) {
   if (!member) {
     return "pending";
   }
 
-  if (
-    hasPortalAccess(member)
-  ) {
+  if (hasPortalAccess(member)) {
     return "active";
   }
 
-  const status =
-    normalizeStatus(
-      member.status
-    );
+  const status = normalizeStatus(member.status);
 
   if (
-    [
-      "pending",
-      "reviewing",
-      "",
-    ].includes(status)
+    ["pending", "reviewing", ""].includes(status)
   ) {
     return "pending";
   }
 
   if (
-    [
-      "disabled",
-      "suspended",
-      "paused",
-    ].includes(status)
+    ["disabled", "suspended", "paused"].includes(status)
   ) {
     return "suspended";
   }
 
   if (
-    [
-      "denied",
-      "closed",
-      "cancelled",
-      "canceled",
-    ].includes(status)
+    ["denied", "closed", "cancelled", "canceled"].includes(status)
   ) {
     return status;
   }
 
-  return (
-    status ||
-    "pending"
-  );
+  return status || "pending";
 }
 
 /* ==========================================================================
    ACCESS MEMBER STATUS
 ============================================================================ */
 
-function getAccessMemberStatus(
-  member
-) {
+function getAccessMemberStatus(member) {
   return normalizeText(
-    member
-      ?.access_member_status ||
-    "pending"
+    member?.access_member_status || "pending"
   );
 }
 
-function getAccessPerksReady(
-  member
-) {
-  const raw =
-    member
-      ?.access_perks_ready;
+function getAccessPerksReady(member) {
+  const raw = member?.access_perks_ready;
 
-  if (
-    typeof raw ===
-      "boolean"
-  ) {
+  if (typeof raw === "boolean") {
     return raw;
   }
 
   return (
-    getAccessMemberStatus(
-      member
-    ).toUpperCase() ===
+    getAccessMemberStatus(member).toUpperCase() ===
     "OPEN"
   );
 }
 
 function buildAccessPayload(
-  member
+  member,
+  accessCatalog = null
 ) {
-  const memberStatus =
-    getAccessMemberStatus(
-      member
-    );
+  const memberStatus = getAccessMemberStatus(
+    member
+  );
 
-  const perksReady =
-    getAccessPerksReady(
-      member
-    );
+  const suspended = [
+    "SUSPEND",
+    "SUSPENDED",
+  ].includes(memberStatus.toUpperCase());
+
+  const catalogReady =
+    !suspended &&
+    hasPortalAccess(member) &&
+    accessCatalog?.loaded === true;
 
   return {
-    member_identifier:
-      normalizeText(
-        member
-          ?.access_member_identifier
-      ),
+    member_identifier: normalizeText(
+      member?.access_member_identifier
+    ),
 
-    member_customer_identifier:
-      normalizeText(
-        member
-          ?.access_member_identifier
-      ),
+    member_customer_identifier: normalizeText(
+      member?.access_member_identifier
+    ),
 
     member_status:
-      memberStatus,
+      catalogReady ? "catalog_ready" : memberStatus,
 
     status:
+      catalogReady ? "catalog_ready" : memberStatus,
+
+    amt_member_status:
       memberStatus,
 
+    amt_perks_ready:
+      getAccessPerksReady(member),
+
     synced_at:
-      member
-        ?.access_synced_at ||
-      null,
+      member?.access_synced_at || null,
 
     suspended_at:
-      member
-        ?.access_suspended_at ||
-      null,
+      member?.access_suspended_at || null,
 
-    sync_error:
-      normalizeText(
-        member
-          ?.access_sync_error
-      ),
+    // Do not expose raw historical provider errors.
+    sync_error: normalizeText(member?.access_sync_error)
+      ? "Previous Access member synchronization needs review."
+      : "",
 
     perks_ready:
-      perksReady,
+      catalogReady,
 
     benefits_ready:
-      perksReady,
+      catalogReady,
+
+    catalog_ready:
+      catalogReady,
 
     ready:
-      perksReady,
+      catalogReady,
 
     sync_endpoint:
       ACCESS_SYNC_ENDPOINT,
@@ -1286,151 +935,110 @@ function buildAccessPayload(
 ============================================================================ */
 
 function sanitizeMember(
-  member
+  member,
+  accessCatalog = null
 ) {
   if (!member) {
     return null;
   }
 
-  const portalAccess =
-    hasPortalAccess(
-      member
-    );
+  const portalAccess = hasPortalAccess(member);
 
-  const access =
-    buildAccessPayload(
-      member
-    );
+  const access = buildAccessPayload(
+    member,
+    accessCatalog
+  );
 
-  const paymentStatus =
-    normalizeStatus(
-      member.payment_status
-    );
+  const paymentStatus = normalizeStatus(
+    member.payment_status
+  );
 
-  const membershipStatus =
-    normalizeStatus(
-      member.membership_status
-    );
+  const membershipStatus = normalizeStatus(
+    member.membership_status
+  );
 
-  const approvalStatus =
-    normalizeStatus(
-      member.approval_status
-    );
+  const approvalStatus = normalizeStatus(
+    member.approval_status
+  );
 
   const status =
-    normalizeStatus(
-      member.status
-    ) ||
-    "pending";
+    normalizeStatus(member.status) || "pending";
 
-  const tier =
-    normalizeTier(
-      member.tier ||
-      "core"
-    );
+  const tier = normalizeTier(
+    member.tier || "core"
+  );
 
   return {
     id:
-      member.id ||
-      null,
+      member.id || null,
 
     signupId:
-      member.id ||
-      null,
+      member.id || null,
 
     signup_id:
-      member.id ||
-      null,
+      member.id || null,
 
     email:
-      member.email ||
-      null,
+      member.email || null,
 
     firstName:
-      member.first_name ||
-      "",
+      member.first_name || "",
 
     first_name:
-      member.first_name ||
-      "",
+      member.first_name || "",
 
     lastName:
-      member.last_name ||
-      "",
+      member.last_name || "",
 
     last_name:
-      member.last_name ||
-      "",
+      member.last_name || "",
 
     fullName:
-      getDisplayName(
-        member
-      ),
+      getDisplayName(member),
 
     full_name:
-      getDisplayName(
-        member
-      ),
+      getDisplayName(member),
 
     name:
-      getDisplayName(
-        member
-      ),
+      getDisplayName(member),
 
     phone:
-      member.phone ||
-      "",
+      member.phone || "",
 
     city:
-      member.city ||
-      "",
+      member.city || "",
 
     state:
-      member.state ||
-      "",
+      member.state || "",
 
     interest:
-      member.interest ||
-      "",
+      member.interest || "",
 
     goals:
-      member.goals ||
-      "",
+      member.goals || "",
 
     status:
-      portalAccess
-        ? "active"
-        : status,
+      portalAccess ? "active" : status,
 
     payment_status:
       paymentStatus,
 
     membership_status:
-      portalAccess
-        ? "active"
-        : membershipStatus,
+      portalAccess ? "active" : membershipStatus,
 
     approval_status:
-      portalAccess
-        ? "approved"
-        : approvalStatus,
+      portalAccess ? "approved" : approvalStatus,
 
     paymentStatus,
 
     membershipStatus:
-      portalAccess
-        ? "active"
-        : membershipStatus,
+      portalAccess ? "active" : membershipStatus,
 
     approvalStatus:
-      portalAccess
-        ? "approved"
-        : approvalStatus,
+      portalAccess ? "approved" : approvalStatus,
 
     memberStatus:
-      normalizeMemberStatus(
-        member
-      ),
+      normalizeMemberStatus(member),
 
     tier,
 
@@ -1438,34 +1046,22 @@ function sanitizeMember(
       titleCase(tier),
 
     referralCode:
-      member
-        .referral_code ||
-      "",
+      member.referral_code || "",
 
     referral_code:
-      member
-        .referral_code ||
-      "",
+      member.referral_code || "",
 
     portalUserId:
-      member
-        .portal_user_id ||
-      null,
+      member.portal_user_id || null,
 
     portal_user_id:
-      member
-        .portal_user_id ||
-      null,
+      member.portal_user_id || null,
 
     portalLoginUrl:
-      member
-        .portal_login_url ||
-      DEFAULT_PORTAL_PATH,
+      member.portal_login_url || DEFAULT_PORTAL_PATH,
 
     portal_login_url:
-      member
-        .portal_login_url ||
-      DEFAULT_PORTAL_PATH,
+      member.portal_login_url || DEFAULT_PORTAL_PATH,
 
     portalAccess,
 
@@ -1479,96 +1075,64 @@ function sanitizeMember(
       "member",
 
     stripeCustomerId:
-      member
-        .stripe_customer_id ||
-      "",
+      member.stripe_customer_id || "",
 
     stripe_customer_id:
-      member
-        .stripe_customer_id ||
-      "",
+      member.stripe_customer_id || "",
 
     stripeSubscriptionId:
-      member
-        .stripe_subscription_id ||
-      "",
+      member.stripe_subscription_id || "",
 
     stripe_subscription_id:
-      member
-        .stripe_subscription_id ||
-      "",
+      member.stripe_subscription_id || "",
 
     accessMemberIdentifier:
-      access
-        .member_identifier,
+      access.member_identifier,
 
     access_member_identifier:
-      access
-        .member_identifier,
+      access.member_identifier,
 
     accessMemberStatus:
-      access
-        .member_status,
+      access.member_status,
 
     access_member_status:
-      access
-        .member_status,
+      access.member_status,
 
     accessPerksReady:
-      access
-        .perks_ready,
+      access.perks_ready,
 
     access_perks_ready:
-      access
-        .perks_ready,
+      access.perks_ready,
 
     benefitsReady:
-      access
-        .benefits_ready,
+      access.benefits_ready,
 
     benefits_ready:
-      access
-        .benefits_ready,
+      access.benefits_ready,
 
     emailVerified:
-      Boolean(
-        member.email_verified
-      ),
+      Boolean(member.email_verified),
 
     emailVerifiedAt:
-      member
-        .email_verified_at ||
-      null,
+      member.email_verified_at || null,
 
     email_verified:
-      Boolean(
-        member.email_verified
-      ),
+      Boolean(member.email_verified),
 
     email_verified_at:
-      member
-        .email_verified_at ||
-      null,
+      member.email_verified_at || null,
 
     createdAt:
-      member
-        .created_at ||
-      null,
+      member.created_at || null,
 
     updatedAt:
-      member
-        .updated_at ||
-      null,
+      member.updated_at || null,
 
     created_at:
-      member
-        .created_at ||
-      null,
+      member.created_at || null,
 
     updated_at:
-      member
-        .updated_at ||
-      null,
+      member.updated_at || null,
 
     role:
       "member",
@@ -1577,6 +1141,10 @@ function sanitizeMember(
 
 /* ==========================================================================
    SIGNUP SELECT
+
+   Retained for compatibility with the existing file.
+   The member lookup below reads the actual row so optional missing columns
+   cannot cause valid membership and Access fields to be discarded.
 ============================================================================ */
 
 function getSignupSelectFields({
@@ -1605,44 +1173,26 @@ function getSignupSelectFields({
   ];
 
   if (!extended) {
-    return base.join(
-      ", "
-    );
+    return base.join(", ");
   }
 
   return [
     ...base,
-
     "goals",
-
     "payment_status",
-
     "membership_status",
-
     "approval_status",
-
     "activation_fee_amount",
-
     "monthly_fee_amount",
-
     "billing_day",
-
     "stripe_customer_id",
-
     "stripe_subscription_id",
-
     "stripe_checkout_session_id",
-
     "access_member_identifier",
-
     "access_member_status",
-
     "access_synced_at",
-
     "access_suspended_at",
-
     "access_sync_error",
-
     "access_perks_ready",
   ].join(", ");
 }
@@ -1655,313 +1205,169 @@ async function getSignupRecord({
   memberId,
   email,
 }) {
-  let query =
-    supabaseAdmin
-      .from("signups")
-      .select(
-        getSignupSelectFields({
-          extended:
-            true,
-        })
-      )
-      .limit(1);
-
-  if (memberId) {
-    query =
-      query.eq(
-        "id",
-        memberId
-      );
-  } else {
-    query =
-      query.ilike(
-        "email",
-        email
-      );
-  }
-
-  let result =
-    await query
-      .maybeSingle();
-
-  if (
-    result.error &&
-    isMissingOptionalTableOrColumn(
-      result.error
-    )
-  ) {
-    let fallbackQuery =
-      supabaseAdmin
-        .from("signups")
-        .select(
-          getSignupSelectFields({
-            extended:
-              false,
-          })
-        )
-        .limit(1);
-
-    if (memberId) {
-      fallbackQuery =
-        fallbackQuery.eq(
-          "id",
-          memberId
-        );
-    } else {
-      fallbackQuery =
-        fallbackQuery.ilike(
-          "email",
-          email
-        );
-    }
-
-    const fallback =
-      await fallbackQuery
-        .maybeSingle();
-
+  if (!memberId && !email) {
     return {
-      data:
-        fallback.data
-          ? {
-              ...fallback.data,
-
-              goals:
-                "",
-
-              payment_status:
-                "",
-
-              membership_status:
-                "",
-
-              approval_status:
-                "",
-
-              stripe_customer_id:
-                "",
-
-              stripe_subscription_id:
-                "",
-
-              stripe_checkout_session_id:
-                "",
-
-              access_member_identifier:
-                "",
-
-              access_member_status:
-                "pending",
-
-              access_synced_at:
-                null,
-
-              access_suspended_at:
-                null,
-
-              access_sync_error:
-                "",
-
-              access_perks_ready:
-                false,
-            }
-          : null,
-
-      error:
-        fallback.error,
+      data: null,
+      error: null,
     };
   }
 
-  return result;
+  let query = supabaseAdmin
+    .from("signups")
+    .select("*")
+    .limit(1);
+
+  query = memberId
+    ? query.eq("id", memberId)
+    : query.ilike("email", email);
+
+  return await query.maybeSingle();
 }
 
 /* ==========================================================================
-   AUTH
+   AUTHENTICATION
 ============================================================================ */
 
 async function getAuthenticatedMember(
   req,
   res
 ) {
-  const sessionCookie =
-    readSessionCookie(
-      req
-    );
+  const sessionCookie = readSessionCookie(req);
 
-  if (
-    !sessionCookie?.value
-  ) {
+  if (!sessionCookie?.value) {
     return {
-      member:
-        null,
+      member: null,
+      response: unauthorized(
+        res,
+        "Unauthorized. Please sign in."
+      ),
+    };
+  }
 
-      response:
-        unauthorized(
-          res,
-          "Unauthorized. Please sign in."
-        ),
+  if (isSessionExpired(sessionCookie)) {
+    clearAuthCookies(res);
+
+    return {
+      member: null,
+      response: unauthorized(
+        res,
+        "Session expired. Please sign in again."
+      ),
     };
   }
 
   if (
-    isSessionExpired(
-      sessionCookie
-    )
+    sessionCookie.value.authenticated !== true
   ) {
-    clearAuthCookies(
-      res
-    );
+    clearAuthCookies(res);
 
     return {
-      member:
-        null,
-
-      response:
-        unauthorized(
-          res,
-          "Session expired. Please sign in again."
-        ),
+      member: null,
+      response: unauthorized(
+        res,
+        "Session invalid. Please sign in again."
+      ),
     };
   }
 
-  if (
+  const memberId = getSessionMemberId(
     sessionCookie
-      .value
-      .authenticated !==
-    true
-  ) {
-    clearAuthCookies(
-      res
-    );
+  );
+
+  const email = getSessionEmail(
+    sessionCookie
+  );
+
+  if (!memberId && !email) {
+    clearAuthCookies(res);
 
     return {
-      member:
-        null,
-
-      response:
-        unauthorized(
-          res,
-          "Session invalid. Please sign in again."
-        ),
+      member: null,
+      response: unauthorized(
+        res,
+        "Session missing member information."
+      ),
     };
   }
 
-  const memberId =
-    getSessionMemberId(
-      sessionCookie
-    );
-
-  const email =
-    getSessionEmail(
-      sessionCookie
-    );
-
-  if (
-    !memberId &&
-    !email
-  ) {
-    clearAuthCookies(
-      res
-    );
-
-    return {
-      member:
-        null,
-
-      response:
-        unauthorized(
-          res,
-          "Session missing member information."
-        ),
-    };
-  }
-
-  const {
+  let {
     data,
     error,
-  } =
-    await getSignupRecord({
-      memberId,
+  } = await getSignupRecord({
+    memberId,
+    email,
+  });
+
+  if (
+    !error &&
+    !data?.id &&
+    memberId &&
+    email
+  ) {
+    ({
+      data,
+      error,
+    } = await getSignupRecord({
+      memberId: "",
       email,
-    });
+    }));
+  }
 
   if (error) {
     throw error;
   }
 
-  if (
-    !data?.id
-  ) {
-    clearAuthCookies(
-      res
-    );
+  if (!data?.id) {
+    clearAuthCookies(res);
 
     return {
-      member:
-        null,
-
-      response:
-        unauthorized(
-          res,
-          "Account not found. Please sign in again."
-        ),
+      member: null,
+      response: unauthorized(
+        res,
+        "Account not found. Please sign in again."
+      ),
     };
   }
 
-  if (
-    !hasPortalAccess(
-      data
-    )
-  ) {
-    const status =
-      normalizeStatus(
-        data.status ||
-        "pending"
-      );
+  if (!hasPortalAccess(data)) {
+    const status = normalizeStatus(
+      data.status || "pending"
+    );
 
     return {
-      member:
-        null,
+      member: null,
 
-      response:
-        forbidden(
-          res,
+      response: forbidden(
+        res,
 
-          status ===
-            "pending" ||
-          status ===
-            "reviewing" ||
-          !status
-            ? "Your account is pending approval or payment."
-            : "Your account is not active.",
+        status === "pending" ||
+        status === "reviewing" ||
+        !status
+          ? "Your account is pending approval or payment."
+          : "Your account is not active.",
 
-          {
-            authenticated:
-              true,
+        {
+          authenticated: true,
 
-            member:
-              sanitizeMember(
-                data
-              ),
+          member:
+            sanitizeMember(data),
 
-            requires_payment:
-              true,
+          requires_payment:
+            true,
 
-            requiresPayment:
-              true,
+          requiresPayment:
+            true,
 
-            redirectTo:
-              "/signup.html?status=payment_required",
-          }
-        ),
+          redirectTo:
+            "/signup.html?status=payment_required",
+        }
+      ),
     };
   }
 
   return {
-    member:
-      data,
-
-    response:
-      null,
+    member: data,
+    response: null,
   };
 }
 
@@ -1971,48 +1377,27 @@ async function getAuthenticatedMember(
 
 async function getFeatureFlags() {
   const fallback = {
-    rewards_enabled:
-      true,
-
-    referrals_enabled:
-      true,
-
-    support_enabled:
-      true,
-
-    benefits_enabled:
-      true,
-
-    access_perks_enabled:
-      true,
-
-    allowance_card_enabled:
-      true,
+    rewards_enabled: true,
+    referrals_enabled: true,
+    support_enabled: true,
+    benefits_enabled: true,
+    access_perks_enabled: true,
+    allowance_card_enabled: true,
   };
 
   try {
     const {
       data,
       error,
-    } =
-      await supabaseAdmin
-        .from(
-          "system_settings"
-        )
-        .select(
-          "value"
-        )
-        .eq(
-          "key",
-          "portal.features"
-        )
-        .maybeSingle();
+    } = await supabaseAdmin
+      .from("system_settings")
+      .select("value")
+      .eq("key", "portal.features")
+      .maybeSingle();
 
     if (
       error &&
-      isMissingOptionalTableOrColumn(
-        error
-      )
+      isMissingOptionalTableOrColumn(error)
     ) {
       return fallback;
     }
@@ -2023,40 +1408,22 @@ async function getFeatureFlags() {
 
     return {
       rewards_enabled:
-        data
-          ?.value
-          ?.rewards_enabled !==
-        false,
+        data?.value?.rewards_enabled !== false,
 
       referrals_enabled:
-        data
-          ?.value
-          ?.referrals_enabled !==
-        false,
+        data?.value?.referrals_enabled !== false,
 
       support_enabled:
-        data
-          ?.value
-          ?.support_enabled !==
-        false,
+        data?.value?.support_enabled !== false,
 
       benefits_enabled:
-        data
-          ?.value
-          ?.benefits_enabled !==
-        false,
+        data?.value?.benefits_enabled !== false,
 
       access_perks_enabled:
-        data
-          ?.value
-          ?.access_perks_enabled !==
-        false,
+        data?.value?.access_perks_enabled !== false,
 
       allowance_card_enabled:
-        data
-          ?.value
-          ?.allowance_card_enabled !==
-        false,
+        data?.value?.allowance_card_enabled !== false,
     };
   } catch {
     return fallback;
@@ -2067,65 +1434,34 @@ async function getFeatureFlags() {
    DEFAULT ONBOARDING
 ============================================================================ */
 
-function buildDefaultOnboarding(
-  member
-) {
-  const safeMember =
-    sanitizeMember(
-      member
-    );
+function buildDefaultOnboarding(member) {
+  const safeMember = sanitizeMember(member);
 
-  const emailVerified =
-    Boolean(
-      member
-        ?.email_verified ||
-      member
-        ?.email_verified_at
-    );
+  const emailVerified = Boolean(
+    member?.email_verified ||
+    member?.email_verified_at
+  );
 
-  const profileCompleted =
-    Boolean(
-      normalizeText(
-        member
-          ?.first_name
-      ) &&
-      normalizeText(
-        member
-          ?.last_name
-      ) &&
-      normalizeText(
-        member
-          ?.email
-      ) &&
-      normalizeText(
-        member
-          ?.phone
-      )
-    );
+  const profileCompleted = Boolean(
+    normalizeText(member?.first_name) &&
+    normalizeText(member?.last_name) &&
+    normalizeText(member?.email) &&
+    normalizeText(member?.phone)
+  );
 
-  const rewardsActivated =
-    hasPortalAccess(
-      member
-    );
+  const rewardsActivated = hasPortalAccess(member);
 
-  let percent =
-    0;
+  let percent = 0;
 
-  if (
-    profileCompleted
-  ) {
+  if (profileCompleted) {
     percent += 40;
   }
 
-  if (
-    emailVerified
-  ) {
+  if (emailVerified) {
     percent += 30;
   }
 
-  if (
-    rewardsActivated
-  ) {
+  if (rewardsActivated) {
     percent += 30;
   }
 
@@ -2137,14 +1473,10 @@ function buildDefaultOnboarding(
       safeMember.id,
 
     accepted_terms:
-      Boolean(
-        member?.agreed
-      ),
+      Boolean(member?.agreed),
 
     accepted_privacy:
-      Boolean(
-        member?.agreed
-      ),
+      Boolean(member?.agreed),
 
     profile_completed:
       profileCompleted,
@@ -2159,18 +1491,10 @@ function buildDefaultOnboarding(
       rewardsActivated,
 
     onboarding_percent:
-      Math.max(
-        0,
-        Math.min(
-          100,
-          percent
-        )
-      ),
+      Math.max(0, Math.min(100, percent)),
 
     onboarding_status:
-      percent >= 100
-        ? "complete"
-        : "in_progress",
+      percent >= 100 ? "complete" : "in_progress",
   };
 }
 
@@ -2178,24 +1502,16 @@ function buildDefaultOnboarding(
    DEFAULT REWARD ACCOUNT
 ============================================================================ */
 
-function buildDefaultRewardAccount(
-  member
-) {
+function buildDefaultRewardAccount(member) {
   return {
     signup_id:
-      member?.id ||
-      null,
+      member?.id || null,
 
     member_id:
-      member?.id ||
-      null,
+      member?.id || null,
 
     account_status:
-      hasPortalAccess(
-        member
-      )
-        ? "active"
-        : "pending",
+      hasPortalAccess(member) ? "active" : "pending",
 
     total_cardleo_allocated:
       0,
@@ -2247,34 +1563,22 @@ async function queryOptionalSingleByMemberColumns({
   memberId,
   columns,
 }) {
-  for (
-    const column
-    of columns
-  ) {
+  for (const column of columns) {
     const {
       data,
       error,
-    } =
-      await supabaseAdmin
-        .from(table)
-        .select("*")
-        .eq(
-          column,
-          memberId
-        )
-        .maybeSingle();
+    } = await supabaseAdmin
+      .from(table)
+      .select("*")
+      .eq(column, memberId)
+      .maybeSingle();
 
     if (!error) {
-      return (
-        data ||
-        null
-      );
+      return data || null;
     }
 
     if (
-      isMissingOptionalTableOrColumn(
-        error
-      )
+      isMissingOptionalTableOrColumn(error)
     ) {
       continue;
     }
@@ -2292,224 +1596,172 @@ async function queryOptionalSingleByMemberColumns({
 function buildStaticBenefits(
   memberTier,
   featureFlags = {},
-  member = {}
+  member = {},
+  accessCatalog = null
 ) {
-  const normalizedTier =
-    normalizeTier(
-      memberTier
-    );
+  const normalizedTier = normalizeTier(
+    memberTier
+  );
 
-  const tierRank =
-    getTierRank(
-      normalizedTier
-    );
+  const tierRank = getTierRank(
+    normalizedTier
+  );
 
   const referralsEnabled =
-    featureFlags
-      .referrals_enabled !==
-    false;
+    featureFlags.referrals_enabled !== false;
 
   const benefitsEnabled =
-    featureFlags
-      .benefits_enabled !==
-    false;
+    featureFlags.benefits_enabled !== false;
 
   const rewardsEnabled =
-    featureFlags
-      .rewards_enabled !==
-    false;
+    featureFlags.rewards_enabled !== false;
 
   const supportEnabled =
-    featureFlags
-      .support_enabled !==
-    false;
+    featureFlags.support_enabled !== false;
 
   const accessPerksEnabled =
-    featureFlags
-      .access_perks_enabled !==
-    false;
+    featureFlags.access_perks_enabled !== false;
 
   const allowanceEnabled =
-    featureFlags
-      .allowance_card_enabled !==
-    false;
+    featureFlags.allowance_card_enabled !== false;
 
-  const access =
-    buildAccessPayload(
-      member
-    );
+  const access = buildAccessPayload(
+    member,
+    accessCatalog
+  );
 
-  if (
-    !benefitsEnabled
-  ) {
+  if (!benefitsEnabled) {
     return [];
   }
 
   return BASE_BENEFITS
-    .filter(
-      (benefit) => {
-        if (
-          benefit.code ===
-            "referral_access" &&
-          !referralsEnabled
-        ) {
-          return false;
-        }
-
-        if (
-          [
-            "reward_tracking",
-            "company_building",
-          ].includes(
-            benefit.code
-          ) &&
-          !rewardsEnabled
-        ) {
-          return false;
-        }
-
-        if (
-          [
-            "support_access",
-            "priority_support",
-          ].includes(
-            benefit.code
-          ) &&
-          !supportEnabled
-        ) {
-          return false;
-        }
-
-        if (
-          benefit.code ===
-            "access_perks_lifestyle" &&
-          !accessPerksEnabled
-        ) {
-          return false;
-        }
-
-        if (
-          benefit.code ===
-            "allowance_card" &&
-          !allowanceEnabled
-        ) {
-          return false;
-        }
-
-        return true;
+    .filter((benefit) => {
+      if (
+        benefit.code === "referral_access" &&
+        !referralsEnabled
+      ) {
+        return false;
       }
-    )
-    .map(
-      (benefit) => {
-        const requiredTierRank =
-          Math.min(
-            ...benefit.tiers.map(
-              (tier) =>
-                getTierRank(
-                  tier
-                )
-            )
-          );
 
-        let unlocked =
-          benefit.tiers.includes(
-            normalizedTier
-          );
+      if (
+        [
+          "reward_tracking",
+          "company_building",
+        ].includes(benefit.code) &&
+        !rewardsEnabled
+      ) {
+        return false;
+      }
 
-        let lockedReason =
-          null;
+      if (
+        [
+          "support_access",
+          "priority_support",
+        ].includes(benefit.code) &&
+        !supportEnabled
+      ) {
+        return false;
+      }
 
-        const lockedBecauseTier =
-          !unlocked &&
-          tierRank <
-            requiredTierRank;
+      if (
+        benefit.code === "access_perks_lifestyle" &&
+        !accessPerksEnabled
+      ) {
+        return false;
+      }
 
-        if (
-          lockedBecauseTier
-        ) {
+      if (
+        benefit.code === "allowance_card" &&
+        !allowanceEnabled
+      ) {
+        return false;
+      }
+
+      return true;
+    })
+    .map((benefit) => {
+      const requiredTierRank = Math.min(
+        ...benefit.tiers.map(
+          (tier) => getTierRank(tier)
+        )
+      );
+
+      let unlocked = benefit.tiers.includes(
+        normalizedTier
+      );
+
+      let lockedReason = null;
+
+      const lockedBecauseTier =
+        !unlocked &&
+        tierRank < requiredTierRank;
+
+      if (lockedBecauseTier) {
+        lockedReason =
+          `Available starting at ${titleCase(
+            benefit.tiers[0] || "core"
+          )} tier.`;
+      }
+
+      if (
+        benefit.code === "access_perks_lifestyle"
+      ) {
+        unlocked = access.perks_ready;
+
+        if (!access.perks_ready) {
           lockedReason =
-            `Available starting at ${titleCase(
-              benefit
-                .tiers[0] ||
-              "core"
-            )} tier.`;
+            accessCatalog?.reason === "access_member_suspended"
+              ? "Your Access Perks membership is suspended."
+              : accessCatalog?.message ||
+                "Access catalog availability has not been confirmed yet.";
         }
-
-        if (
-          benefit.code ===
-          "access_perks_lifestyle"
-        ) {
-          unlocked =
-            access.perks_ready;
-
-          if (
-            !access.perks_ready
-          ) {
-            lockedReason =
-              access.sync_error
-                ? `Access Perks sync is pending: ${access.sync_error}`
-                : "Access Perks benefits unlock after your Access AMT member status becomes OPEN.";
-          }
-        }
-
-        return {
-          ...benefit,
-
-          type:
-            "cardleo",
-
-          provider:
-            "cardleo",
-
-          requiredTier:
-            benefit
-              .tiers[0] ||
-            "core",
-
-          unlocked,
-
-          locked:
-            !unlocked,
-
-          lockedReason,
-
-          claimable:
-            false,
-
-          redeemable:
-            false,
-
-          meta:
-            benefit.code ===
-            "access_perks_lifestyle"
-              ? {
-                  accessMemberIdentifier:
-                    access
-                      .member_identifier,
-
-                  accessMemberStatus:
-                    access
-                      .member_status,
-
-                  accessPerksReady:
-                    access
-                      .perks_ready,
-
-                  accessSyncError:
-                    access
-                      .sync_error,
-                }
-              : {},
-        };
       }
-    )
+
+      return {
+        ...benefit,
+
+        type:
+          "cardleo",
+
+        provider:
+          "cardleo",
+
+        requiredTier:
+          benefit.tiers[0] || "core",
+
+        unlocked,
+
+        locked:
+          !unlocked,
+
+        lockedReason,
+
+        claimable:
+          false,
+
+        redeemable:
+          false,
+
+        meta:
+          benefit.code === "access_perks_lifestyle"
+            ? {
+                accessMemberIdentifier:
+                  access.member_identifier,
+
+                accessMemberStatus:
+                  access.member_status,
+
+                accessPerksReady:
+                  access.perks_ready,
+
+                accessSyncError:
+                  access.sync_error,
+              }
+            : {},
+      };
+    })
     .sort(
-      (
-        a,
-        b
-      ) =>
-        a.sortOrder -
-        b.sortOrder
+      (a, b) => a.sortOrder - b.sortOrder
     );
 }
 
@@ -2524,100 +1776,67 @@ function buildDynamicBenefits({
   referralsEnabled,
   rewardsEnabled,
   accessPerksEnabled,
+  accessCatalog = null,
 }) {
-  const benefits =
-    [];
+  const benefits = [];
 
-  const memberStatus =
-    normalizeMemberStatus(
-      member
-    );
+  const memberStatus = normalizeMemberStatus(
+    member
+  );
 
-  const access =
-    buildAccessPayload(
-      member
-    );
+  const access = buildAccessPayload(
+    member,
+    accessCatalog
+  );
 
-  const onboardingPercent =
-    Number(
-      onboarding
-        ?.onboarding_percent ||
-      0
-    );
+  const onboardingPercent = Number(
+    onboarding?.onboarding_percent || 0
+  );
 
-  const profileComplete =
-    Boolean(
-      onboarding
-        ?.profile_completed
-    );
+  const profileComplete = Boolean(
+    onboarding?.profile_completed
+  );
 
   const emailVerified =
-    Boolean(
-      onboarding
-        ?.email_verified
-    ) ||
-    Boolean(
-      member
-        ?.email_verified_at
-    ) ||
-    Boolean(
-      member
-        ?.email_verified
-    );
+    Boolean(onboarding?.email_verified) ||
+    Boolean(member?.email_verified_at) ||
+    Boolean(member?.email_verified);
 
-  const rewardsActive =
-    Boolean(
-      onboarding
-        ?.rewards_activated
-    );
+  const rewardsActive = Boolean(
+    onboarding?.rewards_activated
+  );
 
-  const directEarned =
-    money(
-      rewardAccount
-        ?.total_direct_referral_earned
-    );
+  const directEarned = money(
+    rewardAccount?.total_direct_referral_earned
+  );
 
-  const overrideEarned =
-    money(
-      rewardAccount
-        ?.total_override_earned
-    );
+  const overrideEarned = money(
+    rewardAccount?.total_override_earned
+  );
 
-  const companyPending =
-    money(
-      rewardAccount
-        ?.company_building_pending
-    );
+  const companyPending = money(
+    rewardAccount?.company_building_pending
+  );
 
-  const companyReleased =
-    money(
-      rewardAccount
-        ?.company_building_released
-    );
+  const companyReleased = money(
+    rewardAccount?.company_building_released
+  );
 
-  const companyForfeited =
-    money(
-      rewardAccount
-        ?.company_building_forfeited
-    );
+  const companyForfeited = money(
+    rewardAccount?.company_building_forfeited
+  );
 
-  const totalRewardsEarned =
-    money(
-      rewardAccount
-        ?.total_rewards_earned
-    );
+  const totalRewardsEarned = money(
+    rewardAccount?.total_rewards_earned
+  );
 
-  const totalRewardsPaid =
-    money(
-      rewardAccount
-        ?.total_rewards_paid
-    );
+  const totalRewardsPaid = money(
+    rewardAccount?.total_rewards_paid
+  );
 
-  const personalAllowanceEarned =
-    money(
-      directEarned +
-      overrideEarned
-    );
+  const personalAllowanceEarned = money(
+    directEarned + overrideEarned
+  );
 
   benefits.push({
     code:
@@ -2627,8 +1846,7 @@ function buildDynamicBenefits({
       "Member Account Status",
 
     description:
-      memberStatus ===
-      "active"
+      memberStatus === "active"
         ? "Your membership is active and your Card Leo portal is fully enabled."
         : "Your account is not fully active yet.",
 
@@ -2636,9 +1854,7 @@ function buildDynamicBenefits({
       "account",
 
     badge:
-      titleCase(
-        memberStatus
-      ),
+      titleCase(memberStatus),
 
     featured:
       true,
@@ -2647,16 +1863,13 @@ function buildDynamicBenefits({
       5,
 
     unlocked:
-      memberStatus ===
-      "active",
+      memberStatus === "active",
 
     locked:
-      memberStatus !==
-      "active",
+      memberStatus !== "active",
 
     lockedReason:
-      memberStatus ===
-      "active"
+      memberStatus === "active"
         ? null
         : "Activate your account to unlock the full member experience.",
 
@@ -2677,10 +1890,7 @@ function buildDynamicBenefits({
     },
   });
 
-  if (
-    accessPerksEnabled !==
-    false
-  ) {
+  if (accessPerksEnabled !== false) {
     benefits.push({
       code:
         "access_perks_status",
@@ -2690,10 +1900,10 @@ function buildDynamicBenefits({
 
       description:
         access.perks_ready
-          ? "Your Access Perks member record is OPEN and the Access benefits catalog is ready."
+          ? "Your Access benefits catalog was loaded successfully."
           : access.sync_error
-            ? "Your membership is active, but Access Perks member synchronization needs attention."
-            : "Your membership is active. Access Perks will unlock when your Access member record becomes OPEN.",
+            ? "Your Card Leo membership is active. Access catalog availability has not been confirmed."
+            : "Your Card Leo membership is active. The Access catalog is not available yet.",
 
       category:
         "offers",
@@ -2702,8 +1912,8 @@ function buildDynamicBenefits({
         access.perks_ready
           ? "Active"
           : access.sync_error
-            ? "Sync Needed"
-            : "Syncing",
+            ? "Check Access"
+            : "Unavailable",
 
       featured:
         true,
@@ -2720,7 +1930,7 @@ function buildDynamicBenefits({
       lockedReason:
         access.perks_ready
           ? null
-          : "Access Perks requires an OPEN Access AMT member record.",
+          : "Access catalog availability must be confirmed by a successful provider request.",
 
       href:
         DEFAULT_BENEFITS_PATH,
@@ -2739,28 +1949,22 @@ function buildDynamicBenefits({
 
       meta: {
         enabled:
-          accessPerksEnabled !==
-          false,
+          accessPerksEnabled !== false,
 
         accessMemberIdentifier:
-          access
-            .member_identifier,
+          access.member_identifier,
 
         accessMemberStatus:
-          access
-            .member_status,
+          access.member_status,
 
         accessSyncedAt:
-          access
-            .synced_at,
+          access.synced_at,
 
         accessSyncError:
-          access
-            .sync_error,
+          access.sync_error,
 
         accessPerksReady:
-          access
-            .perks_ready,
+          access.perks_ready,
       },
     });
   }
@@ -2773,8 +1977,7 @@ function buildDynamicBenefits({
       "Onboarding Progress",
 
     description:
-      onboardingPercent >=
-      100
+      onboardingPercent >= 100
         ? "Your onboarding is complete and your account is fully set up."
         : "Complete your remaining setup items to finish your Card Leo account.",
 
@@ -2784,10 +1987,7 @@ function buildDynamicBenefits({
     badge:
       `${Math.max(
         0,
-        Math.min(
-          100,
-          onboardingPercent
-        )
+        Math.min(100, onboardingPercent)
       )}% Complete`,
 
     featured:
@@ -2797,16 +1997,13 @@ function buildDynamicBenefits({
       15,
 
     unlocked:
-      onboardingPercent >=
-      100,
+      onboardingPercent >= 100,
 
     locked:
-      onboardingPercent <
-      100,
+      onboardingPercent < 100,
 
     lockedReason:
-      onboardingPercent >=
-      100
+      onboardingPercent >= 100
         ? null
         : "Finish onboarding to complete account setup.",
 
@@ -2824,18 +2021,13 @@ function buildDynamicBenefits({
 
     meta: {
       onboardingPercent,
-
       profileComplete,
-
       emailVerified,
-
       rewardsActive,
     },
   });
 
-  if (
-    rewardsEnabled
-  ) {
+  if (rewardsEnabled) {
     benefits.push({
       code:
         "member_allowance",
@@ -2844,8 +2036,7 @@ function buildDynamicBenefits({
         "Personal Member Allowance",
 
       description:
-        personalAllowanceEarned >
-        0
+        personalAllowanceEarned > 0
           ? "Your direct and team referral rewards are tracked separately as personal member allowance."
           : "Your personal allowance will grow from eligible direct and team referral rewards.",
 
@@ -2853,9 +2044,7 @@ function buildDynamicBenefits({
         "allowance",
 
       badge:
-        `$${personalAllowanceEarned.toFixed(
-          2
-        )} Earned`,
+        `$${personalAllowanceEarned.toFixed(2)} Earned`,
 
       featured:
         true,
@@ -2908,8 +2097,7 @@ function buildDynamicBenefits({
         "Current Rewards Earnings",
 
       description:
-        totalRewardsEarned >
-        0
+        totalRewardsEarned > 0
           ? "Your current tracked Card Leo rewards are available in your Rewards dashboard."
           : "Your rewards account is ready. Earnings will appear as eligible referral activity occurs.",
 
@@ -2917,9 +2105,7 @@ function buildDynamicBenefits({
         "rewards",
 
       badge:
-        `$${totalRewardsEarned.toFixed(
-          2
-        )} Earned`,
+        `$${totalRewardsEarned.toFixed(2)} Earned`,
 
       featured:
         true,
@@ -2953,7 +2139,6 @@ function buildDynamicBenefits({
 
       meta: {
         totalRewardsEarned,
-
         totalRewardsPaid,
       },
     });
@@ -2972,9 +2157,7 @@ function buildDynamicBenefits({
         "rewards",
 
       badge:
-        `$${companyPending.toFixed(
-          2
-        )} Pending`,
+        `$${companyPending.toFixed(2)} Pending`,
 
       featured:
         true,
@@ -3005,9 +2188,7 @@ function buildDynamicBenefits({
 
       meta: {
         companyPending,
-
         companyReleased,
-
         companyForfeited,
 
         includedInAllowance:
@@ -3016,9 +2197,7 @@ function buildDynamicBenefits({
     });
   }
 
-  if (
-    referralsEnabled
-  ) {
+  if (referralsEnabled) {
     benefits.push({
       code:
         "referral_readiness",
@@ -3033,8 +2212,7 @@ function buildDynamicBenefits({
         "referrals",
 
       badge:
-        memberStatus ===
-          "active"
+        memberStatus === "active"
           ? "Ready"
           : "Almost Ready",
 
@@ -3045,16 +2223,13 @@ function buildDynamicBenefits({
         75,
 
       unlocked:
-        memberStatus ===
-        "active",
+        memberStatus === "active",
 
       locked:
-        memberStatus !==
-        "active",
+        memberStatus !== "active",
 
       lockedReason:
-        memberStatus ===
-        "active"
+        memberStatus === "active"
           ? null
           : "Your membership must be active before sharing your referral link.",
 
@@ -3075,24 +2250,16 @@ function buildDynamicBenefits({
 
       meta: {
         referralCode:
-          member
-            ?.referral_code ||
-          "",
+          member?.referral_code || "",
 
         directEarned,
-
         overrideEarned,
       },
     });
   }
 
   return benefits.sort(
-    (
-      a,
-      b
-    ) =>
-      a.sortOrder -
-      b.sortOrder
+    (a, b) => a.sortOrder - b.sortOrder
   );
 }
 
@@ -3100,192 +2267,184 @@ function buildDynamicBenefits({
    GROUP CARD LEO BENEFITS
 ============================================================================ */
 
-function groupBenefitsByCategory(
-  benefits
-) {
-  const groups =
-    {};
+function groupBenefitsByCategory(benefits) {
+  const groups = {};
 
-  for (
-    const benefit
-    of benefits
-  ) {
-    const key =
-      benefit.category ||
-      "other";
+  for (const benefit of benefits) {
+    const key = benefit.category || "other";
 
-    if (
-      !groups[key]
-    ) {
-      groups[key] =
-        [];
+    if (!groups[key]) {
+      groups[key] = [];
     }
 
-    groups[key].push(
-      benefit
-    );
+    groups[key].push(benefit);
   }
 
-  return Object
-    .entries(groups)
-    .map(
-      ([
-        category,
-        items,
-      ]) => ({
-        category,
+  return Object.entries(groups).map(
+    ([category, items]) => ({
+      category,
 
-        title:
-          titleCase(
-            category
-          ),
+      title:
+        titleCase(category),
 
-        count:
-          items.length,
+      count:
+        items.length,
 
-        unlockedCount:
-          items.filter(
-            (item) =>
-              item.unlocked
-          ).length,
+      unlockedCount:
+        items.filter((item) => item.unlocked).length,
 
-        lockedCount:
-          items.filter(
-            (item) =>
-              item.locked
-          ).length,
+      lockedCount:
+        items.filter((item) => item.locked).length,
 
-        items:
-          items.sort(
-            (
-              a,
-              b
-            ) =>
-              (
-                a.sortOrder ||
-                0
-              ) -
-              (
-                b.sortOrder ||
-                0
-              )
-          ),
-      })
-    );
+      items: items.sort(
+        (a, b) =>
+          (a.sortOrder || 0) -
+          (b.sortOrder || 0)
+      ),
+    })
+  );
 }
 
 /* ==========================================================================
    ACCESS QUERY OPTIONS
 ============================================================================ */
 
-function getAccessCatalogOptions(
-  req
-) {
-  const query =
-    req.query ||
-    {};
+function getAccessCatalogOptions(req) {
+  const query = req.query || {};
 
-  const pageSize =
-    clamp(
+  const first = (value) =>
+    Array.isArray(value) ? value[0] : value;
+
+  return {
+    pageSize: clamp(
       normalizeInteger(
-        query
-          .access_page_size ??
-        query.page_size ??
-        query.pageSize,
+        first(
+          query.access_page_size ??
+          query.per_page ??
+          query.page_size ??
+          query.pageSize
+        ),
         DEFAULT_ACCESS_PAGE_SIZE
       ),
       1,
       MAX_ACCESS_PAGE_SIZE
-    );
+    ),
 
-  const maxPages =
-    clamp(
+    maxPages: clamp(
       normalizeInteger(
-        query
-          .access_max_pages ??
-        query.max_pages ??
-        query.maxPages,
+        first(
+          query.access_max_pages ??
+          query.max_pages ??
+          query.maxPages
+        ),
         DEFAULT_ACCESS_MAX_PAGES
       ),
       1,
       MAX_ACCESS_MAX_PAGES
-    );
+    ),
 
-  const latitude =
-    normalizeNumber(
-      query.latitude ??
-      query.lat,
-      null
-    );
-
-  const longitude =
-    normalizeNumber(
-      query.longitude ??
-      query.lng ??
-      query.lon,
-      null
-    );
-
-  const radius =
-    normalizeNumber(
-      query.radius,
-      null
-    );
-
-  return {
-    pageSize,
-
-    maxPages,
-
-    search:
-      normalizeText(
+    search: normalizeText(
+      first(
         query.search ??
         query.q ??
+        query.query ??
         ""
-      ),
+      )
+    ),
 
-    category:
-      normalizeText(
+    category: normalizeText(
+      first(
+        query.category_key ??
         query.category ??
         ""
+      )
+    ),
+
+    postalCode: normalizeText(
+      first(
+        query.postal_code ??
+        query.postalCode ??
+        query.zip_code ??
+        query.zip ??
+        ""
+      )
+    ),
+
+    latitude: normalizeNumber(
+      first(query.latitude ?? query.lat),
+      null
+    ),
+
+    longitude: normalizeNumber(
+      first(
+        query.longitude ??
+        query.lng ??
+        query.lon
       ),
+      null
+    ),
 
-    latitude,
-
-    longitude,
-
-    radius,
+    radius: normalizeNumber(
+      first(query.radius),
+      null
+    ),
 
     online:
-      query.online !==
-      undefined
-        ? normalizeBoolean(
-            query.online
-          )
+      query.online !== undefined
+        ? normalizeBoolean(first(query.online))
         : undefined,
 
     local:
-      query.local !==
-      undefined
-        ? normalizeBoolean(
-            query.local
-          )
+      query.local !== undefined
+        ? normalizeBoolean(first(query.local))
         : undefined,
 
     featured:
-      query.featured !==
-      undefined
-        ? normalizeBoolean(
-            query.featured
-          )
+      query.featured !== undefined
+        ? normalizeBoolean(first(query.featured))
         : undefined,
 
     debug:
-      normalizeBoolean(
-        query.debug,
-        false
-      ),
+      normalizeBoolean(first(query.debug), false),
   };
+}
+
+function validateAccessCatalogOptions(options) {
+  if (
+    options.latitude !== null &&
+    (
+      options.latitude < -90 ||
+      options.latitude > 90
+    )
+  ) {
+    return "Latitude must be between -90 and 90.";
+  }
+
+  if (
+    options.longitude !== null &&
+    (
+      options.longitude < -180 ||
+      options.longitude > 180
+    )
+  ) {
+    return "Longitude must be between -180 and 180.";
+  }
+
+  if (
+    (options.latitude === null) !==
+    (options.longitude === null)
+  ) {
+    return "Provide both latitude and longitude, or use a ZIP code.";
+  }
+
+  if (
+    options.radius !== null &&
+    options.radius <= 0
+  ) {
+    return "Radius must be greater than zero.";
+  }
+
+  return "";
 }
 
 /* ==========================================================================
@@ -3293,9 +2452,10 @@ function getAccessCatalogOptions(
 ============================================================================ */
 
 function buildEmptyAccessCatalog({
-  configured,
-  ready,
+  configured = false,
+  ready = false,
   reason = "",
+  message = "Access catalog availability has not been confirmed yet.",
 } = {}) {
   return {
     configured:
@@ -3335,8 +2495,9 @@ function buildEmptyAccessCatalog({
       false,
 
     reason:
-      reason ||
-      null,
+      reason || null,
+
+    message,
   };
 }
 
@@ -3349,195 +2510,207 @@ async function loadAccessCatalog({
   featureFlags,
   options,
 }) {
-  const access =
-    buildAccessPayload(
-      member
-    );
-
-  const accessEnabled =
-    featureFlags
-      .access_perks_enabled !==
-    false;
-
   if (
-    !accessEnabled
+    featureFlags.benefits_enabled === false ||
+    featureFlags.access_perks_enabled === false
   ) {
     return buildEmptyAccessCatalog({
-      configured:
-        false,
-
-      ready:
-        false,
-
       reason:
         "access_perks_disabled",
+
+      message:
+        "Access benefits are currently disabled.",
     });
   }
 
+  if (!hasPortalAccess(member)) {
+    return buildEmptyAccessCatalog({
+      reason:
+        "membership_not_eligible",
+
+      message:
+        "An active, paid Card Leo membership is required.",
+    });
+  }
+
+  const status = getAccessMemberStatus(
+    member
+  ).toUpperCase();
+
   if (
-    !access.perks_ready
+    ["SUSPEND", "SUSPENDED"].includes(status)
   ) {
     return buildEmptyAccessCatalog({
-      configured:
-        false,
-
-      ready:
-        false,
-
       reason:
-        access.sync_error
-          ? "access_member_sync_failed"
-          : "access_member_not_open",
+        "access_member_suspended",
+
+      message:
+        "Your Access Perks membership is suspended. Please contact support.",
+    });
+  }
+
+  const memberKey = normalizeText(
+    member.access_member_identifier
+  );
+
+  if (!memberKey) {
+    return buildEmptyAccessCatalog({
+      reason:
+        "access_member_identifier_missing",
+
+      message:
+        "Your Card Leo account is missing its permanent Access member identifier.",
+    });
+  }
+
+  const queryError = validateAccessCatalogOptions(
+    options
+  );
+
+  if (queryError) {
+    return buildEmptyAccessCatalog({
+      reason:
+        "access_catalog_query_invalid",
+
+      message:
+        queryError,
     });
   }
 
   const validation =
     validateAccessOffersConfiguration();
 
-  if (
-    !validation.valid
-  ) {
-    return {
-      ...buildEmptyAccessCatalog({
-        configured:
-          false,
+  if (!validation.valid) {
+    return buildEmptyAccessCatalog({
+      reason:
+        "access_offers_not_configured",
 
-        ready:
-          true,
-
-        reason:
-          "access_offers_not_configured",
-      }),
-
-      configurationErrors:
-        validation.errors,
-    };
+      message:
+        "Access Offers is not fully configured. Please contact Card Leo support.",
+    });
   }
 
   try {
-    const result =
-      await fetchAllAccessOffers({
-        pageSize:
-          options.pageSize,
+    const result = await fetchAllAccessOffers({
+      // Always from the database, never supplied by the browser.
+      memberKey,
+      member_key: memberKey,
 
-        maxPages:
-          options.maxPages,
+      postalCode:
+        options.postalCode || undefined,
 
+      postal_code:
+        options.postalCode || undefined,
+
+      pageSize:
+        options.pageSize,
+
+      maxPages:
+        options.maxPages,
+
+      search:
+        options.search || undefined,
+
+      category:
+        options.category || undefined,
+
+      latitude:
+        options.latitude ?? undefined,
+
+      longitude:
+        options.longitude ?? undefined,
+
+      radius:
+        options.radius ?? undefined,
+
+      online:
+        options.online,
+
+      featured:
+        options.featured,
+    });
+
+    const rawOffers = Array.isArray(result.offers)
+      ? result.offers
+      : [];
+
+    const filtered = filterAccessOffers(
+      rawOffers,
+      {
         search:
-          options.search ||
-          undefined,
+          options.search,
 
         category:
-          options.category ||
-          undefined,
-
-        latitude:
-          options.latitude ??
-          undefined,
-
-        longitude:
-          options.longitude ??
-          undefined,
-
-        radius:
-          options.radius ??
-          undefined,
+          options.category,
 
         online:
           options.online,
 
+        local:
+          options.local,
+
         featured:
           options.featured,
-      });
 
-    let offers =
-      result.offers ||
-      [];
+        active:
+          true,
+      }
+    );
 
-    const rawCatalogCount =
-      offers.length;
+    const catalog = buildPortalAccessCatalog(
+      filtered
+    );
 
-    offers =
-      filterAccessOffers(
-        offers,
-        {
-          search:
-            options.search,
+    /*
+     * The catalog builder already sanitizes offers.
+     * Do not sanitize a second time and erase redemption presence flags.
+     *
+     * Metadata alone does not authorize a claim.
+     */
+    const safeOffers = (
+      Array.isArray(catalog.offers)
+        ? catalog.offers
+        : []
+    )
+      .filter(Boolean)
+      .map((offer) => ({
+        ...offer,
 
-          category:
-            options.category,
+        type:
+          "access_offer",
 
-          online:
-            options.online,
+        provider:
+          "access",
 
-          local:
-            options.local,
+        unlocked:
+          true,
 
-          featured:
-            options.featured,
+        locked:
+          false,
 
-          active:
-            true,
-        }
-      );
+        lockedReason:
+          null,
 
-    const catalog =
-      buildPortalAccessCatalog(
-        offers
-      );
+        claimable:
+          false,
 
-    const safeOffers =
-      catalog
-        .offers
-        .map(
-          sanitizeAccessOfferForPortal
-        )
-        .filter(Boolean)
-        .map(
-          (offer) => ({
-            ...offer,
+        redeemable:
+          Boolean(offer.redeemable),
 
-            type:
-              "access_offer",
+        claimEndpoint:
+          ACCESS_REDEEM_ENDPOINT,
 
-            provider:
-              "access",
+        redeemEndpoint:
+          ACCESS_REDEEM_ENDPOINT,
 
-            unlocked:
-              true,
+        claimMethod:
+          "POST",
 
-            locked:
-              false,
-
-            lockedReason:
-              null,
-
-            claimable:
-              Boolean(
-                offer.redeemable
-              ),
-
-            redeemable:
-              Boolean(
-                offer.redeemable
-              ),
-
-            claimEndpoint:
-              ACCESS_REDEEM_ENDPOINT,
-
-            redeemEndpoint:
-              ACCESS_REDEEM_ENDPOINT,
-
-            claimMethod:
-              "POST",
-
-            claimPayload: {
-              offerId:
-                offer.accessOfferId ||
-                offer.id,
-            },
-          })
-        );
+        claimPayload: {
+          offerId:
+            offer.accessOfferId || offer.id,
+        },
+      }));
 
     return {
       configured:
@@ -3556,12 +2729,10 @@ async function loadAccessCatalog({
         safeOffers,
 
       categories:
-        catalog.categories ||
-        [],
+        catalog.categories || [],
 
       merchants:
-        catalog.merchants ||
-        [],
+        catalog.merchants || [],
 
       count:
         safeOffers.length,
@@ -3569,46 +2740,65 @@ async function loadAccessCatalog({
       fullFilteredCount:
         safeOffers.length,
 
-      rawCatalogCount,
+      rawCatalogCount:
+        rawOffers.length,
 
       pagesFetched:
-        result
-          .pagesFetched ||
-        0,
+        result.pagesFetched || 0,
 
       pageSize:
-        result.pageSize ||
-        options.pageSize,
+        result.pageSize || options.pageSize,
 
       hitSafetyLimit:
-        Boolean(
-          result
-            .hitSafetyLimit
-        ),
+        Boolean(result.hitSafetyLimit),
 
       pagination:
-        result.pagination ||
-        null,
+        result.pagination || null,
 
       reason:
         null,
-    };
-  } catch (
-    error
-  ) {
-    /*
-     * Do not destroy the entire Card Leo Benefits page because
-     * Access is temporarily unavailable.
-     */
 
+      message:
+        "Access catalog request completed successfully.",
+    };
+  } catch (error) {
+    const status = Number(error?.status);
+
+    const providerStatus =
+      Number.isInteger(status) &&
+      status >= 400 &&
+      status <= 599
+        ? status
+        : null;
+
+    const safeError = {
+      code:
+        "ACCESS_CATALOG_REQUEST_FAILED",
+
+      status:
+        providerStatus,
+    };
+
+    // Never send raw provider errors, URLs, or bodies to the logger/browser.
     logRequestError(
       null,
-      error,
+      safeError,
       {
         scope:
           "portal_benefits_access_catalog",
       }
     );
+
+    const message =
+      providerStatus === 503
+        ? "The Access Offers service or route is unavailable. Card Leo is awaiting confirmation from Access."
+        : providerStatus === 401 || providerStatus === 403
+          ? "Access did not authorize the catalog request. Card Leo support must verify the environment, token, program access, and member record."
+          : providerStatus === 404
+            ? "Access could not find the requested catalog resource. Please contact Card Leo support."
+            : providerStatus === 429
+              ? "Access is receiving too many requests. Please try again shortly."
+              : "Access could not load the benefits catalog. Please try again later.";
 
     return {
       ...buildEmptyAccessCatalog({
@@ -3616,24 +2806,17 @@ async function loadAccessCatalog({
           true,
 
         ready:
-          true,
+          false,
 
         reason:
           "access_catalog_request_failed",
+
+        message,
       }),
 
       providerError: {
-        message:
-          error?.message ||
-          "Access Offers request failed.",
-
-        code:
-          error?.code ||
-          null,
-
-        status:
-          error?.status ||
-          null,
+        ...safeError,
+        message,
       },
     };
   }
@@ -3647,37 +2830,84 @@ function buildRedemptionStatus({
   member,
   accessCatalog,
 }) {
-  const access =
-    buildAccessPayload(
-      member
+  const memberReady =
+    hasPortalAccess(member) &&
+    !["SUSPEND", "SUSPENDED"].includes(
+      getAccessMemberStatus(member).toUpperCase()
+    ) &&
+    Boolean(
+      normalizeText(member.access_member_identifier)
     );
 
-  const redemptionEndpointConfigured =
-    Boolean(
-      normalizeText(
-        process.env
-          .ACCESS_REDEMPTION_ENDPOINT_PATH
-      )
-    );
+  const offersReady =
+    accessCatalog?.loaded === true;
+
+  const endpointConfigured = Boolean(
+    normalizeText(
+      process.env.ACCESS_REDEMPTION_ENDPOINT_PATH
+    )
+  );
+
+  /*
+   * Enable only after the actual redemption handler has been verified.
+   *
+   * ACCESS_REDEMPTION_ENABLED=true
+   * ACCESS_REDEMPTION_SUPPORTED_TYPES=code,barcode,qr_code,online_url
+   *
+   * List only formats the implemented integration actually supports.
+   */
+  const enabled = normalizeBoolean(
+    process.env.ACCESS_REDEMPTION_ENABLED,
+    false
+  );
+
+  const types = new Set(
+    normalizeText(
+      process.env.ACCESS_REDEMPTION_SUPPORTED_TYPES
+    )
+      .toLowerCase()
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean)
+  );
+
+  const supports = {
+    code:
+      enabled && types.has("code"),
+
+    barcode:
+      enabled && types.has("barcode"),
+
+    qrCode:
+      enabled &&
+      (
+        types.has("qr") ||
+        types.has("qr_code") ||
+        types.has("qrcode")
+      ),
+
+    onlineUrl:
+      enabled &&
+      (
+        types.has("online") ||
+        types.has("online_url") ||
+        types.has("onlineurl")
+      ),
+  };
+
+  const ready =
+    memberReady &&
+    offersReady &&
+    enabled &&
+    endpointConfigured &&
+    Object.values(supports).some(Boolean);
 
   return {
-    memberReady:
-      access.perks_ready,
-
-    offersReady:
-      Boolean(
-        accessCatalog.loaded
-      ),
-
-    endpointConfigured:
-      redemptionEndpointConfigured,
-
-    ready:
-      Boolean(
-        access.perks_ready &&
-        accessCatalog.loaded &&
-        redemptionEndpointConfigured
-      ),
+    memberReady,
+    offersReady,
+    endpointConfigured,
+    enabled,
+    ready,
 
     endpoint:
       ACCESS_REDEEM_ENDPOINT,
@@ -3685,24 +2915,12 @@ function buildRedemptionStatus({
     method:
       "POST",
 
-    supports: {
-      code:
-        true,
-
-      barcode:
-        true,
-
-      qrCode:
-        true,
-
-      onlineUrl:
-        true,
-    },
+    supports,
 
     note:
-      redemptionEndpointConfigured
-        ? "Claim Offer will request member-specific redemption material from Access."
-        : "Claim Offer will remain unavailable until the Access-approved redemption endpoint is configured.",
+      ready
+        ? "The configured redemption integration must validate the selected offer and return member-specific redemption material."
+        : "Direct claims remain unavailable until the redemption integration and supported formats are verified and enabled.",
   };
 }
 
@@ -3710,50 +2928,37 @@ function buildRedemptionStatus({
    OPTIONAL MEMBER CARD STATUS
 ============================================================================ */
 
-async function getOptionalMemberCard(
-  memberId
-) {
+async function getOptionalMemberCard(memberId) {
   const {
     data,
     error,
-  } =
-    await supabaseAdmin
-      .from(
-        "member_cards"
-      )
-      .select(
-        [
-          "id",
-          "member_id",
-          "provider",
-          "card_status",
-          "card_type",
-          "last_four",
-          "allowance_balance_cents",
-          "total_allowance_loaded_cents",
-          "total_allowance_spent_cents",
-          "card_paused",
-          "created_at",
-          "updated_at",
-        ].join(", ")
-      )
-      .eq(
+  } = await supabaseAdmin
+    .from("member_cards")
+    .select(
+      [
+        "id",
         "member_id",
-        memberId
-      )
-      .maybeSingle();
+        "provider",
+        "card_status",
+        "card_type",
+        "last_four",
+        "allowance_balance_cents",
+        "total_allowance_loaded_cents",
+        "total_allowance_spent_cents",
+        "card_paused",
+        "created_at",
+        "updated_at",
+      ].join(", ")
+    )
+    .eq("member_id", memberId)
+    .maybeSingle();
 
   if (!error) {
-    return (
-      data ||
-      null
-    );
+    return data || null;
   }
 
   if (
-    isMissingOptionalTableOrColumn(
-      error
-    )
+    isMissingOptionalTableOrColumn(error)
   ) {
     return null;
   }
@@ -3761,9 +2966,7 @@ async function getOptionalMemberCard(
   throw error;
 }
 
-function buildMemberCardPayload(
-  card
-) {
+function buildMemberCardPayload(card) {
   if (!card) {
     return {
       exists:
@@ -3795,17 +2998,13 @@ function buildMemberCardPayload(
     };
   }
 
-  const lastFour =
-    normalizeText(
-      card.last_four
-    );
+  const lastFour = normalizeText(
+    card.last_four
+  );
 
-  const balanceCents =
-    Number(
-      card
-        .allowance_balance_cents ||
-      0
-    );
+  const balanceCents = Number(
+    card.allowance_balance_cents || 0
+  );
 
   return {
     exists:
@@ -3815,26 +3014,16 @@ function buildMemberCardPayload(
       card.id,
 
     provider:
-      normalizeText(
-        card.provider ||
-        "lithic"
-      ),
+      normalizeText(card.provider || "lithic"),
 
     cardStatus:
-      normalizeText(
-        card.card_status ||
-        "not_created"
-      ),
+      normalizeText(card.card_status || "not_created"),
 
     cardType:
-      normalizeText(
-        card.card_type ||
-        "virtual"
-      ),
+      normalizeText(card.card_type || "virtual"),
 
     lastFour:
-      lastFour ||
-      null,
+      lastFour || null,
 
     maskedNumber:
       lastFour
@@ -3842,37 +3031,26 @@ function buildMemberCardPayload(
         : null,
 
     cardPaused:
-      Boolean(
-        card.card_paused
-      ),
+      Boolean(card.card_paused),
 
     allowanceBalanceCents:
       balanceCents,
 
     allowanceBalance:
-      money(
-        balanceCents /
-        100
-      ),
+      money(balanceCents / 100),
 
     totalAllowanceLoaded:
       money(
         Number(
-          card
-            .total_allowance_loaded_cents ||
-          0
-        ) /
-        100
+          card.total_allowance_loaded_cents || 0
+        ) / 100
       ),
 
     totalAllowanceSpent:
       money(
         Number(
-          card
-            .total_allowance_spent_cents ||
-          0
-        ) /
-        100
+          card.total_allowance_spent_cents || 0
+        ) / 100
       ),
 
     href:
@@ -3888,22 +3066,14 @@ export default async function handler(
   req,
   res
 ) {
-  setNoStore(
-    res
-  );
+  setNoStore(res);
 
-  logRequestStart(
-    req,
-    {
-      scope:
-        "portal_benefits",
-    }
-  );
+  logRequestStart(req, {
+    scope:
+      "portal_benefits",
+  });
 
-  if (
-    req.method !==
-    "GET"
-  ) {
+  if (req.method !== "GET") {
     return methodNotAllowed(
       res,
       ["GET"],
@@ -3919,26 +3089,23 @@ export default async function handler(
     const {
       member,
       response,
-    } =
-      await getAuthenticatedMember(
-        req,
-        res
-      );
+    } = await getAuthenticatedMember(
+      req,
+      res
+    );
 
     if (!member) {
       return response;
     }
 
-    const safeMember =
-      sanitizeMember(
-        member
-      );
+    let safeMember = sanitizeMember(
+      member
+    );
 
-    const memberId =
-      safeMember.id;
+    const memberId = safeMember.id;
 
     /* ======================================================================
-       FEATURE FLAGS + MEMBER DATA
+       FEATURE FLAGS AND MEMBER DATA
     ====================================================================== */
 
     const featureFlags =
@@ -3948,50 +3115,43 @@ export default async function handler(
       onboardingOptional,
       rewardAccountOptional,
       memberCardOptional,
-    ] =
-      await Promise.all([
-        queryOptionalSingleByMemberColumns({
-          table:
-            "member_onboarding",
+    ] = await Promise.all([
+      queryOptionalSingleByMemberColumns({
+        table:
+          "member_onboarding",
 
-          memberId,
+        memberId,
 
-          columns: [
-            "member_id",
-            "signup_id",
-            "profile_id",
-          ],
-        }),
+        columns: [
+          "member_id",
+          "signup_id",
+          "profile_id",
+        ],
+      }),
 
-        queryOptionalSingleByMemberColumns({
-          table:
-            "reward_accounts",
+      queryOptionalSingleByMemberColumns({
+        table:
+          "reward_accounts",
 
-          memberId,
+        memberId,
 
-          columns: [
-            "member_id",
-            "signup_id",
-            "profile_id",
-          ],
-        }),
+        columns: [
+          "member_id",
+          "signup_id",
+          "profile_id",
+        ],
+      }),
 
-        getOptionalMemberCard(
-          memberId
-        ),
-      ]);
+      getOptionalMemberCard(memberId),
+    ]);
 
     const onboarding =
       onboardingOptional ||
-      buildDefaultOnboarding(
-        member
-      );
+      buildDefaultOnboarding(member);
 
     const rewardAccount =
       rewardAccountOptional ||
-      buildDefaultRewardAccount(
-        member
-      );
+      buildDefaultRewardAccount(member);
 
     const memberCard =
       buildMemberCardPayload(
@@ -3999,99 +3159,82 @@ export default async function handler(
       );
 
     /* ======================================================================
-       MEMBER / ACCESS
+       MEMBER AND ACCESS
     ====================================================================== */
 
-    const tier =
-      normalizeTier(
-        member.tier ||
-        "core"
-      );
+    const tier = normalizeTier(
+      member.tier || "core"
+    );
 
-    const nextTier =
-      getNextTier(
-        tier
-      );
+    const nextTier = getNextTier(tier);
 
-    const access =
-      buildAccessPayload(
-        member
-      );
-
-    /* ======================================================================
-       CARD LEO BENEFITS
-    ====================================================================== */
-
-    const staticBenefits =
-      buildStaticBenefits(
-        tier,
-        featureFlags,
-        member
-      );
-
-    const dynamicBenefits =
-      buildDynamicBenefits({
-        member,
-
-        onboarding,
-
-        rewardAccount,
-
-        referralsEnabled:
-          featureFlags
-            .referrals_enabled,
-
-        rewardsEnabled:
-          featureFlags
-            .rewards_enabled,
-
-        accessPerksEnabled:
-          featureFlags
-            .access_perks_enabled,
-      });
-
-    const cardLeoBenefits =
-      [
-        ...dynamicBenefits,
-        ...staticBenefits,
-      ].sort(
-        (
-          a,
-          b
-        ) =>
-          (
-            a.sortOrder ||
-            0
-          ) -
-          (
-            b.sortOrder ||
-            0
-          )
-      );
-
-    const cardLeoGroups =
-      groupBenefitsByCategory(
-        cardLeoBenefits
-      );
+    let access = buildAccessPayload(member);
 
     /* ======================================================================
        ACCESS FULL CATALOG
     ====================================================================== */
 
     const catalogOptions =
-      getAccessCatalogOptions(
-        req
-      );
+      getAccessCatalogOptions(req);
 
     const accessCatalog =
       await loadAccessCatalog({
         member,
-
         featureFlags,
-
-        options:
-          catalogOptions,
+        options: catalogOptions,
       });
+
+    // Reflect the result of this catalog request without modifying Supabase.
+    safeMember = sanitizeMember(
+      member,
+      accessCatalog
+    );
+
+    access = buildAccessPayload(
+      member,
+      accessCatalog
+    );
+
+    /* ======================================================================
+       CARD LEO BENEFITS
+    ====================================================================== */
+
+    const staticBenefits = buildStaticBenefits(
+      tier,
+      featureFlags,
+      member,
+      accessCatalog
+    );
+
+    const dynamicBenefits = buildDynamicBenefits({
+      member,
+      accessCatalog,
+      onboarding,
+      rewardAccount,
+
+      referralsEnabled:
+        featureFlags.referrals_enabled,
+
+      rewardsEnabled:
+        featureFlags.rewards_enabled,
+
+      accessPerksEnabled:
+        featureFlags.access_perks_enabled,
+    });
+
+    const cardLeoBenefits = [
+      ...dynamicBenefits,
+      ...staticBenefits,
+    ].sort(
+      (a, b) =>
+        (a.sortOrder || 0) -
+        (b.sortOrder || 0)
+    );
+
+    const cardLeoGroups =
+      groupBenefitsByCategory(
+        cardLeoBenefits
+      );
 
     /* ======================================================================
        REDEMPTION STATUS
@@ -4100,7 +3243,6 @@ export default async function handler(
     const redemption =
       buildRedemptionStatus({
         member,
-
         accessCatalog,
       });
 
@@ -4109,33 +3251,22 @@ export default async function handler(
     ====================================================================== */
 
     const unlockedCount =
-      cardLeoBenefits
-        .filter(
-          (item) =>
-            item.unlocked
-        ).length;
+      cardLeoBenefits.filter(
+        (item) => item.unlocked
+      ).length;
 
     const lockedCount =
-      cardLeoBenefits
-        .filter(
-          (item) =>
-            item.locked
-        ).length;
+      cardLeoBenefits.filter(
+        (item) => item.locked
+      ).length;
 
     const featuredBenefits =
       cardLeoBenefits
-        .filter(
-          (item) =>
-            item.featured
-        )
-        .slice(
-          0,
-          10
-        );
+        .filter((item) => item.featured)
+        .slice(0, 10);
 
     const accessOfferCount =
-      accessCatalog.count ||
-      0;
+      accessCatalog.count || 0;
 
     const totalVisibleBenefits =
       cardLeoBenefits.length +
@@ -4145,42 +3276,39 @@ export default async function handler(
        LOG
     ====================================================================== */
 
-    logRequestSuccess(
-      req,
-      {
-        scope:
-          "portal_benefits",
+    logRequestSuccess(req, {
+      scope:
+        "portal_benefits",
 
-        memberId,
+      memberId,
 
-        email:
-          safeMember.email,
+      email:
+        safeMember.email,
 
-        tier,
+      tier,
 
-        cardLeoBenefitCount:
-          cardLeoBenefits.length,
+      cardLeoBenefitCount:
+        cardLeoBenefits.length,
 
-        accessOfferCount,
+      accessOfferCount,
 
-        totalVisibleBenefits,
+      totalVisibleBenefits,
 
-        accessMemberStatus:
-          access.member_status,
+      accessMemberStatus:
+        access.member_status,
 
-        accessPerksReady:
-          access.perks_ready,
+      accessPerksReady:
+        access.perks_ready,
 
-        accessCatalogLoaded:
-          accessCatalog.loaded,
+      accessCatalogLoaded:
+        accessCatalog.loaded,
 
-        accessPagesFetched:
-          accessCatalog.pagesFetched,
+      accessPagesFetched:
+        accessCatalog.pagesFetched,
 
-        redemptionReady:
-          redemption.ready,
-      }
-    );
+      redemptionReady:
+        redemption.ready,
+    });
 
     /* ======================================================================
        RESPONSE
@@ -4191,10 +3319,6 @@ export default async function handler(
       {
         authenticated:
           true,
-
-        /* ================================================================
-           SUMMARY
-        ================================================================= */
 
         summary: {
           profileId:
@@ -4212,47 +3336,32 @@ export default async function handler(
           tier,
 
           tierLabel:
-            titleCase(
-              tier
-            ),
+            titleCase(tier),
 
           nextTier,
 
           nextTierLabel:
-            nextTier
-              ? titleCase(
-                  nextTier
-                )
-              : null,
+            nextTier ? titleCase(nextTier) : null,
 
           memberStatus:
-            safeMember
-              .memberStatus,
+            safeMember.memberStatus,
 
           payment_status:
-            safeMember
-              .paymentStatus,
+            safeMember.paymentStatus,
 
           membership_status:
-            safeMember
-              .membershipStatus,
+            safeMember.membershipStatus,
 
           approval_status:
-            safeMember
-              .approvalStatus,
+            safeMember.approvalStatus,
 
           portalAccess:
-            safeMember
-              .portalAccess,
+            safeMember.portalAccess,
 
           timezone:
             DEFAULT_TIMEZONE,
 
           totals: {
-            /*
-             * All benefit cards available to portal.
-             */
-
             benefits:
               totalVisibleBenefits,
 
@@ -4269,22 +3378,12 @@ export default async function handler(
               lockedCount,
 
             accessCategories:
-              accessCatalog
-                .categories
-                ?.length ||
-              0,
+              accessCatalog.categories?.length || 0,
 
             accessMerchants:
-              accessCatalog
-                .merchants
-                ?.length ||
-              0,
+              accessCatalog.merchants?.length || 0,
           },
         },
-
-        /* ================================================================
-           MEMBER
-        ================================================================= */
 
         member:
           safeMember,
@@ -4292,50 +3391,34 @@ export default async function handler(
         profile:
           safeMember,
 
-        /* ================================================================
-           MEMBER CARD
-        ================================================================= */
-
         memberCard,
 
         card:
           memberCard,
 
-        /* ================================================================
-           ACCESS MEMBER
-        ================================================================= */
-
         access,
 
         accessPerks: {
           enabled:
-            featureFlags
-              .access_perks_enabled !==
-            false,
+            featureFlags.access_perks_enabled !== false,
 
           ready:
-            access
-              .perks_ready,
+            access.perks_ready,
 
           status:
-            access
-              .member_status,
+            access.member_status,
 
           member_identifier:
-            access
-              .member_identifier,
+            access.member_identifier,
 
           synced_at:
-            access
-              .synced_at,
+            access.synced_at,
 
           suspended_at:
-            access
-              .suspended_at,
+            access.suspended_at,
 
           sync_error:
-            access
-              .sync_error,
+            access.sync_error,
 
           portal_url:
             DEFAULT_BENEFITS_PATH,
@@ -4350,10 +3433,6 @@ export default async function handler(
             ACCESS_REDEEM_ENDPOINT,
         },
 
-        /* ================================================================
-           ACCESS OFFERS CATALOG
-        ================================================================= */
-
         accessCatalog,
 
         offers:
@@ -4362,28 +3441,14 @@ export default async function handler(
         accessOffers:
           accessCatalog.offers,
 
-        /*
-         * Alias for frontend compatibility.
-         *
-         * This is the REAL Access offer list.
-         */
-
         partnerBenefits:
           accessCatalog.offers,
-
-        /* ================================================================
-           ACCESS CATEGORIES
-        ================================================================= */
 
         accessCategories:
           accessCatalog.categories,
 
         accessMerchants:
           accessCatalog.merchants,
-
-        /* ================================================================
-           REDEMPTION
-        ================================================================= */
 
         redemption,
 
@@ -4398,12 +3463,8 @@ export default async function handler(
             "POST",
 
           instructions:
-            "Send the selected Access offer ID to the redemption endpoint. Card Leo will display the code, barcode, QR code, or online redemption URL returned by Access.",
+            "Direct claims require the verified redemption integration and offer-specific authorization. Catalog metadata alone does not authorize a claim.",
         },
-
-        /* ================================================================
-           CARD LEO INTERNAL BENEFITS
-        ================================================================= */
 
         benefits:
           cardLeoBenefits,
@@ -4416,30 +3477,22 @@ export default async function handler(
           cardLeoGroups,
 
         categories:
-          cardLeoGroups.map(
-            (group) => ({
-              slug:
-                group.category,
+          cardLeoGroups.map((group) => ({
+            slug:
+              group.category,
 
-              name:
-                group.title,
+            name:
+              group.title,
 
-              count:
-                group.count,
+            count:
+              group.count,
 
-              unlockedCount:
-                group
-                  .unlockedCount,
+            unlockedCount:
+              group.unlockedCount,
 
-              lockedCount:
-                group
-                  .lockedCount,
-            })
-          ),
-
-        /* ================================================================
-           MEMBER DATA
-        ================================================================= */
+            lockedCount:
+              group.lockedCount,
+          })),
 
         featureFlags,
 
@@ -4447,11 +3500,10 @@ export default async function handler(
 
         rewardAccount,
 
-        /* ================================================================
-           FILTERS
-        ================================================================= */
-
         filters: {
+          postalCode:
+            catalogOptions.postalCode,
+
           search:
             catalogOptions.search,
 
@@ -4459,16 +3511,13 @@ export default async function handler(
             catalogOptions.category,
 
           online:
-            catalogOptions.online ??
-            null,
+            catalogOptions.online ?? null,
 
           local:
-            catalogOptions.local ??
-            null,
+            catalogOptions.local ?? null,
 
           featured:
-            catalogOptions.featured ??
-            null,
+            catalogOptions.featured ?? null,
 
           latitude:
             catalogOptions.latitude,
@@ -4485,10 +3534,6 @@ export default async function handler(
           maxPages:
             catalogOptions.maxPages,
         },
-
-        /* ================================================================
-           LINKS
-        ================================================================= */
 
         links: {
           portal:
@@ -4516,36 +3561,38 @@ export default async function handler(
             ACCESS_REDEEM_ENDPOINT,
         },
 
-        /* ================================================================
-           ACCESS INTEGRATION DEBUG
-        ================================================================= */
-
         integration:
           catalogOptions.debug
             ? {
                 accessOffers:
                   getAccessOffersIntegrationStatus(),
 
-                config:
-                  getAccessOffersConfigForDebug(),
+                config: {
+                  environment:
+                    getAccessOffersIntegrationStatus().environment,
+
+                  configured:
+                    validateAccessOffersConfiguration().valid,
+                },
               }
             : undefined,
 
         fetchedAt:
-          new Date()
-            .toISOString(),
+          new Date().toISOString(),
       },
 
       accessCatalog.loaded
         ? `Benefits loaded successfully. ${accessCatalog.count} Access offers are available.`
-        : "Benefits loaded successfully."
+        : "Card Leo account benefits loaded. " +
+          accessCatalog.message
     );
-  } catch (
-    error
-  ) {
+  } catch (error) {
     logRequestError(
       req,
-      error,
+      {
+        code:
+          "PORTAL_BENEFITS_FAILED",
+      },
       {
         scope:
           "portal_benefits_unexpected",
@@ -4554,19 +3601,15 @@ export default async function handler(
 
     return serverError(
       res,
-
       "Failed to load portal benefits.",
 
-      process.env.NODE_ENV ===
-        "development"
+      process.env.NODE_ENV === "development"
         ? {
             error:
-              error?.message ||
-              "Unknown error.",
+              error?.message || "Unknown error.",
 
             code:
-              error?.code ||
-              null,
+              error?.code || null,
           }
         : null
     );

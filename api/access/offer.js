@@ -32,6 +32,12 @@ import {
   safeJsonParse,
 } from "../../lib/cookies.js";
 
+// Shared mapping keeps catalog and detail fields consistent.
+import {
+  normalizeAccessOffer,
+  sanitizeAccessOfferForPortal,
+} from "../../lib/access-offers.js";
+
 // -----------------------------------------------------------------------------
 // Configuration
 // -----------------------------------------------------------------------------
@@ -1047,138 +1053,122 @@ function normalizeCategories(value) {
 }
 
 function mapOfferForPortal(raw) {
-  const merchant = isObject(raw.merchant)
-    ? raw.merchant
-    : isObject(raw.store)
-      ? raw.store
-      : {};
+  // Use the updated shared helper for names, descriptions, combined terms,
+  // redemption instructions, and full participating-location addresses.
+  const normalized = normalizeAccessOffer(raw);
 
-  const offerKey = normalizeString(raw.offer_key);
+  if (!normalized || !normalized.accessOfferId) {
+    throw createError(
+      "Access returned an offer without a valid identifier.",
+      "ACCESS_OFFER_RESPONSE_INVALID",
+      502
+    );
+  }
 
-  const merchantName = safeText(
-    raw.store_name ||
-    raw.merchant_name ||
-    merchant.name
-  );
-
-  const title = safeText(
-    raw.title || raw.name
-  );
-
-  const description = safeText(
-    raw.description ||
-    raw.long_description ||
-    raw.short_description
-  );
-
-  const terms = safeText(
-    raw.terms ||
-    raw.terms_and_conditions ||
-    raw.disclaimer
-  );
-
-  const imageUrl = safeHttpsUrl(
-    raw.image_url ||
-    raw.image ||
-    merchant.image_url ||
-    merchant.logo_url
-  );
+  const safe = sanitizeAccessOfferForPortal(normalized);
+  const offerKey = normalized.accessOfferId;
+  const merchant = safe.merchant || {};
+  const logoUrl = safeHttpsUrl(merchant.logo);
+  const imageUrl = safeHttpsUrl(safe.image) || logoUrl;
 
   const categoryName = safeText(
     raw.category_name ||
-    (
-      typeof raw.category === "string"
-        ? raw.category
-        : raw.category?.name
-    )
+    (typeof raw.category === "string" ? raw.category : raw.category?.name) ||
+    safe.categoryName
   );
 
-  const categories = normalizeCategories(
-    raw.categories
-  );
+  const locations = (safe.locations || []).map((location) => ({
+    ...location,
 
-  const sourceLocations = Array.isArray(raw.locations)
-    ? raw.locations
-    : isObject(raw.location)
-      ? [raw.location]
-      : [];
+    // Preserve the address alias consumed by existing detail pages.
+    address: safeText(location.address1),
+    address1: safeText(location.address1),
+    address2: safeText(location.address2),
+    city: safeText(location.city),
+    state: safeText(location.state),
+    postalCode: safeText(location.postalCode),
+    postal_code: safeText(location.postalCode),
+    country: safeText(location.country),
 
-  const locations = sourceLocations
-    .map(normalizeLocation)
-    .filter(Boolean);
+    fullAddress: [
+      location.address1,
+      location.address2,
+      location.city,
+      location.state,
+      location.postalCode,
+      location.country,
+    ].map(safeText).filter(Boolean).join(", "),
 
-  const redemptionMethod = safeText(
-    raw.redemption_method
-  );
-
-  const instructions = safeText(
-    raw.redemption_instructions ||
-    raw.instructions
-  );
+    website: safeHttpsUrl(location.website),
+  }));
 
   return {
+    ...safe,
+
     id: offerKey,
     accessOfferId: offerKey,
     offerKey,
     offer_key: offerKey,
 
-    title,
-    name: title,
-    description,
+    name: safe.title,
+    description: safe.description || "",
+    shortDescription: safe.shortDescription || "",
+    terms: safe.terms || "",
+    termsAndConditions: safe.terms || "",
 
-    shortDescription:
-      safeText(raw.short_description),
-
-    terms,
-    termsAndConditions: terms,
-
+    image: imageUrl,
     imageUrl,
     image_url: imageUrl,
 
-    merchantName,
-    storeName: merchantName,
+    images: (safe.images || [])
+      .map(safeHttpsUrl)
+      .filter(Boolean),
+
+    logo: logoUrl,
+    merchantName: merchant.name || safe.merchantName || "",
+    storeName: merchant.name || safe.merchantName || "",
+    merchantDescription: merchant.description || "",
 
     merchant: {
-      id: safeText(
-        raw.store_key ||
-        merchant.store_key ||
-        merchant.id
-      ),
+      ...merchant,
+      name: merchant.name || safe.merchantName || "",
+      logo: logoUrl,
+      logoUrl,
+      website: safeHttpsUrl(merchant.website),
 
-      name:
-        merchantName,
+      images: (merchant.images || [])
+        .map(safeHttpsUrl)
+        .filter(Boolean),
 
-      logoUrl:
-        safeHttpsUrl(merchant.logo_url),
+      locations,
     },
 
-    category:
-      categoryName,
-
-    categories,
+    category: categoryName,
+    categoryName,
+    categories: safe.categories || [],
     locations,
 
-    national:
-      raw.national_offer === true,
+    national: raw.national_offer === true,
 
-    startDate: safeDate(
-      raw.start_date || raw.starts_at
-    ),
+    startDate: safe.startsAt,
+    endDate: safe.expiresAt,
 
-    endDate: safeDate(
-      raw.end_date || raw.expires_at
-    ),
+    redemptionMethod:
+      safe.redemption?.method || "",
 
-    redemptionMethod,
+    redemptionInstructions:
+      safe.redemption?.instructions || "",
 
-    // Display metadata only.
-    // Loading details does not authorize redemption.
+    // Preserve instructions and presence flags, not actual redemption
+    // URLs, serialized codes, barcodes, or QR credentials.
     redemption: {
-      method: redemptionMethod,
-      instructions,
+      ...safe.redemption,
       endpoint: "/api/access/redeem-offer",
       offerKey,
     },
+
+    // Detail loading alone does not establish redemption availability.
+    claimable: false,
 
     detailsUrl:
       `/portal/offer.html?offer_key=${encodeURIComponent(offerKey)}`,

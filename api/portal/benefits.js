@@ -1,4 +1,21 @@
 // api/portal/benefits.js
+//
+// Card Leo Rewards — Combined member benefits API.
+//
+// Requires the updated lib/access-offers.js.
+//
+// Preserves:
+// - Existing member sessions and membership eligibility.
+// - Internal Card Leo benefits and tier handling.
+// - Onboarding, rewards, allowance, Growth Pool, and card payloads.
+// - Access catalog requests and response aliases.
+//
+// Adds:
+// - Merchant/logo compatibility fields.
+// - Full participating-location address fields.
+// - Terms and redemption-instruction aliases.
+//
+// Catalog metadata does not authorize redemption.
 
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 
@@ -33,35 +50,9 @@ import {
   validateAccessOffersConfiguration,
 } from "../../lib/access-offers.js";
 
-/* ==========================================================================
-   CARD LEO REWARDS
-   PORTAL BENEFITS API
-
-   GET /api/portal/benefits
-
-   Combines:
-   - Existing Card Leo member authentication
-   - Active and paid membership checks
-   - Access member synchronization metadata
-   - Provider-confirmed Access catalog readiness
-   - Access offers, categories, and merchants
-   - Internal Card Leo benefits
-   - Reward-account information
-   - Member-card information
-   - Onboarding information
-
-   Important:
-   - Historical AMT sync failure does not block a catalog attempt.
-   - Explicit Access suspension remains enforced.
-   - The permanent Access identifier comes from the member database row.
-   - Catalog access does not establish redemption authorization.
-   - This endpoint does not generate coupons, barcodes, or QR codes.
-   - This endpoint does not modify AMT synchronization fields.
-============================================================================ */
-
-/* ==========================================================================
-   CONFIGURATION
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Configuration
+// -----------------------------------------------------------------------------
 
 const DEFAULT_TIMEZONE = "America/New_York";
 
@@ -77,10 +68,6 @@ const DEFAULT_ACCESS_MAX_PAGES = 100;
 
 const MAX_ACCESS_PAGE_SIZE = 100;
 const MAX_ACCESS_MAX_PAGES = 250;
-
-/* ==========================================================================
-   ACTIVE MEMBER STATES
-============================================================================ */
 
 const ACTIVE_STATUSES = new Set([
   "active",
@@ -125,10 +112,6 @@ const INACTIVE_STATUSES = new Set([
   "payment_failed",
 ]);
 
-/* ==========================================================================
-   SESSION COOKIE NAMES
-============================================================================ */
-
 const POSSIBLE_SESSION_COOKIE_NAMES = [
   "cardleo_session",
   "cardleo_auth",
@@ -139,9 +122,9 @@ const POSSIBLE_SESSION_COOKIE_NAMES = [
   "session",
 ];
 
-/* ==========================================================================
-   CARD LEO INTERNAL BENEFITS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Existing Card Leo benefits
+// -----------------------------------------------------------------------------
 
 const BASE_BENEFITS = [
   {
@@ -156,7 +139,6 @@ const BASE_BENEFITS = [
     sortOrder: 10,
     href: "/portal/index.html",
   },
-
   {
     code: "access_perks_lifestyle",
     title: "Access Perks Lifestyle Savings",
@@ -169,7 +151,6 @@ const BASE_BENEFITS = [
     sortOrder: 12,
     href: "/portal/benefits.html",
   },
-
   {
     code: "allowance_card",
     title: "Card Leo Member Allowance Card",
@@ -182,7 +163,6 @@ const BASE_BENEFITS = [
     sortOrder: 14,
     href: "/portal/card.html",
   },
-
   {
     code: "reward_tracking",
     title: "Reward Tracking",
@@ -195,7 +175,6 @@ const BASE_BENEFITS = [
     sortOrder: 20,
     href: "/portal/rewards.html",
   },
-
   {
     code: "support_access",
     title: "Member Support",
@@ -208,7 +187,6 @@ const BASE_BENEFITS = [
     sortOrder: 30,
     href: "/portal/index.html",
   },
-
   {
     code: "company_building",
     title: "Growth Pool / Company-Building Tracking",
@@ -221,7 +199,6 @@ const BASE_BENEFITS = [
     sortOrder: 40,
     href: "/portal/rewards.html",
   },
-
   {
     code: "referral_access",
     title: "Referral Program Access",
@@ -234,7 +211,6 @@ const BASE_BENEFITS = [
     sortOrder: 50,
     href: "/portal/referrals.html",
   },
-
   {
     code: "priority_support",
     title: "Priority Support Routing",
@@ -247,7 +223,6 @@ const BASE_BENEFITS = [
     sortOrder: 60,
     href: "/portal/index.html",
   },
-
   {
     code: "premium_offers",
     title: "Premium Member Offers",
@@ -260,7 +235,6 @@ const BASE_BENEFITS = [
     sortOrder: 70,
     href: "/portal/benefits.html",
   },
-
   {
     code: "vip_concierge",
     title: "VIP Concierge Access",
@@ -275,9 +249,9 @@ const BASE_BENEFITS = [
   },
 ];
 
-/* ==========================================================================
-   BASIC HELPERS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// General helpers
+// -----------------------------------------------------------------------------
 
 function isObject(value) {
   return (
@@ -310,15 +284,11 @@ function normalizeBoolean(value, fallback = false) {
 
   const normalized = normalizeStatus(value);
 
-  if (
-    ["true", "1", "yes", "y", "on"].includes(normalized)
-  ) {
+  if (["true", "1", "yes", "y", "on"].includes(normalized)) {
     return true;
   }
 
-  if (
-    ["false", "0", "no", "n", "off"].includes(normalized)
-  ) {
+  if (["false", "0", "no", "n", "off"].includes(normalized)) {
     return false;
   }
 
@@ -326,11 +296,7 @@ function normalizeBoolean(value, fallback = false) {
 }
 
 function normalizeInteger(value, fallback = 0) {
-  const parsed = Number.parseInt(
-    String(value ?? ""),
-    10
-  );
-
+  const parsed = Number.parseInt(String(value ?? ""), 10);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
@@ -344,7 +310,6 @@ function normalizeNumber(value, fallback = null) {
   }
 
   const number = Number(value);
-
   return Number.isFinite(number) ? number : fallback;
 }
 
@@ -400,10 +365,6 @@ function safeDate(value) {
     : date.toISOString();
 }
 
-/* ==========================================================================
-   TIER HELPERS
-============================================================================ */
-
 function getTierRank(tier) {
   const order = {
     core: 1,
@@ -417,17 +378,8 @@ function getTierRank(tier) {
 }
 
 function getNextTier(tier) {
-  const tiers = [
-    "core",
-    "silver",
-    "gold",
-    "platinum",
-    "vip",
-  ];
-
-  const currentIndex = tiers.indexOf(
-    normalizeTier(tier)
-  );
+  const tiers = ["core", "silver", "gold", "platinum", "vip"];
+  const currentIndex = tiers.indexOf(normalizeTier(tier));
 
   if (
     currentIndex < 0 ||
@@ -439,9 +391,9 @@ function getNextTier(tier) {
   return tiers[currentIndex + 1];
 }
 
-/* ==========================================================================
-   COOKIE HELPERS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Existing cookie/session handling
+// -----------------------------------------------------------------------------
 
 function parseCookieHeader(req) {
   if (
@@ -522,7 +474,7 @@ function parseJsonObject(value) {
       return parsedBase64;
     }
   } catch {
-    // Ignore invalid base64.
+    // Continue to the existing base64url fallback.
   }
 
   try {
@@ -546,7 +498,7 @@ function parseJsonObject(value) {
       return parsed;
     }
   } catch {
-    // Ignore invalid base64url.
+    // Invalid cookie value.
   }
 
   return null;
@@ -589,10 +541,6 @@ function readSessionCookie(req) {
   return null;
 }
 
-/* ==========================================================================
-   SESSION HELPERS
-============================================================================ */
-
 function getSessionExpiresAt(sessionCookie) {
   const value = sessionCookie?.value || {};
 
@@ -619,11 +567,8 @@ function getSessionExpiresAt(sessionCookie) {
 }
 
 function isSessionExpired(sessionCookie) {
-  const expiresAt = getSessionExpiresAt(
-    sessionCookie
-  );
+  const expiresAt = getSessionExpiresAt(sessionCookie);
 
-  // Preserve compatibility with older sessions.
   if (!expiresAt) {
     return false;
   }
@@ -652,25 +597,25 @@ function getSessionMemberId(sessionCookie) {
 
   return normalizeText(
     member.id ||
-      member.signupId ||
-      member.signup_id ||
-      member.memberId ||
-      member.member_id ||
-      profile.id ||
-      profile.signupId ||
-      profile.signup_id ||
-      profile.memberId ||
-      profile.member_id ||
-      user.id ||
-      metadata.signupId ||
-      metadata.signup_id ||
-      metadata.memberId ||
-      metadata.member_id ||
-      value.signupId ||
-      value.signup_id ||
-      value.memberId ||
-      value.member_id ||
-      value.id
+    member.signupId ||
+    member.signup_id ||
+    member.memberId ||
+    member.member_id ||
+    profile.id ||
+    profile.signupId ||
+    profile.signup_id ||
+    profile.memberId ||
+    profile.member_id ||
+    user.id ||
+    metadata.signupId ||
+    metadata.signup_id ||
+    metadata.memberId ||
+    metadata.member_id ||
+    value.signupId ||
+    value.signup_id ||
+    value.memberId ||
+    value.member_id ||
+    value.id
   );
 }
 
@@ -695,17 +640,17 @@ function getSessionEmail(sessionCookie) {
 
   return normalizeEmail(
     member.email ||
-      profile.email ||
-      user.email ||
-      metadata.email ||
-      value.email ||
-      value.userEmail
+    profile.email ||
+    user.email ||
+    metadata.email ||
+    value.email ||
+    value.userEmail
   );
 }
 
-/* ==========================================================================
-   OPTIONAL DATABASE SUPPORT
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Member helpers
+// -----------------------------------------------------------------------------
 
 function isMissingOptionalTableOrColumn(error) {
   const code = String(error?.code || "");
@@ -732,14 +677,8 @@ function isMissingOptionalTableOrColumn(error) {
   );
 }
 
-/* ==========================================================================
-   MEMBER DISPLAY
-============================================================================ */
-
 function getDisplayName(member) {
-  const fullName = normalizeText(
-    member?.full_name
-  );
+  const fullName = normalizeText(member?.full_name);
 
   if (fullName) {
     return fullName;
@@ -755,10 +694,6 @@ function getDisplayName(member) {
 
   return joined || "Card Leo Member";
 }
-
-/* ==========================================================================
-   PORTAL ACCESS
-============================================================================ */
 
 function hasPortalAccess(member) {
   if (!member) {
@@ -813,9 +748,7 @@ function normalizeMemberStatus(member) {
 
   const status = normalizeStatus(member.status);
 
-  if (
-    ["pending", "reviewing", ""].includes(status)
-  ) {
+  if (["pending", "reviewing", ""].includes(status)) {
     return "pending";
   }
 
@@ -834,10 +767,6 @@ function normalizeMemberStatus(member) {
   return status || "pending";
 }
 
-/* ==========================================================================
-   ACCESS MEMBER STATUS
-============================================================================ */
-
 function getAccessMemberStatus(member) {
   return normalizeText(
     member?.access_member_status || "pending"
@@ -851,19 +780,11 @@ function getAccessPerksReady(member) {
     return raw;
   }
 
-  return (
-    getAccessMemberStatus(member).toUpperCase() ===
-    "OPEN"
-  );
+  return getAccessMemberStatus(member).toUpperCase() === "OPEN";
 }
 
-function buildAccessPayload(
-  member,
-  accessCatalog = null
-) {
-  const memberStatus = getAccessMemberStatus(
-    member
-  );
+function buildAccessPayload(member, accessCatalog = null) {
+  const memberStatus = getAccessMemberStatus(member);
 
   const suspended = [
     "SUSPEND",
@@ -876,13 +797,11 @@ function buildAccessPayload(
     accessCatalog?.loaded === true;
 
   return {
-    member_identifier: normalizeText(
-      member?.access_member_identifier
-    ),
+    member_identifier:
+      normalizeText(member?.access_member_identifier),
 
-    member_customer_identifier: normalizeText(
-      member?.access_member_identifier
-    ),
+    member_customer_identifier:
+      normalizeText(member?.access_member_identifier),
 
     member_status:
       catalogReady ? "catalog_ready" : memberStatus,
@@ -902,52 +821,28 @@ function buildAccessPayload(
     suspended_at:
       member?.access_suspended_at || null,
 
-    // Do not expose raw historical provider errors.
     sync_error: normalizeText(member?.access_sync_error)
       ? "Previous Access member synchronization needs review."
       : "",
 
-    perks_ready:
-      catalogReady,
+    perks_ready: catalogReady,
+    benefits_ready: catalogReady,
+    catalog_ready: catalogReady,
+    ready: catalogReady,
 
-    benefits_ready:
-      catalogReady,
-
-    catalog_ready:
-      catalogReady,
-
-    ready:
-      catalogReady,
-
-    sync_endpoint:
-      ACCESS_SYNC_ENDPOINT,
-
-    offers_endpoint:
-      ACCESS_OFFERS_ENDPOINT,
-
-    redeem_endpoint:
-      ACCESS_REDEEM_ENDPOINT,
+    sync_endpoint: ACCESS_SYNC_ENDPOINT,
+    offers_endpoint: ACCESS_OFFERS_ENDPOINT,
+    redeem_endpoint: ACCESS_REDEEM_ENDPOINT,
   };
 }
 
-/* ==========================================================================
-   SAFE MEMBER
-============================================================================ */
-
-function sanitizeMember(
-  member,
-  accessCatalog = null
-) {
+function sanitizeMember(member, accessCatalog = null) {
   if (!member) {
     return null;
   }
 
   const portalAccess = hasPortalAccess(member);
-
-  const access = buildAccessPayload(
-    member,
-    accessCatalog
-  );
+  const access = buildAccessPayload(member, accessCatalog);
 
   const paymentStatus = normalizeStatus(
     member.payment_status
@@ -961,61 +856,31 @@ function sanitizeMember(
     member.approval_status
   );
 
-  const status =
-    normalizeStatus(member.status) || "pending";
-
-  const tier = normalizeTier(
-    member.tier || "core"
-  );
+  const status = normalizeStatus(member.status) || "pending";
+  const tier = normalizeTier(member.tier || "core");
 
   return {
-    id:
-      member.id || null,
+    id: member.id || null,
+    signupId: member.id || null,
+    signup_id: member.id || null,
 
-    signupId:
-      member.id || null,
+    email: member.email || null,
 
-    signup_id:
-      member.id || null,
+    firstName: member.first_name || "",
+    first_name: member.first_name || "",
 
-    email:
-      member.email || null,
+    lastName: member.last_name || "",
+    last_name: member.last_name || "",
 
-    firstName:
-      member.first_name || "",
+    fullName: getDisplayName(member),
+    full_name: getDisplayName(member),
+    name: getDisplayName(member),
 
-    first_name:
-      member.first_name || "",
-
-    lastName:
-      member.last_name || "",
-
-    last_name:
-      member.last_name || "",
-
-    fullName:
-      getDisplayName(member),
-
-    full_name:
-      getDisplayName(member),
-
-    name:
-      getDisplayName(member),
-
-    phone:
-      member.phone || "",
-
-    city:
-      member.city || "",
-
-    state:
-      member.state || "",
-
-    interest:
-      member.interest || "",
-
-    goals:
-      member.goals || "",
+    phone: member.phone || "",
+    city: member.city || "",
+    state: member.state || "",
+    interest: member.interest || "",
+    goals: member.goals || "",
 
     status:
       portalAccess ? "active" : status,
@@ -1041,21 +906,13 @@ function sanitizeMember(
       normalizeMemberStatus(member),
 
     tier,
+    tierLabel: titleCase(tier),
 
-    tierLabel:
-      titleCase(tier),
+    referralCode: member.referral_code || "",
+    referral_code: member.referral_code || "",
 
-    referralCode:
-      member.referral_code || "",
-
-    referral_code:
-      member.referral_code || "",
-
-    portalUserId:
-      member.portal_user_id || null,
-
-    portal_user_id:
-      member.portal_user_id || null,
+    portalUserId: member.portal_user_id || null,
+    portal_user_id: member.portal_user_id || null,
 
     portalLoginUrl:
       member.portal_login_url || DEFAULT_PORTAL_PATH,
@@ -1064,15 +921,10 @@ function sanitizeMember(
       member.portal_login_url || DEFAULT_PORTAL_PATH,
 
     portalAccess,
+    portal_access: portalAccess,
 
-    portal_access:
-      portalAccess,
-
-    accessLevel:
-      "member",
-
-    access_level:
-      "member",
+    accessLevel: "member",
+    access_level: "member",
 
     stripeCustomerId:
       member.stripe_customer_id || "",
@@ -1122,34 +974,20 @@ function sanitizeMember(
     email_verified_at:
       member.email_verified_at || null,
 
-    createdAt:
-      member.created_at || null,
+    createdAt: member.created_at || null,
+    updatedAt: member.updated_at || null,
+    created_at: member.created_at || null,
+    updated_at: member.updated_at || null,
 
-    updatedAt:
-      member.updated_at || null,
-
-    created_at:
-      member.created_at || null,
-
-    updated_at:
-      member.updated_at || null,
-
-    role:
-      "member",
+    role: "member",
   };
 }
 
-/* ==========================================================================
-   SIGNUP SELECT
+// -----------------------------------------------------------------------------
+// Existing member queries
+// -----------------------------------------------------------------------------
 
-   Retained for compatibility with the existing file.
-   The member lookup below reads the actual row so optional missing columns
-   cannot cause valid membership and Access fields to be discarded.
-============================================================================ */
-
-function getSignupSelectFields({
-  extended = true,
-} = {}) {
+function getSignupSelectFields({ extended = true } = {}) {
   const base = [
     "id",
     "first_name",
@@ -1197,14 +1035,7 @@ function getSignupSelectFields({
   ].join(", ");
 }
 
-/* ==========================================================================
-   MEMBER LOOKUP
-============================================================================ */
-
-async function getSignupRecord({
-  memberId,
-  email,
-}) {
+async function getSignupRecord({ memberId, email }) {
   if (!memberId && !email) {
     return {
       data: null,
@@ -1212,6 +1043,7 @@ async function getSignupRecord({
     };
   }
 
+  // Query actual row fields without requiring optional columns to exist.
   let query = supabaseAdmin
     .from("signups")
     .select("*")
@@ -1224,14 +1056,7 @@ async function getSignupRecord({
   return await query.maybeSingle();
 }
 
-/* ==========================================================================
-   AUTHENTICATION
-============================================================================ */
-
-async function getAuthenticatedMember(
-  req,
-  res
-) {
+async function getAuthenticatedMember(req, res) {
   const sessionCookie = readSessionCookie(req);
 
   if (!sessionCookie?.value) {
@@ -1256,9 +1081,7 @@ async function getAuthenticatedMember(
     };
   }
 
-  if (
-    sessionCookie.value.authenticated !== true
-  ) {
+  if (sessionCookie.value.authenticated !== true) {
     clearAuthCookies(res);
 
     return {
@@ -1270,13 +1093,8 @@ async function getAuthenticatedMember(
     };
   }
 
-  const memberId = getSessionMemberId(
-    sessionCookie
-  );
-
-  const email = getSessionEmail(
-    sessionCookie
-  );
+  const memberId = getSessionMemberId(sessionCookie);
+  const email = getSessionEmail(sessionCookie);
 
   if (!memberId && !email) {
     clearAuthCookies(res);
@@ -1290,24 +1108,13 @@ async function getAuthenticatedMember(
     };
   }
 
-  let {
-    data,
-    error,
-  } = await getSignupRecord({
+  let { data, error } = await getSignupRecord({
     memberId,
     email,
   });
 
-  if (
-    !error &&
-    !data?.id &&
-    memberId &&
-    email
-  ) {
-    ({
-      data,
-      error,
-    } = await getSignupRecord({
+  if (!error && !data?.id && memberId && email) {
+    ({ data, error } = await getSignupRecord({
       memberId: "",
       email,
     }));
@@ -1339,27 +1146,19 @@ async function getAuthenticatedMember(
 
       response: forbidden(
         res,
-
         status === "pending" ||
         status === "reviewing" ||
         !status
           ? "Your account is pending approval or payment."
           : "Your account is not active.",
-
         {
           authenticated: true,
-
-          member:
-            sanitizeMember(data),
-
-          requires_payment:
-            true,
-
-          requiresPayment:
-            true,
+          member: sanitizeMember(data),
+          requires_payment: true,
+          requiresPayment: true,
 
           redirectTo:
-            "/signup.html?status=payment_required",
+            "/login.html?payment_required=1&next=%2Fportal%2Fbenefits.html",
         }
       ),
     };
@@ -1371,9 +1170,9 @@ async function getAuthenticatedMember(
   };
 }
 
-/* ==========================================================================
-   FEATURE FLAGS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Feature flags and optional account records
+// -----------------------------------------------------------------------------
 
 async function getFeatureFlags() {
   const fallback = {
@@ -1386,19 +1185,13 @@ async function getFeatureFlags() {
   };
 
   try {
-    const {
-      data,
-      error,
-    } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("system_settings")
       .select("value")
       .eq("key", "portal.features")
       .maybeSingle();
 
-    if (
-      error &&
-      isMissingOptionalTableOrColumn(error)
-    ) {
+    if (error && isMissingOptionalTableOrColumn(error)) {
       return fallback;
     }
 
@@ -1429,10 +1222,6 @@ async function getFeatureFlags() {
     return fallback;
   }
 }
-
-/* ==========================================================================
-   DEFAULT ONBOARDING
-============================================================================ */
 
 function buildDefaultOnboarding(member) {
   const safeMember = sanitizeMember(member);
@@ -1466,97 +1255,46 @@ function buildDefaultOnboarding(member) {
   }
 
   return {
-    signup_id:
-      safeMember.id,
-
-    member_id:
-      safeMember.id,
-
-    accepted_terms:
-      Boolean(member?.agreed),
-
-    accepted_privacy:
-      Boolean(member?.agreed),
-
-    profile_completed:
-      profileCompleted,
-
-    email_verified:
-      emailVerified,
-
-    first_login_completed:
-      true,
-
-    rewards_activated:
-      rewardsActivated,
-
-    onboarding_percent:
-      Math.max(0, Math.min(100, percent)),
-
+    signup_id: safeMember.id,
+    member_id: safeMember.id,
+    accepted_terms: Boolean(member?.agreed),
+    accepted_privacy: Boolean(member?.agreed),
+    profile_completed: profileCompleted,
+    email_verified: emailVerified,
+    first_login_completed: true,
+    rewards_activated: rewardsActivated,
+    onboarding_percent: Math.max(0, Math.min(100, percent)),
     onboarding_status:
       percent >= 100 ? "complete" : "in_progress",
   };
 }
 
-/* ==========================================================================
-   DEFAULT REWARD ACCOUNT
-============================================================================ */
-
 function buildDefaultRewardAccount(member) {
   return {
-    signup_id:
-      member?.id || null,
-
-    member_id:
-      member?.id || null,
+    signup_id: member?.id || null,
+    member_id: member?.id || null,
 
     account_status:
       hasPortalAccess(member) ? "active" : "pending",
 
-    total_cardleo_allocated:
-      0,
+    total_cardleo_allocated: 0,
+    total_direct_referral_earned: 0,
+    total_override_earned: 0,
 
-    total_direct_referral_earned:
-      0,
+    company_building_pending: 0,
+    company_building_released: 0,
+    company_building_forfeited: 0,
 
-    total_override_earned:
-      0,
+    total_member_revenue_processed: 0,
+    total_rewards_earned: 0,
+    total_rewards_paid: 0,
 
-    company_building_pending:
-      0,
-
-    company_building_released:
-      0,
-
-    company_building_forfeited:
-      0,
-
-    total_member_revenue_processed:
-      0,
-
-    total_rewards_earned:
-      0,
-
-    total_rewards_paid:
-      0,
-
-    last_membership_paid_at:
-      null,
-
-    last_direct_referral_at:
-      null,
-
-    last_override_at:
-      null,
-
-    last_company_building_release_at:
-      null,
+    last_membership_paid_at: null,
+    last_direct_referral_at: null,
+    last_override_at: null,
+    last_company_building_release_at: null,
   };
 }
-
-/* ==========================================================================
-   OPTIONAL SINGLE LOOKUP
-============================================================================ */
 
 async function queryOptionalSingleByMemberColumns({
   table,
@@ -1564,10 +1302,7 @@ async function queryOptionalSingleByMemberColumns({
   columns,
 }) {
   for (const column of columns) {
-    const {
-      data,
-      error,
-    } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from(table)
       .select("*")
       .eq(column, memberId)
@@ -1577,9 +1312,7 @@ async function queryOptionalSingleByMemberColumns({
       return data || null;
     }
 
-    if (
-      isMissingOptionalTableOrColumn(error)
-    ) {
+    if (isMissingOptionalTableOrColumn(error)) {
       continue;
     }
 
@@ -1589,9 +1322,9 @@ async function queryOptionalSingleByMemberColumns({
   return null;
 }
 
-/* ==========================================================================
-   STATIC CARD LEO BENEFITS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Existing static benefits
+// -----------------------------------------------------------------------------
 
 function buildStaticBenefits(
   memberTier,
@@ -1599,13 +1332,8 @@ function buildStaticBenefits(
   member = {},
   accessCatalog = null
 ) {
-  const normalizedTier = normalizeTier(
-    memberTier
-  );
-
-  const tierRank = getTierRank(
-    normalizedTier
-  );
+  const normalizedTier = normalizeTier(memberTier);
+  const tierRank = getTierRank(normalizedTier);
 
   const referralsEnabled =
     featureFlags.referrals_enabled !== false;
@@ -1625,10 +1353,7 @@ function buildStaticBenefits(
   const allowanceEnabled =
     featureFlags.allowance_card_enabled !== false;
 
-  const access = buildAccessPayload(
-    member,
-    accessCatalog
-  );
+  const access = buildAccessPayload(member, accessCatalog);
 
   if (!benefitsEnabled) {
     return [];
@@ -1644,20 +1369,18 @@ function buildStaticBenefits(
       }
 
       if (
-        [
-          "reward_tracking",
-          "company_building",
-        ].includes(benefit.code) &&
+        ["reward_tracking", "company_building"].includes(
+          benefit.code
+        ) &&
         !rewardsEnabled
       ) {
         return false;
       }
 
       if (
-        [
-          "support_access",
-          "priority_support",
-        ].includes(benefit.code) &&
+        ["support_access", "priority_support"].includes(
+          benefit.code
+        ) &&
         !supportEnabled
       ) {
         return false;
@@ -1681,20 +1404,14 @@ function buildStaticBenefits(
     })
     .map((benefit) => {
       const requiredTierRank = Math.min(
-        ...benefit.tiers.map(
-          (tier) => getTierRank(tier)
-        )
+        ...benefit.tiers.map((tier) => getTierRank(tier))
       );
 
-      let unlocked = benefit.tiers.includes(
-        normalizedTier
-      );
-
+      let unlocked = benefit.tiers.includes(normalizedTier);
       let lockedReason = null;
 
       const lockedBecauseTier =
-        !unlocked &&
-        tierRank < requiredTierRank;
+        !unlocked && tierRank < requiredTierRank;
 
       if (lockedBecauseTier) {
         lockedReason =
@@ -1703,9 +1420,7 @@ function buildStaticBenefits(
           )} tier.`;
       }
 
-      if (
-        benefit.code === "access_perks_lifestyle"
-      ) {
+      if (benefit.code === "access_perks_lifestyle") {
         unlocked = access.perks_ready;
 
         if (!access.perks_ready) {
@@ -1719,55 +1434,38 @@ function buildStaticBenefits(
 
       return {
         ...benefit,
-
-        type:
-          "cardleo",
-
-        provider:
-          "cardleo",
-
-        requiredTier:
-          benefit.tiers[0] || "core",
-
+        type: "cardleo",
+        provider: "cardleo",
+        requiredTier: benefit.tiers[0] || "core",
         unlocked,
-
-        locked:
-          !unlocked,
-
+        locked: !unlocked,
         lockedReason,
+        claimable: false,
+        redeemable: false,
 
-        claimable:
-          false,
+        meta: benefit.code === "access_perks_lifestyle"
+          ? {
+              accessMemberIdentifier:
+                access.member_identifier,
 
-        redeemable:
-          false,
+              accessMemberStatus:
+                access.member_status,
 
-        meta:
-          benefit.code === "access_perks_lifestyle"
-            ? {
-                accessMemberIdentifier:
-                  access.member_identifier,
+              accessPerksReady:
+                access.perks_ready,
 
-                accessMemberStatus:
-                  access.member_status,
-
-                accessPerksReady:
-                  access.perks_ready,
-
-                accessSyncError:
-                  access.sync_error,
-              }
-            : {},
+              accessSyncError:
+                access.sync_error,
+            }
+          : {},
       };
     })
-    .sort(
-      (a, b) => a.sortOrder - b.sortOrder
-    );
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
-/* ==========================================================================
-   DYNAMIC BENEFITS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Existing dynamic benefits
+// -----------------------------------------------------------------------------
 
 function buildDynamicBenefits({
   member,
@@ -1780,14 +1478,8 @@ function buildDynamicBenefits({
 }) {
   const benefits = [];
 
-  const memberStatus = normalizeMemberStatus(
-    member
-  );
-
-  const access = buildAccessPayload(
-    member,
-    accessCatalog
-  );
+  const memberStatus = normalizeMemberStatus(member);
+  const access = buildAccessPayload(member, accessCatalog);
 
   const onboardingPercent = Number(
     onboarding?.onboarding_percent || 0
@@ -1839,51 +1531,29 @@ function buildDynamicBenefits({
   );
 
   benefits.push({
-    code:
-      "account_status",
+    code: "account_status",
+    title: "Member Account Status",
 
-    title:
-      "Member Account Status",
+    description: memberStatus === "active"
+      ? "Your membership is active and your Card Leo portal is fully enabled."
+      : "Your account is not fully active yet.",
 
-    description:
-      memberStatus === "active"
-        ? "Your membership is active and your Card Leo portal is fully enabled."
-        : "Your account is not fully active yet.",
+    category: "account",
+    badge: titleCase(memberStatus),
+    featured: true,
+    sortOrder: 5,
 
-    category:
-      "account",
+    unlocked: memberStatus === "active",
+    locked: memberStatus !== "active",
 
-    badge:
-      titleCase(memberStatus),
+    lockedReason: memberStatus === "active"
+      ? null
+      : "Activate your account to unlock the full member experience.",
 
-    featured:
-      true,
-
-    sortOrder:
-      5,
-
-    unlocked:
-      memberStatus === "active",
-
-    locked:
-      memberStatus !== "active",
-
-    lockedReason:
-      memberStatus === "active"
-        ? null
-        : "Activate your account to unlock the full member experience.",
-
-    type:
-      "cardleo",
-
-    provider:
-      "cardleo",
-
-    claimable:
-      false,
-
-    redeemable:
-      false,
+    type: "cardleo",
+    provider: "cardleo",
+    claimable: false,
+    redeemable: false,
 
     meta: {
       memberStatus,
@@ -1892,132 +1562,75 @@ function buildDynamicBenefits({
 
   if (accessPerksEnabled !== false) {
     benefits.push({
-      code:
-        "access_perks_status",
+      code: "access_perks_status",
+      title: "Access Perks Member Status",
 
-      title:
-        "Access Perks Member Status",
+      description: access.perks_ready
+        ? "Your Access benefits catalog was loaded successfully."
+        : access.sync_error
+          ? "Your Card Leo membership is active. Access catalog availability has not been confirmed."
+          : "Your Card Leo membership is active. The Access catalog is not available yet.",
 
-      description:
-        access.perks_ready
-          ? "Your Access benefits catalog was loaded successfully."
-          : access.sync_error
-            ? "Your Card Leo membership is active. Access catalog availability has not been confirmed."
-            : "Your Card Leo membership is active. The Access catalog is not available yet.",
+      category: "offers",
 
-      category:
-        "offers",
+      badge: access.perks_ready
+        ? "Active"
+        : access.sync_error
+          ? "Check Access"
+          : "Unavailable",
 
-      badge:
-        access.perks_ready
-          ? "Active"
-          : access.sync_error
-            ? "Check Access"
-            : "Unavailable",
+      featured: true,
+      sortOrder: 8,
+      unlocked: access.perks_ready,
+      locked: !access.perks_ready,
 
-      featured:
-        true,
+      lockedReason: access.perks_ready
+        ? null
+        : "Access catalog availability must be confirmed by a successful provider request.",
 
-      sortOrder:
-        8,
-
-      unlocked:
-        access.perks_ready,
-
-      locked:
-        !access.perks_ready,
-
-      lockedReason:
-        access.perks_ready
-          ? null
-          : "Access catalog availability must be confirmed by a successful provider request.",
-
-      href:
-        DEFAULT_BENEFITS_PATH,
-
-      type:
-        "cardleo",
-
-      provider:
-        "access",
-
-      claimable:
-        false,
-
-      redeemable:
-        false,
+      href: DEFAULT_BENEFITS_PATH,
+      type: "cardleo",
+      provider: "access",
+      claimable: false,
+      redeemable: false,
 
       meta: {
-        enabled:
-          accessPerksEnabled !== false,
-
-        accessMemberIdentifier:
-          access.member_identifier,
-
-        accessMemberStatus:
-          access.member_status,
-
-        accessSyncedAt:
-          access.synced_at,
-
-        accessSyncError:
-          access.sync_error,
-
-        accessPerksReady:
-          access.perks_ready,
+        enabled: accessPerksEnabled !== false,
+        accessMemberIdentifier: access.member_identifier,
+        accessMemberStatus: access.member_status,
+        accessSyncedAt: access.synced_at,
+        accessSyncError: access.sync_error,
+        accessPerksReady: access.perks_ready,
       },
     });
   }
 
   benefits.push({
-    code:
-      "onboarding_progress",
+    code: "onboarding_progress",
+    title: "Onboarding Progress",
 
-    title:
-      "Onboarding Progress",
+    description: onboardingPercent >= 100
+      ? "Your onboarding is complete and your account is fully set up."
+      : "Complete your remaining setup items to finish your Card Leo account.",
 
-    description:
-      onboardingPercent >= 100
-        ? "Your onboarding is complete and your account is fully set up."
-        : "Complete your remaining setup items to finish your Card Leo account.",
-
-    category:
-      "account",
+    category: "account",
 
     badge:
-      `${Math.max(
-        0,
-        Math.min(100, onboardingPercent)
-      )}% Complete`,
+      `${Math.max(0, Math.min(100, onboardingPercent))}% Complete`,
 
-    featured:
-      true,
+    featured: true,
+    sortOrder: 15,
+    unlocked: onboardingPercent >= 100,
+    locked: onboardingPercent < 100,
 
-    sortOrder:
-      15,
+    lockedReason: onboardingPercent >= 100
+      ? null
+      : "Finish onboarding to complete account setup.",
 
-    unlocked:
-      onboardingPercent >= 100,
-
-    locked:
-      onboardingPercent < 100,
-
-    lockedReason:
-      onboardingPercent >= 100
-        ? null
-        : "Finish onboarding to complete account setup.",
-
-    type:
-      "cardleo",
-
-    provider:
-      "cardleo",
-
-    claimable:
-      false,
-
-    redeemable:
-      false,
+    type: "cardleo",
+    provider: "cardleo",
+    claimable: false,
+    redeemable: false,
 
     meta: {
       onboardingPercent,
@@ -2029,113 +1642,57 @@ function buildDynamicBenefits({
 
   if (rewardsEnabled) {
     benefits.push({
-      code:
-        "member_allowance",
+      code: "member_allowance",
+      title: "Personal Member Allowance",
 
-      title:
-        "Personal Member Allowance",
+      description: personalAllowanceEarned > 0
+        ? "Your direct and team referral rewards are tracked separately as personal member allowance."
+        : "Your personal allowance will grow from eligible direct and team referral rewards.",
 
-      description:
-        personalAllowanceEarned > 0
-          ? "Your direct and team referral rewards are tracked separately as personal member allowance."
-          : "Your personal allowance will grow from eligible direct and team referral rewards.",
-
-      category:
-        "allowance",
+      category: "allowance",
 
       badge:
         `$${personalAllowanceEarned.toFixed(2)} Earned`,
 
-      featured:
-        true,
-
-      sortOrder:
-        18,
-
-      unlocked:
-        true,
-
-      locked:
-        false,
-
-      lockedReason:
-        null,
-
-      href:
-        "/portal/card.html",
-
-      type:
-        "cardleo",
-
-      provider:
-        "cardleo",
-
-      claimable:
-        false,
-
-      redeemable:
-        false,
+      featured: true,
+      sortOrder: 18,
+      unlocked: true,
+      locked: false,
+      lockedReason: null,
+      href: "/portal/card.html",
+      type: "cardleo",
+      provider: "cardleo",
+      claimable: false,
+      redeemable: false,
 
       meta: {
         directEarned,
-
-        teamEarned:
-          overrideEarned,
-
+        teamEarned: overrideEarned,
         personalAllowanceEarned,
-
-        growthPoolIncluded:
-          false,
+        growthPoolIncluded: false,
       },
     });
 
     benefits.push({
-      code:
-        "rewards_balance",
+      code: "rewards_balance",
+      title: "Current Rewards Earnings",
 
-      title:
-        "Current Rewards Earnings",
+      description: totalRewardsEarned > 0
+        ? "Your current tracked Card Leo rewards are available in your Rewards dashboard."
+        : "Your rewards account is ready. Earnings will appear as eligible referral activity occurs.",
 
-      description:
-        totalRewardsEarned > 0
-          ? "Your current tracked Card Leo rewards are available in your Rewards dashboard."
-          : "Your rewards account is ready. Earnings will appear as eligible referral activity occurs.",
-
-      category:
-        "rewards",
-
-      badge:
-        `$${totalRewardsEarned.toFixed(2)} Earned`,
-
-      featured:
-        true,
-
-      sortOrder:
-        25,
-
-      unlocked:
-        true,
-
-      locked:
-        false,
-
-      lockedReason:
-        null,
-
-      href:
-        "/portal/rewards.html",
-
-      type:
-        "cardleo",
-
-      provider:
-        "cardleo",
-
-      claimable:
-        false,
-
-      redeemable:
-        false,
+      category: "rewards",
+      badge: `$${totalRewardsEarned.toFixed(2)} Earned`,
+      featured: true,
+      sortOrder: 25,
+      unlocked: true,
+      locked: false,
+      lockedReason: null,
+      href: "/portal/rewards.html",
+      type: "cardleo",
+      provider: "cardleo",
+      claimable: false,
+      redeemable: false,
 
       meta: {
         totalRewardsEarned,
@@ -2144,114 +1701,63 @@ function buildDynamicBenefits({
     });
 
     benefits.push({
-      code:
-        "growth_pool_status",
-
-      title:
-        "Growth Pool Status",
+      code: "growth_pool_status",
+      title: "Growth Pool Status",
 
       description:
         "Growth Pool/company-building money is tracked separately from your personal spendable allowance.",
 
-      category:
-        "rewards",
-
-      badge:
-        `$${companyPending.toFixed(2)} Pending`,
-
-      featured:
-        true,
-
-      sortOrder:
-        35,
-
-      unlocked:
-        true,
-
-      locked:
-        false,
-
-      lockedReason:
-        null,
-
-      type:
-        "cardleo",
-
-      provider:
-        "cardleo",
-
-      claimable:
-        false,
-
-      redeemable:
-        false,
+      category: "rewards",
+      badge: `$${companyPending.toFixed(2)} Pending`,
+      featured: true,
+      sortOrder: 35,
+      unlocked: true,
+      locked: false,
+      lockedReason: null,
+      type: "cardleo",
+      provider: "cardleo",
+      claimable: false,
+      redeemable: false,
 
       meta: {
         companyPending,
         companyReleased,
         companyForfeited,
-
-        includedInAllowance:
-          false,
+        includedInAllowance: false,
       },
     });
   }
 
   if (referralsEnabled) {
     benefits.push({
-      code:
-        "referral_readiness",
-
-      title:
-        "Referral Sharing",
+      code: "referral_readiness",
+      title: "Referral Sharing",
 
       description:
         "Copy your personal Card Leo referral link and send it directly to new recruits by text, email, social media, or messaging apps.",
 
-      category:
-        "referrals",
+      category: "referrals",
 
       badge:
-        memberStatus === "active"
-          ? "Ready"
-          : "Almost Ready",
+        memberStatus === "active" ? "Ready" : "Almost Ready",
 
-      featured:
-        true,
+      featured: true,
+      sortOrder: 75,
+      unlocked: memberStatus === "active",
+      locked: memberStatus !== "active",
 
-      sortOrder:
-        75,
+      lockedReason: memberStatus === "active"
+        ? null
+        : "Your membership must be active before sharing your referral link.",
 
-      unlocked:
-        memberStatus === "active",
-
-      locked:
-        memberStatus !== "active",
-
-      lockedReason:
-        memberStatus === "active"
-          ? null
-          : "Your membership must be active before sharing your referral link.",
-
-      href:
-        "/portal/referrals.html",
-
-      type:
-        "cardleo",
-
-      provider:
-        "cardleo",
-
-      claimable:
-        false,
-
-      redeemable:
-        false,
+      href: "/portal/referrals.html",
+      type: "cardleo",
+      provider: "cardleo",
+      claimable: false,
+      redeemable: false,
 
       meta: {
-        referralCode:
-          member?.referral_code || "",
-
+        referralCode: member?.referral_code || "",
         directEarned,
         overrideEarned,
       },
@@ -2262,10 +1768,6 @@ function buildDynamicBenefits({
     (a, b) => a.sortOrder - b.sortOrder
   );
 }
-
-/* ==========================================================================
-   GROUP CARD LEO BENEFITS
-============================================================================ */
 
 function groupBenefitsByCategory(benefits) {
   const groups = {};
@@ -2283,12 +1785,8 @@ function groupBenefitsByCategory(benefits) {
   return Object.entries(groups).map(
     ([category, items]) => ({
       category,
-
-      title:
-        titleCase(category),
-
-      count:
-        items.length,
+      title: titleCase(category),
+      count: items.length,
 
       unlockedCount:
         items.filter((item) => item.unlocked).length,
@@ -2297,17 +1795,15 @@ function groupBenefitsByCategory(benefits) {
         items.filter((item) => item.locked).length,
 
       items: items.sort(
-        (a, b) =>
-          (a.sortOrder || 0) -
-          (b.sortOrder || 0)
+        (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)
       ),
     })
   );
 }
 
-/* ==========================================================================
-   ACCESS QUERY OPTIONS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Access catalog options
+// -----------------------------------------------------------------------------
 
 function getAccessCatalogOptions(req) {
   const query = req.query || {};
@@ -2389,23 +1885,22 @@ function getAccessCatalogOptions(req) {
       null
     ),
 
-    online:
-      query.online !== undefined
-        ? normalizeBoolean(first(query.online))
-        : undefined,
+    online: query.online !== undefined
+      ? normalizeBoolean(first(query.online))
+      : undefined,
 
-    local:
-      query.local !== undefined
-        ? normalizeBoolean(first(query.local))
-        : undefined,
+    local: query.local !== undefined
+      ? normalizeBoolean(first(query.local))
+      : undefined,
 
-    featured:
-      query.featured !== undefined
-        ? normalizeBoolean(first(query.featured))
-        : undefined,
+    featured: query.featured !== undefined
+      ? normalizeBoolean(first(query.featured))
+      : undefined,
 
-    debug:
-      normalizeBoolean(first(query.debug), false),
+    debug: normalizeBoolean(
+      first(query.debug),
+      false
+    ),
   };
 }
 
@@ -2447,10 +1942,6 @@ function validateAccessCatalogOptions(options) {
   return "";
 }
 
-/* ==========================================================================
-   ACCESS CATALOG FALLBACK
-============================================================================ */
-
 function buildEmptyAccessCatalog({
   configured = false,
   ready = false,
@@ -2458,52 +1949,190 @@ function buildEmptyAccessCatalog({
   message = "Access catalog availability has not been confirmed yet.",
 } = {}) {
   return {
-    configured:
-      Boolean(configured),
+    configured: Boolean(configured),
+    ready: Boolean(ready),
+    loaded: false,
 
-    ready:
-      Boolean(ready),
+    offers: [],
+    benefits: [],
+    categories: [],
+    merchants: [],
 
-    loaded:
-      false,
+    count: 0,
+    fullFilteredCount: 0,
+    rawCatalogCount: 0,
+    pagesFetched: 0,
+    hitSafetyLimit: false,
 
-    offers:
-      [],
-
-    benefits:
-      [],
-
-    categories:
-      [],
-
-    merchants:
-      [],
-
-    count:
-      0,
-
-    fullFilteredCount:
-      0,
-
-    rawCatalogCount:
-      0,
-
-    pagesFetched:
-      0,
-
-    hitSafetyLimit:
-      false,
-
-    reason:
-      reason || null,
-
+    reason: reason || null,
     message,
   };
 }
 
-/* ==========================================================================
-   LOAD FULL ACCESS CATALOG
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Access offer response compatibility
+// -----------------------------------------------------------------------------
+
+function mapAccessOfferForBenefits(offer) {
+  const merchant = isObject(offer.merchant)
+    ? offer.merchant
+    : {};
+
+  const offerKey = normalizeText(
+    offer.accessOfferId ||
+    offer.offerKey ||
+    offer.id
+  );
+
+  const merchantName = normalizeText(
+    merchant.name || offer.merchantName
+  );
+
+  const logoUrl = normalizeText(
+    merchant.logo ||
+    merchant.logoUrl ||
+    offer.logo
+  );
+
+  const imageUrl = normalizeText(
+    offer.image ||
+    offer.imageUrl ||
+    logoUrl
+  );
+
+  const terms = normalizeText(
+    offer.terms || offer.termsAndConditions
+  );
+
+  const instructions = normalizeText(
+    offer.redemption?.instructions
+  );
+
+  const locations = (
+    Array.isArray(offer.locations)
+      ? offer.locations
+      : []
+  )
+    .filter(isObject)
+    .map((location) => ({
+      ...location,
+
+      address: normalizeText(
+        location.address1 || location.address
+      ),
+
+      address1: normalizeText(
+        location.address1 || location.address
+      ),
+
+      address2:
+        normalizeText(location.address2),
+
+      city:
+        normalizeText(location.city),
+
+      state:
+        normalizeText(location.state),
+
+      postalCode: normalizeText(
+        location.postalCode || location.postal_code
+      ),
+
+      postal_code: normalizeText(
+        location.postalCode || location.postal_code
+      ),
+
+      fullAddress: [
+        location.address1 || location.address,
+        location.address2,
+        location.city,
+        location.state,
+        location.postalCode || location.postal_code,
+        location.country,
+      ]
+        .map(normalizeText)
+        .filter(Boolean)
+        .join(", "),
+    }));
+
+  return {
+    ...offer,
+
+    offerKey,
+    offer_key: offerKey,
+    name: offer.title,
+
+    merchantName,
+    storeName: merchantName,
+
+    merchantDescription: normalizeText(
+      merchant.description || offer.merchantDescription
+    ),
+
+    merchant: {
+      ...merchant,
+      name: merchantName,
+      logo: logoUrl,
+      logoUrl,
+      locations,
+    },
+
+    logo: logoUrl,
+    image: imageUrl,
+    imageUrl,
+    image_url: imageUrl,
+
+    terms,
+    termsAndConditions: terms,
+
+    locations,
+
+    redemptionInstructions:
+      instructions,
+
+    redemptionMethod:
+      normalizeText(offer.redemption?.method),
+
+    redemption: {
+      ...offer.redemption,
+      instructions,
+      endpoint: ACCESS_REDEEM_ENDPOINT,
+      offerKey,
+    },
+
+    detailsUrl:
+      `/portal/offer.html?offer_key=${encodeURIComponent(offerKey)}`,
+
+    type: "access_offer",
+    provider: "access",
+
+    unlocked: true,
+    locked: false,
+    lockedReason: null,
+
+    // Catalog metadata does not authorize redemption.
+    claimable: false,
+
+    redeemable:
+      Boolean(offer.redeemable),
+
+    claimEndpoint:
+      ACCESS_REDEEM_ENDPOINT,
+
+    redeemEndpoint:
+      ACCESS_REDEEM_ENDPOINT,
+
+    claimMethod: "POST",
+
+    claimPayload: {
+      offerId: offerKey,
+    },
+  };
+}
+
+// -----------------------------------------------------------------------------
+// Access catalog loading
+// -----------------------------------------------------------------------------
 
 async function loadAccessCatalog({
   member,
@@ -2515,35 +2144,24 @@ async function loadAccessCatalog({
     featureFlags.access_perks_enabled === false
   ) {
     return buildEmptyAccessCatalog({
-      reason:
-        "access_perks_disabled",
-
-      message:
-        "Access benefits are currently disabled.",
+      reason: "access_perks_disabled",
+      message: "Access benefits are currently disabled.",
     });
   }
 
   if (!hasPortalAccess(member)) {
     return buildEmptyAccessCatalog({
-      reason:
-        "membership_not_eligible",
-
+      reason: "membership_not_eligible",
       message:
         "An active, paid Card Leo membership is required.",
     });
   }
 
-  const status = getAccessMemberStatus(
-    member
-  ).toUpperCase();
+  const status = getAccessMemberStatus(member).toUpperCase();
 
-  if (
-    ["SUSPEND", "SUSPENDED"].includes(status)
-  ) {
+  if (["SUSPEND", "SUSPENDED"].includes(status)) {
     return buildEmptyAccessCatalog({
-      reason:
-        "access_member_suspended",
-
+      reason: "access_member_suspended",
       message:
         "Your Access Perks membership is suspended. Please contact support.",
     });
@@ -2555,36 +2173,26 @@ async function loadAccessCatalog({
 
   if (!memberKey) {
     return buildEmptyAccessCatalog({
-      reason:
-        "access_member_identifier_missing",
-
+      reason: "access_member_identifier_missing",
       message:
         "Your Card Leo account is missing its permanent Access member identifier.",
     });
   }
 
-  const queryError = validateAccessCatalogOptions(
-    options
-  );
+  const queryError = validateAccessCatalogOptions(options);
 
   if (queryError) {
     return buildEmptyAccessCatalog({
-      reason:
-        "access_catalog_query_invalid",
-
-      message:
-        queryError,
+      reason: "access_catalog_query_invalid",
+      message: queryError,
     });
   }
 
-  const validation =
-    validateAccessOffersConfiguration();
+  const validation = validateAccessOffersConfiguration();
 
   if (!validation.valid) {
     return buildEmptyAccessCatalog({
-      reason:
-        "access_offers_not_configured",
-
+      reason: "access_offers_not_configured",
       message:
         "Access Offers is not fully configured. Please contact Card Leo support.",
     });
@@ -2592,7 +2200,6 @@ async function loadAccessCatalog({
 
   try {
     const result = await fetchAllAccessOffers({
-      // Always from the database, never supplied by the browser.
       memberKey,
       member_key: memberKey,
 
@@ -2637,96 +2244,34 @@ async function loadAccessCatalog({
     const filtered = filterAccessOffers(
       rawOffers,
       {
-        search:
-          options.search,
-
-        category:
-          options.category,
-
-        online:
-          options.online,
-
-        local:
-          options.local,
-
-        featured:
-          options.featured,
-
-        active:
-          true,
+        search: options.search,
+        category: options.category,
+        online: options.online,
+        local: options.local,
+        featured: options.featured,
+        active: true,
       }
     );
 
-    const catalog = buildPortalAccessCatalog(
-      filtered
-    );
+    const catalog = buildPortalAccessCatalog(filtered);
 
-    /*
-     * The catalog builder already sanitizes offers.
-     * Do not sanitize a second time and erase redemption presence flags.
-     *
-     * Metadata alone does not authorize a claim.
-     */
+    // The shared catalog builder already strips redemption credentials.
+    // Preserve its instructions and presence flags.
     const safeOffers = (
       Array.isArray(catalog.offers)
         ? catalog.offers
         : []
     )
       .filter(Boolean)
-      .map((offer) => ({
-        ...offer,
-
-        type:
-          "access_offer",
-
-        provider:
-          "access",
-
-        unlocked:
-          true,
-
-        locked:
-          false,
-
-        lockedReason:
-          null,
-
-        claimable:
-          false,
-
-        redeemable:
-          Boolean(offer.redeemable),
-
-        claimEndpoint:
-          ACCESS_REDEEM_ENDPOINT,
-
-        redeemEndpoint:
-          ACCESS_REDEEM_ENDPOINT,
-
-        claimMethod:
-          "POST",
-
-        claimPayload: {
-          offerId:
-            offer.accessOfferId || offer.id,
-        },
-      }));
+      .map(mapAccessOfferForBenefits);
 
     return {
-      configured:
-        true,
+      configured: true,
+      ready: true,
+      loaded: true,
 
-      ready:
-        true,
-
-      loaded:
-        true,
-
-      offers:
-        safeOffers,
-
-      benefits:
-        safeOffers,
+      offers: safeOffers,
+      benefits: safeOffers,
 
       categories:
         catalog.categories || [],
@@ -2755,11 +2300,11 @@ async function loadAccessCatalog({
       pagination:
         result.pagination || null,
 
-      reason:
-        null,
+      reason: null,
 
-      message:
-        "Access catalog request completed successfully.",
+      message: result.hitSafetyLimit
+        ? "Access offers loaded up to the configured page limit. Additional offers may remain."
+        : "Access catalog request completed successfully.",
     };
   } catch (error) {
     const status = Number(error?.status);
@@ -2772,45 +2317,33 @@ async function loadAccessCatalog({
         : null;
 
     const safeError = {
-      code:
-        "ACCESS_CATALOG_REQUEST_FAILED",
-
-      status:
-        providerStatus,
+      code: "ACCESS_CATALOG_REQUEST_FAILED",
+      status: providerStatus,
     };
 
-    // Never send raw provider errors, URLs, or bodies to the logger/browser.
     logRequestError(
       null,
       safeError,
       {
-        scope:
-          "portal_benefits_access_catalog",
+        scope: "portal_benefits_access_catalog",
       }
     );
 
-    const message =
-      providerStatus === 503
-        ? "The Access Offers service or route is unavailable. Card Leo is awaiting confirmation from Access."
-        : providerStatus === 401 || providerStatus === 403
-          ? "Access did not authorize the catalog request. Card Leo support must verify the environment, token, program access, and member record."
-          : providerStatus === 404
-            ? "Access could not find the requested catalog resource. Please contact Card Leo support."
-            : providerStatus === 429
-              ? "Access is receiving too many requests. Please try again shortly."
-              : "Access could not load the benefits catalog. Please try again later.";
+    const message = providerStatus === 503
+      ? "The Access Offers service is unavailable. Card Leo support must verify the configured Offers hostname and path or retry later."
+      : providerStatus === 401 || providerStatus === 403
+        ? "Access did not authorize the catalog request. Card Leo support must verify the environment, token, program access, and member record."
+        : providerStatus === 404
+          ? "Access could not find the requested catalog resource. Please contact Card Leo support."
+          : providerStatus === 429
+            ? "Access is receiving too many requests. Please try again shortly."
+            : "Access could not load the benefits catalog. Please try again later.";
 
     return {
       ...buildEmptyAccessCatalog({
-        configured:
-          true,
-
-        ready:
-          false,
-
-        reason:
-          "access_catalog_request_failed",
-
+        configured: true,
+        ready: false,
+        reason: "access_catalog_request_failed",
         message,
       }),
 
@@ -2822,9 +2355,9 @@ async function loadAccessCatalog({
   }
 }
 
-/* ==========================================================================
-   REDEMPTION STATUS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Redemption readiness
+// -----------------------------------------------------------------------------
 
 function buildRedemptionStatus({
   member,
@@ -2848,14 +2381,6 @@ function buildRedemptionStatus({
     )
   );
 
-  /*
-   * Enable only after the actual redemption handler has been verified.
-   *
-   * ACCESS_REDEMPTION_ENABLED=true
-   * ACCESS_REDEMPTION_SUPPORTED_TYPES=code,barcode,qr_code,online_url
-   *
-   * List only formats the implemented integration actually supports.
-   */
   const enabled = normalizeBoolean(
     process.env.ACCESS_REDEMPTION_ENABLED,
     false
@@ -2909,30 +2434,23 @@ function buildRedemptionStatus({
     enabled,
     ready,
 
-    endpoint:
-      ACCESS_REDEEM_ENDPOINT,
-
-    method:
-      "POST",
+    endpoint: ACCESS_REDEEM_ENDPOINT,
+    method: "POST",
 
     supports,
 
-    note:
-      ready
-        ? "The configured redemption integration must validate the selected offer and return member-specific redemption material."
-        : "Direct claims remain unavailable until the redemption integration and supported formats are verified and enabled.",
+    note: ready
+      ? "The configured redemption integration must validate the selected offer and return member-specific redemption material."
+      : "Direct claims remain unavailable until the redemption integration and supported formats are verified and enabled.",
   };
 }
 
-/* ==========================================================================
-   OPTIONAL MEMBER CARD STATUS
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Existing member-card payload
+// -----------------------------------------------------------------------------
 
 async function getOptionalMemberCard(memberId) {
-  const {
-    data,
-    error,
-  } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("member_cards")
     .select(
       [
@@ -2957,9 +2475,7 @@ async function getOptionalMemberCard(memberId) {
     return data || null;
   }
 
-  if (
-    isMissingOptionalTableOrColumn(error)
-  ) {
+  if (isMissingOptionalTableOrColumn(error)) {
     return null;
   }
 
@@ -2969,49 +2485,27 @@ async function getOptionalMemberCard(memberId) {
 function buildMemberCardPayload(card) {
   if (!card) {
     return {
-      exists:
-        false,
-
-      provider:
-        "lithic",
-
-      cardStatus:
-        "not_created",
-
-      cardType:
-        "virtual",
-
-      lastFour:
-        null,
-
-      maskedNumber:
-        null,
-
-      allowanceBalanceCents:
-        0,
-
-      allowanceBalance:
-        0,
-
-      href:
-        "/portal/card.html",
+      exists: false,
+      provider: "lithic",
+      cardStatus: "not_created",
+      cardType: "virtual",
+      lastFour: null,
+      maskedNumber: null,
+      allowanceBalanceCents: 0,
+      allowanceBalance: 0,
+      href: "/portal/card.html",
     };
   }
 
-  const lastFour = normalizeText(
-    card.last_four
-  );
+  const lastFour = normalizeText(card.last_four);
 
   const balanceCents = Number(
     card.allowance_balance_cents || 0
   );
 
   return {
-    exists:
-      true,
-
-    id:
-      card.id,
+    exists: true,
+    id: card.id,
 
     provider:
       normalizeText(card.provider || "lithic"),
@@ -3025,10 +2519,9 @@ function buildMemberCardPayload(card) {
     lastFour:
       lastFour || null,
 
-    maskedNumber:
-      lastFour
-        ? `•••• •••• •••• ${lastFour}`
-        : null,
+    maskedNumber: lastFour
+      ? `•••• •••• •••• ${lastFour}`
+      : null,
 
     cardPaused:
       Boolean(card.card_paused),
@@ -3041,36 +2534,27 @@ function buildMemberCardPayload(card) {
 
     totalAllowanceLoaded:
       money(
-        Number(
-          card.total_allowance_loaded_cents || 0
-        ) / 100
+        Number(card.total_allowance_loaded_cents || 0) / 100
       ),
 
     totalAllowanceSpent:
       money(
-        Number(
-          card.total_allowance_spent_cents || 0
-        ) / 100
+        Number(card.total_allowance_spent_cents || 0) / 100
       ),
 
-    href:
-      "/portal/card.html",
+    href: "/portal/card.html",
   };
 }
 
-/* ==========================================================================
-   HANDLER
-============================================================================ */
+// -----------------------------------------------------------------------------
+// Handler
+// -----------------------------------------------------------------------------
 
-export default async function handler(
-  req,
-  res
-) {
+export default async function handler(req, res) {
   setNoStore(res);
 
   logRequestStart(req, {
-    scope:
-      "portal_benefits",
+    scope: "portal_benefits",
   });
 
   if (req.method !== "GET") {
@@ -3082,34 +2566,19 @@ export default async function handler(
   }
 
   try {
-    /* ======================================================================
-       AUTHENTICATE
-    ====================================================================== */
-
     const {
       member,
       response,
-    } = await getAuthenticatedMember(
-      req,
-      res
-    );
+    } = await getAuthenticatedMember(req, res);
 
     if (!member) {
       return response;
     }
 
-    let safeMember = sanitizeMember(
-      member
-    );
+    let safeMember = sanitizeMember(member);
 
     const memberId = safeMember.id;
-
-    /* ======================================================================
-       FEATURE FLAGS AND MEMBER DATA
-    ====================================================================== */
-
-    const featureFlags =
-      await getFeatureFlags();
+    const featureFlags = await getFeatureFlags();
 
     const [
       onboardingOptional,
@@ -3117,11 +2586,8 @@ export default async function handler(
       memberCardOptional,
     ] = await Promise.all([
       queryOptionalSingleByMemberColumns({
-        table:
-          "member_onboarding",
-
+        table: "member_onboarding",
         memberId,
-
         columns: [
           "member_id",
           "signup_id",
@@ -3130,11 +2596,8 @@ export default async function handler(
       }),
 
       queryOptionalSingleByMemberColumns({
-        table:
-          "reward_accounts",
-
+        table: "reward_accounts",
         memberId,
-
         columns: [
           "member_id",
           "signup_id",
@@ -3153,51 +2616,25 @@ export default async function handler(
       rewardAccountOptional ||
       buildDefaultRewardAccount(member);
 
-    const memberCard =
-      buildMemberCardPayload(
-        memberCardOptional
-      );
-
-    /* ======================================================================
-       MEMBER AND ACCESS
-    ====================================================================== */
-
-    const tier = normalizeTier(
-      member.tier || "core"
+    const memberCard = buildMemberCardPayload(
+      memberCardOptional
     );
 
+    const tier = normalizeTier(member.tier || "core");
     const nextTier = getNextTier(tier);
 
     let access = buildAccessPayload(member);
 
-    /* ======================================================================
-       ACCESS FULL CATALOG
-    ====================================================================== */
+    const catalogOptions = getAccessCatalogOptions(req);
 
-    const catalogOptions =
-      getAccessCatalogOptions(req);
-
-    const accessCatalog =
-      await loadAccessCatalog({
-        member,
-        featureFlags,
-        options: catalogOptions,
-      });
-
-    // Reflect the result of this catalog request without modifying Supabase.
-    safeMember = sanitizeMember(
+    const accessCatalog = await loadAccessCatalog({
       member,
-      accessCatalog
-    );
+      featureFlags,
+      options: catalogOptions,
+    });
 
-    access = buildAccessPayload(
-      member,
-      accessCatalog
-    );
-
-    /* ======================================================================
-       CARD LEO BENEFITS
-    ====================================================================== */
+    safeMember = sanitizeMember(member, accessCatalog);
+    access = buildAccessPayload(member, accessCatalog);
 
     const staticBenefits = buildStaticBenefits(
       tier,
@@ -3226,72 +2663,45 @@ export default async function handler(
       ...dynamicBenefits,
       ...staticBenefits,
     ].sort(
-      (a, b) =>
-        (a.sortOrder || 0) -
-        (b.sortOrder || 0)
+      (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)
     );
 
-    const cardLeoGroups =
-      groupBenefitsByCategory(
-        cardLeoBenefits
-      );
-
-    /* ======================================================================
-       REDEMPTION STATUS
-    ====================================================================== */
-
-    const redemption =
-      buildRedemptionStatus({
-        member,
-        accessCatalog,
-      });
-
-    /* ======================================================================
-       COUNTS
-    ====================================================================== */
-
-    const unlockedCount =
-      cardLeoBenefits.filter(
-        (item) => item.unlocked
-      ).length;
-
-    const lockedCount =
-      cardLeoBenefits.filter(
-        (item) => item.locked
-      ).length;
-
-    const featuredBenefits =
+    const cardLeoGroups = groupBenefitsByCategory(
       cardLeoBenefits
-        .filter((item) => item.featured)
-        .slice(0, 10);
+    );
 
-    const accessOfferCount =
-      accessCatalog.count || 0;
+    const redemption = buildRedemptionStatus({
+      member,
+      accessCatalog,
+    });
+
+    const unlockedCount = cardLeoBenefits.filter(
+      (item) => item.unlocked
+    ).length;
+
+    const lockedCount = cardLeoBenefits.filter(
+      (item) => item.locked
+    ).length;
+
+    const featuredBenefits = cardLeoBenefits
+      .filter((item) => item.featured)
+      .slice(0, 10);
+
+    const accessOfferCount = accessCatalog.count || 0;
 
     const totalVisibleBenefits =
-      cardLeoBenefits.length +
-      accessOfferCount;
-
-    /* ======================================================================
-       LOG
-    ====================================================================== */
+      cardLeoBenefits.length + accessOfferCount;
 
     logRequestSuccess(req, {
-      scope:
-        "portal_benefits",
-
+      scope: "portal_benefits",
       memberId,
-
-      email:
-        safeMember.email,
-
+      email: safeMember.email,
       tier,
 
       cardLeoBenefitCount:
         cardLeoBenefits.length,
 
       accessOfferCount,
-
       totalVisibleBenefits,
 
       accessMemberStatus:
@@ -3310,36 +2720,21 @@ export default async function handler(
         redemption.ready,
     });
 
-    /* ======================================================================
-       RESPONSE
-    ====================================================================== */
-
     return ok(
       res,
       {
-        authenticated:
-          true,
+        authenticated: true,
 
         summary: {
-          profileId:
-            safeMember.id,
-
-          memberId:
-            safeMember.id,
-
-          memberName:
-            safeMember.fullName,
-
-          email:
-            safeMember.email,
+          profileId: safeMember.id,
+          memberId: safeMember.id,
+          memberName: safeMember.fullName,
+          email: safeMember.email,
 
           tier,
-
-          tierLabel:
-            titleCase(tier),
+          tierLabel: titleCase(tier),
 
           nextTier,
-
           nextTierLabel:
             nextTier ? titleCase(nextTier) : null,
 
@@ -3385,16 +2780,11 @@ export default async function handler(
           },
         },
 
-        member:
-          safeMember,
-
-        profile:
-          safeMember,
+        member: safeMember,
+        profile: safeMember,
 
         memberCard,
-
-        card:
-          memberCard,
+        card: memberCard,
 
         access,
 
@@ -3476,28 +2866,16 @@ export default async function handler(
         groups:
           cardLeoGroups,
 
-        categories:
-          cardLeoGroups.map((group) => ({
-            slug:
-              group.category,
-
-            name:
-              group.title,
-
-            count:
-              group.count,
-
-            unlockedCount:
-              group.unlockedCount,
-
-            lockedCount:
-              group.lockedCount,
-          })),
+        categories: cardLeoGroups.map((group) => ({
+          slug: group.category,
+          name: group.title,
+          count: group.count,
+          unlockedCount: group.unlockedCount,
+          lockedCount: group.lockedCount,
+        })),
 
         featureFlags,
-
         onboarding,
-
         rewardAccount,
 
         filters: {
@@ -3561,21 +2939,20 @@ export default async function handler(
             ACCESS_REDEEM_ENDPOINT,
         },
 
-        integration:
-          catalogOptions.debug
-            ? {
-                accessOffers:
-                  getAccessOffersIntegrationStatus(),
+        integration: catalogOptions.debug
+          ? {
+              accessOffers:
+                getAccessOffersIntegrationStatus(),
 
-                config: {
-                  environment:
-                    getAccessOffersIntegrationStatus().environment,
+              config: {
+                environment:
+                  getAccessOffersIntegrationStatus().environment,
 
-                  configured:
-                    validateAccessOffersConfiguration().valid,
-                },
-              }
-            : undefined,
+                configured:
+                  validateAccessOffersConfiguration().valid,
+              },
+            }
+          : undefined,
 
         fetchedAt:
           new Date().toISOString(),
@@ -3583,19 +2960,16 @@ export default async function handler(
 
       accessCatalog.loaded
         ? `Benefits loaded successfully. ${accessCatalog.count} Access offers are available.`
-        : "Card Leo account benefits loaded. " +
-          accessCatalog.message
+        : "Card Leo account benefits loaded. " + accessCatalog.message
     );
   } catch (error) {
     logRequestError(
       req,
       {
-        code:
-          "PORTAL_BENEFITS_FAILED",
+        code: "PORTAL_BENEFITS_FAILED",
       },
       {
-        scope:
-          "portal_benefits_unexpected",
+        scope: "portal_benefits_unexpected",
       }
     );
 
@@ -3605,11 +2979,8 @@ export default async function handler(
 
       process.env.NODE_ENV === "development"
         ? {
-            error:
-              error?.message || "Unknown error.",
-
-            code:
-              error?.code || null,
+            error: error?.message || "Unknown error.",
+            code: error?.code || null,
           }
         : null
     );

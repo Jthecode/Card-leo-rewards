@@ -471,7 +471,15 @@
       background:linear-gradient(135deg,var(--gold-light),var(--gold));
     }
 
-    .benefit-icon img { width:100%; height:100%; object-fit:cover; }
+    .benefit-icon img { width:100%; height:100%; object-fit:contain; }
+    .merchant-detail { display:flex; align-items:center; gap:14px; }
+    .merchant-detail-logo { width:72px; height:72px; flex:0 0 auto; object-fit:contain; border-radius:12px; background:#fff; padding:5px; }
+    .offer-detail-image { display:block; width:100%; max-height:240px; object-fit:contain; border-radius:14px; }
+    .detail-value,.benefit-location { white-space:pre-wrap; }
+    .location-list { margin:7px 0 0; padding-left:22px; }
+    .location-list li + li { margin-top:12px; }
+    .location-list address { font-style:normal; white-space:pre-wrap; line-height:1.58; }
+    .merchant-logo-note { color:var(--muted); font-size:.85rem; }
     .benefit-title { margin:13px 0 0; font-size:1.08rem; line-height:1.3; font-weight:950; }
     .merchant-name { margin:6px 0 0; color:var(--gold-light); font-size:.9rem; font-weight:850; }
     .benefit-copy { margin:9px 0 0; color:var(--muted); line-height:1.6; flex:1; }
@@ -693,6 +701,7 @@
         <a href="./profile.html">Profile</a>
         <a href="./rewards.html">Rewards</a>
         <a class="active" href="./benefits.html" aria-current="page">Benefits</a>
+        <a href="./travel.html">Travel</a>
         <a href="./support.html">Support</a>
         <a href="./settings.html">Settings</a>
       </nav>
@@ -710,7 +719,7 @@
           <h2 class="hero-title">Use Your Benefits. Save More.</h2>
 
           <p class="hero-copy">
-            Browse your complete Card Leo Rewards benefit catalog. Search restaurants,
+            Browse available offers through your Card Leo Rewards membership. Search restaurants,
             travel, shopping, entertainment, fitness, wellness, and local offers.
             Open an offer and tap <strong>Claim Offer</strong> when a benefit
             supports member redemption.
@@ -803,7 +812,7 @@
           <div>
             <h2 class="section-title">Search All Benefits</h2>
             <p class="section-copy">
-              Search the full Access catalog instead of stopping at the first small batch of offers.
+              Search the loaded Access offers by merchant, offer, category, or location.
             </p>
           </div>
         </div>
@@ -875,7 +884,7 @@
             <div>
               <h2 class="section-title">Available Benefits</h2>
               <p class="section-copy" id="benefitsSubtitle">
-                Loading the complete Access catalog...
+                Loading available Access offers...
               </p>
             </div>
           </div>
@@ -919,10 +928,10 @@
             <ul class="info-list">
               <li>1. Find the offer you want.</li>
               <li>2. Tap <strong>View Details</strong>.</li>
-              <li>3. Tap <strong>Claim Offer</strong>.</li>
+              <li>3. Read the offer terms and redemption instructions.</li>
               <li>
-                4. Show or use the QR code, barcode, coupon code, or link returned
-                for your membership.
+                4. Follow the supplied instructions. When available, tap
+                <strong>Claim Offer</strong> to request your member redemption.
               </li>
             </ul>
           </article>
@@ -946,8 +955,8 @@
               Redemption content is requested securely after you claim an eligible offer.
             </p>
             <ul class="info-list">
-              <li>Your Access API credentials remain on the server.</li>
-              <li>Member-specific claim data is never created by this page.</li>
+              <li>Read the complete terms before using an offer.</li>
+              <li>Check the listed participating locations before visiting.</li>
               <li>
                 If Access returns a QR code, coupon, barcode, or online link,
                 it will appear inside the secure claim window.
@@ -1130,11 +1139,40 @@
         return Array.isArray(value) ? value : [];
       }
 
+      function displayText(value) {
+        if (typeof value === "string" || typeof value === "number") {
+          return normalizeText(value);
+        }
+
+        if (Array.isArray(value)) {
+          return [...new Set(value.map(displayText).filter(Boolean))].join("\n\n");
+        }
+
+        if (isObject(value)) {
+          return displayText(value.text || value.description || value.content || value.value);
+        }
+
+        return "";
+      }
+
       function cleanDescription(value) {
-        return normalizeText(value)
+        const text = displayText(value)
+          .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
+          .replace(/<br\s*\/?\s*>/gi, "\n")
+          .replace(/<\/(p|div|li|h[1-6])\s*>/gi, "\n")
+          .replace(/<li\b[^>]*>/gi, "• ")
           .replace(/<[^>]*>/g, "")
-          .replace(/\s+/g, " ")
-          .trim();
+          .replace(/&(?:#\d+|#x[\da-f]+|[a-z][a-z\d]+);/gi, (entity) => {
+            const decoder = document.createElement("textarea");
+            decoder.innerHTML = entity;
+            return decoder.value;
+          });
+
+        return text.replace(/[ \t]+/g, " ").replace(/ *\n */g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+      }
+
+      function combineText(...values) {
+        return [...new Set(values.map(cleanDescription).filter(Boolean))].join("\n\n");
       }
 
       function getInitials(name) {
@@ -1225,7 +1263,7 @@
           member.membershipStatus ||
           member.membership_status ||
           member.status ||
-          "active"
+          "unverified"
         );
       }
 
@@ -1375,91 +1413,94 @@
       }
 
       function getOfferTitle(offer) {
-        return normalizeText(offer?.title, "Member Benefit");
+        return cleanDescription(offer?.title || offer?.name || offer?.offer_name) || "Member Benefit";
       }
 
       function getMerchantName(offer) {
-        return normalizeText(
-          offer?.merchantName ||
-          offer?.storeName ||
-          offer?.store_name ||
-          offer?.merchant?.name ||
-          offer?.store?.name,
-          "Card Leo Rewards"
-        );
+        return cleanDescription(
+          offer?.merchant?.name || offer?.store?.name ||
+          offer?.merchantName || offer?.storeName || offer?.store_name ||
+          offer?.merchant_name || offer?.business_name
+        ) || "Merchant information unavailable";
       }
 
       function getOfferDescription(offer) {
         return cleanDescription(
-          offer?.description ||
-          `Save with ${getMerchantName(offer)} through Card Leo Rewards.`
-        );
+          offer?.description || offer?.long_description ||
+          offer?.shortDescription || offer?.short_description
+        ) || getOfferTitle(offer);
       }
 
       function getSavingsText(offer) {
-        return normalizeText(
-          offer?.discountText ||
-          offer?.savingsText ||
-          offer?.discount ||
-          "Member savings"
+        const savings = cleanDescription(
+          offer?.discountText || offer?.savingsText || offer?.discount_text || offer?.discount
         );
+
+        // A bare number does not identify dollars, percentages, or savings units.
+        return savings && !/^[+-]?\d+(?:\.\d+)?$/.test(savings)
+          ? savings
+          : getOfferTitle(offer);
       }
 
       function getOfferCategory(offer) {
-        return normalizeText(
-          offer?.categoryName ||
-          (
-            typeof offer?.category === "string"
-              ? offer.category
-              : offer?.category?.name
-          ) ||
-          offer?.categories?.[0]?.name,
-          "Offers"
+        return cleanDescription(
+          offer?.categoryName || offer?.category_name ||
+          (typeof offer?.category === "string" ? offer.category : offer?.category?.name) ||
+          offer?.categories?.[0]?.name
+        ) || "Offers";
+      }
+
+      function getMerchantLogo(offer) {
+        return safeRedemptionUrl(
+          offer?.merchant?.logo || offer?.merchant?.logoUrl || offer?.merchant?.logo_url ||
+          offer?.store?.logo || offer?.store?.logo_url || offer?.logo ||
+          offer?.merchant_logo || offer?.store_logo
         );
       }
 
       function getOfferImage(offer) {
-        const value = normalizeText(
-          offer?.imageUrl ||
-          offer?.image_url ||
-          offer?.image ||
-          offer?.logo ||
-          offer?.merchant?.logoUrl ||
-          offer?.merchant?.logo
-        );
+        return safeRedemptionUrl(offer?.imageUrl || offer?.image_url || offer?.image) ||
+          getMerchantLogo(offer);
+      }
 
-        if (!value) return "";
+      function getOfferLocations(offer) {
+        const rows = toArray(offer?.locations).length
+          ? offer.locations
+          : toArray(offer?.merchant?.locations);
 
-        try {
-          const url = new URL(value, window.location.origin);
+        return rows.filter(isObject);
+      }
 
-          return ["https:", "http:"].includes(url.protocol)
-            ? url.href
-            : "";
-        } catch {
-          return "";
-        }
+      function formatLocation(location) {
+        const address = [
+          location.address1 || location.address_1 || location.address_line_1 ||
+            (typeof location.address === "string" ? location.address : ""),
+          location.address2 || location.address_2 || location.address_line_2,
+          location.city || location.city_locality,
+          location.state || location.state_region,
+          location.postalCode || location.postal_code || location.zip,
+          location.country || location.country_code,
+        ].map(cleanDescription).filter(Boolean).join(", ");
+
+        return address || cleanDescription(location.fullAddress) || "Address information unavailable";
       }
 
       function getOfferLocation(offer) {
-        const location = toArray(offer?.locations)[0];
-        if (!location) return "";
-
-        return [
-          location.address1 || location.address || location.address_1,
-          location.city || location.city_locality,
-          location.state || location.state_region,
-          location.postalCode || location.postal_code,
-        ]
-          .map((value) => normalizeText(value))
-          .filter(Boolean)
-          .join(", ");
+        return [...new Set(getOfferLocations(offer).map(formatLocation))].join("\n");
       }
 
       function getOfferTerms(offer) {
-        return cleanDescription(
-          offer?.terms ||
-          "Offer availability, participating locations, and restrictions may vary."
+        return combineText(
+          offer?.terms, offer?.termsAndConditions, offer?.terms_of_use,
+          offer?.termsOfUse, offer?.terms_and_conditions, offer?.offer_terms,
+          offer?.disclaimer, offer?.restrictions
+        );
+      }
+
+      function getRedemptionInstructions(offer) {
+        return combineText(
+          offer?.redemption?.instructions, offer?.redemptionInstructions,
+          offer?.redemption_instructions, offer?.instructions
         );
       }
 
@@ -1474,6 +1515,7 @@
           getOfferDescription(offer),
           getSavingsText(offer),
           getOfferCategory(offer),
+          getOfferLocation(offer),
 
           ...toArray(offer?.categories).map(
             (category) => category?.name
@@ -1735,11 +1777,11 @@
             const savings = getSavingsText(offer);
             const category = getOfferCategory(offer);
             const location = getOfferLocation(offer);
-            const image = getOfferImage(offer);
+            const image = getMerchantLogo(offer);
             const claimable = canClaimOffer(offer);
 
             const iconContent = image
-              ? `<img src="${escapeHtml(image)}" alt="" loading="lazy" />`
+              ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(merchant)} logo" loading="lazy" referrerpolicy="no-referrer" />`
               : escapeHtml(getCategoryIcon(category));
 
             return `
@@ -1753,6 +1795,7 @@
 
                 <h3 class="benefit-title">${escapeHtml(title)}</h3>
                 <p class="merchant-name">${escapeHtml(merchant)}</p>
+                ${!image ? '<p class="merchant-logo-note">Merchant logo unavailable</p>' : ""}
                 <p class="benefit-copy">${escapeHtml(description)}</p>
                 <div class="benefit-savings">${escapeHtml(savings)}</div>
 
@@ -1845,8 +1888,12 @@
         const description = getOfferDescription(offer);
         const savings = getSavingsText(offer);
         const category = getOfferCategory(offer);
-        const location = getOfferLocation(offer);
+        const locations = getOfferLocations(offer);
         const terms = getOfferTerms(offer);
+        const instructions = getRedemptionInstructions(offer);
+        const logo = getMerchantLogo(offer);
+        const image = getOfferImage(offer);
+        const merchantDescription = cleanDescription(offer?.merchantDescription || offer?.merchant?.description);
         const claimable = canClaimOffer(offer);
 
         if (els.modalCategory) {
@@ -1861,9 +1908,14 @@
 
         els.modalBody.innerHTML = `
           <div class="detail-grid">
+            ${image && image !== logo ? `<img class="offer-detail-image" src="${escapeHtml(image)}" alt="${escapeHtml(title)}" referrerpolicy="no-referrer" />` : ""}
             <div class="detail-box">
               <div class="detail-label">Merchant</div>
-              <div class="detail-value">${escapeHtml(merchant)}</div>
+              <div class="merchant-detail">
+                ${logo ? `<img class="merchant-detail-logo" src="${escapeHtml(logo)}" alt="${escapeHtml(merchant)} logo" referrerpolicy="no-referrer" />` : '<span class="merchant-logo-note">Merchant logo unavailable</span>'}
+                <div class="detail-value">${escapeHtml(merchant)}</div>
+              </div>
+              ${merchantDescription ? `<div class="detail-value">${escapeHtml(merchantDescription)}</div>` : ""}
             </div>
 
             <div class="detail-box">
@@ -1877,19 +1929,30 @@
             </div>
 
             ${
-              location
+              locations.length
                 ? `
                   <div class="detail-box">
-                    <div class="detail-label">Participating Location</div>
-                    <div class="detail-value">${escapeHtml(location)}</div>
+                    <div class="detail-label">Participating Locations (${locations.length})</div>
+                    <ol class="location-list">${locations.map((location) => `
+                      <li>
+                        ${location.name ? `<strong>${escapeHtml(cleanDescription(location.name))}</strong>` : ""}
+                        <address>${escapeHtml(formatLocation(location))}</address>
+                        ${location.phone ? `<div class="detail-value">${escapeHtml(normalizeText(location.phone))}</div>` : ""}
+                      </li>
+                    `).join("")}</ol>
                   </div>
                 `
-                : ""
+                : `<div class="detail-box"><div class="detail-label">Participating Locations</div><div class="detail-value">${offer?.national === true ? "National offer. Follow the offer terms and redemption instructions for availability." : "Access has not supplied participating location addresses for this offer."}</div></div>`
             }
 
             <div class="detail-box">
-              <div class="detail-label">Terms</div>
-              <div class="detail-value">${escapeHtml(terms)}</div>
+              <div class="detail-label">Terms of Use</div>
+              <div class="detail-value">${escapeHtml(terms || "Access has not supplied terms for this offer. Check again before redeeming.")}</div>
+            </div>
+
+            <div class="detail-box">
+              <div class="detail-label">Redemption Instructions</div>
+              <div class="detail-value">${escapeHtml(instructions || "Access has not supplied redemption instructions for this offer. Please check again before redeeming.")}</div>
             </div>
 
             <div class="claim-panel">
@@ -1899,7 +1962,9 @@
                 ${
                   claimable
                     ? "Tap Claim Offer to request your member-specific redemption information."
-                    : "Direct claims are not available for this offer. Review its terms for redemption instructions."
+                    : instructions
+                      ? "Follow the redemption instructions supplied above."
+                      : "Redemption information is unavailable for this offer right now."
                 }
               </p>
 
@@ -1980,6 +2045,10 @@
 
           if (!isObject(details)) {
             throw new Error("Access did not return offer details.");
+          }
+
+          if (getOfferId(details) !== offerKey) {
+            throw new Error("Access returned details for a different offer. Please try again.");
           }
 
           const detailedOffer = {
@@ -2070,7 +2139,7 @@
           redemption?.redemptionUrl
         );
 
-        const instructions = normalizeText(
+        const instructions = cleanDescription(
           redemption?.instructions
         );
 
@@ -2145,7 +2214,7 @@
                   <div class="detail-box">
                     <div class="detail-label">Expiration</div>
                     <div class="detail-value">
-                      ${escapeHtml(new Date(expiresAt).toLocaleString())}
+                      ${escapeHtml(Number.isNaN(Date.parse(expiresAt)) ? expiresAt : new Date(expiresAt).toLocaleString())}
                     </div>
                   </div>
                 `
@@ -2287,10 +2356,10 @@
           }
 
           const usableRedemption = Boolean(
-            redemption.code ||
-            redemption.barcode ||
-            redemption.qrCode ||
-            redemption.redemptionUrl
+            normalizeText(redemption.code) ||
+            normalizeText(redemption.barcode) ||
+            getReturnedQrImage(redemption) ||
+            safeRedemptionUrl(redemption.redemptionUrl)
           );
 
           if (button && !usableRedemption) {

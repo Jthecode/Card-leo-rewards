@@ -1,10 +1,15 @@
 // api/access/redeem-offer.js
 
+import { timingSafeEqual } from "node:crypto";
+
 import { supabaseAdmin } from "../../lib/supabase-admin.js";
 
 import {
   accessOffersRequest,
   getAccessOffersBaseUrl,
+  getAccessOffersEndpointPath,
+  extractOfferRows,
+  normalizeAccessOffer,
   getAccessOffersConfigForDebug,
   getAccessOffersIntegrationStatus,
   getAccessOffersToken,
@@ -42,7 +47,9 @@ import {
           ↓
    Verify paid/active membership
           ↓
-   Verify Access AMT member is OPEN
+   Verify saved login token and reject suspended Access membership
+          ↓
+   Verify the offer in the member-scoped Access catalog
           ↓
    Send member + offer to Access redemption service
           ↓
@@ -58,7 +65,26 @@ import {
 
    IMPORTANT
    ---------
-   This route does NOT invent coupons.
+   This route does NOT invent coupons or redemption endpoints.
+
+   Enable only after Access confirms the redemption endpoint and payload:
+     ACCESS_REDEMPTION_ENABLED=true
+     ACCESS_REDEMPTION_ENDPOINT_PATH=<Access-approved path or path template>
+     ACCESS_REDEMPTION_OFFER_ID_FIELD=<Access-approved JSON field>
+     ACCESS_REDEMPTION_MEMBER_ID_FIELD=<Access-approved JSON field>
+     ACCESS_REDEMPTION_SUPPORTED_TYPES=<confirmed formats>
+
+   Supported format names: code, barcode, qr_code, online_url.
+   The offer/member payload field names deliberately have no guessed defaults.
+   Optional endpoint placeholders: {offer_key}, {offer_id}, {member_key}.
+   The endpoint must be on the configured Access Offers HTTPS origin.
+
+   A saved session_expires_at and at least one existing signups token column
+   must verify the login token:
+     session_token, auth_token, login_token, or portal_token.
+   Decoding a JSON/base64 cookie alone does not authenticate a member.
+
+   A claim issues redemption material; it does not confirm a merchant purchase.
 
    It only returns redemption data actually returned by Access.
 
@@ -145,6 +171,11 @@ const INACTIVE_STATUSES =
     "unpaid",
     "past_due",
     "payment_failed",
+    "expired",
+    "incomplete",
+    "incomplete_expired",
+    "failed",
+    "suspend",
   ]);
 
 /* ==========================================================================
@@ -409,32 +440,22 @@ function nowIso() {
    REQUEST BODY
 ============================================================================ */
 
-function getRequestBody(
-  req
-) {
-  if (!req?.body) {
-    return {};
+function getRequestBody(req) {
+  let body = req?.body;
+
+  if (Buffer.isBuffer(body)) {
+    body = body.toString("utf8");
   }
 
-  if (
-    typeof req.body === "string"
-  ) {
-    try {
-      return JSON.parse(
-        req.body
-      );
-    } catch {
-      return {};
+  if (typeof body === "string") {
+    if (Buffer.byteLength(body, "utf8") > 16384) {
+      return null;
     }
+
+    body = safeJsonParse(body, null);
   }
 
-  if (
-    typeof req.body === "object"
-  ) {
-    return req.body;
-  }
-
-  return {};
+  return isObject(body) ? body : null;
 }
 
 /* ==========================================================================
@@ -460,65 +481,31 @@ function getEnv(
 ============================================================================ */
 
 function getAccessRedemptionEndpointPath() {
-  const configured =
-    getEnv(
-      "ACCESS_REDEMPTION_ENDPOINT_PATH"
-    );
-
-  if (!configured) {
-    return "";
-  }
+  const configured = getEnv("ACCESS_REDEMPTION_ENDPOINT_PATH");
 
   if (
-    configured === "/" ||
-    normalizeLower(configured) === "root"
+    !configured || configured === "/" ||
+    !configured.startsWith("/") || configured.startsWith("//") ||
+    /[\\?#\s]/.test(configured) ||
+    configured.split("/").some((part) => part === "." || part === "..")
   ) {
     return "";
   }
 
-  return configured.startsWith("/")
-    ? configured
-    : `/${configured}`;
+  return configured;
 }
 
 function getAccessRedemptionMethod() {
-  const method =
-    normalizeUpper(
-      getEnv(
-        "ACCESS_REDEMPTION_METHOD",
-        DEFAULT_REDEMPTION_METHOD
-      )
-    );
-
-  if (
-    [
-      "POST",
-      "PUT",
-      "PATCH",
-    ].includes(method)
-  ) {
-    return method;
-  }
-
-  return DEFAULT_REDEMPTION_METHOD;
+  const method = normalizeUpper(getEnv("ACCESS_REDEMPTION_METHOD", DEFAULT_REDEMPTION_METHOD));
+  return ["POST", "PUT", "PATCH"].includes(method) ? method : "";
 }
 
 function getAccessRedemptionOfferIdField() {
-  return (
-    getEnv(
-      "ACCESS_REDEMPTION_OFFER_ID_FIELD"
-    ) ||
-    "offer_id"
-  );
+  return getEnv("ACCESS_REDEMPTION_OFFER_ID_FIELD");
 }
 
 function getAccessRedemptionMemberIdField() {
-  return (
-    getEnv(
-      "ACCESS_REDEMPTION_MEMBER_ID_FIELD"
-    ) ||
-    "member_customer_identifier"
-  );
+  return getEnv("ACCESS_REDEMPTION_MEMBER_ID_FIELD");
 }
 
 function getAccessRedemptionProgramField() {
@@ -818,102 +805,41 @@ function getSessionEmail(
   );
 }
 
-function getSessionExpiresAt(
-  session
-) {
-  const data =
-    session?.data ||
-    {};
+function getSessionExpiresAt(session) {
+  const data = session?.data || {};
+  const candidates = [data.expires_at, data.expiresAt, data.exp, data.session?.expires_at, data.session?.expiresAt];
 
-  const candidates = [
-    data.expires_at,
-    data.expiresAt,
-    data.exp,
-    data.session?.expires_at,
-    data.session?.expiresAt,
-  ];
-
-  for (
-    const candidate
-    of candidates
-  ) {
-    const value =
-      Number(candidate);
-
-    if (
-      Number.isFinite(value) &&
-      value > 0
-    ) {
-      return value;
-    }
+  for (const candidate of candidates) {
+    if (candidate === undefined || candidate === null || candidate === "") continue;
+    const number = Number(candidate);
+    const timestamp = Number.isFinite(number) && number > 0
+      ? (number > 1e12 ? number / 1000 : number)
+      : Date.parse(candidate) / 1000;
+    if (Number.isFinite(timestamp) && timestamp > 0) return timestamp;
   }
 
   return 0;
 }
 
-function isSessionExpired(
-  session
-) {
-  const expiresAt =
-    getSessionExpiresAt(
-      session
-    );
-
-  if (!expiresAt) {
-    return false;
-  }
-
-  return (
-    expiresAt <=
-    Math.floor(
-      Date.now() / 1000
-    )
-  );
+function isSessionExpired(session) {
+  const expiresAt = getSessionExpiresAt(session);
+  return !expiresAt || expiresAt <= Math.floor(Date.now() / 1000);
 }
 
 /* ==========================================================================
    MEMBER LOOKUP
 ============================================================================ */
 
-async function findMember({
-  memberId,
-  email,
-}) {
-  let query =
-    supabaseAdmin
-      .from(
-        "signups"
-      )
-      .select("*")
-      .limit(1);
+async function findMember({ memberId, email }) {
+  if (!memberId && !email) return null;
 
-  if (memberId) {
-    query =
-      query.eq(
-        "id",
-        memberId
-      );
-  } else {
-    query =
-      query.ilike(
-        "email",
-        email
-      );
-  }
+  let query = supabaseAdmin.from("signups").select("*");
+  query = memberId ? query.eq("id", memberId) : query.eq("email", email);
 
-  const {
-    data,
-    error,
-  } =
-    await query
-      .maybeSingle();
-
-  if (error) {
-    throw error;
-  }
-
-  return data ||
-    null;
+  // Do not select an arbitrary member when identities are duplicated.
+  const { data, error } = await query.maybeSingle();
+  if (error) throw error;
+  return data || null;
 }
 
 /* ==========================================================================
@@ -984,25 +910,10 @@ function isMemberActive(
    ACCESS READY
 ============================================================================ */
 
-function isAccessReady(
-  member
-) {
-  if (
-    typeof member
-      ?.access_perks_ready ===
-      "boolean"
-  ) {
-    return member
-      .access_perks_ready;
-  }
-
-  return (
-    normalizeUpper(
-      member
-        ?.access_member_status
-    ) ===
-    "OPEN"
-  );
+function isAccessReady(member) {
+  // Eligibility only. OPEN and cached readiness are not proof of redemption support.
+  const status = normalizeUpper(member?.access_member_status);
+  return !["SUSPEND", "SUSPENDED", "CLOSED", "INACTIVE", "DISABLED"].includes(status);
 }
 
 /* ==========================================================================
@@ -1048,15 +959,12 @@ async function authenticateMember(
     };
   }
 
-  /*
-   * IMPORTANT:
-   *
-   * Do NOT require:
-   *
-   *   session.data.authenticated === true
-   *
-   * Card Leo resolves the member from the server-side session identity.
-   */
+  if (session.data.authenticated !== true) {
+    return {
+      member: null,
+      response: unauthorized(res, "Please sign in again before redeeming benefits."),
+    };
+  }
 
   const memberId =
     getSessionMemberId(
@@ -1099,6 +1007,20 @@ async function authenticateMember(
     };
   }
 
+  const sessionProof = verifyMemberSessionToken(req, session, member);
+
+  if (!sessionProof.ok) {
+    return {
+      member: null,
+      response: sendJson(res, sessionProof.status, {
+        success: false,
+        ok: false,
+        code: sessionProof.code,
+        message: sessionProof.message,
+      }),
+    };
+  }
+
   if (
     !isMemberActive(
       member
@@ -1115,7 +1037,7 @@ async function authenticateMember(
               true,
 
             redirectTo:
-              "/signup.html?status=payment_required",
+              "/login.html?status=payment_required&next=%2Fportal%2Fbenefits.html",
           }
         ),
     };
@@ -1131,10 +1053,10 @@ async function authenticateMember(
       response:
         forbidden(
           res,
-          "Your Access Perks membership is not ready for redemption yet.",
+          "Your Access Perks membership is suspended or inactive.",
           {
             code:
-              "ACCESS_MEMBER_NOT_READY",
+              "ACCESS_MEMBER_SUSPENDED",
 
             accessStatus:
               normalizeString(
@@ -1201,9 +1123,10 @@ function sanitizeMember(
       ),
 
     accessPerksReady:
-      isAccessReady(
-        member
-      ),
+      normalizeBoolean(member?.access_perks_ready, false),
+
+    accessEligible:
+      isAccessReady(member),
   };
 }
 
@@ -1211,16 +1134,11 @@ function sanitizeMember(
    OFFER ID
 ============================================================================ */
 
-function getOfferId(
-  body = {}
-) {
-  return normalizeString(
-    body.offer_id ||
-      body.offerId ||
-      body.access_offer_id ||
-      body.accessOfferId ||
-      body.id
-  );
+function getOfferId(body = {}) {
+  return safeIdentifier(firstNonEmpty(
+    body.offer_key, body.offerKey, body.offer_id, body.offerId,
+    body.access_offer_id, body.accessOfferId, body.id
+  ));
 }
 
 /* ==========================================================================
@@ -1232,7 +1150,7 @@ function buildRedemptionPayload({
   offerId,
   body,
 }) {
-  const payload = {};
+  const payload = Object.create(null);
 
   const offerField =
     getAccessRedemptionOfferIdField();
@@ -1286,9 +1204,8 @@ function buildRedemptionPayload({
    */
 
   const locationId =
-    normalizeString(
-      body.location_id ||
-      body.locationId
+    safeIdentifier(
+      body.location_key ?? body.locationKey ?? body.location_id ?? body.locationId
     );
 
   if (locationId) {
@@ -1306,9 +1223,8 @@ function buildRedemptionPayload({
    */
 
   const redemptionType =
-    normalizeString(
-      body.redemption_type ||
-      body.redemptionType
+    safeIdentifier(
+      body.redemption_type || body.redemptionType
     );
 
   if (redemptionType) {
@@ -1373,179 +1289,63 @@ function unwrapRedemptionResponse(
    NORMALIZE REDEMPTION RESPONSE
 ============================================================================ */
 
-function normalizeRedemptionResult(
-  result,
-  offerId
-) {
-  const data =
-    unwrapRedemptionResponse(
-      result
-    );
-
-  const code =
-    normalizeString(
-      firstNonEmpty(
-        data.code,
-        data.coupon_code,
-        data.couponCode,
-        data.promo_code,
-        data.promoCode,
-        data.redemption_code,
-        data.redemptionCode
-      )
-    );
-
-  const barcode =
-    normalizeString(
-      firstNonEmpty(
-        data.barcode,
-        data.barcode_value,
-        data.barcodeValue,
-        data.bar_code,
-        data.barCode
-      )
-    );
-
-  const barcodeFormat =
-    normalizeString(
-      firstNonEmpty(
-        data.barcode_format,
-        data.barcodeFormat,
-        data.barcode_type,
-        data.barcodeType
-      )
-    );
-
-  const qrCode =
-    normalizeString(
-      firstNonEmpty(
-        data.qr_code,
-        data.qrCode,
-        data.qr_code_url,
-        data.qrCodeUrl,
-        data.qrcode,
-        data.qrcode_url
-      )
-    );
-
-  const redemptionUrl =
-    normalizeString(
-      firstNonEmpty(
-        data.url,
-        data.redemption_url,
-        data.redemptionUrl,
-        data.claim_url,
-        data.claimUrl,
-        data.online_url,
-        data.onlineUrl
-      )
-    );
-
-  const instructions =
-    normalizeString(
-      firstNonEmpty(
-        data.instructions,
-        data.redemption_instructions,
-        data.redemptionInstructions,
-        data.description
-      )
-    );
-
-  const redemptionId =
-    normalizeString(
-      firstNonEmpty(
-        data.id,
-        data.redemption_id,
-        data.redemptionId,
-        data.token,
-        data.redemption_token,
-        data.redemptionToken
-      )
-    );
-
-  const expiresAt =
-    safeDate(
-      firstNonEmpty(
-        data.expires_at,
-        data.expiresAt,
-        data.expiration_date,
-        data.expirationDate,
-        data.valid_until,
-        data.validUntil
-      )
-    );
-
-  const hasRedemptionMaterial =
-    Boolean(
-      code ||
-      barcode ||
-      qrCode ||
-      redemptionUrl
-    );
+function normalizeRedemptionResult(result, offerId) {
+  const data = unwrapRedemptionResponse(result);
+  const supported = getSupportedRedemptionTypes();
+  const code = supported.has("code") ? firstScalar(
+    data.code, data.coupon_code, data.couponCode, data.promo_code,
+    data.promoCode, data.redemption_code, data.redemptionCode
+  ) : "";
+  const barcode = supported.has("barcode") ? firstScalar(
+    data.barcode, data.barcode_value, data.barcodeValue, data.bar_code, data.barCode
+  ) : "";
+  const barcodeFormat = firstScalar(
+    data.barcode_format, data.barcodeFormat, data.barcode_type, data.barcodeType
+  );
+  const qrCode = supported.has("qr_code") ? firstSafeUrl(true,
+    data.qr_code, data.qrCode, data.qr_code_url, data.qrCodeUrl, data.qrcode, data.qrcode_url
+  ) : "";
+  const redemptionUrl = supported.has("online_url") ? firstSafeUrl(false,
+    data.redemption_url, data.redemptionUrl, data.claim_url, data.claimUrl,
+    data.online_url, data.onlineUrl, data.url
+  ) : "";
+  const instructions = combineInstructions(
+    data.instructions, data.redemption_instructions, data.redemptionInstructions
+  );
+  const redemptionId = firstScalar(
+    data.id, data.redemption_id, data.redemptionId
+  );
+  const rawExpiry = firstScalar(
+    data.expires_at, data.expiresAt, data.expiration_date,
+    data.expirationDate, data.valid_until, data.validUntil
+  );
+  const expiresAt = safeDate(rawExpiry);
+  const expired = Boolean(rawExpiry) && (!expiresAt || Date.parse(expiresAt) <= Date.now());
+  const providerStatus = normalizeLower(firstScalar(
+    data.status, data.redemption_status, data.redemptionStatus
+  ));
+  const blockedStatus = [
+    "pending", "processing", "queued", "failed", "failure", "error", "denied",
+    "rejected", "expired", "cancelled", "canceled", "inactive", "suspended", "used", "redeemed",
+  ].includes(providerStatus);
+  const ready = Boolean(code || barcode || qrCode || redemptionUrl) && !expired && !blockedStatus;
 
   return {
     offerId,
-
-    redemptionId:
-      redemptionId ||
-      null,
-
-    status:
-      normalizeString(
-        firstNonEmpty(
-          data.status,
-          data.redemption_status,
-          data.redemptionStatus
-        )
-      ) ||
-      (
-        hasRedemptionMaterial
-          ? "ready"
-          : "pending"
-      ),
-
-    code:
-      code ||
-      null,
-
-    barcode:
-      barcode ||
-      null,
-
-    barcodeFormat:
-      barcodeFormat ||
-      null,
-
-    qrCode:
-      qrCode ||
-      null,
-
-    redemptionUrl:
-      redemptionUrl ||
-      null,
-
-    instructions:
-      instructions ||
-      null,
-
+    redemptionId: redemptionId || null,
+    status: expired ? "expired" : providerStatus || (ready ? "ready" : "pending"),
+    code: ready ? code || null : null,
+    barcode: ready ? barcode || null : null,
+    barcodeFormat: ready ? barcodeFormat || null : null,
+    qrCode: ready ? qrCode || null : null,
+    redemptionUrl: ready ? redemptionUrl || null : null,
+    instructions: instructions || null,
     expiresAt,
-
-    hasCode:
-      Boolean(code),
-
-    hasBarcode:
-      Boolean(barcode),
-
-    hasQrCode:
-      Boolean(qrCode),
-
-    hasOnlineUrl:
-      Boolean(
-        redemptionUrl
-      ),
-
-    ready:
-      hasRedemptionMaterial,
+    hasCode: ready && Boolean(code),
+    hasBarcode: ready && Boolean(barcode),
+    hasQrCode: ready && Boolean(qrCode),
+    hasOnlineUrl: ready && Boolean(redemptionUrl),
+    ready,
   };
 }
 
@@ -1648,9 +1448,12 @@ async function saveRedemptionRecord({
     provider:
       "access",
 
-    provider_response:
-      accessResponse ||
-      {},
+    provider_response: {
+      status: Number(accessResponse?.status) || null,
+      offer_id: offerId,
+      redemption_id: redemption.redemptionId || null,
+      material_issued: redemption.ready === true,
+    },
 
     redeemed_at:
       nowIso(),
@@ -1673,7 +1476,7 @@ async function saveRedemptionRecord({
       .insert(
         payload
       )
-      .select()
+      .select("id")
       .single();
 
   if (!error) {
@@ -1705,8 +1508,8 @@ async function saveRedemptionRecord({
    */
 
   console.error(
-    "Card Leo redemption logging error:",
-    error
+    "Card Leo redemption logging failed",
+    { code: firstScalar(error?.code) || "UNKNOWN" }
   );
 
   return {
@@ -1717,7 +1520,7 @@ async function saveRedemptionRecord({
       true,
 
     error:
-      error.message,
+      "REDEMPTION_HISTORY_SAVE_FAILED",
   };
 }
 
@@ -1784,6 +1587,195 @@ function redactSensitive(
 }
 
 /* ==========================================================================
+   REQUEST, SESSION, AND PROVIDER VALIDATION
+============================================================================ */
+
+function firstScalar(...values) {
+  for (const value of values) {
+    if (typeof value === "string" || typeof value === "number") {
+      const text = String(value).trim();
+      if (text) return text;
+    }
+  }
+  return "";
+}
+
+function safeIdentifier(value) {
+  const text = firstScalar(value);
+  return text.length <= 256 && ![".", ".."].includes(text) &&
+    !/[\s\x00-\x1f\x7f]/.test(text) ? text : "";
+}
+
+function safeHttpsUrl(value, allowImageData = false) {
+  const text = firstScalar(value);
+  if (!text) return "";
+  if (allowImageData && text.length <= 2000000 &&
+      /^data:image\/(png|jpeg|webp|gif);base64,[a-zA-Z0-9+/=]+$/.test(text)) return text;
+  try {
+    const url = new URL(text);
+    return url.protocol === "https:" && !url.username && !url.password ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
+function firstSafeUrl(allowImageData, ...values) {
+  for (const value of values) {
+    const url = safeHttpsUrl(value, allowImageData);
+    if (url) return url;
+  }
+  return "";
+}
+
+function combineInstructions(...values) {
+  function read(value) {
+    if (Array.isArray(value)) return value.map(read).filter(Boolean).join("\n\n");
+    if (isObject(value)) return read(value.text || value.description || value.content || value.value);
+    return firstScalar(value);
+  }
+  return [...new Set(values.map(read).filter(Boolean))].join("\n\n");
+}
+
+function getSupportedRedemptionTypes() {
+  const aliases = {
+    code: "code", barcode: "barcode", qr: "qr_code", qrcode: "qr_code",
+    qr_code: "qr_code", online: "online_url", onlineurl: "online_url", online_url: "online_url",
+  };
+  return new Set(getEnv("ACCESS_REDEMPTION_SUPPORTED_TYPES").toLowerCase()
+    .split(",").map((type) => Object.hasOwn(aliases, type.trim()) ? aliases[type.trim()] : "").filter(Boolean));
+}
+
+function validateRedemptionConfiguration() {
+  if (!normalizeBoolean(getEnv("ACCESS_REDEMPTION_ENABLED"), false)) {
+    return "ACCESS_REDEMPTION_DISABLED";
+  }
+  if (!getAccessRedemptionEndpointPath() || !getAccessRedemptionMethod()) {
+    return "ACCESS_REDEMPTION_ENDPOINT_REQUIRED";
+  }
+  const fields = [
+    getAccessRedemptionOfferIdField(), getAccessRedemptionMemberIdField(),
+    getAccessRedemptionProgramField(), getAccessRedemptionOrganizationField(),
+    getEnv("ACCESS_REDEMPTION_LOCATION_ID_FIELD", "location_id"),
+    getEnv("ACCESS_REDEMPTION_TYPE_FIELD", "redemption_type"),
+  ];
+  if (fields.some((field) => !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(field)) ||
+      new Set(fields).size !== fields.length) return "ACCESS_REDEMPTION_FIELDS_INVALID";
+  if (!getSupportedRedemptionTypes().size) return "ACCESS_REDEMPTION_TYPES_REQUIRED";
+  return "";
+}
+
+function isAllowedBrowserRequest(req) {
+  const origin = firstScalar(req.headers?.origin);
+  const allowed = new Set(["https://cardleorewards.com", "https://www.cardleorewards.com"]);
+  for (const value of [process.env.CARDLEO_SITE_URL, process.env.APP_BASE_URL]) {
+    if (!value) continue;
+    try {
+      const url = new URL(value);
+      if (url.protocol === "https:") allowed.add(url.origin);
+    } catch {
+      /* Ignore invalid optional origins. */
+    }
+  }
+  if (origin && !allowed.has(origin)) return false;
+  const fetchSite = firstScalar(req.headers?.["sec-fetch-site"]);
+  return Boolean(origin) || !fetchSite || ["same-origin", "none"].includes(fetchSite);
+}
+
+function verifyMemberSessionToken(req, session, member) {
+  const cookies = parseCookies(req);
+  const data = session.data;
+  const token = firstScalar(
+    cookies.cardleo_session_token, data.token, data.sessionToken, data.session_token,
+    data.authToken, data.auth_token, data.loginToken, data.login_token,
+    data.portalToken, data.portal_token, data.session?.token
+  );
+  const stored = [member.session_token, member.auth_token, member.login_token, member.portal_token]
+    .map((value) => firstScalar(value)).filter(Boolean);
+  if (!stored.length || !member.session_expires_at) {
+    return {
+      ok: false,
+      status: 503,
+      code: "SESSION_VERIFICATION_NOT_CONFIGURED",
+      message: "Secure redemption session verification is unavailable. Please contact Card Leo support."
+    };
+  }
+  const valid = token && stored.some((value) => {
+    const a = Buffer.from(token, "utf8");
+    const b = Buffer.from(value, "utf8");
+    return a.length === b.length && timingSafeEqual(a, b);
+  });
+  const expiresAt = member.session_expires_at;
+  const expired = expiresAt && (!safeDate(expiresAt) || Date.parse(expiresAt) <= Date.now());
+  if (!valid || expired) {
+    return {
+      ok: false,
+      status: 401,
+      code: "SESSION_VERIFICATION_FAILED",
+      message: "Your login session could not be verified. Please sign in again."
+    };
+  }
+  return { ok: true };
+}
+
+function buildAccessRedemptionPath(offerId, memberKey) {
+  const path = getAccessRedemptionEndpointPath()
+    .replaceAll("{offer_key}", encodeURIComponent(offerId))
+    .replaceAll("{offer_id}", encodeURIComponent(offerId))
+    .replaceAll("{member_key}", encodeURIComponent(memberKey));
+  if (/[{}]/.test(path)) throw new Error("Invalid redemption endpoint template.");
+  const base = new URL(getAccessOffersBaseUrl());
+  const url = new URL(base.origin + path);
+  if (base.protocol !== "https:" || url.origin !== base.origin || url.username || url.password ||
+      url.search || url.hash) throw new Error("Invalid redemption endpoint origin.");
+  return url.pathname;
+}
+
+function providerFailed(result) {
+  const response = result?.response;
+  const data = unwrapRedemptionResponse(result);
+  return result?.success === false || result?.ok === false ||
+    response?.success === false || response?.ok === false ||
+    response?.data?.success === false || response?.data?.ok === false ||
+    data?.success === false || data?.ok === false ||
+    Boolean(response?.error) || Boolean(response?.data?.error) || Boolean(data?.error) ||
+    [response, response?.data, data].some((value) => Array.isArray(value?.errors) && value.errors.length > 0);
+}
+
+async function findMemberOffer(memberKey, offerId, timeoutMs) {
+  const result = await accessOffersRequest(getAccessOffersEndpointPath(), {
+    method: "GET",
+    query: {
+      member_key: memberKey,
+      offer_key: offerId,
+      all_offers: true,
+      sanitize_html: true,
+      page: 1,
+      per_page: 1
+    },
+    timeoutMs,
+  });
+  if (providerFailed(result)) throw new Error("Offer verification failed.");
+  const offers = extractOfferRows(result).map((row) => normalizeAccessOffer(row)).filter(Boolean);
+  return offers.find((offer) => firstScalar(offer.offer_key, offer.accessOfferId, offer.id) === offerId) || null;
+}
+
+function providerFailureResponse(res, error, offerId) {
+  const status = Number(error?.status);
+  const responseStatus = status === 429 ? 429 : status === 503 ? 503 : status === 504 ? 504 : 502;
+
+  // Provider authentication failures are not failures of the member's Card Leo login.
+  return sendJson(res, responseStatus, {
+    success: false,
+    ok: false,
+    code: "ACCESS_REDEMPTION_FAILED",
+    offerId,
+    message: status === 504
+      ? "Access timed out. Check your benefit before trying again."
+      : "Access could not complete the redemption request. Please try again later.",
+  });
+}
+
+/* ==========================================================================
    HANDLER
 ============================================================================ */
 
@@ -1815,6 +1807,23 @@ export default async function handler(
     );
   }
 
+  if (!isAllowedBrowserRequest(req)) {
+    return forbidden(res, "This redemption request is not allowed.", {
+      code: "ORIGIN_NOT_ALLOWED"
+    });
+  }
+
+  const contentType = firstScalar(req.headers?.["content-type"]).toLowerCase();
+
+  if (contentType && contentType.split(";")[0].trim() !== "application/json") {
+    return sendJson(res, 415, {
+      success: false,
+      ok: false,
+      code: "JSON_REQUIRED",
+      message: "Send the redemption request as JSON."
+    });
+  }
+
   try {
     /* ======================================================================
        AUTH
@@ -1842,6 +1851,12 @@ export default async function handler(
         req
       );
 
+    if (!body) {
+      return badRequest(res, "A valid JSON object is required.", {
+        code: "INVALID_REQUEST_BODY"
+      });
+    }
+
     const offerId =
       getOfferId(
         body
@@ -1863,11 +1878,8 @@ export default async function handler(
       );
     }
 
-    const debug =
-      normalizeBoolean(
-        body.debug,
-        false
-      );
+    // Never return provider bodies, credential-bearing URLs, or debug data to members.
+    const debug = false;
 
     /* ======================================================================
        ACCESS OFFERS CONFIG
@@ -1894,40 +1906,12 @@ export default async function handler(
        REDEMPTION CONFIG
     ====================================================================== */
 
-    const redemptionPath =
-      getAccessRedemptionEndpointPath();
+    const configurationError = validateRedemptionConfiguration();
 
-    if (!redemptionPath) {
-      return serviceUnavailable(
-        res,
-        "Access redemption is not configured yet.",
-        {
-          code:
-            "ACCESS_REDEMPTION_ENDPOINT_REQUIRED",
-
-          message:
-            "Add the exact Access-approved redemption endpoint path to ACCESS_REDEMPTION_ENDPOINT_PATH before enabling Claim Offer.",
-
-          configuredOffersBaseUrl:
-            getAccessOffersBaseUrl(),
-
-          debug:
-            debug
-              ? {
-                  offers:
-                    getAccessOffersConfigForDebug(),
-
-                  redemption: {
-                    endpointPath:
-                      null,
-
-                    method:
-                      getAccessRedemptionMethod(),
-                  },
-                }
-              : undefined,
-        }
-      );
+    if (configurationError) {
+      return serviceUnavailable(res, "Direct offer redemption is not configured yet.", {
+        code: configurationError,
+      });
     }
 
     const accessMemberIdentifier =
@@ -1956,25 +1940,73 @@ export default async function handler(
        REQUEST PAYLOAD
     ====================================================================== */
 
-    const payload =
-      buildRedemptionPayload({
-        member,
-        offerId,
-        body,
-      });
+    const timeoutMs = Math.min(Math.max(
+      normalizeInteger(getEnv("ACCESS_REDEMPTION_TIMEOUT_MS"), DEFAULT_TIMEOUT_MS), 5000
+    ), MAX_TIMEOUT_MS);
 
-    const timeoutMs =
-      Math.min(
-        Math.max(
-          normalizeInteger(
-            body.timeout_ms ??
-            body.timeoutMs,
-            DEFAULT_TIMEOUT_MS
-          ),
-          5000
-        ),
-        MAX_TIMEOUT_MS
-      );
+    let offer;
+
+    try {
+      offer = await findMemberOffer(accessMemberIdentifier, offerId, timeoutMs);
+    } catch (error) {
+      return providerFailureResponse(res, error, offerId);
+    }
+
+    if (!offer) {
+      return notFound(res, "This offer is not available in your Access catalog.", {
+        code: "ACCESS_OFFER_NOT_AVAILABLE",
+        offerId,
+      });
+    }
+
+    if (
+      (offer.expiresAt && Date.parse(offer.expiresAt) <= Date.now()) ||
+      (offer.startsAt && Date.parse(offer.startsAt) > Date.now())
+    ) {
+      return conflict(res, "This offer is not currently available.", {
+        code: "ACCESS_OFFER_OUTSIDE_VALID_DATES",
+        offerId,
+      });
+    }
+
+    const requestedLocation =
+      body.location_key ??
+      body.locationKey ??
+      body.location_id ??
+      body.locationId;
+
+    const locationId = safeIdentifier(requestedLocation);
+
+    if (
+      requestedLocation !== undefined &&
+      (
+        !locationId ||
+        !offer.locations.some((location) =>
+          firstScalar(location.id, location.location_key, location.locationId) === locationId
+        )
+      )
+    ) {
+      return badRequest(res, "Choose a participating location for this offer.", {
+        code: "ACCESS_LOCATION_NOT_AVAILABLE",
+        offerId,
+      });
+    }
+
+    const requestedType = body.redemption_type ?? body.redemptionType;
+
+    if (requestedType !== undefined && !safeIdentifier(requestedType)) {
+      return badRequest(res, "The redemption type is invalid.", {
+        code: "INVALID_REDEMPTION_TYPE"
+      });
+    }
+
+    const redemptionPath = buildAccessRedemptionPath(offerId, accessMemberIdentifier);
+
+    const payload = buildRedemptionPayload({
+      member,
+      offerId,
+      body
+    });
 
     /* ======================================================================
        ACCESS REDEMPTION REQUEST
@@ -1999,63 +2031,32 @@ export default async function handler(
     } catch (
       accessError
     ) {
-      const providerStatus =
-        Number(
-          accessError?.status
-        );
+      return providerFailureResponse(res, accessError, offerId);
+    }
 
-      return sendJson(
-        res,
-        (
-          Number.isFinite(
-            providerStatus
-          ) &&
-          providerStatus >= 400 &&
-          providerStatus <= 599
-        )
-          ? providerStatus
-          : 502,
-        {
-          success:
-            false,
+    if (providerFailed(accessResult)) {
+      return providerFailureResponse(res, {}, offerId);
+    }
 
-          ok:
-            false,
+    const returned = unwrapRedemptionResponse(accessResult);
 
-          message:
-            accessError?.message ||
-            "Access could not generate this offer redemption.",
+    const returnedOfferId = firstScalar(
+      returned.offer_key,
+      returned.offerKey,
+      returned.offer_id,
+      returned.offerId
+    );
 
-          code:
-            accessError?.code ||
-            "ACCESS_REDEMPTION_FAILED",
+    const returnedMemberKey = firstScalar(
+      returned.member_key,
+      returned.member_customer_identifier
+    );
 
-          offerId,
-
-          access: {
-            status:
-              accessError?.status ||
-              null,
-
-            statusText:
-              accessError
-                ?.statusText ||
-              "",
-
-            url:
-              accessError?.url ||
-              null,
-
-            response:
-              debug
-                ? redactSensitive(
-                    accessError
-                      ?.response
-                  )
-                : undefined,
-          },
-        }
-      );
+    if (
+      (returnedOfferId && returnedOfferId !== offerId) ||
+      (returnedMemberKey && returnedMemberKey !== accessMemberIdentifier)
+    ) {
+      return providerFailureResponse(res, {}, offerId);
     }
 
     /* ======================================================================
@@ -2068,8 +2069,14 @@ export default async function handler(
         offerId
       );
 
+    redemption.instructions = combineInstructions(
+      redemption.instructions,
+      offer.redemption?.instructions
+    ) || null;
+
     /*
-     * Never invent a QR/code.
+     * Never invent a QR/code, convert an opaque QR value into an image URL,
+     * or report unsupported/expired material as ready.
      */
 
     if (
@@ -2077,7 +2084,7 @@ export default async function handler(
     ) {
       return conflict(
         res,
-        "Access accepted the redemption request but did not return a usable redemption code, barcode, QR code, or online link.",
+        "Access has not returned usable, current redemption material for this offer.",
         {
           code:
             "ACCESS_REDEMPTION_NOT_READY",
@@ -2101,19 +2108,29 @@ export default async function handler(
        SAVE REDEMPTION
     ====================================================================== */
 
-    const history =
-      await saveRedemptionRecord({
+    let history;
+
+    try {
+      history = await saveRedemptionRecord({
         member,
 
         offerId,
 
         redemption,
 
-        accessResponse:
-          accessResult
-            ?.response ||
-          {},
+        accessResponse: {
+          status: accessResult.status
+        },
       });
+    } catch {
+      // Issuing succeeded. A local history outage must not discard the member's material.
+      history = {
+        saved: false,
+        error: "REDEMPTION_HISTORY_SAVE_FAILED"
+      };
+
+      console.error("Card Leo redemption history is unavailable.");
+    }
 
     /* ======================================================================
        SUCCESS
@@ -2143,6 +2160,11 @@ export default async function handler(
         },
 
         redemption: {
+          offerId,
+          offer_key: offerId,
+          ready: redemption.ready,
+          redemptionId: redemption.redemptionId,
+
           id:
             redemption
               .redemptionId,
@@ -2219,25 +2241,18 @@ export default async function handler(
     error
   ) {
     console.error(
-      "Card Leo Access redemption error:",
-      error
+      "Card Leo Access redemption failed",
+      {
+        code: firstScalar(error?.code) || "UNKNOWN"
+      }
     );
 
     return serverError(
       res,
       "Unable to redeem this Card Leo benefit right now.",
-      process.env.NODE_ENV ===
-        "development"
-        ? {
-            error:
-              error?.message ||
-              "Unknown error.",
-
-            code:
-              error?.code ||
-              null,
-          }
-        : {}
+      {
+        code: "ACCESS_REDEMPTION_ERROR"
+      }
     );
   }
 }
